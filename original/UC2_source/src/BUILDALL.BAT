@@ -1,0 +1,24 @@
+@echo off
+echo y | del \uc\dist\*.*
+cd \uc\docs\uk\ucdocs\inter
+call dist
+cd \uc\docs\uk\ucdocs
+call dist
+cd \uc\docs\uk\market
+call dist
+cd \uc\tools\stealth
+call m
+call dist
+cd \uc\source\bats
+call dist
+cd \uc\sas
+call m
+call dist
+cd \uc\order
+call m
+call dist
+cd \uc\local\verman
+call m
+call dist
+cd \uc\source
+call makeall

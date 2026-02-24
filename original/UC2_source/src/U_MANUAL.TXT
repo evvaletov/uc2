@@ -1,0 +1,4525 @@
+0. WHAT IS NEW (overview of changes from version 2.3 to 2.4)
+============================================================
+
+This chapter describes all differences between UltraCompressor (tm)
+version 2.3 (the June 1 1995 release) and version 2.4.
+
+This chapter contains the following paragraphs:
+
+        - A. Bug fixes
+        - B. Enhancements
+        - C. Known problems/issues
+
+When you use the AIPNL manual viewer you can jump to a chapter or a
+paragraph by pressing the corresponding digit(s) or letter.
+
+
+0.A BUG FIXES
+=============
+
+UltraCompressor
+---------------
+   The use of PCPs, can no longer erroneously causes fatal error 225.
+
+   The size of the error logfile is no longer reported erroneously.
+
+   !DTT (dynamic time travel) can now be used on all archives managed by
+   VM (version manager).
+
+   Optimize and SuperOptimize no longer cause 'out of memory' errors.
+
+   Fixed rare unneeded 'out of memory' error during optimizing phase.
+
+Visual UltraCompressor
+----------------------
+   Visual UltraCompressor now properly copies system and hidden files
+   from disk to disk.
+
+   Visual UltraCompressor no longer leaves temporary directories on disk
+   if the current drive and the temporary files directory are on
+   different disks.
+
+   Visual UltraCompressor no longer complains that UC.EXE is not in the
+   PATH if it is in the current directory.
+
+   Visual UltraCompressor now properly handles filenames ending with
+   international characters.
+
+Other tools
+-----------
+   UCRYPT no longer claims some correct passwords to be wrong.
+
+   SAS no longer overwrites archives if they happen to have the same
+   name as archive parts.
+
+   Self extracting archives now properly detect that a disk is full.
+
+
+0.B ENHANCEMENTS
+================
+
+UltraCompressor
+---------------
+   UC2 now stores and re-stores Windows 95 long filenames. Details on
+   Windows 95 support are in chapter 16.
+
+Visual UltraCompressor
+----------------------
+   Visual UltraCompressor has been adapted to cooperate better with
+   braille equipped systems.
+
+   VU now shows and properly handles Windows 95 long filenames. (use F11
+   to toggle the view mode)
+
+   VU now handles Enter/Double-Click as VIEW instead of EDIT which makes
+   it much faster inside archives.
+
+   VU now uses internal logic to copy/move/delete files.
+
+   VU now has a Make Archive command.
+
+Other tools
+-----------
+   UC2SEA now allows specification of volume size in bytes.
+
+   UC2SEA now has a faster (-f) compression mode.
+
+
+0.C KNOWN PROBLEMS/ISSUES
+=========================
+
+UC2/UC2SEA/UCEXE and resident virus scanners
+--------------------------------------------
+   UC2 can "generate" executables (extraction from an archive), UC2SEA
+   and UCEXE also generate executables. Some (resident) virus scanners
+   detect that an executable is changed/generated and warn you a virus
+   might be active. In many cases UC2 and UC2SEA are capable of avoiding
+   this problem but not all virus scanners allow this. This problem is
+   not unique, other archivers, compilers and executable compressors
+   have similar problems.
+
+SuperOptimizer efficiency
+-------------------------
+   The SuperOptimizer could be made about 20% faster by eliminating
+   redundant decompression phases. The SuperOptimizer currently uses a
+   universal approach capable of handling all archive types. In the
+   future some more specialized methods will be used for the
+   SuperOptimizer.
+
+UC2 transaction processing and UNDELETE tools
+---------------------------------------------
+   To minimize the risk of data loss in case of e.g. power failures, UC2
+   always works 'transaction oriented'. UC2 often uses temporary files
+   to achieve this. In some environments deleted files are not really
+   deleted, but moved to a different location. This allows better
+   recovery of deleted files. Examples of this are the OS/2 DELDIR
+   setting and the Norton SmartCan program. Since these tools use a
+   first in first out approach, intensive use of UC2 can 'take over' the
+   deleted file space. DELDIR, SmartCan, etc. should be disabled before
+   UC is executed if this is unwanted.
+
+1. INTRODUCTION (how to get started, features, etc.)
+====================================================
+
+This chapter briefly discusses all the software included in the
+UltraCompressor package.
+
+For 'commercial' use the UC2 evaluation copy can only be used for a
+period of 30 days. More details on this are in chapter 2. Chapter 2 also
+contains the AIPNL license agreement. By using this package, you are
+agreeing to be bound by the terms of this agreement.
+
+Please use ORDER.FRM to order a license for our products.
+
+This chapter contains the following paragraphs:
+
+        - A. What is UltraCompressor?
+        - B. Support, feedback, dealers, third party tools
+        - C. Features, main
+        - D. Features, business/corporate use
+        - E. Features, developers
+        - F. Features, BBS sysops
+        - G. Included files
+        - H. Credits
+        - I. Acknowledgements
+        - J. Press release
+
+When you use the AIPNL manual viewer you can jump to a chapter or a
+paragraph by pressing the corresponding digit(s) or letter.
+
+
+1.A WHAT IS ULTRA-COMPRESSOR?
+=============================
+
+UltraCompressor from AIPNL (Ad Infinitum Programs) is an archiver. An
+archiver is a file handling and compression utility. It will make most
+of your files significantly smaller and it can keep related files
+together. When you need the files, you can decompress them with the same
+UC2 utility. UC2 is very easy to use, thanks to its simple user
+interface and has support for all archiving needs.
+
+An archive behaves just like a floppy disk. It has a directory
+structure, you can copy from the archive with extraction and copy to the
+archive by adding. It is also possible to delete files from the archive.
+
+UC2 can also make such an archive DAMAGE PROTECTED (tm), so ALL files in
+the archive are safe, even if there are disk errors (within reasonable
+limits).
+
+With UC2 an archive can contain multiple versions of the same file.
+
+With a clear manual and a limited number of commands, UC2 will turn out
+to be very easy to use. Most of the options are configurable, so the
+commands are very simple and easy to remember.
+
+In general UC2 is very fast, especially when updating archives or
+extracting files from archives. At the same time it has superior
+compression. UC2 can handle near unlimited collections of files, in
+multi-gigabyte archives, even on a XT. For a detailed overview of the
+features of UC2, see paragraph C.
+
+
+1.B SUPPORT, FEEDBACK, DEALERS, THIRD PARTY TOOLS
+=================================================
+
+Contacting AIPNL
+----------------
+   Mail       : P.O. Box 1432, 3430 BK Nieuwegein, The Netherlands
+
+   Phone      : +31-30-2662107
+   FAX        : +31-30-2616571
+
+   WEB        : http://www.xs4all.nl/~aipnl
+
+   Internet   : desk@aip.nl
+
+   We actively monitor the Internet newsgroup comp.compression.
+
+   Up-to-date software is always available from:
+
+      InterNet   : ftp://ftp.nl.net/gopher/NLnet-connected/aipnl/...
+      WEB        : http://www.xs4all.nl/~aipnl
+
+   When you have any questions, just ask us or any of our dealers. We
+   will answer your questions as soon as possible.
+
+   You can also contact desk@aip.nl to become a beta tester, to be added
+   to our mailing list or to request uuencoded copies of our software.
+
+Feedback
+--------
+   Help us to make this product even better. Tell us what you want us to
+   improve in UC2 and all our other products. Comment on the manuals in
+   general, or on a manual in a specific language, is also very welcome.
+
+Dealers
+-------
+   USA, BMT Micro
+
+      Mail        : 452 Horn Rd, Wilmington, NC 28412-2411, USA
+      Phone       : (800) 414-4268 (toll free, orders only)
+                    (910) 791-7052
+      FAX         : (910) 350-2937
+      BBS         : (910) 350-8061 (direct link to AIPNL)
+      Internet    : thomas.bradford@bmtmicro.com
+      CompuServe  : 74031,307
+      FidoNet     : 1:3628/11
+
+   France, SERMEDITECH
+
+      Mail        : 6 Rue Racine, 02200 Courmelles, France
+      Phone       : 23.73.98.90
+      FAX         : 23.73.40.71
+      BBS         : 23.73.02.51
+      Internet    : rfrey@sermeditec.win.net
+      CompuServe  : 100346,1161
+      FidoNet     : 2:322/12
+      SparkNet    : 74:322/1
+      FrancoMedia : 101:176/106
+
+   Singapore, Online Technology
+
+      Mail        : P.O. Box 0685, Bukit Merah Central, Singapore 9115
+      Phone       : (65) 298-8634
+      FAX         : (65) 298-1324
+      Internet    : 71413.3330@compuserve.com
+      CompuServe  : 71413,3330
+
+   Israel, Magic
+
+      Mail        : 29 Etzion St., Ra'anana 43562, Israel
+      Phone       : 09-441-579
+      FAX         : 09-984-945, 09-916-647
+      BBS         : 09-916-647, 09-984-945, 09-918-533
+      Internet    : tammar@chemsg5.tau.ac.il
+      FidoNet     : 2:405/52
+
+   Australia, GNXS
+
+      Mail        : P.O. Box 3075, Stocklands Mall, Wetherill Park,
+                    NSW 2164, Australia
+      Phone       : +61-2-757-3306
+      FAX         : +61-2-757-3322
+      BBS         : +61-2-757-3322
+      Internet    : aip-nl@gnxs.com.au
+      Fidonet     : 3:713/611
+      FTP         : ftp.gnxs.com.au/pub/aipnl
+
+
+Third party tools
+-----------------
+   For third parties AIP has implemented a third party interface in UC2
+   (UC2-3PI). For documentation and samples sources please contact
+   AIPNL.
+
+   The following tools have UltraCompressor support: (we list the
+   lowest version number with UC2 support)
+
+      ARCHIVE MANAGER PRO 1.0, Alexander Maltsev, archive manager,
+                               freeware
+
+         Internet   : Alexander.Maltsev@p29.f271.n5020.z2.fidonet.org
+         FidoNet    : 2:5020/271.29   Moscow Russia
+
+         Available on any AMP Support BBS. Contact to become an
+         Authorized User or Support BBS.
+
+      ArcMaster 10.0, New-Ware, archiver shell, shareware $35 USD
+
+         Mail       : 8050 Camino Kiosco, San Diego, CA 92122-1820, USA
+         Phone      : (619) 455-6225 (Business hours ONLY please!)
+         BBS        : (619) 455-5226
+
+      AVIEW 4.5, Chris Buijs, archive viewer, freeware
+
+         Mail       : De Spil 22, 1507 CX Zaandam, The Netherlands
+         BBS        : +31-(0)75-704890
+         CompuServe : 100117,3242
+         FidoNet    : 2:280/407.16
+
+      DOS Navigator(tm) 1.30, RIT S.R.L., DOS shell, shareware $35 USD
+
+         Mail       : str. Tudor Vladimirescu 18, Chishinau, 277024,
+                      Republic of Moldova
+         Phone      : +373 2 26-10-16
+         FAX        : +373 2 26-14-16
+         BBS        : +373 2 22-64-83, +373 2 22-85-77
+         Internet   : AxoNSoft@silk.glas.apc.org
+         FidoNet    : 2:469/33
+
+      Morgul 1.00, Toni Nikkanen, music module player, free/cardware
+
+         Mail       : Kymenlaaksonkatu 7 D 45, FIN-48100 KOTKA, Finland
+         BBS        : +358 (9)51 3758236
+         Internet   : tnikkane@clinet.fi, luovaa@freenet.hut.fi
+         FidoNet    : 2:221/18
+
+      MTA 15.56, DISP, archive converter, shareware $25 USD
+
+         Mail       : P.O. box 131, 1170 AC, Badhoevedorp, Netherlands
+         BBS        : +31-(0)1749-48422
+         CompuServe : 100120,1146
+         FidoNet    : 2:281/904.5
+
+      REARJ 2.25, ARJ Software, archive converter, part of ARJ 2.41a
+
+         Mail       : 2606 Village Road West, Norwood,
+                      Massachusetts 02062
+         Internet   : robjung@world.std.com
+         CompuServe : 72077,445
+
+      SHEZ 9.7, CSD, archiver shell, shareware $39 USD
+
+         Mail       : P.O. Box 15248, Santa Rosa, CA 95402, USA
+         Phone      : (707) 575-9868
+         Internet   : jim.derr@kandy.com
+         CompuServe : 76266,2634
+
+      THD ProScan Version 11.0, File/Upload Tester/Convertor
+
+         FidoNet    : 1:259/423.0
+
+
+
+   If you are aware of a tool which has UltraCompressor support, but
+   which is not included on this list, please let us know.
+
+   The products included here are manufactured by vendors independent of
+   AIPNL; we make no warranty, implied or otherwise, regarding these
+   products' performance or reliability.
+
+
+1.C FEATURES, GENERAL
+=====================
+
+Better compression
+------------------
+   Up to 72% better compression than competing software. (See chapter 4
+   paragraph A options TF, TN, TT and the O commands; chapter 6
+   paragraph A.)
+
+Speed
+-----
+   Compression is fast and configurable to favor compression speed or
+   archive size. Extraction is very fast. UC2 is also very fast when it
+   UPDATES an archive, even if this archive is large, stored on a
+   network server or stored on a slow (floppy) disk. (See chapter 4
+   paragraph A options TF and I; paragraph F 'smart skipping'; chapter 6
+   paragraph A.)
+
+Reliability
+-----------
+   Archives can optionally be protected against damage, allowing them to
+   recover from most disk-errors without any loss of data. UC2 always
+   works 'transaction oriented' allowing recovery from most crashes
+   without any loss of data. It has optional double-verification,
+   preventing data loss in case of hardware or software problems. (See
+   chapter 4 paragraph A the P command; chapter 6 paragraph A
+   'reliability level'.)
+
+Powerful command line
+---------------------
+   Straightforward, yet powerful command line. If UC2 can figure it out,
+   you don't have to specify it. The manual contains 4 separate sections
+   on the command line to make sure you get only the information
+   relevant for what you want. (See chapters 3,4,5 and 8).
+
+Easy to use graphical user interface
+------------------------------------
+   Good looking, general purpose, graphical shell. VU is highly
+   configurable allowing you to tailor it to your personal taste. (See
+   chapter 12.)
+
+Integrated help
+---------------
+   UC2 has integrated help (with search) and an, easy to use, integrated
+   configuration tool. Only a few commands are needed to manage archives
+   with UC. UC can automatically deal with ARC, ARJ, LZH, ZIP, etc.
+   archives as if they are UC archives. (See chapter 3; chapter 6.)
+
+Highly configurable
+-------------------
+   Many operation details can be configured by built in configuration
+   tools and/or by directly changing the readable AIP-NL.INI file. (See
+   chapter 6 and chapter 12.)
+
+Ultra-fast self extracting archives
+-----------------------------------
+   Self extracting archives can span multiple diskettes. Their operation
+   is fully configurable. They work up to 3 times faster than competing
+   self extractors. (See chapter 13.)
+
+Full support of Windows 95 long file/directory names
+----------------------------------------------------
+   Both UC and VU properly store, restore and preserve Windows 95 long
+   file/directory names.
+
+Full support of OS/2 2.x extended attributes
+--------------------------------------------
+   OS/2 2.x extended attributes (such as icons, WPS long icon names,
+   WordPerfect 5.2 for OS/2 summary information, etc.) can be kept in an
+   archive. They are managed automatically. (See chapter 6 paragraph A
+   'Store OS/2 2.x extended attributes'.)
+
+
+1.D FEATURES, BUSINESS/CORPORATE USE
+====================================
+
+Advanced version management
+---------------------------
+   Multiple versions of file collections (projects) can be managed with
+   the included 'Version Manager' (VM) tool. VM supports project level
+   version labelling. Also included is UDIFF, an 'unlimited pass' tool
+   to compare text files. (See chapter 8 paragraph A and chapter 15.)
+
+Scripts
+-------
+   A 'script' file can contain a large list of files (e.g. to be
+   compressed). A script file can also be used as a substitute for
+   multiple (complex) commands. Scripts can be nested, to allow the
+   construction of 'building blocks'. Scripts can be very long
+   (multi-megabyte). (See chapter 4 paragraph F 'scripts'.)
+
+Capable of heavy duty tasks
+---------------------------
+   There is almost no limit to the number of files in an archive or to
+   the number of files processed in a single command. Where some other
+   programs get into trouble with more than 10,000 files, UC2 can easily
+   handle a much larger number of files. Even a simple PC-XT can (given
+   time) handle this workload. (See chapter 7 paragraph A.)
+
+Error handling and logging
+--------------------------
+   UC2 has advanced error handling and logging. This is especially
+   important when large collections of files are archived from shared
+   (network) disks. In almost all cases UC2 allows you to solve severe
+   problems and enables you to continue the operation. (See chapter 4
+   paragraph F 'superior error handling' and chapter 8 paragraph F.)
+
+Private compression profiles
+----------------------------
+   This feature allows you to use UC2 as an optimized special purpose
+   compressor for a specific kind of data (e.g. text files in a specific
+   language). (See chapter 8 paragraph F.)
+
+State of the art encryption
+---------------------------
+   UltraCrypt can protect your data with heavy duty enhanced triple DES
+   (Digital Encryption Standard) encryption. Faster encryption is
+   included as well. (See chapter 9.)
+
+State of the art authenticity verification
+------------------------------------------
+   UltraSeal and UltraSafe can help you protect your data against
+   undetected changes (e.g. virus infections or data falsifications).
+   They do not use 'security by obscurity', but they use digital
+   signatures based on Lucas functions. (See chapters 10 and 11.)
+
+
+1.E FEATURES, DEVELOPERS
+========================
+
+File version management
+-----------------------
+   Multiple versions of a file (e.g. the MAY 2 21:33:18 and the MAY 3
+   02:17:22 version) can be kept in an archive. UC2 version management
+   is very simple to use. (See chapter 4 paragraph E.)
+
+Advanced version management
+---------------------------
+   Multiple versions of file collections (projects) can be managed with
+   the included 'Version Manager' (VM) tool. VM supports project level
+   version labelling. Also included is UDIFF, an 'unlimited pass' tool
+   to compare text files. (See chapter 8 paragraph A and chapter 15.)
+
+Very fast updates
+-----------------
+   UC2 is very fast in updating large archives while maintaining
+   superior compression and reliability. No complex commands or options
+   are needed for this. (See chapter 4 paragraph A options TF and I;
+   paragraph F 'smart skipping'; chapter 6 paragraph A.)
+
+Simple path management
+----------------------
+   With UC2 it is very easy to copy any set of files from anywhere on
+   disk to anywhere in the archive and vice versa. (See chapter 4
+   paragraphs A and B, the # option.)
+
+Filter on file contents
+-----------------------
+   Define a search string and only files containing this string will be
+   printed, listed, extracted, added, etc. (See chapter 8, paragraph E.)
+
+Filter on anything else
+-----------------------
+   Filter on date/time, attributes, if a file is newer, query for each
+   file, etc. (See chapter 8, paragraph E.)
+
+Compress dos executables
+------------------------
+   UCEXE can make DOS executables MUCH smaller, while they remain
+   working. On top of that UCEXE compressed executables check their own
+   integrity. (See chapter 14.)
+
+
+1.F FEATURES, BBS SYSOPS
+========================
+
+Multimedia banners
+------------------
+   UC2 allows you to add multimedia banners (text, graphics, sound and
+   music) to an archive, or to a collection of archives. (See chapter 5
+   paragraph B.)
+
+Easy conversion combined with virus scanning
+--------------------------------------------
+   UC2 can convert collections of archives of almost any kind with just
+   one simple command. If preferred, UC2 will scan archive contents for
+   viruses during conversion. (See chapter 5 paragraph A.)
+
+Get rid of viruses forever
+--------------------------
+   The industrial strength authenticity verification software can help
+   you to get rid of viruses forever by protecting archives against
+   unauthorized changes. (See chapters 9 and 10)
+
+Needs only 32kb free memory to run
+----------------------------------
+   UC2 can be used together with other large programs, perfect for
+   mailers and other (large) programs that need to call UC2. (See
+   chapter 5 paragraph C.)
+
+Time stamp
+----------
+   Time stamp (collections of) archives with the date/time of their
+   newest file. (See chapter 8, paragraph E.)
+
+Private compression profiles
+----------------------------
+   This feature allows you to use UC2 as an optimized special purpose
+   compressor for a specific kind of data (e.g. email). (See chapter 8
+   paragraph F.)
+
+
+1.G INCLUDED FILES
+==================
+
+Please note UC2PRO.EXE has been protected with UltraSeal. You can use
+UltraSafe to verify whether you have an original version.
+
+General
+-------
+   U_MANUAL.TXT   the manual
+   ORDER.FRM      order form
+   USEAL.FRM      supplement to ORDER.FRM for ordering USEAL
+   FILE_ID.DIZ    file for BBSes
+   AIP-NL.INI     configuration file
+
+UltraCompressor
+---------------
+   UC.EXE         command line archive
+   US.EXE         install UltraStealth
+   UUC.EXE        use UltraStealth
+
+UC2 Tools
+---------
+   VM.EXE         version manager
+
+   SAS.EXE        simple archive splitter
+
+   UCDIR.BAT      compress directory
+   UEDIR.BAT      expand directory
+
+   UPROT.BAT      protect archive
+   ULOCK.BAT      lock archive
+
+Other tools
+-----------
+   VU.EXE         GUI archiver shell
+   VU.PIF         Program Information File to make MS-Windows run VU.EXE
+                  in full screen mode
+   VU.REG         File to add VU.EXE to the Windows 95 registry.
+
+   UC2SEA.EXE     convert UC2 archive into an executable
+   DOS.SEA        extraction module for UC2SEA
+
+   UCEXE.EXE      make DOS executable smaller and self checking
+
+   UDIFF.EXE      compare two text files
+
+   UCRYPT.EXE     UltraCrypt executable
+   USAFE.EXE      UltraSafe executable
+
+
+1.H CREDITS
+===========
+
+AIPNL would like to thank the following people for their involvement,
+work, support, ideas, testing, checking, etc.:
+
+   Aarif Rashid                    Ad NÅhn
+   Ad Spijkers                     Allen Koberg
+   Andrew Cadach                   Andy Hakim
+   Arjan Bosse                     Arno Haket
+   Arnold Jansen                   Bernardo Javier Siu Fabry
+   Bruce Ray                       Bruus Antonides
+   Charles Evans                   Charlie Negyesi
+   Conny de Vries                  Damir Lukic
+   Danny Bezemer                   Dejan Markovic
+   Dirk Schreib                    Doug Lamb
+   Doug Tooley                     Ellen de Vries
+   Eric Morel                      Eric Veldhuyzen
+   Eugen Woiwod                    Ewout de Klijne
+   Fabian Meuller                  Forrest Aldrich
+   Frank Leene                     Fred Snijder
+   Fred Wijshoff                   Gary van Beeck
+   Geoffrey Broadwell              Glenn Evan Copeland
+   Graeme Cross                    Graham Scott
+   Greg Roelofs                    Gregory Flint
+   Gudmundur J. Helgason           Hans Klunder
+   Hans Peer                       Helen Derks
+   Ian Spenser Nelson              Ingrid Foster-Dingley-Groot
+   Itamar Even-Zohar               Jacob Poon
+   Jan Kalin                       Jan van Hees
+   Jan van Leeuwen                 Jan-Pieter Cornet
+   Jan-Willem Overbeek             Janne Kankaala
+   Jasmijn de Vries                Jason Buchanan
+   Javier Manero                   Jean-loup Gailly
+   Jeroen Hoppenbrouwers           Joe Emenaker
+   Joe Fortser                     Joe Negron
+   Joergen Hjort                   John Mitchell
+   Joost Pruijt                    Juan Manuel Ruiz Lopez
+   Juha KivijÑrvi                  Kai Uwe Rommel
+   Kit Thong                       Kov†cs Bal†zs
+   Leonid Yakovlev                 Leslie Klieb
+   Marc Randolph                   Marco van de Wetering
+   Marijke Hoytink                 Mark Adler
+   Mark Kovarski                   Mark de Boer
+   Markus Kaemmerer                Marton Anka
+   Michael Sumulong                Mike Charnock
+   Mike Davis                      Mike Laster
+   Mike McCombs                    Morten Lejboelle
+   Ned Crigler                     Nico de Vries
+   Oleg P. Serdjuk                 Oliver Fromme
+   Paul Kocher                     Peter Oudenhoven
+   Piet van Oostrum                Pieter de Ruiter
+   Rafael Ramirez                  Reinier de Groot
+   Rianne van Leur                 Richard Foster-Dingle
+   Rick Hoorn                      Rob van Hoeven
+   Robbie Vance                    Robert Lindeman
+   Roger Burton-West               Ronald Raymond Dippol
+   Roy Alexander                   Ryan Oakley
+   Ryan Watkins                    Sjuck Brongersma
+   Soeren Fisker                   Stefan Hermansson
+   Stefano Zamprogno               Terry Chan
+   Thaddaeus Kong                  Theo Boersma
+   Thomas Wolff                    Timothy F. Sipples
+   Tomas Hajny                     Udo van den Heuvel
+   Victor T. Ng                    Vincent van Wichen
+   Wes Nakamura                    Willem Verloop
+   Wong Ling
+
+We especially want to thank YOU, the reader of this manual, for
+considering the use of our products.
+
+Help us to make this product even better. Tell us what you want us to
+improve in UC2 and all our other products. AIPNL applications are always
+designed in close cooperation with the people who use them. Comment on
+the manuals in general, or on a manual in a specific language, is also
+very welcome.
+
+
+1.I ACKNOWLEDGEMENTS
+====================
+
+UltraCompressor is a trademark of AIPNL (Ad Infinitum Programs).
+
+Most mentioned brand and product names are trademarks or registered
+trademarks of their respective companies.
+
+
+1.J PRESS RELEASE
+=================
+
+AIPNL releases UltraCompressor 2.4 with FULL Windows 95 support
+---------------------------------------------------------------
+
+UTRECHT, The Netherlands, AIPNL today released a new version of
+UltraCompressor. Version 2.4 adds FULL support for Windows 95 long
+filenames. Both the command line and the GUI version now have full
+Windows 95 long filename support.
+
+Included with 2.4 are:
+
+   UltraCompressor 2.4, a general purpose archiver
+      - up to 72% better compression than competing products
+      - up to 10 times faster archive updating than competing products
+      - DAMAGE PROTECTION (tm) allows recovery from disk errors
+      - capable of handling extremely large file collections
+      - intergrated optimal file-version management
+      - full Windows 95 long filename support
+      - full OS/2 extended attribute support
+
+   Visual UltraCompressor, a high speed general purpose shell
+      - extremely fast graphical shell
+      - fully customizable
+
+   UC2SEA, converts UC2 archives into UltraFAST standalone executables
+      - the generated executable can span multiple (floppy) disks
+      - up to 3 times faster than competing products
+      - a fixed fee allows unlimited distribution
+      - source code availability allows full customization
+
+   UCEXE, makes a DOS executable MUCH smaller and self-checking
+
+   Version Manager, project level version management
+
+   UltraDIFF, file compare tool with unique 'unlimited pass' method
+
+Requirements: DOS 2.1 or higher, IBM Compatible 8088 or higher, 640k
+RAM, 2Mb hard disk space. UC2 detects and utilizes EMS/XMS,
+386/486/Pentium/P6, Windows 95, OS/2 Warp, DesqView, etc.
+
+AIPNL intends to keep improving its products at a high rate, keeping
+ahead of its competitors at following customer and market demands. UC2's
+open architecture has already enabled more than 50 third parties to add
+full UC2 support to their applications.
+
+CONTACT: USA       : Thomas Bradford, BMT-Micro, (910) 791-7052
+         Europe    : Nico de Vries, AIPNL, +31-(0)30-(2)662107
+         InterNet  : desk@aip.nl
+         CompuServe: 100115,2303
+
+An evaluation copy can be obtained from
+
+    InterNet FTP    ftp.nl.net/gopher/NLnet-connected/aipnl/...
+    World Wide Web  http://www.xs4all.nl/~aipnl
+
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+Benchmark
+---------
+
+This is a benchmark made by AIPNL with 'Dean Cooper's comparer program,
+Version 1.02'. The benchmark compares UC 2.4 with PKZIP 2.04g and ARJ
+2.50a. Of course, the user can perform the best benchmarks by comparing
+the tools in 'real life' situations. The test has been performed on a
+486/33 PC with MS-DOS, QEMM and Norton Cache (flushed before each test)
+loaded.
+
+
+| Program               Compression mode
++-------------------------------------------------------
+| UC 2.4      (UC)      O25  (SuperOptimize archive)
+| UC 2.4      (UC)      -TT  (type tight/multimedia)
+| UC 2.4      (UC)      -TN  (type normal)
+| PKZIP 2.04g (PKZIP)   -EX  (extra compression)
+| ARJ 2.50a   (ARJ)     -JM1 (faster Maximum compression)
+
+
+| Test     Description                                  Bytes      Files
++-----------------------------------------------------------------------
+| source   Borland C++ 3.1 ..\CRTL\CLIB\*.*  (C & ASM)  1,294,460  373
+| exe+doc  PKZIP 1.10 distribution package                302,272   17
+| sound    MS-Windows 3.1 *.WAV files                      80,304    6
+| UPDATE   Add BGIDEMO.C to source.uc2/zip/arj (floppy)   +40,382   +1
+
+
+| Test     Program  Compress time  Archive size   %     Decompress time
++----------------------------------------------------------------------
+| source   UC O25                  238,540 bytes  100%  29.8 sec
+|          UC -TN    46.7 sec      264,550 bytes  111%  29.9 sec
+|          ARJ       42.1 sec      399,111 bytes  167%  29.1 sec
+|          PKZIP     22.0 sec      412,316 bytes  172%  23.5 sec
+|
+| exe+doc  UC O25                  111,134 bytes  100%   2.4 sec
+|          UC -TN     8.8 sec      114,738 bytes  103%   2.4 sec
+|          PKZIP      5.1 sec      127,753 bytes  115%   1.9 sec
+|          ARJ        7.4 sec      128,188 bytes  115%   3.4 sec
+|
+| sound    UC O25                   36,824 bytes  100%   1.3 sec
+|          UC -TT     6.9 sec       37,216 bytes  101%   1.3 sec
+|          PKZIP      1.7 sec       41,143 bytes  112%   0.4 sec
+|          ARJ        1.9 sec       41,658 bytes  113%   0.5 sec
+|
+| UPDATE   UC -TT    14.3 sec                     100%
+|          PKZIP     66.5 sec                     465%
+|          ARJ      146.3 sec                    1023%
+
+
+2. LICENSE (the license agreement, warranty, etc.)
+==================================================
+
+Some of the essential contents of this chapter:
+
+   All rights are reserved by AIPNL (Ad Infinitum Programs the
+   Netherlands).
+
+   You are permitted to use the evaluation package for a 30 day
+   evaluation period. You must buy it if you continue using it.
+
+   You are permitted to use the evaluation package for longer periods
+   provided all use is strictly non-commercial. Please note AIPNL
+   strongly encourages you to buy the software.
+
+   The package is supplied 'AS IS'. It is up to you to determine its
+   usability.
+
+   You may ONLY redistribute a 100% UNALTERED copy of the complete
+   package through BBSes etc. as long as you make no money from doing
+   this. You can (amongst other methods) use the UltraSafe program to
+   determine the authenticity of a package distributed by AIPNL.
+
+   You may not alter, reverse engineer, decompile, etc. the program(s)
+   or parts of them in any way.
+
+This chapter contains the following paragraphs:
+
+        - A. Limited warranty
+        - B. Documentation
+        - C. Non-commercial use license
+        - D. Evaluation license
+        - E. General license agreement
+        - F. Distribution restrictions
+
+When you use the AIPNL manual viewer you can jump to a chapter or a
+paragraph by pressing the corresponding digit(s) or letter.
+
+
+2.A LIMITED WARRANTY
+====================
+
+AIPNL (Ad Infinitum Programs the Netherlands) warrants the physical
+diskette(s) and physical documentation, provided with registered
+versions, to be free of defects in materials and workmanship, for a
+period of ninety days from the date of registration. If AIPNL receives
+notification within the warranty period of defects in materials or
+workmanship, and such notification is determined by AIPNL to be
+correct, AIPNL will replace the defective diskette(s) or documentation.
+
+The entire and exclusive liability and remedy for breach of this limited
+warranty shall be limited to replacement of defective diskette(s) or
+physical documentation and shall not include or extend to any claim for
+or right to recover any other damages, including but not limited to,
+loss of profit, data, or use of the software, or special, incidental, or
+consequential damages or other similar claims, even if AIPNL has been
+specifically advised of the possibility of such damages. In no event
+will AIPNL's liability, for any damages to you or any other person,
+ever exceed suggested list price or actual price paid, whichever is the
+lower, for the license to use the software, regardless of the form of
+the claim.
+All rights not expressly granted here are reserved by AIPNL.
+
+
+2.B DOCUMENTATION
+=================
+
+Information in the documentation is subject to change without notice and
+does not represent a commitment on the part of AIPNL. No part of the
+documentation may be reproduced or transmitted in any form or by any
+means, electronic or mechanical, including photocopying and recording,
+for any purpose without the express written permission of AIPNL.
+
+All rights not expressly granted here are reserved by AIPNL.
+
+
+2.C NON-COMMERCIAL USE LICENSE
+==============================
+
+The supplied software contains NO public domain program(s). The software
+and all accompanying documentation is Copyright (c) 1991-1995 by AIPNL.
+All rights reserved.
+
+This software and accompanying documentation is protected by the
+Copyright laws of the Netherlands and also by International Treaty
+provisions. Any use of this software in violation of Copyright law or
+the terms of this limited license will be prosecuted to the best of our
+ability. The conditions under which you may copy this software and
+documentation are clearly outlined below under 'Distribution
+Restrictions' (see paragraph F).
+
+AIPNL hereby grants you a license to use this software for personal,
+non-commercial use. Personal use should always be "away from the
+office". Use by non-profit organizations (e.g. non-commercial bulletin
+board systems) is considered to be non-commercial use. Please note
+AIPNL strongly encourages you to buy the software.
+
+You shall not use, copy, emulate, clone, rent, lease, sell, modify,
+decompile, disassemble, otherwise reverse engineer, or transfer the
+licensed program, or any subset of the licensed program, except as
+provided for in this agreement. Any such unauthorized use shall result
+in immediate and automatic termination of this license.
+
+All rights not expressly granted here are reserved by AIPNL.
+
+
+2.D EVALUATION LICENSE (only valid during 30 days evaluation period)
+=====================================================================
+
+The supplied software contains NO public domain program(s). The software
+and all accompanying documentation is Copyright (c) 1991-1995 by AIPNL.
+All rights reserved.
+
+This software and accompanying documentation is protected by the
+Copyright laws of the Netherlands and also by International Treaty
+provisions. Any use of this software in violation of Copyright law or
+the terms of this limited license will be prosecuted to the best of our
+ability. The conditions under which you may copy this software and
+documentation are clearly outlined below under 'Distribution
+Restrictions' (see paragraph F).
+
+AIPNL hereby grants you a limited license to use this software for
+evaluation purposes for a period not to exceed thirty (30) days. If you
+intend to continue using this software (and/or its documentation) after
+the thirty (30) day evaluation period, you must make a registration
+payment to AIPNL.
+
+Using this software after the thirty (30) day evaluation period, without
+registering the software is a violation of the terms of this limited
+license. The only exception to this is when the package is solely used
+for non-commercial purposes in a non-commercial environment (see 2.C).
+
+You shall not use, copy, emulate, clone, rent, lease, sell, modify,
+decompile, disassemble, otherwise reverse engineer, or transfer the
+licensed program, or any subset of the licensed program, except as
+provided for in this agreement. Any such unauthorized use shall result
+in immediate and automatic termination of this license.
+
+All rights not expressly granted here are reserved by AIPNL.
+
+
+2.E GENERAL LICENSE AGREEMENT (not valid during evaluation period)
+==================================================================
+
+This license becomes valid after you have received proof of license from
+AIPNL.
+
+The supplied software contains NO public domain program(s). The software
+and all accompanying documentation is Copyright (c) 1991-1995 by AIPNL.
+All rights reserved.
+
+This is a non-transferable license for use of the software within your
+home, your company or government agency. This allows internal use and
+copying of the software for as many sites/computers as are contracted
+for. (See ORDER.FRM for site license price schedule.) Distributing,
+repackaging, or reselling of the software to third parties is not
+allowed. All licenses are prepaid only.
+
+This software and accompanying documentation are protected by The
+Copyright laws of the Netherlands and also by International Treaty
+provisions. Any use of this software in violation of Copyright law or
+the terms of this limited license will be prosecuted to the best of our
+ability. The conditions under which you may copy this software and
+documentation are clearly outlined below under 'Distribution
+Restrictions' (see paragraph F).
+
+You shall not use, copy, emulate, clone, rent, lease, sell, modify,
+decompile, disassemble, otherwise reverse engineer, or transfer the
+licensed program, or any subset of the licensed program, except as
+provided for in this agreement. Any such unauthorized use shall result
+in immediate and automatic termination of this license.
+
+All rights not expressly granted here are reserved by AIPNL.
+
+
+2.F DISTRIBUTION RESTRICTIONS
+=============================
+
+As the copyright holder, AIPNL authorizes distribution by individuals
+only in accordance with the following restrictions.
+
+The package is defined as the entire file either as 'self extracting
+executable' or an 'archive' as distributed by AIPNL. The authenticity
+of the package can be verified by contacting AIPNL, or by running the
+AIPNL UltraSafe program which verifies the digital signatures AIPNL
+ALWAYS adds to all its distributed software. If the package is changed
+in any way, distribution is forbidden. Please contact AIPNL to obtain a
+complete package suitable for distribution.
+
+You are hereby granted permission by AIPNL to copy the UC2 evaluation
+package for your own use or for others to evaluate, ONLY when the
+following conditions are met:
+
+   The package - including all related program files and documentation
+   files - CANNOT be modified in any way and must be distributed as a
+   complete unchanged package, without exception.
+
+   Small supplements to the package, such as the introductory or
+   installation batch files, are acceptable. This should always be done
+   by supplying EXTRA files, never by altering the package (file) as
+   distributed by AIPNL.
+
+   No price or other compensation may be charged for the package. A
+   distribution cost may be charged for the cost of the diskette,
+   shipping and handling, as long as the total (per disk) does not
+   exceed US$ 15. In case ANY compensation is charged, the receiver
+   should be notified, in writing, of his obligations concerning the
+   Evaluation License.
+
+   If you include the package on a distributed CD-ROM, diskette,
+   magazine, book or any other item, you must give one such item for
+   free and without further obligations to AIPNL. This must be done
+   prior to other distribution of the item.
+
+   AIPNL prohibits the distribution of outdated versions of the
+   package, without written permission from AIPNL. If the version you
+   have obtained is over six (6) months old, please contact AIPNL to
+   ensure that you have the most current version.
+
+   The package CANNOT be sold as part of some other inclusive package,
+   nor can it be included in any commercial or non-commercial software
+   packaging offer, without a written agreement from AIPNL.
+
+   The package, program(s) or documentation cannot be 'rented' or
+   'leased' to others.
+
+   If you wish to add any of our packages to a CD-ROM or other
+   collection, please check the release date of the version you have. If
+   the version is over six (6) months old then please contact AIPNL to
+   ensure that you have the most current version.
+
+   If you would like to distribute the package as a 'Disk-of-the-Month',
+   or as part of a book, subscription or monthly service, then you must
+   contact AIPNL in advance to ensure that you have the most current
+   version of the software. Only current versions may be shipped as
+   'Disk-of-the-Month' disks.
+
+   You may not list any of our products in advertisements, catalogues,
+   or other literature which describes our products as 'FREE SOFTWARE'.
+   This is evaluation software, it is not free!
+
+You are hereby granted permission by AIPNL to distribute executables
+which have been compressed by UCEXE, ONLY when the following conditions
+are met:
+
+   You must own (have bought) the full UC2 package (with disk and
+   manual) from AIPNL.
+
+   AIPNL shall not be liable for any damages arising out of your use of
+   this software, even if they have been advised of the possibility of
+   such damages.
+
+   You must indemnify, hold harmless and defend AIPNL from and against
+   any claims or lawsuits, including attorney's, that arise or result
+   from the use of files generated by UCEXE, or any modification
+   thereof.
+
+You are hereby granted permission by AIPNL to distribute self
+extracting archives made with UC2SEA, ONLY when the following conditions
+are met:
+
+   You must own (have bought) the full UC2 package (with disk and
+   manual) from AIPNL.
+
+   You must own (have bought) an 'UC2 Self Extracting Archive
+   distribution license' from AIPNL. This license must specifically
+   cover the 'extraction software' you include in the self extracting
+   archive.
+
+   AIPNL shall not be liable for any damages arising out of your use of
+   this software, even if they have been advised of the possibility of
+   such damages.
+
+   You must indemnify, hold harmless and defend AIPNL from and against
+   any claims or lawsuits, including attorney's, that arise or result
+   from the use of the files generated by UC2SEA, or any modification
+   thereof.
+
+All rights not expressly granted here are reserved by AIPNL.
+
+
+3. UC2 BASIC COMMANDS
+=====================
+
+This chapter describes the most essential commands of UC2. No special
+features are mentioned. UC2 is very easy to use.
+
+All details on ordering UltraCompressor are in ORDER.FRM.
+
+This chapter contains the following paragraphs:
+
+        - A. Decompressing a complete UC2 archive
+        - B. Compressing a complete directory(tree) into an archive
+        - C. Making an archive damage protected
+        - D. Verbose list of the archive
+        - Z. Summary
+
+When you use the AIPNL manual viewer you can jump to a chapter or a
+paragraph by pressing the corresponding digit(s) or letter.
+
+
+3.A DECOMPRESSING A COMPLETE UC2 ARCHIVE
+========================================
+
+Command: UC ES archive-name
+
+   Put the archive where you want the extracted files to be, and type
+   the command UC ES archive-name, where 'archive-name' is the name of
+   the archive (e.g. UC ES newsoft). All files in the archive will be
+   extracted.
+
+   UC ES works cautiously. It will never overwrite files, create
+   directories, etc., without first consulting you.
+
+
+3.B COMPRESSING A COMPLETE DIRECTORY (TREE) INTO AN ARCHIVE
+===========================================================
+
+Command: UC A archive-name
+
+   All files in the current directory are compressed into an archive
+   (e.g. 'UC A mydocs' creates mydocs.uc2). If the archive already
+   exists, only new and changed files are (re)compressed.
+
+Command: UC AS archive-name
+
+   The files in the current directory and ALL subdirectories are
+   compressed into an archive (e.g. 'UC AS mydocs' creates mydocs.uc2).
+   If the archive already exists, only new and changed files are
+   (re)compressed.
+
+
+3.C MAKING AN ARCHIVE DAMAGE PROTECTED
+======================================
+
+Command: UC P archive-name
+
+   The archive will become damage protected and it will remain damage
+   protected if you add files to it or delete files from it etc. A
+   damage protected archive can recover from most disk errors without
+   losing ANY data. (The disadvantage of making archives damage
+   protected is that the archives become a little bit larger).
+
+
+3.D VERBOSE LIST OF THE ARCHIVE
+===============================
+
+Command: UC VS archive-name
+
+   All files in the archive will be listed. The contents of all its
+   subdirectories will be listed as well.
+
+
+3.Z SUMMARY
+===========
+
+UC ES name     EXTRACT all files from archive name.uc2
+
+UC A  name     COMPRESS all files in current directory into name.uc2
+
+UC AS name     COMPRESS all files in current directory AND its
+               SUBDIRECTORIES into name.uc2
+
+UC P  name     make name.uc2 DAMAGE PROTECTED
+
+UC VS name     the full contents of the archive will be LISTED
+
+
+4. UC2 MAIN COMMANDS
+====================
+
+One general issue about UC2 is that you can consider an archive in the
+same way as you would a disk. It has a root directory, sub-directories
+and so on. UC2 always stores the full directory structure. With UC2, you
+do not have to deal with 'match path', 'store full path', 'junk
+directory name', etc.
+
+The file extension of UltraCompressor archives is currently .UC2. In the
+future, if our file format changes, the extension will become .UC3. This
+means that there can be no confusion about which version of
+UltraCompressor should be used.
+
+While using UC2, the screen will indicate whether everything is working
+properly. When errors occur they are shown in detail on the screen and
+are also written to an error logfile (if active). When this error
+logfile grows over 25,000 bytes, UC2 will give a warning.
+
+In this chapter the commands and options in the examples are in upper
+case, and parameters are in lower case. In use, however, the case is
+never important. Any mix of upper and lower case can be used.
+
+This chapter contains the following paragraphs:
+
+        - A. Commands/options summary
+        - B. Adding files, listing contents
+        - C. Extracting files
+        - D. Other commands and options
+        - E. Version management
+        - F. Features and automatics
+        - Z. Summary
+
+When you use the AIPNL manual viewer you can jump to a chapter or a
+paragraph by pressing the corresponding digit(s) or letter.
+
+
+4.A COMMAND/OPTION SUMMARY
+==========================
+
+General: UC command [option(s)] archive-name [files]
+
+Commands:
+---------
+   A D E     ADD/DELETE/EXTRACT files to/from archive.
+             (See paragraph B and C.)
+
+   L V       LIST/VERBOSE LIST contents of archive.
+
+   P         make archive DAMAGE PROTECTED (approx 1% overhead). Once an
+             archive becomes damage protected, it remains damage
+             protected, even if it is altered. The P command can be
+             combined with other commands (e.g. AP).
+
+   U         remove damage protection (if present) from archive.
+
+   T         fully TEST archive. When it is damaged, UC2 will ask if it
+             needs to be repaired. In force mode (see options), UC2 will
+             repair without asking. If an archive is repaired 100% this
+             is reported. If the archive cannot be repaired 100%, the
+             problems (such as which files are still damaged, etc.) are
+             reported on screen and in the error logfile.
+
+   C         CONVERT ZIP, ARC, ARJ, etc. archives to UC2 archives. (See
+             chapter 5 paragraph A.)
+
+   O         OPTIMIZE archive can make an archive even smaller without
+             deleting anything from the archive. Especially if an
+             archive has been updated many times and/or contains many
+             versions (revisions) of specific files, optimize can
+             significantly reduce the size of an archive.
+
+   O<number> SUPER-OPTIMIZE can make archives even smaller than
+             OPTIMIZE. SO takes a LOT of time, and it is not always
+             capable of making the selected archive smaller. SO works by
+             rebuilding the entire archive <number> times, each time
+             using a randomly chosen optimization strategy (part of this
+             is changing the order of the files). Although SuperOptimize
+             takes a LOT of time to make an archive smaller,
+             decompression speed remains unchanged.
+
+             Please note you can ALWAYS interrupt UC2 (by pressing
+             Ctrl-Break) without risks.
+
+   R         REVISE archive comment. (See paragraph D.)
+
+Options:
+--------
+   Options can be concatenated to the command (UC ES arch) or they can
+   be prefixed by a - or / (UC E -S arch).
+
+   TF TN TT  Type-Fast; Type-Normal (default) or Type-Tight/multimedia
+             compression.
+
+             In TT mode, UC2 will detect whether a file is a multimedia
+             file. Special (lossless) multimedia compression will then
+             take place.
+
+             Please note multimedia compression is not able to compress
+             already compressed files (e.g. *.GIF or *.JPG cannot be
+             significantly compressed).
+
+   TST       Type-Super-Tight compresses a bit better that TT
+             compression, but takes noticeable more time. Only
+             recommended if time is not an issue. TST compression does
+             not affect decompression speed, which remains very fast.
+
+   S         also process all SUB-DIRECTORIES. By default only the files
+             in the current directory are processed.
+
+   M         MOVE mode, after addition/extraction the used source files
+             are deleted. UC2 assures the addition/extraction completed
+             successfully before it deletes the source file.
+
+   F         FORCE mode. Using this mode, the program will work
+             silently. Almost nothing will be asked during execution. In
+             all cases where a question would be asked, the program acts
+             as if 'yes' was answered. When not using this mode, the
+             program will often ask what you want in case of doubt.
+
+                when NOT in force mode
+                ----------------------
+                   - UC2 will prompt you before overwriting files
+                   - UC2 will prompt you before creating directories
+                   - UC2 will optionally ask if hidden/system files
+                     should be processed
+                   - UC2 will optionally ask permission to convert
+                     archives
+                   - UC2 will optionally ask permission to show/play
+                     multimedia banners
+                   - UC2 will prompt you before repairing a damaged
+                     archive (T command)
+
+                when in force mode
+                ------------------
+                   - UC2 will overwrite files without asking
+                   - UC2 will create directories without asking
+                   - UC2 will add hidden/system files (unless
+                     the configuration does not allow that)
+                   - UC2 will always apply auto-conversion
+                   - UC2 will show/play multimedia banners (unless
+                     the configuration does not allow that)
+                   - UC2 will repair an archive immediately, if
+                     the T (test) command finds a problem
+
+   I         INCREMENTAL mode, for FAST updates and version control.
+             Version control is also called revision management. The
+             original archive is not changed, changed files are appended
+             to the archive. Previous versions (revisions) of a file
+             remain accessible this way. (See paragraph E.)
+
+   B         BASIC mode (default unless UC2 is configured otherwise).
+             This is the opposite of incremental mode. In basic mode UC2
+             overwrites files in the archive. No former versions of a
+             file are kept in the archive. If there are multiple
+             versions of a file only the latest one is overwritten in
+             non incremental mode.
+
+   !         EXCLUDE file(s). (See paragraph B.)
+
+   ;n        extract/delete OLDER VERSION of file (See paragraph E.)
+
+   !DTT=YYYY-MM-DD/HH:MM:SS
+             DYNAMIC TIME TRAVEL, option for accessing older versions
+             (revisions) of (large) collections of files. (See paragraph
+             E.)
+
+   #         DESTINATION PATH of files in archive while adding or
+             DESTINATION PATH of files on disk while extracting. (See
+             paragraphs B and C.)
+
+   ##        Like #, but the specified source path(s) will be appended
+             to the destination path. (See paragraphs B and C.)
+
+   &         CONCATENATION OF COMMANDS. (See paragraph D.)
+
+   @         specifies a SCRIPT which substitutes part of the command
+             line. (See paragraph F.)
+
+   !@        like @, but puts '!' before all entries (useful to exclude
+             a collection of files)
+
+   !RELIA=   These options allow (temporary) CONFIGURATION of many of
+   !ARCON=   the values one can configure with the configuration
+   !SMSKIP=  screen. The exact usage of these options is documented
+   !BAN=     in chapter 6.
+   !VSCAN=
+   !SOS2EA=  Example: UC A -S !SYSHID=ON arch *.*
+   !NET=
+   !SYSHID=  In this example hidden and system files are also added to
+             the archive.
+
+
+4.B ADDING FILES, LISTING CONTENTS
+==================================
+
+Examples:
+
+   UC A arch *.txt
+      All *.txt files in the current directory are compressed into the
+      archive arch.uc2. If the archive already exists, the files are
+      added to the archive.
+
+
+   UC A -TF docs *.* !*.bak
+      All (*.*) files except *.bak files are (RAPIDLY) compressed into
+      the archive docs.uc2.
+
+   UC A -S a:\back c:\doc\*.*
+      Create/update archive of complete directory with its
+      subdirectories to archive back.uc2 in the root directory of drive
+      A:.
+
+   When the files to be added are specified with *.*, the command can be
+   shortened: 'c:\doc\*.*' can be replaced by 'c:\doc\'. This also
+   applies to the exclude file(s) option.
+
+   UC A -S a:\back c:\doc\ !c:\doc\old\
+      All files in c:\doc and its subdirectories (except for files in
+      c:\doc\old and its subdirectories) will be added to back.uc2.
+
+   UC A -M arch *.bat
+      All *.bat files will be moved from the current directory to the
+      archive arch.uc2.
+
+   UC A arch #\dir1 *.cpp
+      Add all .cpp files from the current directory to directory dir1 in
+      the archive arch.uc2. When a subdirectory does not already exist
+      in the archive, UC2 will ask you if it has to be created in the
+      archive.
+
+   UC A arch tools\*.exe drivers\*.drv
+      The *.exe files from the tools directory and the *.drv files from
+      the drivers directory are added to the root directory of the
+      archive.
+
+   UC A arch tools\*.c drivers\*.drv ##
+      The *.c files from the tools directory are added to the tools
+      directory in the archive, the *.drv files from the drivers
+      directory are added to the drivers directory in the archive.
+
+   UC A arch tools\*.c drivers\*.drv ##specials
+      The *.c files from the tools directory are added to the
+      specials\tools directory in the archive, the *.drv files from
+      the drivers directory are added to the specials\drivers
+      directory in the archive.
+
+   UC L arch
+      List contents of root directory of arch.uc2 without
+      subdirectories.
+
+   UC V arch
+      Verbose list contents of arch.uc2 without subdirectories. Not only
+      the files are shown, but also all the versions of the files, with
+      their date and time.
+
+   UC L -S arch
+      List contents of all directories and subdirectories in arch.uc2
+
+When you have a file whose name starts with #, !, @ or & you have to let
+UC2 know that you are referring to a file (and not to something else):
+
+   UC A arch .\#file
+      Add #file to arch.uc2. The .\ prefix is used to ensure that the
+      filename is not interpreted as destination path.
+
+Possible alternative ways to enter commands
+-------------------------------------------
+   Options can be put directly after the command or after the previous
+   option (no space allowed) or they can be prefixed by '-' or '/'.
+
+   Some example alternatives for 'UC A -S -TF docs *.* !*.bak':
+
+      UC  A -STF docs *.* !*.bak
+
+         You can concatenate options.
+
+      UC  ASTF docs *.* !*.bak
+
+         You can append the options directly to the command.
+
+      UC  -A -S -TF docs *.* !*.bak
+
+         It is allowed to precede the command with an '-'.
+
+      UC  A /S /TF docs *.* !*.bak
+
+         UC2 does not care whether you use '-' or '/'.
+
+      UC  A -S -TF docs !*.bak
+
+         If no file specifications are present, UC2 uses *.*.
+
+If you want an archive with a name without extension, type a '.' just
+after the archive name:
+
+   UC A sources. *.*
+      The archive will become 'sources' instead of 'sources.uc2'.
+
+
+4.C EXTRACTING FILES
+====================
+
+Examples:
+
+   UC E docs *.doc
+      Extract all *.doc files from docs.uc2 into the current directory.
+
+   UC E backup \test\main.doc
+      Extract main.doc from subdirectory test in the archive, into the
+      current directory.
+
+   UC E -S backup \test\*.*
+      Extract contents of the archive's directory test and all its
+      subdirectories, into the current directory.
+
+   UC E -S backup \test\*.* #\dir1
+      Extract contents of the archive's directory test and all its
+      subdirectories into the directory \dir1.
+
+   UC E -M arch *.bat
+      All *.bat files will be moved from arch.uc2 to the current
+      directory.
+
+   UC E arch tools\*.c drivers\*.drv
+      The *.C files from the tools directory and the *.drv files from
+      the drivers directory are extracted into the current directory.
+
+   UC E arch \tools\*.c \drivers\*.drv ##
+      The *.c files from the tools directory are extracted into the
+      tools directory beneath the current directory, the *.drv files
+      from the drivers directory are extracted into the drivers
+      directory beneath the current directory.
+
+   UC E arch tools\*.c drivers\*.drv ##\
+      The *.c files from the tools directory are extracted into the
+      tools directory in the root directory, the *.drv files from the
+      drivers directory are extracted into the drivers directory in the
+      root directory.
+
+   UC E arch tools\*.c drivers\*.drv ##\specials
+      The *.c files from the tools directory are extracted into the
+      \specials\tools directory, the *.drv files from the drivers
+      directory are extracted into the \specials\drivers directory.
+
+   When a directory does not exist, UC2 will ask you if it has to be
+   created.
+
+   UC D arch *.bak
+      Delete all *.bak files from the archive.
+
+   UC D arch *.* !*.dbf !*.ntx
+      Delete all files except *.dbf and *.ntx files from the archive.
+
+
+4.D OTHER COMMANDS AND OPTIONS
+==============================
+
+Examples:
+
+   UC O5 arch
+      SuperOptimize arch.uc2 5 times.
+
+   UC T arch
+      Thoroughly test arch.uc2, and if it turns out to be damaged,
+      prompt the user for reparation of the archive.
+
+      In case the archive is repaired, a new archive is created with the
+      name FIX_xxxx.UC2 (xxxx stands for the sequence number of existing
+      FIX files), the original arch.uc2 remains unchanged.
+
+   UC P arch
+      Makes arch.uc2 damage protected.
+
+   UC U arch
+      Remove damage protection from arch.uc2.
+
+   UC C arch.arj  or
+   UC C arch.zip  or
+   UC C arch.lzh  etc.
+      An archive made with another archiver will be converted to an UC2
+      archive. The extension (e.g. zip, arj) is optional; UC2 will read
+      'UC C arch' as 'UC C arch.*'.
+
+      Note: be sure the other archiver you need is in a directory named
+      in the PATH statement of your AUTOEXEC.BAT.
+
+   UC A one *.bat & A -S world *.bak & E -S exec *.exe & A world *.cmd
+      With '&' multiple commands can be given at once.
+
+      In this command all the .bat files from the current directory are
+      added to one.uc2, all the .bak files from the current directory
+      and all its subdirectories are added to world.uc2, all the .exe
+      files from the archive (including subdirectories) are extracted
+      from exec.uc2 and all the .cmd files from the current directory
+      are added to world.uc2.
+
+   For long commands we advise you to use '@'. (See paragraph F.)
+
+   UC R arch
+      With the editor configured in AIP-NL.INI you can view or edit the
+      comment file in the archive arch.
+
+
+4.E VERSION MANAGEMENT
+======================
+
+When you want to keep the former versions (revisions) of a file in the
+archive, you can use the -I option to activate 'incremental mode'.
+
+You can use the -B option, to activate 'basic mode', when you do not
+want to keep the older versions of a file in the archive.
+
+In the configuration screen (see also chapter 6) it is possible to
+change the default mode from basic mode to incremental mode or vice
+versa.
+
+In the next examples the default mode of UC2 is basic:
+
+   UC A -I -S a:\back c:\docs\*.*
+      Incrementally update an archive (a:\back.uc2)
+
+   UC E arch filename.doc
+      Extracts the most recent version of the file 'filename.doc' from
+      arch.uc2.
+
+   UC E arch filename.doc;n
+      Extracts the requested version of the file 'filename.doc'. 'n'
+      represents the number of the version.
+
+Some explanation about 'n':
+---------------------------
+   Different versions of the same file in the archive get a sequence
+   number.
+
+   The most recent version gets number 0. The oldest version gets the
+   highest number. Every time the same file is added to the archive in
+   incremental mode, to remain consistent, all versions get a new
+   number.
+
+   There is no practical limit to the number of versions of a file you
+   can keep in an archive.
+
+Now we will look at an archive arch.uc2 after completion of some
+operations:
+
+   UC A -I arch test.doc
+      The file test.doc is added to the archive arch.uc2. This is the
+      first operation on the archive, so it contains only test.doc.
+
+   UC V arch
+      The verbose list of arch.uc2 shows us:
+        TEST    DOC        1234      MAR-17-1993  12:24:12
+       (name    ext nr     length    date         time)
+
+After changing the file test.doc, we again add it to arch.uc2:
+
+   UC A -I arch test.doc
+      The second version of the same file is added to arch.uc2. The
+      archive now contains two files:
+
+   UC V arch
+      The verbose list of arch.uc2 shows us:
+        TEST    DOC;0      1245      MAR-17-1993  12:26:26
+        TEST    DOC;1      1234      MAR-17-1993  12:24:12
+       (name    ext nr     length    date         time)
+
+After adding some more versions of the file TEST.DOC, the verbose list
+gives:
+
+   UC V arch
+        TEST    DOC;0      1356      MAR-17-1993  14:02:00
+        TEST    DOC;1      1349      MAR-17-1993  13:50:56
+        TEST    DOC;2      1298      MAR-17-1993  13:28:32
+        TEST    DOC;3      1280      MAR-17-1993  13:15:42
+        TEST    DOC;4      1245      MAR-17-1993  12:26:26
+        TEST    DOC;5      1234      MAR-17-1993  12:24:12
+
+Now there are six different versions in the archive of the same file
+TEST.DOC.
+
+When you want to extract the most recent one, type the next command:
+
+   UC E arch test.doc    or
+   UC E arch test.doc;0
+      The most recent version of TEST.DOC is extracted from arch.uc2.
+
+When you want to see another version you have to include the version
+number in the command:
+
+   UC E arch test.doc;3
+      There are three more recent versions in the archive than the
+      version extracted.
+
+(Of course the archive is unchanged after extracting a file.)
+
+Deleting a version from the archive is possible with the next command:
+
+   UC D arch test.doc
+      The most recent version of the file is deleted from arch.uc2.
+
+The verbose list will give the next information:
+
+   UC V arch
+        TEST    DOC;0      1349      MAR-17-1993  13:50:56
+        TEST    DOC;1      1298      MAR-17-1993  13:28:32
+        TEST    DOC;2      1280      MAR-17-1993  13:15:42
+        TEST    DOC;3      1245      MAR-17-1993  12:26:26
+        TEST    DOC;4      1234      MAR-17-1993  12:24:12
+
+Also an older version of the file can be deleted:
+
+   UC D arch test.doc;2
+
+The verbose list will give the next information:
+
+   UC V arch
+        TEST    DOC;0      1349      MAR-17-1993  13:50:56
+        TEST    DOC;1      1298      MAR-17-1993  13:28:32
+        TEST    DOC;2      1245      MAR-17-1993  12:26:26
+        TEST    DOC;3      1234      MAR-17-1993  12:24:12
+
+When you want to remove all versions of TEST.DOC from the archive you
+type the following command:
+
+   UC D arch test.doc;*
+
+When you want to remove all the older versions from the archive but keep
+the most recent one, you type:
+
+   UC D arch test.doc;* !test.doc     or
+   UC D arch test.doc;* !test.doc;0
+
+When the archive contains more files with different versions and you
+only want to keep the most recent version of these files, you type:
+
+   UC D arch *.*;* !*.*       or
+   UC D arch *.*;* !*.*;0
+
+As you can see in the examples, for the most recent version of a file,
+you can just type the file name without number, or the filename with
+';0'.
+
+Dynamic Time Travel (!DTT=YYYY-MM-DD/HH:MM:SS)
+----------------------------------------------
+   Time travel simulates the status of the archive, as it was at the
+   specified moment in the past.
+
+   This feature is included for compatibility with older versions of
+   UC2. Our new version manager (chapter 8 paragraph A) is a much better
+   choice to manage collections of files.
+
+   Time travel is only available for the extract (E) and the list (L and
+   V) commands. Its syntax is !DTT=YYYY-MM-DD/HH:MM:SS with YYYY being
+   the year (e.g. 1993), MM being the month, DD being the day, HH being
+   the hour (e.g. 21), MM minute, SS second. The year MUST be 4 digits,
+   all other numbers MUST be two digits.
+
+   You can supply only the left part of the arguments, UC2 will fill in
+   the rest:
+
+   e.g. !DTT=1993-03-17 will be expanded to 1993-03-17/00:00:00
+        !DTT=1991 will be expanded to 1991-01-01/00:00:00
+        !DTT=1992-01-22/18 will be expanded to 1992-01-22/18:00:00
+
+   Please note the -/:'s are optional, e.g. !DTT=19930317 can be used
+   instead of !DTT=1993-03-17. (Actually UC2 ignores the -/:'s
+   completely, their only purpose is to make the entered command more
+   readable.)
+
+   For the next two examples, assume the archive contains:
+
+      TEST    DOC;0      1349      MAR-17-1993  13:50:56
+      TEST    DOC;1      1298      MAR-17-1993  13:28:32
+      TEST    DOC;2      1280      MAR-17-1993  13:15:42
+      TEST    DOC;3      1245      MAR-17-1993  12:26:26
+      TEST    DOC;4      1234      MAR-17-1993  12:24:12
+
+   An example:
+      UC E !DTT=1993-03-17/13:30 arch test.doc
+
+   In this case a 'time travel' to 17 march 1993, 13:30 is executed.
+   Since at that moment the 13:28:32 version of test.doc was the one
+   last added to the archive, THAT version will be extracted.
+
+   Another example:
+      UC V !DTT=1993-03-17/13:20 arch
+
+        TEST    DOC;0      1280      MAR-17-1993  13:15:42
+        TEST    DOC;1      1245      MAR-17-1993  12:26:26
+        TEST    DOC;2      1234      MAR-17-1993  12:24:12
+
+   Note two versions have 'disappeared' and all other versions have got
+   a new index.
+
+   Please note Dynamic Time Travel NEVER alters the contents of an
+   archive, it only creates a different viewpoint.
+
+Important notes
+---------------
+   Especially where an archive has been updated many times and contains
+   many versions of specific files, optimize can significantly reduce
+   the size of an archive.
+
+   A just optimized archive, which contains multiple versions of files,
+   will often be only a little bit larger than an archive which contains
+   only the last version of all files.
+
+   Move mode only moves the specified versions. If 6 versions of test.c
+   are present in arch.uc2, then 'UC E -M arch test.c' will move
+   test.c;0 and all other versions (5) will remain in the archive.
+
+
+4.F FEATURES AND AUTOMATICS
+===========================
+
+Many advanced features are automatic in UC2. The following topics are
+covered in this paragraph:
+
+   - Smart skipping
+
+   - Error handling
+   - Control-break handling
+   - Ensure mode
+   - Crash management
+
+   - Auto-Conversion of other archives
+   - Virus scan during conversion
+
+   - Scripts
+   - Wildcards in archives specification
+
+   - OS/2 2.x extended attributes
+   - Multimedia banners
+
+Smart skipping
+--------------
+   Smart skipping means: do not do unnecessary things. While updating an
+   archive, files can be changed or not. Unchanged files will be
+   skipped, when smart skipping is on. This makes updating faster. UC2
+   compares name, size, time and date to determine if a file can be
+   skipped. In the configuration, smart skipping can be on or off.
+
+Error handling
+--------------
+   UC2 allows you not only to notice the error but also to do whatever
+   is needed (including going to DOS!) to solve the problem. UC2 does
+   not just stop, undoing all the work it has already done for you. E.g.
+   when a floppy turns out to be write protected, you can remove the
+   write protection and continue.
+
+Control-break handling
+----------------------
+   When you interrupt UC2, you do not just stop it, canceling all
+   valuable work you have done. Instead, you are given the opportunity
+   to go to DOS to do whatever you like (after which UC2 can continue
+   where it left off). You can of course also abort the program.
+
+   If you press control-break while UC2 is adding files to an archive,
+   you get an extra option which allows you to skip all pending
+   additions. All additions already performed, remain in the archive.
+   (Since smart-skipping will automatically skip files which are already
+   in the archive (when unchanged), you can continue the interrupted
+   command later.)
+
+Ensure mode
+-----------
+   For those who need absolute reliability, e.g. mission critical data
+   compression tasks, UC2 has an ENSURE operation mode. In this mode UC2
+   handles all updates to an archive as transactions. A transaction can
+   only be confirmed if PROOF has been gathered that the transaction was
+   completed 100% without problems. When a problem has occurred,
+   irrespective of the cause, e.g. hardware failures, software
+   conflicts, they will never get by unnoticed and the operation can be
+   reversed.
+
+Crash management
+----------------
+   When adding files to an archive in basic mode, crashes can do no
+   harm, because UC2 works with a temporary file. Only when everything
+   has been completed successfully will the temporary file, which
+   contains the new archive, be renamed to the archive file. To prevent
+   data loss while adding files to an archive in incremental mode, UC2
+   creates a new file with recovery information of the archive. This
+   file is called arch.UR2 (UltraRecover).
+
+   When everything goes right, this .UR2 file will be deleted
+   automatically and you will never notice it ever existed, but when
+   your computer crashes during adding files to the archive in
+   incremental mode, this .UR2 file will mostly still exist after the
+   crash.
+
+   If you try to do anything with the archive now, you will get a
+   message to repair the archive with 'UC T'. After the repair, the
+   files arch.UC2 and arch.UR2 will still exist. The repaired archive is
+   stored in the file named FIX_xxxx.UC2 (xxxx stands for the sequence
+   number of existing FIX files). Before you can use the archive again,
+   you have to rename FIX_xxxx.UC2 to arch.UC2 and delete the file
+   arch.UR2. Now the situation is similar to the one before the crash.
+
+Auto-Conversion of other archives
+---------------------------------
+   Archives made by other archivers can be converted by UC2. The
+   automatic conversion can be set ON in the configuration (see also
+   chapter 6 paragraph A option D).
+
+   Adding a file to the archive or any other operation on it, starts
+   automatically with the conversion of it. It is important to know
+   that, when using an archive made with another archiver, you have to
+   type the archive name with the extension (e.g. arch.zip, arch.arj).
+
+   Note: be sure the other archiver you need is in a directory named in
+   the PATH of your AUTOEXEC.BAT.
+
+Virus scan during conversion
+----------------------------
+   The archive to be converted can be optionally scanned for viruses. In
+   the configuration this virus scanning can be switched ON or OFF. You
+   can change AIP-NL.INI and use different virus scanners (see chapter 6
+   paragraph D).
+
+Scripts
+-------
+   A 'script' can contain a large list of files (e.g. to be compressed).
+   A script can also be used as a substitute for multiple (complex)
+   commands. Scripts can be nested, to allow the construction of
+   'building blocks'. Scripts can be extremely long (multi-megabyte).
+
+   There are several ways to define a script. If you have entered
+   '@exam' UC2 will look for:
+      (1) an environment variable called EXAM_USC
+      (2) the file 'exam.usc' (current or PATH directory)
+      (3) the file 'exam' (current or PATH directory)
+
+   UC @exam
+      The contents of 'exam': A arch *.bat & V arch
+      The .bat files are added to the archive arch.uc2 followed by a
+      verbose list of arch.uc2.
+
+      In this example multiple commands are concatenated by '&'.
+
+   UC A arch @names
+      The contents of 'names': *.bat *.cpp *.doc
+      The .bat, .cpp and .doc files are added to the archive arch.uc2.
+      In this example the files to be added are substituted by 'names'.
+
+   UC @toback *.cpp
+      The contents of 'toback': A c:\back
+      All .cpp files are added to c:\back.uc2.
+
+   UC @a arch *.cpp
+      The contents of 'a': A -TST -SMSKIP=OFF -F
+      This is an example of a 'personalized' add command.
+
+   !@ works like @, but puts '!' before all entries. It can be used to
+   exclude a collection of files.
+
+   UC A arch *.* !@names
+      The contents of 'names': *.bat *.cpp *.doc
+      All files except .bat, .cpp and .doc files are added to the
+      archive arch.uc2. In this example the files to be excluded are
+      substituted by 'names'.
+
+Wildcards in archives specification
+-----------------------------------
+   Instead of adding a file or a group of files to different archives in
+   different commands, it is possible to work with wildcards.
+
+   UC V *
+      Gives the verbose list of all the archives at once.
+
+   UC A * filename
+      The file 'filename' will be added to all the UC2 archives in the
+      current directory. Using a wildcard is the only way to access more
+      archives in one command. Only one archive description is allowed
+      in a command.
+
+   UC A * *.cpp *.bas
+      Of course more wildcards may be used for the files to be added.
+      All .cpp and .bas files will be added to all archives in the
+      current directory.
+
+   The commands P, U, T, O and C accept multiple archive specifications.
+   Here the archive specification cannot be confused with the files
+   specification because there is none. Also for all these commands the
+   -S option can be used to include archives in subdirectories.
+
+   UC C *.zip *.arj *.lzh
+      All zip, arj and lzh archives will be converted.
+
+   UC T -S C:\*
+      All archives on drive C: (including those in subdirectories)
+      will be tested.
+
+OS/2 2.x extended attributes
+----------------------------
+   When the option 'Store OS/2 2.x extended attributes' (see chapter 6
+   paragraph A) is active, UC2 gets the capability to store OS/2
+   extended attributes. For example if you attach an icon to a file,
+   compress it and extract it somewhere else, the file will still have
+   its icon. Of course this is only possible on an OS/2 system. When you
+   extract a file from an archive, the extended attributes will be the
+   same as when you put the file in the archive. An archive optimized on
+   a machine without extended attribute support (e.g. a plain DOS
+   machine) will still contain extended attributes.
+
+Multimedia banners
+------------------
+   Music, graphics and text banners can be added to an archive. (See
+   chapter 5 paragraph B.)
+
+
+4.Z SUMMARY
+===========
+
+SYNTAX: UC command [option(s)] archive-name [files]
+
+COMMANDS: A D E   add / delete / extract
+            L V   list / verbose list
+            P U   damage protect / unprotect
+              T   test (& repair)
+              C   convert archive to .UC2 archive
+              O   optimize (especially with many versions of files)
+              R   revise archive comment
+
+OPTIONS: (directly after command, or preceded by '-' or '/')
+       TF TN TT   fast / normal / tight-multimedia
+              S   include subdirectories
+              M   move mode
+              F   force mode (never ask, always yes)
+            I B   incremental mode (keep versions) / basic mode
+
+;n  specify version      !DTT=YYYY-MM-DD/HH:MM:SS  dynamic time travel
+!exclude files   #destination   ##+sourcepath   & concat   @script
+
+
+5. UC2 BBS COMMANDS (special features for sysops)
+=================================================
+
+This chapter contains the following paragraphs:
+
+        - A. Archive conversion (with virus checking)
+        - B. Multimedia banners
+        - C. UltraStealth (run UC2 with only 32k free memory)
+        - Z. Summary
+
+When you use the AIPNL manual viewer you can jump to a chapter or a
+paragraph by pressing the corresponding digit(s) or letter.
+
+
+5.A ARCHIVE CONVERSION (with virus checking)
+============================================
+
+Conversion of archives to UC2 archives can be done fully automatic.
+Perfect for the event list of your BBS. Conversion includes the optional
+calling of one or more virus checking programs. Any virus checking
+software can be used. You can define any extraction, checking or
+processing software you would like, to be called by UC2.
+
+The convert command
+-------------------
+   Command: UC C archives
+
+      C is the convert command. ARJ/ZIP/LZH etc. archives are converted
+      to UC2 archives.
+
+   Example: UC C *.ARJ *.ZIP *.ARC
+
+      All ARJ, ZIP and ARC archives in the current directory are
+      converted to UC2 archives.
+
+   Command: UC C -S archives
+
+      Include archives in subdirectories as well.
+
+   Example: UC C -S C:\*.ARJ C:\*.ZIP C:\*.ARC
+
+      All ARJ, ZIP and ARC archives on the C: drive (including all its
+      subdirectories) are converted to UC2 archives.
+
+   VOLUME LABELS, BANNERS, MULTIPLE VERSIONS OF A FILE AND COMMENTS ARE
+   NOT CONVERTED.
+
+   The original archive will be NEVER be deleted by UC2. This is
+   different from previous releases of UC2.
+
+Customizing archive conversion
+------------------------------
+   To convert archives to UC2 archives the original archiver's software
+   will be used. AIP-NL.INI determines which archivers will be used.
+
+   UC2 uses advanced swapping techniques to swap UC2 out of memory while
+   execution of the other archiver takes place. This assures the
+   archivers have enough memory available.
+
+   Currently supported formats include: ARC, ARJ, LZH, PAK, ZIP and ZOO.
+
+   UC2 conversion also supports the 'UCN' format. This format is exactly
+   the same as UC2, but it denotes 'N'ew files. It can be used to mark
+   files new to your BBS, allowing 'conversion' to UC2 archives. This is
+   useful since conversion can also include virus scanning etc.
+
+   *** WARNING *** Please note than conversion from UCN to UC2 will only
+   keep the newest versions of all contained files, older versions will
+   be removed.
+
+Virus checking during conversion
+--------------------------------
+   When you activate virus checking (see chapter 6 paragraph A item E)
+   during conversion, the virus checkers defined in AIP-NL.INI are used.
+   If you want another virus scanner to be used, or use more scanners in
+   the check, you are free to change AIP-NL.INI. Just be sure the virus
+   scanner called is available on your system.
+   (See chapter 6 paragraph D.)
+
+Automatic changes during conversion
+-----------------------------------
+   The AIPNL [VARIOUS] AFTER-CONVERT command can be used to make
+   automatic changes to archives contents during their conversion. Such
+   a change could include the addition of multimedia banners.
+   (See chapter 6 paragraph D.)
+
+
+5.B MULTIMEDIA BANNERS
+======================
+
+UC2 gives you the opportunity to add (multimedia) banners to archives.
+Five file types are supported:
+
+   U$~BAN.GIF   GIF image
+   U$~BAN.JPG   JPEG image
+   U$~BAN.MOD   MOD music files (playable with e.g. Modplay)
+   U$~BAN.TXT   Standard text
+   U$~BAN.ASK   Special file (determines if UC2 asks 'Continue?' after
+                showing/playing the banners. The content of this file is
+                of no importance.)
+
+If you want to add a banner to an archive, you will have to specify the
+banner file explicitly. No wild cards can be used, e.g. 'UC A arch
+U$~BAN.*' will not work.
+
+Example: UC A arch U$~BAN.TXT
+
+   A text banner is added to the archive arch.
+
+You can add multiple banner files (e.g. U$~BAN.GIF, U$~BAN.MOD and
+U$~BAN.ASK) to a single archive.
+
+The AIP-NL.INI file contains the default software to show or play
+banners. See chapter 6 paragraph D for more information on this file.
+
+The banners are shown/played when files are extracted from the archive.
+
+Under 4DOS ~ is sometimes used as 'compound character'. To resolve
+conflicts, you can change this with the 4DOS 'SETDOS /C^' command.
+
+
+5.C ULTRA-STEALTH (run uc with only 32k free memory)
+====================================================
+
+With help of UltraStealth, you can run UC2 with only 32 kilobytes of
+free memory available.
+
+Suppose you have a huge program (e.g. a word processor or a mailer).
+When this huge program has the ability of starting another DOS program
+only a small amount of memory will be free. UltraStealth allows you to
+have this huge program call UC2. To achieve this you need to do two
+things:
+
+(1) the (huge) program has to be started with US (UltraStealth)
+---------------------------------------------------------------
+   Just put US in front of the normal command you use to start the
+   (huge) program. So if the normal command is:
+
+      bigprog /a /q
+
+   You now have to use:
+
+      US bigprog /a /q
+
+(2) use UUC instead of UC
+-------------------------
+   Instead of using UC from your (huge) program, you should call UUC.
+   UUC behaves exactly like UC. The only difference is that US and UUC
+   together solve the memory problem the (huge) program causes.
+
+It is also possible to start US with no command behind it. In this case
+the DOS command processor is started and UUC can be used anytime. The
+command processor (and US) can be stopped with the EXIT command.
+
+When UUC is called, while US is not active, UUC starts UC2 anyway. In
+this case there is no difference in the amount of memory needed for UUC
+and for UC2.
+
+US and UUC together use about 32k of free memory, most of this will be
+claimed by US.
+
+Due to the complex nature of UltraStealth, it is recommended you
+test-drive UltraStealth thoroughly in your specific environment before
+you start using it.
+
+
+5.Z SUMMARY
+===========
+
+UC C *.ARJ *.ZIP *.LZH
+   Convert archives to UC2 archives.
+
+US <command>
+   Executes <command> and installs UltraStealth (needed to use UUC)
+
+UUC ...
+   Exactly the same as UC ..., but much less memory is needed. Will only
+   work with a small amount of memory if UltraStealth is active.
+
+
+6. UC2 CONFIGURATION
+====================
+
+When UC2 is started without parameters there is the option to configure
+UC2 (by pressing the 'C' key).
+
+General options are:
+
+   A -> Default compression method
+   B -> Default operation
+   C -> Reliability level
+   D -> Automatic archive conversion
+   E -> Virus scan during conversion
+   F -> Smart skipping
+   G -> Amount of output/information
+   H -> Show (multimedia) banners
+   I -> Store OS/2 2.x extended attributes
+   J -> Store system/hidden files
+
+System options are:
+
+   M -> Video mode
+   N -> Dynamic program swapping
+   O -> Use EMS
+   P -> Use XMS
+   Q -> Use 386/486/Pentium features
+   R -> Advanced networking
+   S -> Location for temporary files
+   U -> Error logfile
+
+Quick setup options are:
+
+   1 -> default
+   2 -> max speed
+   3 -> max compress
+   4 -> max safe
+   5 -> UNDO
+
+The configuration you choose here will be your default configuration
+when using UC2. All options are stored in the AIP-NL.INI file. Some of
+the options in the configuration screen can also be temporary set on the
+command line. The command line options are also described in this
+chapter.
+
+This chapter contains the following paragraphs:
+
+        - A. General options
+        - B. System options
+        - C. Quick setup
+        - D. AIP-NL.INI
+        - E. Optimizing performance
+
+When you use the AIPNL manual viewer you can jump to a chapter or a
+paragraph by pressing the corresponding digit(s) or letter.
+
+
+6.A GENERAL OPTIONS
+===================
+
+A -> Default compression method
+-------------------------------
+   Equivalent command line options: -TN, -TT, -TST, -TF
+
+   The compression type can be NORMAL, TIGHT, S-TIGHT or FAST. When
+   installing UC2, the default compression type is normal.
+
+   In TT and in TST mode, UC2 will detect whether a file is a multimedia
+   file. Special (lossless) multimedia compression will then take place.
+
+B -> Default operation
+----------------------
+   Equivalent command line options: -I, -B
+
+   The add operation can be in BASIC MODE or INCREMENTAL MODE. In basic
+   mode files that already exist in the archive will be replaced by a
+   new version.
+
+   In incremental mode more versions of a file can be kept in the
+   archive. When an already existing file is added to the archive, the
+   newer version of the file will be added. This mode increases the
+   speed of the addition significantly, especially for slow disks and/or
+   large archives.
+
+   Another advantage of the incremental mode is the possibility of
+   keeping multiple versions of a file in the archive. If, for example,
+   you want to see what is changed in the file, just compare it to a
+   previous version.
+
+C -> Reliability level
+----------------------
+   Equivalent command line options: !RELIA=DETECT, !RELIA=PROTECT,
+                                    !RELIA=ENSURE, !RELIA=CHECK
+
+   The reliability level can be DETECT, PROTECT or ENSURE.
+
+   Detect means errors will be reported, but no action will be taken.
+
+   Protect means errors will be avoided, by using damage protection.
+
+   Ensure mode means UC2 will make as sure as technically possible,
+   everything will go perfect. First the existing archive will be
+   tested. Then the command given will be executed. The third step
+   includes a complete test on the new archive. When something went
+   wrong, a 'rollback' will take place, and the original archive will be
+   restored. To ensure correct storage on your hard disk, diskcache
+   flush commands will be called at appropriate moments during execution
+   of your command. (See paragraph D.)
+
+   Check mode means the thorough testing from ensure mode will be used
+   without making all archives damage protected.
+
+D -> Automatic archive conversion
+---------------------------------
+   Equivalent command line options: !ARCON=ON, !ARCON=OFF
+
+   Automatic conversion of other archiver's archives can be ON or OFF.
+   When automatic conversion is on, any operation can be done on other
+   archiver's archives. UC2 will automatically start rebuilding the
+   archive to an UC2 archive. After rebuilding, the command will be
+   executed.
+
+   When automatic conversion is off, UC2 will not automatically convert
+   archives, but prompt the user, asking permission to convert the
+   archive.
+
+E -> Virus scan during conversion
+---------------------------------
+   Equivalent command line options: !VSCAN=ON, !VSCAN=OFF
+
+   Virus scan can be ON or OFF during the conversion of another
+   archiver's archive (also see paragraph D).
+
+F -> Smart skipping
+-------------------
+   Equivalent command line options: !SMSKIP=ON, !SMSKIP=OFF
+
+   Smart skipping can be ON or OFF.
+
+   When smart skipping is on, unchanged files (already in the archive)
+   are skipped during addition. This makes updating much faster.
+
+G -> Amount of output/information
+---------------------------------
+   The amount of output/information can be MINIMAL, VERBOSE or NORMAL.
+
+   UC2 shows all kinds of information while it is executing your
+   command. Minimal information mode only shows the filenames being
+   processed, no progress indicators are given. Verbose information mode
+   shows in great detail what UC2 is doing. For instance the file name
+   in process is followed by blocks indicating progress. Normal
+   information mode shows what UC2 is doing, but does not give undue
+   attention to details which are not directly related to the given
+   command.
+
+   In some environments (e.g. Chinese/Japanese/Russian) the behavior of
+   UC2 to print 'high ASCII' characters is unwanted. In those cases you
+   can use the 'SET UC2_NO_HIGH_ASCII=ON' environment setting to disable
+   high ASCII in UC2 output. Please note UC2 already uses an ISO 9241
+   compliant subset of IBM high ASCII to avoid conflicts with e.g. IBM
+   OS/2 2.x XGA systems.
+
+H -> Show (multimedia) banners
+------------------------------
+   Equivalent command line options: !BAN=ON, !BAN=OFF, !BAN=ASK
+
+   You can choose if the banners added to the archives are shown/played
+   automatically (ON), only when you agree (ASK) or never (OFF).
+
+I -> Store OS/2 2.x extended attributes
+---------------------------------------
+   Equivalent command line options: !SOS2EA=ON, !SOS2EA=OFF
+
+   By putting this option ON, OS/2 EAs will be stored when UC2 finds any
+   during compression, when this option is OFF UC2 will not store OS/2
+   2.x EAs. OS/2 2.x extended attributes (such as icons, WPS long icon
+   names, WordPerfect 5.2 for OS/2 summary information, etc.) will be
+   retained in an archive when the option is ON. Please note that OS/2
+   2.x EAs will ALWAYS be extracted, when present in an archive.
+   Extended attributes are preserved by the optimize command, even if
+   this is performed on a machine which does not run OS/2.
+
+J -> Store system/hidden files
+------------------------------
+   Equivalent command line options: !SYSHID=ON, !SYSHID=OFF,
+                                    !SYSHID=ASK
+
+   You can choose if you want 'system' and 'hidden' files to be added
+   ON, OFF or if you want UC2 to ASK you how to deal with them.
+
+
+6.B SYSTEM OPTIONS
+==================
+
+M -> Video mode
+---------------
+   If your card is not compatible with MDA, HERCULES, CGA, EGA, VGA,
+   SVGA, XGA, etc. (very unlikely but possible for some older computers)
+   choose BIOS mode. If you have a monochrome monitor (or laptops etc.)
+   choose MONO instead of COLOR. Please note that if UC2 detects
+   DesqView (which prefers BIOS video on 286 computers) it will use BIOS
+   video, even if UC2 is not configured to use BIOS video.
+
+N -> Dynamic program swapping
+-----------------------------
+   Dynamic program swapping can be ON (in which case UC2 will be swapped
+   to EMS or disk if it invokes DOS) or OFF.
+
+O -> Use EMS
+------------
+   In general '4.0+ ONLY' is the best option. Most modern EMS drivers
+   behave in a reliable way. Some older versions can cause unwanted
+   conflicts and this mode will not use those older versions. Switch EMS
+   OFF if your EMS (emulator) is not compatible with the
+   Lotus/Intel/Microsoft specifications. Switch EMS to 'ANY VERSION' if
+   you have an EMS driver lower than 4.0, which you verified to work
+   correctly with UC2. Compressing and decompressing a large collection
+   of files is a good way to verify this.
+
+   Default, UC2 allocates all available EMS. By setting the environment
+   variable 'SET UC2_MAX_EMS=xxx', you can specify in kilobytes how much
+   EMS UC2 should use.
+
+P -> Use XMS
+------------
+   Switch XMS OFF if your XMS (emulator) is not compatible with the
+   Lotus/Intel/Microsoft specifications. This is not likely since UC2
+   uses XMS very conservatively.
+
+   Default, UC2 allocates all available XMS. By setting the environment
+   variable 'SET UC2_MAX_XMS=xxx', you can specify in kilobytes how much
+   XMS UC2 should use.
+
+   Default, UC2 allocates all available UMB (upper memory blocks) from
+   the UMA (upper memory area). By setting the environment variable 'SET
+   UC2_MAX_UMB=xxx', you can specify in kilobytes how much UMB UC2
+   should use.
+
+   It is also possible for UC2 to use "raw" extended memory (without a
+   XMS driver). With the environment variable 'SET UC2_RAW_EXT=xxx' you
+   can specify in kilobytes how much extended memory UC2 should use.
+   Please note this option is VERY dangerous. We strongly advise you to
+   use a XMS driver (like HIMEM.SYS) instead.
+
+Q -> Use 386/486/Pentium features
+---------------------------------
+   Switch off use of 386/486/Pentium options. AIPNL is not aware of any
+   situation where this feature had to be disabled. UC2 does not suffer
+   from Pentium processors with the infamous 'FDIV bug'.
+
+R -> Advanced networking
+------------------------
+   Equivalent command line options: !NET=ON, !NET=OFF, !NET=AUTO-SKIP
+
+   Network Support. If you have a version of DOS which does not support
+   DOS network calls (e.g. 2.0), or if you have a network which behaves
+   very differently from IBM, Lantastic, Microsoft, Novell or Vines
+   networks, you can set this option to OFF. Sharing archives is then no
+   longer possible.
+
+   When UC2 attempts to compress a locked file, it allows the user to
+   skip this file by hand. When auto-skip mode is active, locked files
+   will be skipped automatically. A warning is reported and logged if
+   files are skipped.
+
+S -> Location for temporary files
+---------------------------------
+   The location for temporary files can be configured. When everything
+   goes well you will never notice the temporary files. Please make sure
+   the directory configured exists on your disk.
+
+   You can override this setting with the environment variable UC2_TMP
+   e.g. 'SET UC2_TMP=F:\'.
+
+   The temporary files location will also be used by the virtual memory
+   manager. Default, UC2 will use up to 8192 kilobytes of virtual
+   memory. This amount can be changed with 'SET UC2_VMEM=xxx' to a value
+   from 4096 to 49192 (kilobytes). UC2 needs 1 byte of base memory for
+   each kilobyte of virtual memory.
+
+U -> Error logfile
+------------------
+   The error logfile will register all errors and warnings that appear
+   while executing UC2. You can also disable error logging by specifying
+   * as logfile.
+
+
+6.C QUICK SETUP
+===============
+
+1 -> default
+------------
+   The default setup changes the following settings:
+
+       GENERAL OPTIONS:
+
+           default compression mode        into    normal
+           default operation               into    basic mode
+           reliability level               into    detect
+           automatic archive conversion    into    off
+           virus scan during conversion    into    off
+           amount of output/information    into    normal
+           show (multimedia) banners       into    ask
+           store OS/2 2.x ext. attributes  into    off
+           store system/hidden files       into    ask
+
+       SYSTEM OPTIONS:
+
+           video mode                      into    color
+           dynamic program swapping        into    on
+           use EMS                         into    4.0 and higher only
+           use XMS                         into    on
+           use 386/486/Pentium features    into    on
+           advanced networking             into    on
+           all locations will be set to the same location as UC.EXE
+
+2 -> max speed
+--------------
+   The max speed setup changes the following settings:
+
+       GENERAL OPTIONS:
+
+           default compression             into    fast
+           default operation               into    incremental
+           reliability level               into    detect
+           automatic archive conversion    into    on
+           virus scan during conversion    into    off
+           amount of output/information    into    minimal
+           show (multimedia) banners       into    off
+
+       SYSTEM OPTIONS:
+
+           video mode   No matter whether the video mode is color or
+                        mono, this configuration will turn off BIOS
+                        usage
+           use EMS                         into    4.0 and higher only
+           use XMS                         into    on
+           use 386/486/Pentium features    into    on
+           advanced networking             into    auto-skip
+
+3 -> max compress
+-----------------
+   The max compress setup changes the following settings:
+
+       GENERAL OPTIONS:
+
+           default compression             into    s-tight
+           default operation               into    basic mode
+           reliability level               into    detect
+           automatic archive conversion    into    on
+
+4 -> max safety
+---------------
+   The max safe setup changes the following settings:
+
+       GENERAL OPTIONS:
+
+           default operation               into    incremental mode
+           reliability level               into    ensure
+           automatic archive conversion    into    off
+           virus scan during conversion    into    on
+           smart skipping                  into    off
+           show (multimedia) banners       into    off
+
+       SYSTEM OPTIONS:
+
+           video mode   No matter whether the video mode is color or
+                        mono, this configuration will turn on BIOS usage
+           use EMS                         into    off
+           use XMS                         into    off
+           use 386/486/Pentium features    into    off
+           only if advanced networking was auto-detect:
+                                           into    on
+
+5 -> UNDO
+---------
+   The configuration will be reset to the state it was before you
+   started the configuration screen.
+
+
+6.D AIP-NL.INI
+==============
+
+All UC2 settings are kept in the AIP-NL.INI file.
+
+Please note the AIP-NL.INI file contains settings for ALL AIPNL
+products.
+
+All AIPNL products use the PATH environment variable (usually set in
+AUTOEXEC.BAT) to locate AIP-NL.INI, thus allowing multiple people to use
+the same executable file, while they each have their own configuration
+file.
+
+AIP-NL.INI consist of sections each containing a number of settings.
+
+EXPANDERS
+---------
+   This section specifies how archives should be extracted for use by
+   the convert command.
+
+   For example "ARC = ARC xzw % *.*/h/a, PKXARC % *.*, PAK e %"
+   specifies that files with the ARC extension should be extracted by
+   ARC, PKXARC or PAK. If more than one of those is available, the first
+   one in the list will be used.
+
+UC2-GENERAL-OPTIONS, UC2-SYSTEM-OPTIONS
+---------------------------------------
+   These sections contain all settings from the configuration menu.
+
+VARIOUS
+-------
+   TEMPORARY-FILES specifies which directory UC2 uses for temporary
+   files.
+
+   PRINT-FILE specifies how $PRF prints a file.
+
+   FLUSH-CACHE specifies how ensure mode flushes the disk cache.
+
+   VIRUS-SCAN specifies how convert can check for viruses.
+
+   AFTER-CONVERT specifies a command to be executed during archive
+   conversion.
+
+VIEWERS, EDITORS
+----------------
+   These sections are mainly used by Visual UltraCompressor. UC2 does
+   use them for the R (revise comment) command and for showing
+   multimedia banners.
+
+
+6.E OPTIMIZING PERFORMANCE
+==========================
+
+In general UC2 will automatically utilize available resources (RAM,
+microprocessor) in an optimal fashion. Please note UC2 does not stretch
+beyond the limits of your system to achieve this. It only uses
+officially documented methods to access XMS, EMS, DOS, Windows, OS/2,
+etc. In many cases the methods UC2 uses have been double checked with
+IBM, Microsoft, QuarterDeck, Novell and others. And of course everything
+has been extensively tested on many different environments.
+
+There are some tips to allow UC2 to work as fast as possible:
+
+   - make as much base, EMS and XMS memory available as you can spare
+
+   - (but) on systems supporting virtual memory (e.g. Windows NT and
+     OS/2) you should not make TOO much memory available for UC2 (to
+     prevent swapping)
+
+   - select maximal speed in the configuration menu
+
+   - or (e.g. if you prefer better compression)
+      - enable advanced networking (when applicable)
+      - enable EMS/XMS usage
+      - enable 386/486/Pentium usage
+      - set UC2 information to minimal
+
+   - redirect the output of UC2 to the NUL device (e.g. UC X test > NUL)
+
+   - install sufficient BUFFERS in your CONFIG.SYS and/or install a disk
+     caching utility
+
+
+7. UC2 TECHNICAL DETAILS (UC2 internals, design, benchmarks)
+============================================================
+
+Although many aspects of UC2 look simple and straightforward, UC2 is a
+very advanced program.
+
+This chapter contains the following paragraphs:
+
+        - A. Inside UC2
+        - B. Compression technology
+        - C. Damage protection technology
+        - D. Benchmarking
+
+When you use the AIPNL manual viewer you can jump to a chapter or a
+paragraph by pressing the corresponding digit(s) or letter.
+
+
+7.A INSIDE UC2
+==============
+
+Here a rough overview of the internals of UC2 is given. It can give
+those who are interested more insight into what is going on INSIDE
+UltraCompressor.
+
+If you want more detailed technical information (e.g. for making add-on
+tools) you can always contact us. Please note however we do not intend
+to supply the source code of UC2 to third parties. Sample add-on tools
+(including their source code) are available on request.
+
+UC2 is programmed in C++ and assembly language (for the time critical
+sections). It is devised in a number of modules which are briefly
+described in this section.
+
+
+Overview
+--------
+                        GENERAL CONTROL
+                           main
+                           config
+                           command interpreter
+                           manager
+                           archive I/O
+
+
+   SYSTEM SERVICES                             COMPRESSION SERVICES
+      video                                       dictionary manager
+      low level I/O                               ultra engine
+      memory manager
+      virtual memory manager
+                                               RELIABILITY SERVICES
+                                                  error handler
+   OTHER                                          damage protection
+      lister                                      guard
+      viewer                                      test
+
+
+General control
+---------------
+   MAIN
+      The main module calls all initialization routines.
+
+   CONFIG
+      This module handles the interactive configuration screen. This
+      module also uses and maintains AIP-NL.INI.
+
+   COMMAND INTERPRETER
+      The command line and script files are interpreted in this module.
+
+   MANAGER
+      Finds out what should happen (e.g. ask the command interpreter,
+      scan the disk and the archive), and makes it happen (call the data
+      compressor, etc.). This module is the most complex module of UC2,
+      but it delegates a lot of hard work to other modules.
+
+   ARCHIVE I/O
+      Here the archive file format is managed. Conversion between
+      external (compressed flat file) and internal (object database)
+      formats, as well as all kinds of integrity checks are performed.
+
+System services
+---------------
+   VIDEO
+      The keyboard, screen and output file (in case of redirection) are
+      managed here.
+
+   LOW LEVEL I/O
+      Here low level file specifics and networking are handled. Also
+      this module takes care of file caching, an essential issue in
+      making UC2 perform fast on (floppy) disk and network access.
+
+   MEMORY MANAGER (MM)
+      This module manages base memory, XMS and EMS. The MM decides which
+      components of the program can get memory, and how much memory they
+      can get, to optimize overall performance.
+
+   VIRTUAL MEMORY MANAGER (VMM)
+      This module manages the 'persistent object database' containing
+      the central directory of an archive and numerous links needed to
+      make processing as efficient as possible. No matter the amount of
+      data in the VMM, it can always work (fast) with only a small
+      amount of memory. VMM uses the memory manager to optimize its
+      performance wherever possible. The VMM also supplies pipeline
+      services for decoupling translation (archive I/O) and compression
+      logic.
+
+Compression services
+--------------------
+   DICTIONARY MANAGER
+      This component makes dictionaries of collections of files. These
+      dictionaries allow UC2 to use similarities between different files
+      to compress all files even further. The analyzing phase of UC2
+      refers to the creation of dictionaries based on found files. The
+      optimizing phase (which is different from the optimize command)
+      refers to the compression of the dictionaries. One special
+      dictionary (the 'master') is built into the compressor. This
+      dictionary is used to improve compression of the other
+      dictionaries. The master contains information about the general
+      structure of common file types such as: documents, spreadsheets,
+      databases, sources, etc. Private Compression Profiles (8.F) allow
+      you to replace the master with you own dictionary.
+
+   ULTRA ENGINE
+      The bare high speed compressor/decompressor. Based on a dictionary
+      the redundancy of a stream of data is analyzed and compressed.
+
+Reliability services
+--------------------
+   ERROR HANDLER
+      The error handler traps DOS system errors and handles them in a
+      neat and consistent way. It often allows the user to go to DOS,
+      solve the problem, leave DOS and continue where UC2 has stopped.
+      The error handler makes it impossible for the user to specify
+      'ignore', (an unfortunate option DOS offers if something goes
+      wrong).
+
+   DAMAGE PROTECTION
+      This module handles damage protection, damage detection and damage
+      recovery.
+
+   GUARD
+      The guard continuously checks the internal integrity of UC2. It is
+      often able to prevent damage caused by e.g. software conflicts or
+      hardware problems.
+
+   TEST (only available in beta versions)
+      Tests and interrogates various components of UC2 during execution.
+
+Other
+-----
+   LISTER
+      Shows contents of archive in various formats.
+
+   VIEWER
+      Online help viewer.
+
+
+7.B COMPRESSION TECHNOLOGY
+==========================
+
+UC2 significantly outperforms older data compression technology. For
+those interested in background information, we will discuss WHY and HOW
+UC2 is capable of doing this.
+
+AIPNL would like to specifically thank Drs. ing. D. Bezemer, Prof. dr.
+J. van Leeuwen, Dr. P. van Oostrum and Drs. ing. N.E. de Vries for their
+significant participation in the design of the UC2 compression engine.
+
+To begin, we will give a brief explanation of AR002. Most modern data
+compressors (ARJ, LHA, ZIP, ZOO) are derivatives of AR002. AR002 was
+designed by Haruhiko Okumura.
+
+AR002, a two phase compressor
+-----------------------------
+   DATA <-> (#1, LZ) <-> (grouping) <-> (#2, Huffman) <-> COMPRESSED
+
+   In phase #1 (the 'LempelZiv' phase) 'matches' are located. Matches
+   are strings of data which are equal. The string 'hello there hello'
+   can be converted to 'hello there '(-12,5) since 'hello' is matched.
+   In general ARJ, LHA, ZIP and ZOO can find matches with a maximum
+   distance of about 32700, and a maximum length of about 500 (rough
+   estimates).
+
+   In phase #2 (the 'Huffman' phase) the output of phase #1 is divided
+   into blocks. For each block statistics are analyzed (for example the
+   compressor notices the character 'e' is used much more often than
+   'q'). From this analysis an optimal translation table ('Huffman
+   tree') is generated (e.g. 'e'=001 'q'=100100010). The compressed
+   block then consists of the Huffman tree and the translated contents
+   of the block.
+
+   The storage of the Huffman tree, at the beginning of each block, is a
+   complicated matter which we will not cover here.
+
+   The number of different values phase #1 can generate is very large
+   (e.g. all 256 possible values of a byte, and about 32700 * 500
+   different match descriptions). Since it is very inefficient to make a
+   Huffman tree for all those possible values, the values are grouped,
+   and statistics are gathered for the groups instead of the single
+   values. LHA, ZOO, ARJ and ZIP all use different methods to realize
+   this grouping.
+
+UltraEngine
+-----------
+   The UltraEngine is also an AR002 derivative, but with some
+   fundamental enhancements. These enhancements can be divided into two
+   major features: the core engine and the dictionary manager.
+
+   The dictionary manager is the most significant enhancement. Ordinary
+   data compression engines always start completely 'blank', knowing
+   absolutely nothing about the data they are going to compress. The
+   dictionary manager collects generic information about a group of
+   files. For example a collection of *.DOC files will all have similar
+   characteristics, and share common text strings like 'paper'. The
+   dictionary manager collects this common 'knowledge' in a dictionary.
+   This dictionary is used to make the core engine much smarter when
+   similar files are compressed.
+
+   UC2 has a dictionary (the 'master') built into the executable as
+   well. This master contains information about common file formats. It
+   contains, for example, information about spreadsheets, databases,
+   word processors, programming languages and common words in: English,
+   French, German and Dutch. This built in information improves
+   compression.
+
+   The core engine also has some enhancements over the basic AR002
+   engine.
+
+   The match engine has been replaced by a completely new one. This new
+   engine is capable of finding matches at a distance of 64000 and with
+   a maximum length of 30000.
+
+   Also the way in which blocks of data are gathered for further Huffman
+   compression is completely different. Instead of looking at one block
+   at a time, the core engine attempts to 'learn' from previous blocks
+   so less information is needed to encode statistical information of a
+   block.
+
+Alternative
+-----------
+   A collection of files can also be compressed more, with the often
+   used TAR+COMPRESS 'trick'. First collect all files in a single large
+   file, and then compress this single large file at once. Especially
+   for large collections of small files, this improves compression
+   significantly. This approach can be reached with ARJ as well, by
+   first compressing with ARJ -m0, and compressing the resulting archive
+   again with ARJ -jm1.
+
+   It should be noted, however, that the UltraEngine approach works much
+   better. First of all, the compression is better. The dictionary
+   manager is much smarter than just a simple concatenation. This can be
+   verified by compressing the output of ARJ -m0 with UC -tt. Also the
+   core engine is fine tuned for optimal performance in cooperation with
+   dictionaries. The 64000 byte match length is one of the essential
+   enhancements.
+
+   Another reason why the UC2 approach is much better, is random access.
+   Try to delete a single file of a collection of 5000 C files when ARJ
+   -m0/-jm1 has been used, or try to add or extract SOME files. UC2 will
+   mostly do this much faster than ordinary archivers (this is a result
+   of better caching and a better file format), and remarkably faster
+   than a collect/compress (unit packing, solid) archiver.
+
+
+7.C DAMAGE PROTECTION TECHNOLOGY
+================================
+
+When an archive is 'damage protected' with the P command, it becomes
+resistant to a certain amount of damage. This paragraph explains how UC2
+achieves this.
+
+We will start with a mathematical operator called 'XOR'. XOR has the
+following properties:
+
+0 XOR 0 = 0; 0 XOR 1 = 1; 1 XOR 0 = 1; 1 XOR 1 = 0
+
+if   a1 XOR a2 XOR a3 XOR a4 XOR a5 = xx
+then a1 XOR xx XOR a3 XOR a4 XOR a5 = a2
+and  a1 XOR a2 XOR a3 XOR xx XOR a5 = a4
+etc.
+
+This exactly shows the essence of damage protection, a1..a5 are the bare
+data, xx is special (damage recovery) information which can be used to
+restore bare data if it somehow has been destroyed.
+
+In practice UC2 XORs groups of 512 bytes (sectors) instead of single
+bits. To determine if a specific sector is correct or damaged a checksum
+of all sectors is included in the damage recovery information.
+
+About 1% of damage protection information is added to an archive. For
+short files this is a single recovery sector (meaning up to 1 damaged
+sector can be recovered), but if the archive is longer multiple damage
+recovery sectors are added, for example one for odd and one for even
+sectors.
+
+
+7.D BENCHMARKING
+================
+
+Benchmarking is a very complicated matter. It is always possible to
+create a legitimate looking benchmark which makes product A or product B
+look better. A nice example of this can be seen by just looking at some
+ads.
+
+We have done a successful attempt to optimize UC2 for daily 'real life'
+use. This means it compresses fast and it decompresses very fast.
+
+But when archives are used intensively, the bare compression/
+decompression speed is only an aspect of the whole picture. What is also
+very important is how efficient updates are performed. Especially when
+'the going gets tough', for example when a large archive resides on a
+floppy disk, or when the archive is on a network, UC2 can be much faster
+than other products.
+
+An unfortunate problem in benchmarking archivers is the 'Calgary
+Compression Corpus', which is often used to compare data compressors.
+Well, UC2 will do better than other compressors with this test, yet the
+real power of the compression engine is not used in this unrealistic
+test. When collections of 'real life' files (e.g. a large collection of
+documents, or sources, or the average archive one finds on a BBS) is
+compressed the difference between UC2 and other products becomes more
+significant.
+
+Of course, although performance is very important, it is only one aspect
+in the usability of a product.
+
+In general it is our opinion that you, the user, are the best person to
+perform benchmarks. Try the product the way you would actually USE it
+and see for yourself.
+
+
+8. UC2 EXTENDED COMMANDS
+========================
+
+On of the toughest decisions to make, in designing a utility like
+UltraCompressor, is what option should and should not be included. The
+problem is, that different users have a different view on what should be
+included in the tool. Some users prefer simple and clean, other users
+prefer a tool which adapts exactly to their specific wishes.
+
+We decided to split the command line options into sections in order to
+solve this conflict:
+
+BASIC (3)
+   This section aims at maximum simplicity. It only describes extraction
+   of an entire archive, compression of an entire directory and viewing
+   archive contents.
+
+MAIN (4)
+   Several goals have driven this section:
+   -> smart commands, not needing a lot of complicated options
+   -> the entire command description must fit on one screen (UC -?)
+   -> it should be simple, clean and consistent
+
+BBS (5)
+   Special commands and options aimed at sysops have been put in a
+   separate section.
+
+EXTEND (8)
+   Simple is no longer an issue here, only power and flexibility count.
+   Extended commands always start with $, extended options always start
+   with !. Dynamic Time Travel and all options documented in CONFIG (6)
+   are therefore extended options as well, although they are not covered
+   again in this chapter.
+
+This chapter contains the following paragraphs:
+
+        - A. Tools: version manager (vm.exe)
+        - B. Tools: lock archive (ulock.bat, uprot.bat)
+        - C. Tools: compress/expand directory (ucdir, uedir)
+        - D. Tools: simple archive splitter (sas)
+        - E. Extended command/option overview
+        - F. Private Compression Profiles
+        - G. Error messages
+        - Z. Summary
+
+When you use the AIPNL manual viewer you can jump to a chapter or a
+paragraph by pressing the corresponding digit(s) or letter.
+
+
+8.A TOOLS: VERSION MANAGER (VM.EXE)
+===================================
+
+UltraCompressor allows you to keep multiple versions (revisions) of a
+file in an archive. This feature is, however, single file oriented.
+
+Version Manager allows you to manage versions of file collections
+(projects). It allows you to attach a 'version label' to a collection of
+files and to extract or list all file versions having that specific
+label.
+
+This is perfectly suited for marking specific stages of a project to
+allow simple reconstruction of those stages.
+
+Please note that version labels are case and space sensitive.
+
+Commands:
+---------
+VM Mark "label" archive-name
+
+   Attach "label" to the most current file versions (*.*;0). "label" can
+   be anything you want, e.g. "REV 1.2.1", "Version for Acme Inc.",
+   "LWV" (last working version) etc. One file version can have multiple
+   labels. Labels are case sensitive and can be up to 80 characters
+   long.
+
+VM Remove "label" archive-name
+
+   Remove a specific label from an archive (only the label is removed,
+   no files are deleted).
+
+VM LAbels archive-name
+
+   List all labels present in the archive in alphabetic order.
+
+VM History archive-name
+
+   List all labels present in the archive in chronological order.
+
+VM L "label" [options] archive-name [files]
+VM V "label" [options] archive-name [files]
+
+   List/verbose list of all files having the specified label. All UC2
+   options can be used.
+
+VM E "label" [options] archive-name [files]
+
+   Extract files having the specified label. All UC2 options can be
+   used.
+
+'Special' label names:
+----------------------
+If a label description ends with $, $$ or # then substitution takes
+place:
+
+   $   The $ is replaced by the current date (e.g. "LWV $" becomes "LWV
+       NOV-12-1997").
+
+   $$  The $$ is replaced by the current date and time (e.g. "LWV $$"
+       becomes "LWV NOV-12-1997 22:34:04").
+
+   #   The # is replaced by an automatic version number (e.g. "KQZ #"
+       becomes "KQZ 1.2.6"). VM always searches for labels with a
+       similar layout, finds the highest one, and increases the last
+       number. For 'major' releases the new version number has to be
+       specified.
+
+All labels get an index (e.g. @12) which can be used as abbreviation.
+The index for each label is shown by LABELS and HISTORY.
+
+Examples:
+---------
+VM MARK "LWV $$" arch
+
+   Mark the most current files as the current 'Last Working Version',
+   e.g. "LWV NOV-12-1997 12:34:04".
+
+VM M "REV #" arch
+
+   Mark the most current files as "REV xxx", where the new version
+   number is automatically determined.
+
+VM E "REV 1.2.2" -S arch #c:\build
+
+   Extract all files labelled REV 1.2.2 to c:\build.
+
+VM E @12 arch
+
+   Extract all files with the label with index @12.
+
+VM Finger printing
+------------------
+Often an executable should contain its own version label. This version
+label can for instance be shown in the startup screen of the
+application. This allows technical support to determine which version of
+a program a specific user is running.
+
+VM can automate the maintenance of such a version label. It can do this
+by generating an include file which contains a definition for the
+version label. This include file will then be updated automatically when
+the VM MARK or the VM E commands are used.
+
+The generation of this VM include file is controlled by an environment
+variable.
+
+Example:
+
+   SET VM_FINGERPRINT_CPP=mylab.h
+
+   In this sample the version label is maintained in the C++ include
+   file mylab.h.
+
+
+The following filetypes are supported:
+
+   Environment variable  Type         Sample contents
+   --------------------------------------------------------------
+   VM_FINGERPRINT_ASM    Assembly     db "..."
+
+   VM_FINGERPRINT_BAS    BASIC        const VM_LABEL$ = "..."
+
+   VM_FINGERPRINT_C      C            #define VM_LABEL "..."
+
+   VM_FINGERPRINT_CPP    C++          const char* VM_LABEL = "...";
+
+   VM_FINGERPRINT_MOD    Modula II    CONST VM_LABEL = "...";
+
+   VM_FINGERPRINT_PAS    Pascal       CONST VM_LABEL = "...";
+
+   VM_FINGERPRINT_RAW                 ...
+
+
+The file is always generated in the current directory (unless a full
+path is specified).
+
+
+8.B TOOLS: LOCK ARCHIVE (ULOCK.BAT, UPROT.BAT)
+==============================================
+
+Example:    ULOCK arch
+
+The archive arch.uc2 is protected against all manipulative commands
+(e.g. add and delete). Please note that someone could bypass this lock
+by just expanding all files in the archive, and creating a new one.
+
+Example:    UPROT arch
+
+All files in arch.uc2 will be protected against deletion. Incremental
+addition to the archive is still allowed, overwriting or deleting files
+not. Perfect for version management where older file versions should
+never be deleted.
+
+The ULOCK and the UPROT commands can only be reversed by extracting all
+files from the locked/protected archive and building a new one.
+
+
+8.C TOOLS: COMPRESS/EXPAND DIRECTORY (UCDIR, UEDIR)
+===================================================
+
+UCDIR
+
+   This command moves all files from the current directory and below to
+   the archive UCDIRDAT.UC2. If this archive already exists smart
+   skipping will skip redundant work. UCDIRDAT.UC2 is always damage
+   protected. UCDIR will make UCDIRDAT.UC2 read-only to avoid accidental
+   deletion.
+
+UEDIR
+
+   This command completely expands UCDIRDAT.UC2 (if it is present in the
+   current directory). The archive is not removed to speed up the UCDIR
+   command. UEDIR will make UCDIRDAT.UC2 deletable.
+
+Used together UCDIR and UEDIR allow you to keep data readily available
+on disk, while it takes significantly less space than uncompressed, or
+even when compressed with a transparent disk compressor.
+
+
+8.D TOOLS: SIMPLE ARCHIVE SPLITTER (SAS)
+========================================
+
+Commands:
+   SAS S arch 123      split arch.uc2 in 123kb pieces, 1kb=1024 bytes
+   SAS B arch          build arch.uc2 from those pieces
+
+When arch.uc2 is split into 5 pieces, those pieces will be named
+arch.p01, arch.p02, arch.p03, arch.p04 and arch.p05. SAS adds a little
+amount of overhead to each piece.
+
+SAS allows basic UC2 archive splitting. This can be used to allow
+archives which do not fit on a single floppy disk to be spread amongst
+more than one diskettes.
+
+For distribution of multivolume archives, UC2SEA (chapter 13) is a
+better choice.
+
+
+8.E EXTENDED COMMAND/OPTION OVERVIEW
+====================================
+
+Extended commands always start with $, extended options always start
+with !. Dynamic Time Travel and all options documented in CONFIG (6) are
+all extended options as well.
+
+Add variants (can be used instead of A)
+---------------------------------------
+   $FRE    FREshen files in archive (update files, but do not add new
+           ones)
+
+Extract variants (can be used instead of E)
+-------------------------------------------
+   $EWP    Extract Without Path (extract all files to the same
+           directory, ignoring their original path). This command
+           automatically activates the -S (include subdirs) option.
+
+   $PRF    PRint Files (how a file should be printed is defined in
+           AIP-NL.INI)
+
+              Example: UC $PRF arch *.txt
+
+Archive manipulation commands
+-----------------------------
+   $RED    Remove Empty Directories
+
+           Usage: UC $RED archive-name(s)
+
+   $TSN    Time Stamp archive with date/time of Newest file
+
+           Usage: UC $TSN archive-name(s)
+
+Miscellaneous commands
+----------------------
+   $GLF    Generate List File (usable as script/list-file). Please note
+           that this command does not automatically include
+           subdirectories. The -S option is needed to include
+           subdirectories.
+
+           Usage: UC $GLF listfile-name [options] archive-name [files]
+
+           Example: UC $GLF listfile.txt -S arch *.doc
+
+   $DOS    execute DOS command
+
+           Example: UC $DOS del *.bak & A arch *.*
+
+Filter/selection options
+------------------------
+   Filter/selection options can be used for add (A, $FRE), list (L, V,
+   $GLF), delete (D) and extract (E, $EWP, $PRF). Please note these
+   options only filter out files. They do not change the version number
+   of files (unlike Dynamic Time Travel and VM.EXE).
+
+   !CONTAINS="..."
+           only allow files which contain the specified string, upper
+           and lower case characters match for this option (e.g. Test
+           matches tEsT)
+           Note: the search string can be at most 40 characters.
+
+   !EFA=HSRA
+           Exclude Files with (Hidden/System/Read-only/Archive)
+           Attributes
+
+   !ARCA   only include files having the ARChive Attribute bit set
+
+   !ELD=YYYY/MM/DD-HH:MM:SS
+           only include files with Equal or Later Date/time
+
+   !EED=YYYY/MM/DD-HH:MM:SS
+           only include files with Equal or Earlier Date/time
+
+   !QUERY  ask permission for each single file
+
+   !NEWER  (add and extract only)
+           only add/extract a file, if the source file is NEWER than a
+           (to be overwritten) destination file, or if there is no
+           destination file
+
+   !NOF    (add and extract only)
+           Never Overwrite a File
+
+   Examples:
+
+      UC E !EFA=HS arch
+
+         Extract all files from arch, except files having the system or
+         the hidden attribute.
+
+      UC $GLF listfile !CONTAINS="#include <graph.hpp>" arch
+
+         Create a file 'listfile' which contains all files in arch.uc2
+         containing the string "#include <graph.hpp>".
+
+      UC A !CONTAINS="main" arch *.cpp
+
+         Add all *.cpp files containing "main" to arch.uc2.
+
+      UC D !CONTAINS="old" arch
+
+         Delete all files containing "old" from arch.uc2.
+
+      UC VS !CONTAINS="check" *
+
+         List all files containing "check" from all archives in the
+         current directory.
+
+      UC E -S !ELD=1992/07/28 !EED=1993/03/17 arch *.*;*
+
+         Extract all files in the archive dated 1992/07/28 - 1993/03/17.
+         Notice the *.*;* ensures all versions of a file will be
+         considered, not only the newest one.
+
+      UC $PRF !CONTAINS="echo off" !QUERY arch
+
+         Try to print all files containing 'echo off', ask permission
+         for each file.
+
+Miscellaneous options
+---------------------
+   !RAB     Reset the Archive attribute Bit after adding a file
+
+   !BAK     keep BAcKup (.BAK) of updated archives
+
+   !TSN     Time Stamp archive with date/time of Newest file
+
+   !VLAB    add:     copy Volume LABel from the first mentioned drive to
+                     archive
+            extract: copy Volume LABel from archive to the destination
+                     drive
+
+   !VLAB=X  add:     copy Volume LABel from drive X: to archive
+            extract: copy Volume LABel from archive to drive X:
+
+   !ASUB    include Archives in SUBdirectories
+
+   Examples:
+
+      UC A -S !ARCA !RAB arch *.*
+          Backup files having the archive attribute bit set and after
+          that reset their attribute bit.
+
+      UC A !TSN arch *.bas
+          Add *.bas files to the archive, time stamp the archive with
+          the newest file in the archive.
+
+      UC C !TSN *
+          Convert all archives in the current directory to UC2 archives,
+          time stamp the resulting archives with the newest file in the
+          archive.
+
+      UC A !VLAB test d:*.cpp
+          Add files and copy volume label from drive D: to the archive.
+
+      UC A !VLAB test *.cpp d:*.cpp
+          Add files and copy volume label from the current drive to the
+          archive.
+
+      UC A !ASUB c:\* u$~ban.txt
+          Add u$~ban.txt to all archives (including those in
+          subdirectories) on drive C:.
+
+
+8.F PRIVATE COMPRESSION PROFILES
+================================
+
+This feature allows you to use UC2 as an optimized special purpose
+compressor for a specific kind of data (e.g. text files in a specific
+language).
+
+VERY IMPORTANT WARNING
+----------------------
+   Private compression profiles (PCPs) are a very powerful but also a
+   dangerous feature. If you build archives using a specific PCP and you
+   somehow lose, change or damage the PCP ALL data in ALL archives you
+   made using the PCP will be COMPLETELY LOST.
+
+How do PCPs work?
+-----------------
+   UC2 uses built-in knowledge to improve compression. The knowledge
+   built into UC2 is a mix of common file formats. It contains, for
+   example, information about spreadsheets, databases, word processors,
+   programming languages and common words in: English, French, German
+   and Dutch, etc.
+
+   PCPs allow you to replace the knowledge which UC2 uses with different
+   knowledge. This can be very effective in an environment where the
+   data which is compressed is of a more or less similar kind.
+
+   One example of where PCPs can be very effective is for two bulletin
+   boards that exchange a lot of email. When a PCP is made for this
+   environment compression will significantly improve, even for very
+   small email messages.
+
+   Another example is when a lot of archives containing sources in a
+   specific language (e.g. C++) are maintained. A PCP for company
+   specific C++ sources will again significantly improve compression.
+
+How do I create a PCP?
+----------------------
+   PCPs work best when they are based on a single file type (e.g.
+   sources). It is possible to make a PCP based on multiple file types
+   but we do not recommend it.
+
+   A PCP is just a file containing up to 58k of sample data. To build a
+   PCP simply concatenate some sample files together until you have a
+   file of about 58k. The more 'average' your sample files are, the
+   better the PCP will work.
+
+How do I use a PCP?
+-------------------
+   A PCP is activated by setting an environment variable. This approach
+   allows use of archiver shells (like Visual UltraCompressor) in
+   combination with PCPs. To activate a PCP you should use:
+
+      set UC2_PCP=<full name of pcp file>
+
+   to deactivate it you should use:
+
+      set UC2_PCP=
+
+   A sample batch for making backups:
+
+      set UC2_PCP=s:\uc2pcps\sources.pcp
+      UC A a:\backup h:\sources\*.cpp h:\sources\*.h
+      set UC2_PCP=
+
+How safe are PCPs?
+------------------
+   UC2 always verifies if a PCP should be used or not.
+
+   This verification is also performed by older versions of UC2 (error
+   145).
+
+   UC2 always checks if the correct PCP is used (PCP checksum).
+
+   A PCP does not limit what can be stored in an archive. (e.g. if a C++
+   PCP is used you can still archive binaries)
+
+   In all cases if something is wrong, UC2 will give a clear error
+   message (215, 220, 225 or 230).
+
+   If you use PCPs by accident (you forgot to disable them), your
+   archives will be unusable for people not having access to your PCPs.
+   UC2 always reports to you that it uses PCPs to limit the chance of
+   such a mistake.
+
+   If you somehow lose, change or damage a PCP ALL data in ALL archives
+   you made using that PCP will be COMPLETELY LOST. There is no way your
+   data can be recovered in such a situation. As always, keeping backups
+   is very important.
+
+
+8.G ERROR MESSAGES
+==================
+
+When something went wrong, UC2 displays an error message. UC2 has three
+levels of error messages:
+
+   Fatal Error  something occurred which forced UC2 to stop
+   Error        something went wrong, but execution could be continued
+   Warning      something happened which might be unwanted
+
+All errors have a "level", multiple error messages can share the same
+level. This level is shown on screen and also returned to DOS
+(errorlevel). If multiple errors occur, the highest level is returned to
+DOS. For more details the error logfile (if enabled) can be consulted.
+
+Error message level explanations:
+---------------------------------
+
+OK (0)
+------
+   0  Everything went OK.
+
+Warnings (1-49)
+---------------
+   5  Internal error (UC2 beta versions only).
+
+   7  The archive is protected against changes in archive comment.
+
+  10  A device name has been mapped to a filename.
+
+  15  The archive's size did not change (optimize).
+
+  20  No file/archive found matching ...
+
+  25  The user chose to skip the rest of the ADD command.
+
+  30  Skipped file, AUTO-SKIP (network/locking related).
+
+  35  Skipped file, the user chose to skip the rest of the ADD command.
+
+  40  Archive has been made with cracked UC.EXE.
+        Although all evaluation versions of UC2 have always been 100%
+        complete and uncrippled, some people have made cracking tools to
+        enter fake serial numbers into UC.EXE. Unfortunately most of
+        these cracking tools severely damage the operation (and thereby
+        the reliability) of UC.EXE. When UC2 detects an archive made
+        which such an archiver it emits this warning. Please notify the
+        source of such archives that their software is illegal and
+        probably unreliable.
+
+Errors (50-99)
+--------------
+  50  Internal error.
+
+  55  Failed to delete a file.
+        This can be caused by a network (you do not have sufficient
+        rights to delete a specific file) or by attempts to delete a
+        file from a write-protected disk.
+
+  60  Failed to delete a directory.
+        This can be caused by a network (you do not have sufficient
+        rights to delete a specific directory) or by attempts to delete
+        a directory from a write-protected disk.
+
+  63  Failed to rename a file.
+        This can be caused by a network (you do not have sufficient
+        rights to rename a specific file) or by attempts to rename a
+        file on a write-protected disk.
+
+  65  The conversion of a specific archive failed.
+        The archive has an unknown format, the file is not an archive,
+        or the archive is damaged.
+
+  70  Failed to set the volume label.
+        This can be caused by a network (you do not have sufficient
+        rights to set the volume label), by attempts to set the volume
+        label of write-protected disk or the volume label is not a valid
+        DOS volume label (e.g. the original was made with the Norton
+        utilities).
+
+  75  Failed to set OS/2 extended attributes.
+        This can be caused by a network (you do not have sufficient
+        rights to set extended attributes) or by attempts to set
+        extended attributes on a write-protected disk.
+
+  80  Skipped a file (could not write to it).
+        This can be caused by a network (you do not have sufficient
+        rights to create a specific file) or by attempts to write a file
+        to a write-protected disk.
+
+  85  Cannot create a directory.
+        This can be caused by a network (you do not have sufficient
+        rights to create a specific directory) or by attempts to create
+        a directory on a write-protected disk.
+
+  90  The archive is damaged (use 'UC T' to repair it).
+
+  95  Conversion of the archive failed, due to the detection of a virus.
+
+Fatal errors (100-255)
+----------------------
+ 100  The user aborted the program by choice or with Ctrl-Break.
+
+ 105  Some problem with UC.EXE.
+        (When trying to reconfigure) UC2 resides on a write-protected
+        diskette or has been made read-only. (Other) The executable is
+        damaged, obtain or install a new one.
+
+ 110  Configuration problem (UC -!).
+        You should reconfigure UC2 (the specific error message explains
+        what you should change).
+
+ 120  The command line is not correct.
+        You have entered an unknown command or option. Consult the
+        manual for more information on what you want to achieve.
+
+ 123  A command/option is not allowed by the configuration (UC -!).
+        If ensure or protect mode is activated (UC -! C) you can no
+        longer use the unprotect command.
+
+ 125  The archive is encrypted.
+        You should use UCRYPT (with the proper password) to decrypt the
+        encrypted archive.
+
+ 130  Failed to access archive (e.g. archive does not exist).
+
+ 135  The archive is locked, some other tool (like VM) is using it.
+
+ 140  A command/option is not allowed by the archive.
+        Archives can be protected against certain commands. For more
+        details see chapter 8 paragraph B.
+
+ 145  A newer version of UC is needed for this archive.
+
+ 150  Cannot create file.
+        This can be caused by a network (you do not have sufficient
+        rights to create a specific file) or by attempts to write a file
+        to a write-protected disk.
+
+ 155  Failed to show banners.
+        U$~BAN.* files are present on disk. You have to remove them, or
+        execute the command from a different directory.
+
+ 157  Failed to edit comment.
+        The file U$~COMM.TXT is present on disk. You have to remove it,
+        or execute the command from a different directory.
+
+ 160  Out of memory.
+        UC2 needs 520,000 bytes (460,000 if EMS is used) free memory for
+        the add command. You can make more memory available by removing
+        TSRs and/or installing a memory manager like EMM386, QEMM or
+        386^MAX (under OS/2 enough memory should always be available).
+        If insufficient memory is available because UC2 was started from
+        another program, you can use UltraStealth (see chapter 5
+        paragraph C).
+
+ 163  EMS/XMS problem.
+        UC2 encountered a problem with EMS or XMS. Please consult the
+        manual of your memory manager to solve the problem, or disable
+        EMS/XMS usage (UC -!).
+
+ 165  Out of virtual memory.
+        The drive containing temporary data is full, or the upper amount
+        of virtual memory should be changed (see chapter 6 paragraph B
+        option S).
+
+ 170  System/critical error followed by user abort.
+
+ 175  Failed to rename a file.
+        This can be caused by a network (you do not have sufficient
+        rights to rename a specific file) or by attempts to rename a
+        file on a write-protected disk.
+
+ 180  Failed to delete a directory.
+        This can be caused by a network (you do not have sufficient
+        rights to delete a specific directory) or by attempts to delete
+        a directory from a write-protected disk.
+
+ 185  Failed to change to a directory.
+        The directory no longer exists, or you do not have sufficient
+        rights to access the directory.
+
+ 190  Conversion failed due to virus infection.
+
+ 195  Failed to repair archive.
+
+ 200  The archive is damaged, needs repair.
+
+ 205  Conversion failed.
+        The archive has an unknown format, the file is not an archive,
+        or the archive is damaged.
+
+ 210  Update/operation failed.
+        The archive contained errors after an operation (it was verified
+        because ensure mode is enabled).
+
+ 215  Cannot read Private Compression Profile
+        The file specified with the UC2_PCP environment variable does
+        not exist. For more details see 8.F.
+
+ 220  A Private Compression Profile is needed for this archive
+        You have to activate the proper Private Compression Profile. For
+        more details see 8.F.
+
+ 225  This archive needs a different Private Compression Profile
+        You have to activate the proper Private Compression Profile. For
+        more details see 8.F.
+
+ 230  This archive does not use a Private Compression Profile
+        You should empty the UC2_PCP environment variable. For more
+        details see 8.F.
+
+ 250  Failed to write to error logfile.
+        This can be caused by a network (you do not have sufficient
+        rights to write to the error logfile) or by attempts to write to
+        the logfile on a write-protected disk. The location of the error
+        logfile can be changed with 'UC -! U'.
+
+ 255  Internal/special error.
+        This should not occur. Check if TSRs and drivers are installed
+        properly. If everything seems to be OK consult AIPNL technical
+        support.
+
+
+8.Z SUMMARY
+===========
+
+EXTENDED COMMANDS         EXTENDED OPTIONS
+
+add                       filter/select
+ $FRE freshen              !CONTAINS="+" only files containing +
+                           !EFA=HSRA     exclude files with attributes
+extract                    !ARCA         only files with archive attrib
+ $EWP extract without path !ELD=...      only with equal or later date
+ $PRF print files          !EED=...      only with equal or earlier date
+                           !QUERY        query for each file
+manipulate                 !NEWER        only overwrite if newer
+ $RED remove empty dirs    !NOF          never overwrite file
+ $TSN timestamp with newest
+                          miscellaneous
+                           !RAB         reset archive attribute bit
+miscellaneous              !BAK         create backup of archive
+ $GLF generate list file   !TSN         time stamp with newest
+ $DOS execute DOS command  !VLAB        include volume label (first drv)
+                           !VLAB=X      include volume label (drive X:)
+                           !ASUB        include archives in subdirs
+
+
+9. ULTRA-CRYPT (encryption, password protection)
+================================================
+
+After having archived a set of files with UC2, you might want to protect
+them from being accessed by others. To achieve this, you can use UCRYPT.
+
+UCRYPT protects the archive with a password, chosen by you. The password
+is case sensitive. This increases the amount of possible passwords.
+
+Those who wish to investigate that UCRYPT properly implements triple DES
+and MD5, and also that it has no hidden 'backdoor' or other weaknesses,
+can get the source code of UCRYPT from AIPNL. This source code can only
+be used to verify that the code is cryptographically correct. The source
+code can not be disclosed or used for other purposes.
+
+This chapter contains the following paragraphs:
+
+        - A. Command summary
+        - B. Encryption
+        - C. Encryption with destruction of the original archive
+        - D. Decryption
+        - E. Export of cryptographic software
+        - Z. Summary
+
+When you use the AIPNL manual viewer you can jump to a chapter or a
+paragraph by pressing the corresponding digit(s) or letter.
+
+
+9.A COMMAND SUMMARY
+===================
+
+General: UCRYPT command archive-name
+
+Starting UCRYPT with no command gives an explanation on screen about the
+use of UCRYPT.
+
+Possible commands are:
+
+   C   for protecting an archive with a password
+       (enhanced triple DES is used here)
+
+   E   for protecting an archive with a password and destroying the
+       original archive
+
+   CF  like C, but uses 'faster' encryption
+       (a MD5 based one-time pad is used here)
+
+   EF  like E, but uses 'faster' encryption
+
+   D   makes an archive accessible again
+
+
+9.B ENCRYPTION
+==============
+
+Command: UCRYPT C archive-name
+
+   With this command the archive will be protected with a password. The
+   original unprotected archive still exists after the execution of
+   UCRYPT.
+
+   After having entered the command, the password will be asked. The
+   password must consist of at least eight characters and at most
+   sixteen.
+
+   Every keystroke will be represented by an asterisk, so the password
+   is never visible.
+
+   When you are not sure about a keystroke, use <BACK SPACE> and the
+   keystroke will be undone.
+
+   As usual with passwords, you will be asked to enter the password
+   twice. When a difference between the passwords is detected, the
+   encryption will be terminated and you have to start again.
+
+   Encrypting an archive in another directory gives an encrypted archive
+   in the same directory as the original archive.
+
+Command: UCRYPT C archive-name "password"
+
+   This command has the same function as the former command. With this
+   command the archive will also be protected with a password, but the
+   password is entered on the command line, between double quotes.
+
+   Now you will not be asked to repeat the password, but the protection
+   will be done at once. Of course the password is visible, when entered
+   on the command line.
+
+   You can also use 'faster' encryption by using the CF instead of the C
+   command. The normal encryption uses triple-DES (Digital Encryption
+   Standard) encryption and has some enhancements crippling brute force
+   attacks. This makes the normal encryption safe according to all
+   common standards. The 'faster' encryption uses a less proven method,
+   a MD5 based one-time pad. It is not as established as triple-DES, but
+   for most practical purposes reliable enough.
+
+
+9.C ENCRYPTION WITH DESTRUCTION OF THE ORIGINAL ARCHIVE
+=======================================================
+
+Commands: UCRYPT E archive-name
+          UCRYPT E archive-name "password"
+          UCRYPT EF archive-name
+          UCRYPT EF archive-name "password"
+
+   The E and EF commands work the same as the C and CF commands, the
+   only difference is the deletion. This deletion is not an ordinary
+   deletion, but a real destruction of the archive.
+
+   On systems with integrated datacompression (e.g. Stacker), or systems
+   with a very slow deferred write caching, the destruction might fail.
+   These systems do not allow destruction.
+
+   On C2 compliant operating systems (e.g. Windows NT) it is sufficient
+   to use the C and CF commands, since these systems already destroy
+   deleted files.
+
+
+9.D DECRYPTION
+==============
+
+Commands: UCRYPT D archive-name
+          UCRYPT D archive-name "password"
+
+   The (encrypted) archive is decrypted.
+
+For decryption of the archive the password is required. After decryption
+the encrypted archive still exists. The way passwords are handled is the
+same as in paragraph 1.B.
+
+Entering a wrong password terminates the program with an error message.
+
+The time UltraCrypt needs to determine that a password is wrong is
+almost the same as the time needed to decrypt an archive with the
+correct password. This is necessary, since other approaches would allow
+someone to try passwords much faster (brute force attack).
+
+The UCRYPT data-encryption format has more specific features to make
+brute-force attacks much harder. A side effect of this is that there is
+a chance of 1 to 256 the archive will be decrypted into garbage after
+entering a wrong password, without an error message.
+
+
+9.E EXPORT OF CRYPTOGRAPHIC SOFTWARE
+====================================
+
+UltraCRYPT is covered by the Dutch 'uitvoerbesluit strategische goederen
+1963' (export regulations for strategic goods). The 19th version of
+'handboek strategische goederen' (handbook strategic goods) has been
+published January 21st 1994.
+
+UltraCRYPT is covered by APN (3), 5D002 (5-10), 5E002 1.b (5-11) and
+"Programmatuur" (DEF-16). This specifically allows unlimited and
+unrestricted export of UltraCRYPT.
+
+For details or questions one can contact the Dutch Ministry of Economic
+Affairs at +31-(0)20-3798911.
+
+Please note this does in no way damage the reliability of UltraCRYPT.
+UltraCRYPT uses uncensored and unharmed enhanced triple DES technology
+to maximize the security of encrypted data. AIPNL is not aware of ANY
+feasible technology capable of breaking UltraCRYPT encryption.
+
+
+9.Z SUMMARY
+===========
+
+UCRYPT                     gives explanation about the use of UCRYPT
+                           on screen
+UCRYPT C name
+UCRYPT C name "password"   protects archive, keeping the original
+                           archive
+UCRYPT E name
+UCRYPT E name "password"   protects archive, destroying the original
+                           archive
+UCRYPT CF name
+UCRYPT CF name "password"  like C but uses 'faster' encryption
+
+UCRYPT EF name
+UCRYPT EF name "password"  like E but uses 'faster' encryption
+
+UCRYPT D name
+UCRYPT D name "password"   makes archive accessible again
+
+
+10. ULTRA-SAFE (authenticity verification)
+==========================================
+
+An archive can be protected by one or more uncrackable, unbreakable and
+unforgeable UltraSeals. Checking if an archive has seals, and if these
+are intact, is done with USAFE.
+
+An archive with one or more seals cannot be changed without breaking
+these seals. This prevents virus infection, cracking, etc. Each seal
+contains information about who put the seal on the archive.
+
+Those who wish to investigate that USAFE properly implements Lucas
+function based digital signature verification and also that it has no
+hidden 'backdoor' or other weaknesses, can get the source code of USAFE
+from AIPNL. This source code can only be used to verify that the code
+is cryptographically correct. The source code can not be disclosed or
+used for other purposes.
+
+This chapter contains the following paragraphs:
+
+        - A. The command
+        - B. How secure are these seals?
+        - C. Important
+        - D. Error levels
+
+When you use the AIPNL manual viewer you can jump to a chapter or a
+paragraph by pressing the corresponding digit(s) or letter.
+
+
+10.A THE COMMAND
+================
+
+Command: USAFE arch
+
+   The archive arch.uc2 is verified.
+
+If the archive is protected by one or more UltraSeals, USAFE verifies if
+all these seals are intact. USAFE reports if seals are present, and if
+they are intact. If seals are broken this is reported as well.
+
+
+10.B HOW SECURE ARE THESE SEALS?
+================================
+
+'Authenticity verification' is not new. Many archivers are doing it, BUT
+most of these are based on 'security by obscurity'. They keep their
+method secret and hope nobody finds out how it works. For most of these
+archivers, some or multiple ways of cracking them are known. Sometimes
+even a program to automate forging is available!
+
+USAFE is NOT based on 'security by obscurity'. It is based on digital
+signature technology. The digital signature technology, USAFE uses, is
+based on Lucas functions. It uses prime factors of 300 and 400 bits,
+which is much more than the current industry standard safety limits.
+AIPNL is not aware of ANY feasible technology for faking these
+signatures.
+
+USAFE is slower than weaker authenticity verification methods, but this
+is the price you have to pay for real, instead of fake security. On a
+386/33 machine USAFE needs about 7.5 seconds for each seal.
+
+
+10.C IMPORTANT
+==============
+
+ALL software AIPNL will ever ship, will be protected by a seal. This
+includes upgrades, etc. If you discover files which claim to be from
+AIPNL, but are not protected by a seal, DO NOT USE THEM, but report
+them to AIPNL immediately.
+
+
+10.D ERROR LEVELS
+=================
+
+USAFE returns an 'errorlevel' to DOS (e.g. for detection in batch
+files). The following levels are defined:
+
+   0   the archive contains one or more seals which are all intact
+
+   1   the archive does not contain any seals
+
+   2   the archive contains one or more seals, which are broken
+
+   3+  other errors
+
+
+11. ULTRA-SEAL (preventing unwanted changes)
+============================================
+
+An archive can be protected by one or more uncrackable, unbreakable and
+unforgeable UltraSeals. Sealing an archive is done with your
+personalized USEAL program.
+
+An archive with one or more seals cannot be changed without breaking
+these seals. This prevents virus infection, cracking, etc. Each seal
+contains information about who put it on the archive.
+
+Since USEAL is a personalized tool, it is not included into UC2. Use
+ORDER.FRM AND USEAL.FRM to order your own copy of USEAL.
+
+Those who wish to investigate that USEAL properly implements Lucas
+function based digital signatures and also that it has no hidden
+'backdoor' or other weaknesses, can get the source code of USEAL from
+AIPNL. This source code can only be used to verify that the code is
+cryptographically correct. The source code can not be disclosed or used
+for other purposes.
+
+This chapter contains the following paragraphs:
+
+        - A. The command
+        - B. Important
+
+When you use the AIPNL manual viewer you can jump to a chapter or a
+paragraph by pressing the corresponding digit(s) or letter.
+
+
+11.A THE COMMAND
+================
+
+Command: USEAL arch
+
+   Your personal seal is attached to arch.uc2.
+
+Please note sealing takes some time. On a 386/33 machine sealing takes
+3.5 to 11 minutes. Checking the seal with USAFE is done much faster.
+
+After making any changes to a sealed archive you (of course) have to use
+USEAL again to attach your seal to the archive.
+
+
+11.B IMPORTANT
+==============
+
+Please make VERY sure before you seal an archive that it contains no
+viruses, and that it is indeed data that deserves your seal.
+
+Also make sure no one but certified people have access to your (unique)
+copy of USEAL, yet make sure you have a backup of your copy.
+
+
+12. VISUAL ULTRA-COMPRESSOR (general purpose shell)
+===================================================
+
+This chapter contains the following sections:
+
+        - A. Introduction
+        - B. Overview
+        - C. Configuring VU
+        - D. Command line options
+
+When you use the AIPNL manual viewer you can jump to a chapter or a
+paragraph by pressing the corresponding digit(s) or letter.
+
+
+12.A INTRODUCTION
+=================
+
+Visual UltraCompressor is a GUI (graphical user interface) for
+UltraCompressor (UC2). UC 2.3 or later is needed for VU to operate. VU
+is also very usable as a general purpose SHELL for managing, viewing,
+editing and processing files.
+
+Highlights of VU include:
+
+    - four panels, each viewing a separate directory/archive
+    - VU can remember the (de)selection of up to 2 million files
+    - user defined commands can be added to VU
+    - user defined commands can be interactive
+    - files can be copied from archive to archive
+
+VU is highly configurable (see 12.C) allowing you to tailor it to your
+personal taste. VU uses a 'directory cache' to speed up access of UC2
+archives (VU uses plain UC2-3PI to access UC2 archives).
+
+
+12.B OVERVIEW
+=============
+
+What is on The Screen
+---------------------
+   VU maintains four 'panels'. Each of those panels shows the contents
+   of a directory. This can be a directory on disk or a directory
+   residing in an UC2 archive. VU always shows the contents of one
+   panel. At the bottom of this panel are tabs allowing you to switch
+   between panels. You can switch between panels by clicking on the
+   tabs, by using cursor keys or by pressing Shift-1 .. Shift-4.
+
+   Right from the panel there is a set of push buttons which allows you
+   to perform operations.
+
+   On top of the screen there is an information line. If you move your
+   mouse cursor to the top of the screen or if you press the ALT key a
+   pull-down menu appears (you can also use the MENU push button).
+
+Changing the current directory
+-----------------------------
+   You can change to a different directory (or to an UC2 archive) by
+   double clicking on a directory, or by pressing the ENTER key.
+
+   There are some quick navigators available under the panel menu.
+
+How to select items (files/directories)
+---------------------------------------
+   Most commands (menu options/push buttons/keyboard) operate on
+   selected items. The selection bar can be moved by pushing the left
+   mouse button or by using the cursor keys. An item can be selected by
+   pushing the right mouse button or by pressing the spacebar.
+
+   You can start typing the name of an item at any time. While you type
+   the name of the item VU will automatically jump to it for you.
+   Ctrl+Enter can be used to switch between multiple files starting with
+   the same letters.
+
+   A collection of files can be (de)selected with the panel menu.
+
+How to execute commands
+-----------------------
+   Commands are executed by pressing a push button, by using the
+   keyboard, or by selecting a menu item. All push buttons and menu
+   items contain a clear indication as to which keyboard shortcut may be
+   used in their place.
+
+   Some commands operate on a single file (like VIEW and EDIT). The
+   selection bar determines which file this will be.
+
+   Some commands operate on multiple items (like TO DISK).
+
+Which commands are available
+----------------------------
+   Just browse the menu to see which commands are available. Most
+   commands are straightforward. For details on the ARCHIVE commands you
+   can consult chapter 4.
+
+   Some special commands/considerations which might save time:
+
+   -> when using TO DISK to copy selected items to disk, a dialog will
+      inform you where the files will go, and ask whether a copy or move
+      operation should be performed
+
+   -> use DRIVE to change to a different drive
+
+   -> files can be copied and moved from ANY to ANY place (including
+      from one UC2 archive to another UC2 archive)
+
+   -> use ALT-1 .. ALT-4 to copy/move files between panels
+
+   -> if your screen looks like a mess, select TEXT MODE from the panel
+      menu (it should look great on EGA and VGA compatible systems)
+
+   -> if you are running VU in a Windows or OS/2 window select TEXT MODE
+      (full screen graphical mode will look much better)
+
+   -> if you do not like something, reconfigure it!
+
+
+12.C CONFIGURING VISUAL ULTRA-COMPRESSOR
+========================================
+
+There are two ways to configure Visual UltraCompressor. Some
+configuration options are available in the menu. ALL configuration
+options are present in the AIP-NL.INI text file. AIP-NL.INI can be
+edited with any standard text editor (e.g. EDIT, NOTEPAD or E).
+
+Please note the AIP-NL.INI file contains settings for ALL AIPNL
+products.
+
+All AIPNL products use the PATH environment variable (usually set in
+AUTOEXEC.BAT) to locate AIP-NL.INI, thus allowing multiple people to use
+the same executable file, while they each have their own configuration
+file.
+
+AIP-NL.INI consist of sections each containing a number of settings.
+
+ENTER-DOUBLE-CLICK, VIEWERS, EDITORS
+------------------------------------
+   These sections allow you to specify what the VIEW, EDIT and
+   ENTER/DOUBLE-CLICK commands do. All these commands are file extension
+   dependant.
+
+   For example "PCX, GIF = VPIC %, FV %" specifies that files with the
+   PCX and files with the GIF extension should be showed by VPIC or by
+   FV. If both programs are available, the first one will be used. When
+   VU executes the command the % is replaced by the filename.
+
+   VU will try to locate programs by looking for program files (EXE,
+   COM, BAT or BTM) in the PATH (AUTOEXEC.BAT). If you do not want VU to
+   try to locate the program (e.g. because it is a 4DOS alias) you can
+   place a : before the command (e.g. "PCX, GIF = :VPIC %").
+
+   The line "* = ..." specifies what should be done if no viewer can be
+   found for a specific file.
+
+   If you want to make conversion of archives to UC2 archives simpler
+   you might want to add "LZH, ZOO, ZIP, ARJ, PAK, ARC = UC C %" to the
+   [ENTER-DOUBLE-CLICK] section.
+
+   Please note handling of UC2 and UE2 files is built into VU, it can
+   not be changed.
+
+VARIOUS
+-------
+   TEMPORARY-FILES specifies which directory VU uses for temporary
+   files.
+
+   DEFAULT-ARCHIVE specifies the default archive name.
+
+   VU-UDIFF-PARAMS specifies the parameters used by VU to call UDIFF.
+
+   XCOPY-PARAMS specifies which options should be used for XCOPY. Only
+   options different from /E /S should be defined since these are build
+   into VU.
+
+VU-OPTIONS
+----------
+   This section contains the options which are also available in the
+   menu.
+
+   SORT-SHOW-PER-PANEL
+      Determines whether each panel has its own settings or all panels
+      share the same settings.
+
+   FORCE-MODE
+      Determines whether UC2 is used in 'force' mode. In force mode file
+      will be replaced without prompting for confirmation. More details
+      on force mode are in chapter 4.
+
+   CONFIRM-DELETE
+      Determines whether VU will ask for confirmation on file deletions.
+
+   VIDEO
+      Video mode can be GRAPHICAL (EGA and VGA systems) or TEXTMODE
+      (other systems, Windows and OS/2 windowed sessions).
+
+   SCREEN-LINES
+      Determines whether 25 or 43/50 text lines are available.
+
+VU-USER-ITEMS
+-------------
+   The FILE, FILES, ARCHIVES and COMMAND menu can be extended by user
+   defined commands. For the ARCHIVES menu you can define 5 extra
+   options, for all other menus you can define 9 extra options.
+
+   For each user defined option you need to specify the menu, the index,
+   the text to display on screen and the actual command.
+
+   Example:
+
+      FILES-3-TEXT      = UCEXE
+      FILES-3-ACTION    = ucexe %
+
+   this example adds an options to the FILES menu to compress selected
+   executables with UCEXE.
+
+   Please note VU is very smart in handling user commands. If a command
+   somehow changes a file, deletes a file, or generates new files VU
+   will handle this in a very clean way. There will be no difference in
+   handling files on disk or handling files in an archive.
+
+   It is possible to specify multiple DOS commands for 1 menu option by
+   separating them with the ^ character.
+
+   It is also possible to make VU ask questions while executing a user
+   defined command.
+
+   Example:
+
+      FILES-2-TEXT      = rename
+      FILES-2-ACTION    = ren % ?"New name"
+
+   this example will ask for a new filename FOR EACH SELECTED FILE. The
+   ?"New name" part will be replaced by the answer to the question.
+
+VU-STATUS
+---------
+   These variables are used internally by VU. You can change them if you
+   want, but mostly that will not be very useful.
+
+
+12.D COMMAND LINE OPTIONS
+=========================
+
+Visual UltraCompressor (obviously) does not need much command line
+options.
+
+VU <location>
+
+   Move to <location> and start VU.
+
+VU <archive>
+
+   Start VU, show the contents of <archive>.
+
+VU -R ...
+
+   Return to the startup directory after VU is closed.
+
+VU -V <file>
+
+   Use the VU viewer logic to view <file>.
+
+VU -E <file>
+
+   Use the VU editor logic to edit <file>.
+
+VU -H <section> <file>
+
+   Handle <file> with the program(s) defined in <section> in AIP-NL.INI.
+   <section> should be structured the same way the VIEWERS and the
+   EDITORS sections are structured. This command allows you to create
+   user defined commands (e.g. COMPILE) which are file extension
+   sensitive.
+
+
+13. UC2SEA (creating UltraFAST self extracting archives)
+========================================================
+
+This chapter contains the following paragraphs:
+
+        - A. Introduction
+        - B. UC2SEA overview
+        - C. SEA overview
+
+When you use the AIPNL manual viewer you can jump to a chapter or a
+paragraph by pressing the corresponding digit(s) or letter.
+
+WARNING: in some environments UC2SEA (NOT the executables it produces)
+fails to operate if the UC temporary directory (UC -! S) is located on a
+Novell network drive.
+
+
+13.A INTRODUCTION
+=================
+
+UC2SEA is a tool which converts an UC2 archive into a standalone
+executable, a self extracting archive (SEA). No separate extraction
+software is needed to extract the files included in this executable.
+
+Highlights of UC2SEA include:
+
+    - the generated executable is extremely fast (especially from
+      floppy)
+    - less than 270k of free memory is needed to run a DOS SEA
+    - all files in the SEA are protected by a checksum
+    - the distribution license allows UNLIMITED distribution
+
+The datacompression engine of UC2SEA is different from the one used in
+UltraCompressor. UC2SEA uses a subset of the UltraFAST decompression
+engine which will probably be used in portable UltraCompressor III. In
+most cases a self extracting archive will be larger than the original
+UC2 archive. Due to the new compression engine used in UC2SEA the
+generated executable can be smaller than the original UC2 archive as
+well.
+
+Please note that the extraction module which UC2SEA includes in the
+executables it produces are Copyright 1995 AIPNL. A distribution
+license is needed for distribution of self extracting archives. (See
+chapter 2, paragraph F.)
+
+
+13.B UC2SEA OVERVIEW
+====================
+
+Usage: UC2SEA [options] [archive]
+
+Options:
+    -v<size>[,size]   Specify size(s) for multiple volume SEA
+    -b<banner>        Specify small text file to be used as banner
+    -s<extractor>     Specify extractor (default is DOS.SEA)
+    -f                Use fatsre (less) compression
+
+UC2SEA arch
+    Convert arch.uc2 to arch.exe (UC2SEA will never remove arch.uc2).
+
+UC2SEA arch -sWIN95
+    Create a native Windows 95 self extracting archive. For this you
+    need to have WIN95.SEA.
+
+UC2SEA arch -v600,700
+    Split the executable up in 1 600kb file (arch.exe) and make all the
+    other volumes 700kb (arch.002, arch.003, etc.).
+
+    Please note volumes can never be smaller than 32k.
+
+UC2SEA arch -v123456,54321
+    Split the executable up in 1 123456 bytes file (arch.exe) and make
+    all the other volumes 54321 bytes (arch.002, arch.003, etc.).
+
+UC2SEA arch -bbanner.txt
+    Includes a banner into the self extracting archive. A good example
+    of how a self extracting archive with banner should look is
+    UC2PRO.EXE.
+
+If a file called SEASTART.BAT, SEASTART.CMD, SEASTART.EXE or
+SEASTART.COM is present in the root directory of the UC2 archive, then
+this program will be called by the SEA module as soon as all files are
+extracted. The SEA module passes the destination directory (for the
+extracted files) as a parameter to SEASTART. This can be an empty string
+if the destination is the current directory. After execution of
+SEASTART.* the file will be deleted by the SEA module. If the SEA module
+somehow fails to complete extracting all files, SEASTART will not be
+called or deleted.
+
+
+13.C SEA OVERVIEW
+=================
+
+Usage: SEA [-o] destination-directory
+
+The -o option makes the SEA module overwrite files without asking.
+Otherwise the SEA module will ask "Overwrite 'XXX' (Yes/No/Always/
+nEver/Quit) ?" before overwriting a file.
+
+If the destination directory is not specified on the command line the
+SEA module will ask what it should do:
+
+   Press Enter    to extract files to the current directory
+         Spacebar to extract files to a specified directory (prompt)
+         Escape   to extract nothing (quit)
+
+SEA -? will display micro-help for the SEA module.
+
+When SEA needs a new disk (volume) it will ask "Insert next disk and
+press [Enter], or press [Q] to quit...".
+
+
+14. UCEXE (compressing executables)
+===================================
+
+UCEXE makes DOS programs MUCH smaller and self-checking.
+
+Usage: UCEXE <file(s)>
+
+UCEXE will NOT delete compressed executables. The original executable
+will be renamed to <program>.~XE.
+
+WARNING: Device drivers and self checking/modifying/reading executables
+         should not be compressed.
+
+You can only distribute compressed executables if you bought UC2. (See
+chapter 2, paragraph F.)
+
+
+15. ULTRA-DIFF (comparing text files)
+=====================================
+
+UDIFF visually compares two versions of a text file. It shows you what
+changed between two versions of a file. This can be used to analyze
+changes to batch files, ini files and sources to solve problems like
+"why did it stop working".
+
+Unlike many other file compare utilities, UDIFF uses an "unlimited pass"
+method to analyze changes. This means UDIFF is capable of reducing the
+list of changes it shows to an absolute minimum. UDIFF is even capable
+of properly finding and reporting CUT + multiple PASTE changes. UDIFF
+can at most compare 5000 lines of text.
+
+The most common ways of using UDIFF, comparing two versions of a file,
+and comparing a file to its backup, have been built into Visual
+UltraCompressor.
+
+Usage: UDIFF <oldfile> <newfile> [options]
+
+Options:
+   -S          smart mode (ignore layout, indentation and spaces)
+   -A          use only ASCII characters in output
+   -V          use VU viewer to browse results
+   -M          show source of moves (CUT)
+   -L<number>  show <number> context lines around changes (default=2)
+   -W          show whole lines
+
+Environment:
+   SET TABSIZE=n  (default 8)
+
+Output:
+   MATCH  unchanged line (used to show context of change)
+   ADD    inserted (new) line
+   DEL    removed line
+   CUT    moved line (destination is shown)
+   MCUT   line moved to multiple destinations (number of destinations
+          is shown)
+   PASTE  line moved or copied from different place (source is shown)
+
+
+16. WINDOWS 95 (long filename support)
+======================================
+
+In order to remain backward compatible with 16 bit DOS and MS-Windows
+software, Microsoft implemented a 'double filename' system in Windows
+95. Each file gets 2 names, a short name and a long name.
+
+(Visual) UltraCompressor will preserve both the short and the long
+filename of files. UC2 does this completely automatic. No settings or
+options are needed to preserve long filenames (or long directory names).
+
+Visual UltraCompressor can show both the long and the short filename.
+You can use the F11 key to toggle between viewmodes.
+
+The UC command line needs short filenames (or wildcards like *.*) to
+operate. UC will (re)store long filenames, but the only way to directly
+view/manipulate long filenames is with Visual UltraCompressor.
+
+Included with UC2 is a file VU.REG. If VU.EXE is in the PATH
+(autoexec.bat) you can double click on this file from the Windows 95
+explorer to register VU.EXE in the Windows 95 registry. You can also
+execute 'REGEDIT VU.REG' from the command line to achieve the same
+result. This will allow you to double-click on UC2 archives from the
+desktop or the explorer to access UC2 archives with VU.

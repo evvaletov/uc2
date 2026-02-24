@@ -1,0 +1,21 @@
+# Build
+build/
+cmake-build-*/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Original downloads
+original/*.zip
+
+# Build artifacts in preserved originals
+original/unuc2-0.6/*.o
+original/unuc2-0.6/*.a
+original/unuc2-0.6/unuc2

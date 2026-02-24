@@ -1,0 +1,22 @@
+Nieuwegein, The Netherlands, December 11th 2015
+
+Hello,
+
+I have been working on UltraCompressor II from 1992-1996 with help of Danny Bezemer, Jan-Pieter Cornet and many other people. The included U_MANUAL.TXT file contains a full list of everyone who contributed.
+
+December 7th 2015, I received a request from Vladislav Sagunov to re-release it with a LGPL license, which I think is an excellent idea. So this archive contains all UC2 source files and you can (re)use them according to the rules of the LGPL. E.g. port it to modern operating systems and incorporate it in proprietary software. Please note the parts I made are LGPL but the sources made by Borland (there are a few) are "C/C++ Run Time Library - Version 5.0, Copyright (c) 1987, 1992 by Borland International, All Rights Reserved". The Borland Run Time Library part is mostly for MS-DOS specifics so if you prefer not to use them (which is probably your only option for other platforms than MS-DOS anyway) that should be achievable. Please note Embarcadero, the company that now owns Borland's developer tools, gives away a lot of their antique software for free. Turbo Pascal 1.0, 3.02, and 5.5 are available, as are Turbo C 2.01 and Turbo C++ 1.01. At the moment I wrote this they are available at: http://edn.embarcadero.com/museum/antiquesoftware.
+
+Please note UC2 was aimed at MS-DOS, Windows 95 and early versions of OS/2. Is uses assembler (not a lot though) and MS-DOS, Windows 95, OS/2 specific things. So it will take some effort to get it running with modern operating systems.
+
+I also included the MS-DOS executables/installers for UC v2.3 (uc2pro.exe), UC v2.37 beta (uc237b.exe) and UE. Since these are all MS-DOS based, they won't work on Linux or the latest 64 bit versions of Windows.
+
+If you are just interested in data compression, the Lossless Datacompression Kit I made in 1992 might be a good place to start. In contains the C source of many different compression methods: 
+http://www.nicodevries.com/wp-content/uploads/2013/03/Lossless_datacompression_sources_1.3.zip
+
+I would highly appreciate it if you let me know when you do something with the UC2 source code. My e-mail address is nico@nicodevries.com. Feel free to e-mail me questions but please note it has been a while since I worked on UC2.
+
+Take care,
+
+Nico de Vries
+http://www.nicodevries.com
+nico@nicodevries.com

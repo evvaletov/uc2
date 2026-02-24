@@ -1,0 +1,33 @@
+#include <winver.h>
+#define STR_(S) #S
+#define STR(S) STR_(S)
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION VERNUM
+ PRODUCTVERSION VERNUM
+ FILEFLAGS 0
+ FILEOS VOS__WINDOWS32
+ FILETYPE VFT_APP
+ FILESUBTYPE 0
+BEGIN
+ BLOCK "StringFileInfo"
+ BEGIN
+  BLOCK "00000000"
+  BEGIN
+   VALUE "FileDescription", "UC2 archive extracting tool"
+   VALUE "FileVersion", __DATE__
+   VALUE "LegalCopyright", "GPL"
+   VALUE "OriginalFilename", "unuc2.exe"
+   VALUE "ProductName", "UnUC2"
+   VALUE "ProductVersion", STR(VERSION)
+   VALUE "Author", "Jan Bobrowski"
+   VALUE "URL", "http://torinak.com/~jb/unuc2/"
+  END
+ END
+ BLOCK "VarFileInfo"
+ BEGIN
+  VALUE "Translation", 0,0
+ END
+END
+
+0 ICON "cli.ico"

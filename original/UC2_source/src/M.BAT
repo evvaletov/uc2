@@ -1,0 +1,1 @@
+make -fucd_rel

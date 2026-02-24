@@ -1,0 +1,6 @@
+# Preserve CRLF line endings in original DOS sources
+original/UC2_source/** -text
+original/UC2_source/**/*.exe binary
+original/UC2_source/**/*.DAT binary
+original/UC2_source/**/*.LIB binary
+original/UC2_source/**/*.PRJ binary

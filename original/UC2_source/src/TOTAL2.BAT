@@ -1,0 +1,10 @@
+cd \uc\source
+call ucminst
+cd \uc\tools\useusa
+call makeall
+cd \uc\tools\ucrypt
+call m
+cd \uc\source
+call makeuu
+cd \uc\source
+call final
