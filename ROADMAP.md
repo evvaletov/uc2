@@ -127,6 +127,15 @@ an opt-in feature, not on the critical path.  Prototype in a fork first.
 - [ ] Compression tournaments / community challenges
 - [ ] Neural/learned compression preprocessor (modern platforms only,
       not DOS — optional compile-time module)
+- [ ] Jupyter kernel for interactive archive exploration and compression
+      research (Python, building on foxkernel experience):
+      - Rich HTML tables for archive listings with compression ratios
+      - Interactive dedup graph visualization (master-block DAG: which
+        files share blocks, space savings)
+      - Inline benchmark charts comparing methods/levels (ratio vs speed)
+      - Version diff visualization between archive snapshots
+      - Huffman tree / ANS state table visualization for algorithm
+        development
 
 ## Testing Strategy
 
