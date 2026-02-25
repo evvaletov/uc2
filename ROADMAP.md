@@ -120,7 +120,40 @@ with the post-quantum direction and need no trusted setup.  Proof
 generation is slow (seconds to minutes for complex circuits) so this is
 an opt-in feature, not on the critical path.  Prototype in a fork first.
 
-## Phase 10: Advanced Features
+## Phase 10: Ecosystem Integrations
+
+### libarchive plugin
+
+Highest-leverage integration.  Adding UC2 read/write support to libarchive
+makes `.uc2` a first-class format for `bsdtar`, `cmake`, `pkg(8)`,
+file-roller, Ark, and dozens of other tools across the Linux ecosystem.
+
+- [ ] libarchive read handler (decompression/listing)
+- [ ] libarchive write handler (compression, once Phase 2 is done)
+
+### Streaming dedup ingestion
+
+Position UC2 as a deduplicating storage layer that other tools pipe into.
+No other CLI archiver offers this.
+
+```sh
+rsync -a /data/ | uc2 --ingest repo.uc2      # dedup on receive
+tar cf - /project | uc2 --ingest backup.uc2   # dedup tar stream
+cp -a /snapshot/ | uc2 --ingest backup.uc2    # incremental dedup
+```
+
+- [ ] `uc2 --ingest` mode: streaming input with master-block dedup
+- [ ] Incremental snapshots: `uc2 snapshot /path repo.uc2`
+      (borg/restic-style deduplicating backups without filesystem support)
+
+### File manager plugins
+
+Bobrowski already shipped prototypes; update for UC2 v3.
+
+- [ ] Midnight Commander VFS plugin (update `misc/mc.ext` and `misc/uuc2`)
+- [ ] Total Commander WCX plugin (update `misc/unuc2-wcx.c`)
+
+## Phase 11: Advanced Features
 
 - [ ] Archive-as-filesystem: FUSE mount for `.uc2` on Linux (read-only,
       decompress-on-the-fly with master-block caching)
