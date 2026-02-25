@@ -15,6 +15,12 @@
 - [ ] Compression levels T1--TQ from original `COMPINT.CPP` parameters
 - [ ] Start without master blocks; add dedup later
 - [ ] Round-trip testing: new compress -> old extract in DOSBox, and vice versa
+- [ ] Give UC2 a voice: status and progress messages with personality,
+      continuing the original's tradition ("Do not worry, you have got
+      the tree", "decompression always lightspeed", FAST/TIGHT/S-TIGHT
+      levels, `BoosterOn()`).  Not a --fun flag — just how UC2 talks.
+      Warm, confident, slightly quirky, never annoying.  Suppressed
+      by -q/--quiet for scripting.
 
 ## Phase 3: Modernized Master-Block Deduplication
 
