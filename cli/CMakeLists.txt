@@ -22,4 +22,8 @@ if(WIN32)
         g_compat__utf8_console g_compat__wpath g_fopen
         g_access g_mkdir g_utime
     )
+elseif(DJGPP)
+    target_sources(uc2-cli PRIVATE src/compat/compat_dos.c)
+    # Only add the err.h and fnmatch.h headers, not sys/ overrides
+    target_include_directories(uc2-cli PRIVATE src/compat/include/dos)
 endif()

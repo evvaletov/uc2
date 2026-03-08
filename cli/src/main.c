@@ -16,12 +16,18 @@
 #include <unistd.h>
 #include <time.h>
 #include <utime.h>
+#ifdef __DJGPP__
+#include <err.h>
+#include <fnmatch.h>
+void setprogname(const char *argv0);
+#else
 #include <fnmatch.h>
 #include <getopt.h>
+#include <err.h>
+#endif
 #include <stdarg.h>
 #include <stdbool.h>
 #include <errno.h>
-#include <err.h>
 #include <assert.h>
 #include <sys/stat.h>
 
@@ -465,6 +471,9 @@ static bool extract_cb(struct node *ne, void *ctx, enum cause cause)
 
 int main(int argc, char *argv[])
 {
+#ifdef __DJGPP__
+	setprogname(argv[0]);
+#endif
 	if (argc == 1)
 		goto usage;
 
