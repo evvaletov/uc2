@@ -29,3 +29,5 @@ jobs:
       - name: Smoke test (Windows)
         if: runner.os == 'Windows'
         run: .\build\cli\Release\uc2.exe -h
+      - name: Test
+        run: ctest --test-dir build --output-on-failure -C Release

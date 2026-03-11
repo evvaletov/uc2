@@ -1,0 +1,30 @@
+UltraCompressor II was a DOS-era archiver created by Nico de Vries between
+1992 and 1996.  It was notable for its advanced deduplication system called
+"master blocks", file versioning within archives, and competitive compression
+ratios on the hardware of its day.
+
+The archiver used an LZ77 sliding-window compressor with Huffman entropy
+coding.  The algorithm operates on a 64KB circular buffer with hash-chain
+match finding.  Matches of 3 to 32760 bytes are supported, with lazy
+evaluation to find better matches at adjacent positions.
+
+Huffman trees are serialized using delta coding against the previous block's
+tree, with a nested Huffman code for the delta symbols.  This is remarkably
+efficient for typical data where consecutive blocks have similar symbol
+distributions.
+
+The deduplication system works by identifying common data blocks across files
+and storing them only once as "master blocks".  When a file's compressed data
+matches an existing master, only a reference is stored.  This was ahead of its
+time -- modern tools like borg and restic use similar content-defined chunking.
+
+UC2 v3.0.0 is a cross-platform revival of this archiver, built on Jan
+Bobrowski's clean-room portable decompressor (libunuc2).  The project brings
+UC2 back as a modern, portable C99 tool that runs on Linux, macOS, Windows,
+and even DOS via DJGPP cross-compilation.
+
+This text file serves as part of the test corpus for verifying the extraction
+pipeline.  It contains enough English prose to exercise the typical symbol
+distribution paths in the decompressor, including the Huffman tree generation
+and the LZ77 back-reference matching for repeated phrases like "master blocks"
+and "compression" which appear multiple times.
