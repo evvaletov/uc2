@@ -11,13 +11,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        include:
+          - { os: ubuntu-latest,  name: Linux }
+          - { os: macos-latest,   name: macOS }
+          - { os: windows-latest, name: Windows (MSVC) }
     runs-on: ${{ matrix.os }}
+    name: ${{ matrix.name }}
     steps:
       - uses: actions/checkout@v4
       - name: Configure
         run: cmake -B build -DCMAKE_BUILD_TYPE=Release
       - name: Build
-        run: cmake --build build
-      - name: Smoke test
+        run: cmake --build build --config Release
+      - name: Smoke test (Unix)
+        if: runner.os != 'Windows'
         run: ./build/cli/uc2 -h
+      - name: Smoke test (Windows)
+        if: runner.os == 'Windows'
+        run: .\build\cli\Release\uc2.exe -h

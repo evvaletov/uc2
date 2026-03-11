@@ -2,7 +2,8 @@
 #define _ERR_H
 #ifdef __GNUC__
 #define err_noreturn __attribute__((noreturn))
-//#define err_noreturn [[noreturn]]
+#elif defined(_MSC_VER)
+#define err_noreturn __declspec(noreturn)
 #else
 #define err_noreturn
 #endif

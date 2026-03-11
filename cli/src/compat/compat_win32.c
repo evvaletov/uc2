@@ -1,4 +1,7 @@
-/* Copyright © Jan Bobrowski 2020 / Licence: LGPL */
+/* Win32 compatibility layer for UC2 CLI.
+   Provides POSIX/BSD functions missing from MSVC and MinGW.
+   All file operations use wide-char Windows APIs for UTF-8 support.
+   Copyright (c) Jan Bobrowski 2020 / Licence: LGPL */
 
 #define NO_OLDNAMES
 #include <stdlib.h>
@@ -110,7 +113,7 @@ const char *getprogname(void)
 {
 	static char name[256];
 	if (!name[0]) {
-#ifdef _pgmptr
+#ifdef _WIN32
 		char *p = _pgmptr;
 		char *q = p;
 		int n;
@@ -215,6 +218,18 @@ wchar_t *compat__wpath(const char *path);
 
 #ifdef g_compat__utf8_console
 #include <fcntl.h>
+#ifdef _MSC_VER
+/* MSVC: use CRT initializer table (.CRT$XCU) instead of GCC constructor */
+static void __cdecl compat__utf8_console_init(void)
+{
+	setvbuf(stdout, 0, _IOFBF, 1<<16);
+	setvbuf(stderr, 0, _IOFBF, 1<<16);
+	SetConsoleOutputCP(CP_UTF8);
+}
+#pragma section(".CRT$XCU", read)
+__declspec(allocate(".CRT$XCU"))
+static void (__cdecl *compat__utf8_console_p)(void) = compat__utf8_console_init;
+#else
 __attribute__((constructor))
 void compat__utf8_console(void)
 {
@@ -222,6 +237,7 @@ void compat__utf8_console(void)
 	setvbuf(stderr, 0, _IOFBF, 1<<16);
 	SetConsoleOutputCP(CP_UTF8);
 }
+#endif
 #endif
 
 #ifdef g_compat__wpath
@@ -253,6 +269,22 @@ int access(const char *path, int mode)
 }
 #endif
 
+#ifdef g_unlink
+int unlink(const char *path)
+{
+	wchar_t *wpath = compat__wpath(path);
+	return wpath ? _wunlink(wpath) : -1;
+}
+#endif
+
+#ifdef g_chdir
+int chdir(const char *path)
+{
+	wchar_t *wpath = compat__wpath(path);
+	return wpath ? _wchdir(wpath) : -1;
+}
+#endif
+
 #ifdef g_mkdir
 int mkdir(const char *path, int mode)
 {
@@ -266,14 +298,27 @@ int mkdir(const char *path, int mode)
 }
 #endif
 
+#ifdef g_chmod
+int chmod(const char *path, int mode)
+{
+	wchar_t *wpath = compat__wpath(path);
+	return wpath ? _wchmod(wpath, mode) : -1;
+}
+#endif
+
 #ifdef g_utime
 #include <sys/utime.h>
+#ifdef _MSC_VER
+/* MSVC's <sys/utime.h> hides utimbuf behind NO_OLDNAMES */
+#include <time.h>
+struct utimbuf { time_t actime; time_t modtime; };
+#endif
 int utime(const char *path, struct utimbuf *ut)
 {
 	wchar_t *wpath = compat__wpath(path);
 	if (!wpath)
 		return -1;
-	struct __utimbuf32 wut = {.actime = ut->actime, .modtime = ut->modtime};
+	struct __utimbuf32 wut = {.actime = (long)ut->actime, .modtime = (long)ut->modtime};
 	return _wutime32(wpath, &wut);
 }
 #endif
