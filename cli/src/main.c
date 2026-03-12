@@ -517,6 +517,16 @@ static unsigned to_dos_time(time_t t)
 	       ((unsigned)(tm->tm_sec / 2));
 }
 
+static unsigned fnv1a(const unsigned char *data, unsigned len)
+{
+	unsigned h = 2166136261u;
+	for (unsigned i = 0; i < len; i++) {
+		h ^= data[i];
+		h *= 16777619u;
+	}
+	return h;
+}
+
 static void make_dos_name(unsigned char dos_name[11], const char *filename)
 {
 	const char *base = strrchr(filename, '/');
@@ -570,6 +580,19 @@ struct file_rec {
 	unsigned short csum;
 	unsigned offset;
 	unsigned dos_time;
+	int master_idx; /* 0=SuperMaster, >=2=custom master */
+};
+
+struct master_rec {
+	unsigned idx;
+	unsigned char *data;
+	unsigned size;
+	unsigned csize;
+	unsigned short csum;
+	unsigned offset;
+	unsigned key;
+	unsigned ref_len;
+	unsigned ref_ctr;
 };
 
 static int create_archive(int nfiles, char **files)
@@ -592,6 +615,7 @@ static int create_archive(int nfiles, char **files)
 		make_dos_name(recs[i].dos_name, files[i]);
 		recs[i].size = (unsigned)st.st_size;
 		recs[i].dos_time = to_dos_time(st.st_mtime);
+		recs[i].master_idx = 0; /* SuperMaster */
 	}
 
 	/* Load the SuperMaster (49152-byte built-in dictionary) */
@@ -602,6 +626,83 @@ static int create_archive(int nfiles, char **files)
 	if (sm_ret < 0)
 		errx(EXIT_FAILURE, "Failed to load SuperMaster (%d)", sm_ret);
 
+	/* Fingerprint files for master-block grouping.
+	   Files sharing identical first 4096 bytes get a custom master
+	   built from the largest file in the group. */
+	enum { SampleSize = 4096, MinMasterFile = 1024, MaxMasterSize = 65535 };
+	unsigned *fps = calloc(nfiles, sizeof *fps);
+	bool *grouped = calloc(nfiles, sizeof *grouped);
+	if (!fps || !grouped)
+		err(EXIT_FAILURE, "malloc");
+
+	for (int i = 0; i < nfiles; i++) {
+		if (recs[i].size < MinMasterFile)
+			continue;
+		unsigned char sample[SampleSize];
+		FILE *f = fopen(recs[i].path, "rb");
+		if (!f) err(EXIT_FAILURE, "%s", recs[i].path);
+		unsigned n = (unsigned)fread(sample, 1, SampleSize, f);
+		fclose(f);
+		fps[i] = fnv1a(sample, n);
+	}
+
+	int nmasters = 0, master_cap = 16;
+	struct master_rec *masters = calloc(master_cap, sizeof *masters);
+	if (!masters)
+		err(EXIT_FAILURE, "malloc");
+
+	for (int i = 0; i < nfiles; i++) {
+		if (grouped[i] || recs[i].size < MinMasterFile)
+			continue;
+
+		/* Count files with same fingerprint */
+		int count = 0, largest = i;
+		for (int j = i; j < nfiles; j++) {
+			if (recs[j].size >= MinMasterFile && fps[j] == fps[i]) {
+				count++;
+				if (recs[j].size > recs[largest].size)
+					largest = j;
+			}
+		}
+		if (count < 2)
+			continue;
+
+		/* Build master from first MaxMasterSize bytes of largest file */
+		unsigned midx = 2 + (unsigned)nmasters; /* FirstMaster = 2 */
+		unsigned msz = recs[largest].size;
+		if (msz > MaxMasterSize) msz = MaxMasterSize;
+		unsigned char *mdata = malloc(msz);
+		if (!mdata) err(EXIT_FAILURE, "malloc");
+		FILE *mf = fopen(recs[largest].path, "rb");
+		if (!mf) err(EXIT_FAILURE, "%s", recs[largest].path);
+		msz = (unsigned)fread(mdata, 1, msz, mf);
+		fclose(mf);
+
+		unsigned ref_len = 0, ref_ctr = 0;
+		for (int j = i; j < nfiles; j++) {
+			if (recs[j].size >= MinMasterFile && fps[j] == fps[i]) {
+				recs[j].master_idx = (int)midx;
+				grouped[j] = true;
+				ref_len += recs[j].size;
+				ref_ctr++;
+			}
+		}
+
+		if (nmasters >= master_cap) {
+			master_cap *= 2;
+			masters = realloc(masters, (unsigned)master_cap * sizeof *masters);
+			if (!masters) err(EXIT_FAILURE, "realloc");
+		}
+		masters[nmasters] = (struct master_rec){
+			.idx = midx, .data = mdata, .size = msz,
+			.key = fnv1a(mdata, msz),
+			.ref_len = ref_len, .ref_ctr = ref_ctr
+		};
+		nmasters++;
+	}
+	free(fps);
+	free(grouped);
+
 	FILE *out = fopen(opt.archive, "wb");
 	if (!out)
 		err(EXIT_FAILURE, "%s", opt.archive);
@@ -611,7 +712,24 @@ static int create_archive(int nfiles, char **files)
 	memset(header, 0, sizeof header);
 	fwrite(header, 1, 29, out);
 
-	/* Compress each file using SuperMaster dictionary */
+	/* Write master blocks (compressed with SuperMaster) */
+	for (int i = 0; i < nmasters; i++) {
+		masters[i].offset = (unsigned)ftell(out);
+		struct mem_reader mr = {.data = masters[i].data, .pos = 0, .len = masters[i].size};
+		unsigned csize = 0;
+		unsigned short csum = 0;
+		int ret = uc2_compress_ex(opt.level, supermaster, 49152,
+		                          mem_read_cb, &mr, fwrite_cb, out,
+		                          masters[i].size, &csum, &csize);
+		if (ret < 0)
+			errx(EXIT_FAILURE, "master %u: compression error %d", masters[i].idx, ret);
+		masters[i].csize = csize;
+		masters[i].csum = csum;
+		fprintf(stderr, "  master[%u]: %u -> %u (%u files)\n",
+		        masters[i].idx, masters[i].size, csize, masters[i].ref_ctr);
+	}
+
+	/* Compress each file */
 	for (int i = 0; i < nfiles; i++) {
 		recs[i].offset = (unsigned)ftell(out);
 
@@ -619,9 +737,21 @@ static int create_archive(int nfiles, char **files)
 		if (!inf)
 			err(EXIT_FAILURE, "%s", recs[i].path);
 
+		const unsigned char *mdata = supermaster;
+		unsigned msz = 49152;
+		if (recs[i].master_idx >= 2) {
+			for (int m = 0; m < nmasters; m++) {
+				if (masters[m].idx == (unsigned)recs[i].master_idx) {
+					mdata = masters[m].data;
+					msz = masters[m].size;
+					break;
+				}
+			}
+		}
+
 		unsigned csize = 0;
 		unsigned short csum = 0;
-		int ret = uc2_compress_ex(opt.level, supermaster, 49152,
+		int ret = uc2_compress_ex(opt.level, mdata, msz,
 		                          fread_cb, inf, fwrite_cb, out,
 		                          recs[i].size, &csum, &csize);
 		fclose(inf);
@@ -630,11 +760,14 @@ static int create_archive(int nfiles, char **files)
 
 		recs[i].csize = csize;
 		recs[i].csum = csum;
-		fprintf(stderr, "  %s: %u -> %u\n", recs[i].name, recs[i].size, csize);
+		fprintf(stderr, "  %s: %u -> %u%s\n", recs[i].name, recs[i].size, csize,
+		        recs[i].master_idx >= 2 ? " (custom master)" : "");
 	}
 
 	/* Build raw central directory */
 	unsigned cdir_cap = 22; /* EndOfCdir + XTAIL + aserial */
+	for (int i = 0; i < nmasters; i++)
+		cdir_cap += 39; /* OHEAD(1) + MASMETA(20) + COMPRESS(10) + LOCATION(8) */
 	for (int i = 0; i < nfiles; i++)
 		cdir_cap += 47 + 21 + (unsigned)strlen(recs[i].name) + 1;
 
@@ -643,41 +776,61 @@ static int create_archive(int nfiles, char **files)
 		err(EXIT_FAILURE, "malloc");
 
 	unsigned char *p = raw_cdir;
+
+	/* Master entries */
+	for (int i = 0; i < nmasters; i++) {
+		*p++ = 3; /* MasterEntry */
+		/* MASMETA (20 bytes) */
+		w32(p, masters[i].idx); p += 4;
+		w32(p, masters[i].key); p += 4;
+		w32(p, masters[i].ref_len); p += 4;
+		w32(p, masters[i].ref_ctr); p += 4;
+		w16(p, masters[i].size); p += 2;
+		w16(p, masters[i].csum); p += 2;
+		/* COMPRESS (10 bytes) */
+		w32(p, masters[i].csize); p += 4;
+		w16(p, 1); p += 2;  /* method */
+		w32(p, 0); p += 4;  /* masterPrefix = SuperMaster */
+		/* LOCATION (8 bytes) */
+		w32(p, 1); p += 4;
+		w32(p, masters[i].offset); p += 4;
+	}
+
+	/* File entries */
 	for (int i = 0; i < nfiles; i++) {
 		unsigned namelen = (unsigned)strlen(recs[i].name);
-		/* OHEAD */
 		*p++ = 2; /* FileEntry */
 		/* OSMETA (22 bytes) */
-		w32(p, 0); p += 4;                        /* parent = root */
-		*p++ = 0x20;                               /* attrib = archive */
+		w32(p, 0); p += 4;
+		*p++ = 0x20;
 		w32(p, recs[i].dos_time); p += 4;
 		memcpy(p, recs[i].dos_name, 11); p += 11;
-		*p++ = 0;                                  /* hidden */
-		*p++ = 1;                                  /* tag = has long name */
+		*p++ = 0;
+		*p++ = 1; /* has tags */
 		/* FILEMETA (6 bytes) */
 		w32(p, recs[i].size); p += 4;
 		w16(p, recs[i].csum); p += 2;
 		/* COMPRESS (10 bytes) */
 		w32(p, recs[i].csize); p += 4;
-		w16(p, 1); p += 2;                        /* method = ultra */
-		w32(p, 0); p += 4;                        /* masterPrefix = SuperMaster */
+		w16(p, 1); p += 2;
+		w32(p, (unsigned)recs[i].master_idx); p += 4;
 		/* LOCATION (8 bytes) */
-		w32(p, 1); p += 4;                        /* volume */
+		w32(p, 1); p += 4;
 		w32(p, recs[i].offset); p += 4;
-		/* EXTMETA: long name tag (21 + namelen + 1 bytes) */
+		/* EXTMETA: long name tag */
 		memcpy(p, "AIP:Win95 LongN", 16); p += 16;
 		w32(p, namelen + 1); p += 4;
-		*p++ = 0;                                  /* next = no more tags */
+		*p++ = 0;
 		memcpy(p, recs[i].name, namelen + 1); p += namelen + 1;
 	}
 
 	/* EndOfCdir */
 	*p++ = 4;
 	/* XTAIL (17 bytes) */
-	*p++ = 0;                                      /* beta */
-	*p++ = 0;                                      /* lock */
-	w32(p, 0); p += 4;                            /* serial */
-	memset(p, ' ', 11); p += 11;                  /* label */
+	*p++ = 0;
+	*p++ = 0;
+	w32(p, 0); p += 4;
+	memset(p, ' ', 11); p += 11;
 	/* aserial (4 bytes) */
 	w32(p, 0); p += 4;
 
@@ -712,24 +865,28 @@ static int create_archive(int nfiles, char **files)
 	/* Fix FHEAD + XHEAD */
 	fseek(out, 0, SEEK_SET);
 	unsigned complen = total - 13;
-	w32(header + 0, 0x1A324355);                   /* "UC2\x1a" */
+	w32(header + 0, 0x1A324355);
 	w32(header + 4, complen);
 	w32(header + 8, complen + 0x01B2C3D4);
-	header[12] = 0;                                 /* damageProtected */
-	w32(header + 13, 1);                           /* cdir.volume */
-	w32(header + 17, cdir_offset);                 /* cdir.offset */
-	w16(header + 21, cdir_csum);                   /* fletch */
-	header[23] = 0;                                 /* busy */
-	w16(header + 24, 300);                         /* versionMadeBy = 3.00 */
-	w16(header + 26, 200);                         /* versionNeededToExtract */
+	header[12] = 0;
+	w32(header + 13, 1);
+	w32(header + 17, cdir_offset);
+	w16(header + 21, cdir_csum);
+	header[23] = 0;
+	w16(header + 24, 300);
+	w16(header + 26, 200);
 	header[28] = 0;
 	fwrite(header, 1, 29, out);
 
 	fclose(out);
+	for (int i = 0; i < nmasters; i++)
+		free(masters[i].data);
+	free(masters);
 	free(supermaster);
 	free(recs);
-	printf("Created %s (%d file%s, %u bytes)\n",
-	       opt.archive, nfiles, nfiles == 1 ? "" : "s", total);
+	printf("Created %s (%d file%s, %d master%s, %u bytes)\n",
+	       opt.archive, nfiles, nfiles == 1 ? "" : "s",
+	       nmasters, nmasters == 1 ? "" : "s", total);
 	return EXIT_SUCCESS;
 }
 

@@ -30,6 +30,15 @@ Modes
    algorithm is used.  Compression level defaults to 4 (Tight); use
    ``-L`` to change it.
 
+   The archiver automatically groups similar files using content
+   fingerprinting: files sharing identical first 4096 bytes are assigned a
+   custom master block built from the largest file in the group.  This
+   pre-fills the LZ77 sliding window with shared content, improving
+   compression for collections of structurally similar files (e.g. log
+   rotations, versioned configs, same-format data files).  Files that
+   don't group (or are smaller than 1 KB) use the built-in 49 KB
+   SuperMaster dictionary.
+
 Options
 -------
 

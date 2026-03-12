@@ -92,6 +92,57 @@ Each directory entry begins with a 1-byte type tag:
 
 The directory ends with XTAIL (17 bytes) + archive serial (4 bytes).
 
+Master Blocks
+~~~~~~~~~~~~~
+
+Masters are LZ77 dictionary prefixes that pre-fill the sliding window
+before decompression, allowing back-references into shared content
+across files.  Three kinds exist:
+
+.. list-table::
+   :widths: 15 85
+
+   * - 0
+     - **SuperMaster** — built-in 49 152-byte dictionary, decompressed
+       from a static blob embedded in the library.
+   * - 1
+     - **NoMaster** — 512 zero bytes (minimal dictionary).
+   * - ≥ 2
+     - **Custom master** — archive-specific, described by a MASMETA
+       record in the central directory.
+
+MASMETA (20 bytes):
+
+.. list-table::
+   :widths: 15 15 70
+
+   * - Offset
+     - Size
+     - Field
+   * - 0
+     - 4
+     - Master index (≥ 2)
+   * - 4
+     - 4
+     - Content key (FNV-1a hash)
+   * - 8
+     - 4
+     - Total uncompressed size of referring files
+   * - 12
+     - 4
+     - Number of referring files
+   * - 16
+     - 2
+     - Master data length (uncompressed, ≤ 65 535)
+   * - 18
+     - 2
+     - Fletcher checksum of master data
+
+A master entry in the cdir is: type byte (3) + MASMETA (20) +
+COMPRESS (10) + LOCATION (8) = 39 bytes.  The compressed master data
+is stored at the location pointed to by LOCATION; it is itself
+compressed using another master (typically SuperMaster).
+
 Compression Format
 ------------------
 

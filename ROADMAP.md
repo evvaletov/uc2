@@ -8,13 +8,15 @@
 - [x] Win32 compat layer carried over
 - [x] Tagged v3.0.0-alpha.1
 
-## Phase 2: Original Compression Engine
+## Phase 2: Original Compression Engine (DONE)
 
-- [ ] Port LZ77+Huffman compressor from `ULTRACMP.CPP`, `TREEGEN.CPP`, `TREEENC.CPP`
-- [ ] Write as the inverse of the decompressor (Bobrowski's code is the spec)
-- [ ] Compression levels T1--TQ from original `COMPINT.CPP` parameters
-- [ ] Start without master blocks; add dedup later
-- [ ] Round-trip testing: new compress -> old extract in DOSBox, and vice versa
+- [x] Port LZ77+Huffman compressor from `ULTRACMP.CPP`, `TREEGEN.CPP`, `TREEENC.CPP`
+- [x] Write as the inverse of the decompressor (Bobrowski's code is the spec)
+- [x] Compression levels 2=Fast, 3=Normal, 4=Tight, 5=Ultra
+- [x] CLI create mode (`uc2 -w`), compression level flag (`-L`)
+- [x] SuperMaster dictionary support (built-in 49 KB dictionary)
+- [x] Round-trip testing: 37 unit tests + CLI integration tests
+- [ ] Round-trip testing vs original `uc2pro.exe` in DOSBox
 - [ ] Give UC2 a voice: status and progress messages with personality,
       continuing the original's tradition ("Do not worry, you have got
       the tree", "decompression always lightspeed", FAST/TIGHT/S-TIGHT
@@ -27,6 +29,11 @@
 UC2's signature feature from 1992, ahead of its time.  Modernize into
 something no mainstream archiver offers.
 
+- [x] Content-fingerprint file grouping (FNV-1a hash of first 4096 bytes)
+- [x] Custom master-block generation from largest file in each group
+- [x] MASMETA central directory records with full metadata
+- [x] Masters compressed with SuperMaster, files compressed with custom master
+- [x] CLI integration test validating master deduplication round-trip
 - [ ] Content-defined chunking (CDC) with rolling hashes (Gear or Rabin-Karp)
       replacing fixed-block exact matching
 - [ ] Merkle DAG of deduplicated blocks (Git pack-style content addressing)

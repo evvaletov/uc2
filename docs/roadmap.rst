@@ -10,8 +10,11 @@ root.  Key phases:
 2. **Original Compression Engine** — Done. LZ77+Huffman compressor
    producing bitstreams compatible with the original format.
 
-3. **Modernized Master-Block Deduplication** — Content-defined
-   chunking, Merkle DAG, cross-archive dedup, near-duplicate detection.
+3. **Modernized Master-Block Deduplication** — In progress.
+   Content-fingerprint grouping and custom master-block generation done
+   (FNV-1a sampling, MASMETA cdir records, SuperMaster-compressed
+   masters).  Remaining: content-defined chunking, Merkle DAG,
+   cross-archive dedup, near-duplicate detection.
 
 4. **Modern Compression Backends** — ANS entropy coding,
    zstd-inspired dictionary compression, content-aware preprocessing.
