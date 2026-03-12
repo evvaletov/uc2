@@ -1,6 +1,6 @@
 # libuc2 — UC2 decompression library
 
-set(LIBUC2_SOURCES src/decompress.c)
+set(LIBUC2_SOURCES src/decompress.c src/compress.c src/uc2_tables.c)
 
 # Embed super.bin: use .S with .incbin on GCC/Clang, generated C array on MSVC
 if(MSVC)

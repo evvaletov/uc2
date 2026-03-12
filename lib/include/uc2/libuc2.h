@@ -83,6 +83,22 @@ UC2_API int uc2_extract(
 
 UC2_API const char *uc2_message(uc2_handle, int ret);
 
+/* Compress raw data into a UC2 bitstream (no archive framing).
+   level: 2=Fast, 3=Normal, 4=Tight(default), 5=Ultra.
+   read() should return bytes read (0 at EOF, <0 on error).
+   write() should return <0 on error.
+   Returns 0 on success, negative UC2_* error code on failure. */
+UC2_API int uc2_compress(
+	int level,
+	int (*read)(void *context, void *buf, unsigned len),
+	void *read_ctx,
+	int (*write)(void *context, const void *ptr, unsigned len),
+	void *write_ctx,
+	unsigned size,
+	unsigned short *checksum_out,
+	unsigned *compressed_size_out
+);
+
 struct uc2_io {
 	/* Read len bytes from the archive at offset pos into buf.
 	   Return number of bytes read, or less if eof.
