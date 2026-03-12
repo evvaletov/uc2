@@ -3,6 +3,9 @@ build/
 build-*/
 cmake-build-*/
 
+# Docs build
+docs/_build/
+
 # IDE
 .idea/
 .vscode/
