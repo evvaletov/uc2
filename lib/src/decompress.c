@@ -11,6 +11,7 @@
 */
 
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 #include <assert.h>
@@ -1518,4 +1519,27 @@ const char *uc2_message(struct uc2_context *uc2, int ret)
 		}
 	}
 	return s;
+}
+
+/* Decompress the built-in SuperMaster (49152 bytes) into caller's buffer.
+   Returns 49152 on success, negative UC2_* error code on failure. */
+static void *sm_alloc(void *ctx, unsigned size) { (void)ctx; return malloc(size); }
+static void sm_free(void *ctx, void *ptr) { (void)ctx; free(ptr); }
+
+int uc2_get_supermaster(void *buf, unsigned buf_size)
+{
+	if (buf_size < 49152)
+		return UC2_UserFault;
+
+	struct uc2_io io = { .alloc = sm_alloc, .free = sm_free };
+	struct uc2_context *uc2 = uc2_open(&io, NULL);
+	if (!uc2)
+		return UC2_UserFault;
+
+	int ret = resolve_master(uc2, SuperMaster);
+	if (ret >= 0)
+		memcpy(buf, uc2->supermaster, 49152);
+
+	uc2_close(uc2);
+	return ret < 0 ? ret : 49152;
 }

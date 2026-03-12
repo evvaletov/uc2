@@ -7,6 +7,7 @@ Synopsis
 .. code-block:: none
 
    uc2 [options] archive.uc2 [patterns...]
+   uc2 -w [-L level] archive.uc2 files...
 
 Modes
 -----
@@ -24,6 +25,11 @@ Modes
 ``uc2 -p archive.uc2 filename``
    Extract a file to stdout.
 
+``uc2 -w archive.uc2 files...``
+   Create a new archive from the given files.  The original LZ77+Huffman
+   algorithm is used.  Compression level defaults to 4 (Tight); use
+   ``-L`` to change it.
+
 Options
 -------
 
@@ -37,6 +43,11 @@ Options
      - List archive contents
    * - ``-t``
      - Test archive integrity
+   * - ``-w``
+     - Create archive
+   * - ``-L n``
+     - Compression level: 2 = Fast, 3 = Normal, 4 = Tight (default),
+       5 = Ultra
    * - ``-a``
      - Include all file versions (not just latest)
    * - ``-d path``

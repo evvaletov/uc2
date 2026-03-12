@@ -125,19 +125,20 @@ static void put_u32le(unsigned char *p, unsigned v)
 /* --- Build a minimal UC2 archive containing one file --- */
 
 static int compress_data(const unsigned char *data, unsigned len, int level,
+                         const void *master, unsigned master_size,
                          struct membuf *out, unsigned short *csum_out)
 {
 	struct mem_reader mr = { .data = data, .pos = 0, .len = len };
 	unsigned csize = 0;
 	membuf_init(out);
-	int ret = uc2_compress(level, mem_read, &mr, membuf_write, out,
-	                       len, csum_out, &csize);
+	int ret = uc2_compress_ex(level, master, master_size, mem_read, &mr,
+	                          membuf_write, out, len, csum_out, &csize);
 	return ret;
 }
 
 static int build_archive(const unsigned char *file_compressed, unsigned file_csize,
                          unsigned file_orig_size, unsigned short file_csum,
-                         int level, struct membuf *archive)
+                         unsigned master_id, int level, struct membuf *archive)
 {
 	/*
 	 * Archive layout:
@@ -183,7 +184,7 @@ static int build_archive(const unsigned char *file_compressed, unsigned file_csi
 	/* COMPRESS */
 	put_u32le(p, file_csize); p += 4;     /* compressedLength */
 	put_u16le(p, 1); p += 2;              /* method = ultra */
-	put_u32le(p, 1); p += 4;              /* masterPrefix = NoMaster */
+	put_u32le(p, master_id); p += 4;      /* masterPrefix */
 
 	/* LOCATION */
 	put_u32le(p, 1); p += 4;              /* volume = 1 */
@@ -209,7 +210,7 @@ static int build_archive(const unsigned char *file_compressed, unsigned file_csi
 	/* Compress the cdir */
 	struct membuf cdir_compressed;
 	unsigned short cdir_compress_csum = 0;
-	int ret = compress_data(raw_cdir, raw_cdir_len, level,
+	int ret = compress_data(raw_cdir, raw_cdir_len, level, NULL, 0,
 	                        &cdir_compressed, &cdir_compress_csum);
 	if (ret < 0) {
 		membuf_free(&cdir_compressed);
@@ -258,15 +259,18 @@ static int build_archive(const unsigned char *file_compressed, unsigned file_csi
 	return 0;
 }
 
-static void test_roundtrip(const char *name, const unsigned char *input,
-                           unsigned input_len, int level)
+static void test_roundtrip_master(const char *name, const unsigned char *input,
+                                  unsigned input_len, int level,
+                                  const void *master, unsigned master_size,
+                                  unsigned master_id)
 {
-	printf("  %s (level %d, %u bytes): ", name, level, input_len);
+	printf("  %s (level %d, %u bytes, master=%u): ", name, level, input_len, master_id);
 
 	/* Compress file data */
 	struct membuf file_compressed;
 	unsigned short file_csum = 0;
-	int ret = compress_data(input, input_len, level, &file_compressed, &file_csum);
+	int ret = compress_data(input, input_len, level, master, master_size,
+	                        &file_compressed, &file_csum);
 	if (ret < 0) {
 		printf("FAIL (compress returned %d)\n", ret);
 		failures++;
@@ -278,7 +282,7 @@ static void test_roundtrip(const char *name, const unsigned char *input,
 	/* Build archive */
 	struct membuf archive;
 	ret = build_archive(file_compressed.data, file_compressed.len,
-	                    input_len, file_csum, level, &archive);
+	                    input_len, file_csum, master_id, level, &archive);
 	membuf_free(&file_compressed);
 	if (ret < 0) {
 		printf("FAIL (build_archive returned %d)\n", ret);
@@ -363,6 +367,12 @@ static void test_roundtrip(const char *name, const unsigned char *input,
 	}
 
 	membuf_free(&output);
+}
+
+static void test_roundtrip(const char *name, const unsigned char *input,
+                           unsigned input_len, int level)
+{
+	test_roundtrip_master(name, input, input_len, level, NULL, 0, 1);
 }
 
 /* Test data generators */
@@ -466,6 +476,41 @@ int main(void)
 
 		printf("\n");
 	}
+
+	/* SuperMaster round-trip tests (level 4 only for speed) */
+	printf("SuperMaster:\n");
+	{
+		unsigned char *sm = malloc(49152);
+		if (!sm) { fprintf(stderr, "malloc failed\n"); return EXIT_FAILURE; }
+		int sm_ret = uc2_get_supermaster(sm, 49152);
+		if (sm_ret < 0) {
+			fprintf(stderr, "uc2_get_supermaster failed: %d\n", sm_ret);
+			free(sm);
+			return EXIT_FAILURE;
+		}
+
+		unsigned char empty = 0;
+		test_roundtrip_master("sm_empty", &empty, 0, 4, sm, 49152, 0);
+
+		unsigned char one = 'A';
+		test_roundtrip_master("sm_single", &one, 1, 4, sm, 49152, 0);
+
+		unsigned char *z = gen_zeros(4096);
+		test_roundtrip_master("sm_zeros_4k", z, 4096, 4, sm, 49152, 0);
+		free(z);
+
+		unsigned char *r = gen_random(1024, 42);
+		test_roundtrip_master("sm_random_1k", r, 1024, 4, sm, 49152, 0);
+		free(r);
+
+		unsigned tlen;
+		unsigned char *t = gen_text(&tlen);
+		test_roundtrip_master("sm_text", t, tlen, 4, sm, 49152, 0);
+		free(t);
+
+		free(sm);
+	}
+	printf("\n");
 
 	if (failures) {
 		fprintf(stderr, "%d test(s) FAILED\n", failures);

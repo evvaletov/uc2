@@ -20,3 +20,11 @@ target_link_libraries(test_roundtrip PRIVATE uc2)
 target_include_directories(test_roundtrip PRIVATE "${PROJECT_BINARY_DIR}/lib")
 target_compile_features(test_roundtrip PRIVATE c_std_99)
 add_test(NAME roundtrip COMMAND test_roundtrip)
+
+# CLI create/extract round-trip test
+add_test(NAME cli_create
+    COMMAND ${CMAKE_COMMAND}
+        -DUC2_CLI=$<TARGET_FILE:uc2-cli>
+        -DTEST_DIR=${CMAKE_CURRENT_BINARY_DIR}/cli_test
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/test_cli_create.cmake
+)

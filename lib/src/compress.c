@@ -813,8 +813,9 @@ static int count_write(void *ctx, const void *ptr, unsigned len)
 	return cw->write(cw->ctx, ptr, len);
 }
 
-int uc2_compress(
+int uc2_compress_ex(
 	int level,
+	const void *master, unsigned master_size,
 	int (*read)(void *context, void *buf, unsigned len),
 	void *read_ctx,
 	int (*write)(void *context, const void *ptr, unsigned len),
@@ -851,6 +852,19 @@ int uc2_compress(
 	/* Read all input data into circular buffer and compress */
 	unsigned remaining = size;
 	u16 load_pos = 0;
+
+	/* Pre-fill circular buffer with master data (LZ77 dictionary prefix) */
+	if (master && master_size > 0) {
+		unsigned ms = master_size;
+		if (ms > UC2_BUF_SIZE - UC2_MIN_MATCH)
+			ms = UC2_BUF_SIZE - UC2_MIN_MATCH;
+		memcpy(c->data, master, ms);
+		for (unsigned i = 0; i + 2 < ms; i++)
+			hash_enter(c, (u16)i);
+		load_pos = (u16)ms;
+		c->pos = load_pos;
+		c->end = load_pos;
+	}
 
 	/* Pre-count EOB distance symbol frequency so the tree includes it */
 	c->bd_freq[NumByteSym + dist_to_sym(UC2_EOB_MARK)]++;
@@ -944,4 +958,18 @@ int uc2_compress(
 
 	free(ctx);
 	return 0;
+}
+
+int uc2_compress(
+	int level,
+	int (*read)(void *context, void *buf, unsigned len),
+	void *read_ctx,
+	int (*write)(void *context, const void *ptr, unsigned len),
+	void *write_ctx,
+	unsigned size,
+	unsigned short *checksum_out,
+	unsigned *compressed_size_out)
+{
+	return uc2_compress_ex(level, NULL, 0, read, read_ctx, write, write_ctx,
+	                       size, checksum_out, compressed_size_out);
 }

@@ -44,14 +44,16 @@ struct options {
 	bool all:1;
 	bool test:1;
 	bool pipe:1;
+	bool create:1;
 	bool overwrite:1;
 	bool no_dir_meta:1;
 	bool no_file_meta:1;
 	bool help:1;
 	char sep;
+	int level;
 	char *archive;
 	char *dest;
-} opt = {.sep = ' '};
+} opt = {.sep = ' ', .level = 4};
 
 static int my_read(void *ctx, unsigned pos, void *ptr, unsigned len)
 {
@@ -469,6 +471,268 @@ static bool extract_cb(struct node *ne, void *ctx, enum cause cause)
 	return true;
 }
 
+/* --- Archive creation --- */
+
+static void w16(unsigned char *p, unsigned v)
+{
+	p[0] = v & 0xFF;
+	p[1] = (v >> 8) & 0xFF;
+}
+
+static void w32(unsigned char *p, unsigned v)
+{
+	p[0] = v & 0xFF;
+	p[1] = (v >> 8) & 0xFF;
+	p[2] = (v >> 16) & 0xFF;
+	p[3] = (v >> 24) & 0xFF;
+}
+
+static unsigned short fletcher_csum(const unsigned char *data, unsigned len)
+{
+	if (!len) return 0xA55A;
+	unsigned v = 0xA55A;
+	const unsigned char *p = data;
+	const unsigned char *e = p + len - 1;
+	if (v > 0xFFFF)
+		v ^= *p++ << 8;
+	while (p < e) {
+		v ^= p[0] | p[1] << 8;
+		p += 2;
+	}
+	v &= 0xFFFF;
+	if (p == e)
+		v ^= *p | 0x10000;
+	return (unsigned short)(v & 0xFFFF);
+}
+
+static unsigned to_dos_time(time_t t)
+{
+	struct tm *tm = localtime(&t);
+	if (!tm || tm->tm_year < 80) return 0;
+	return ((unsigned)(tm->tm_year - 80) << 25) |
+	       ((unsigned)(tm->tm_mon + 1) << 21) |
+	       ((unsigned)tm->tm_mday << 16) |
+	       ((unsigned)tm->tm_hour << 11) |
+	       ((unsigned)tm->tm_min << 5) |
+	       ((unsigned)(tm->tm_sec / 2));
+}
+
+static void make_dos_name(unsigned char dos_name[11], const char *filename)
+{
+	const char *base = strrchr(filename, '/');
+	base = base ? base + 1 : filename;
+	const char *dot = strrchr(base, '.');
+	int namelen = dot ? (int)(dot - base) : (int)strlen(base);
+
+	memset(dos_name, ' ', 11);
+	for (int i = 0; i < 8 && i < namelen; i++)
+		dos_name[i] = toupper((unsigned char)base[i]);
+	if (dot) {
+		const char *ext = dot + 1;
+		for (int i = 0; i < 3 && ext[i]; i++)
+			dos_name[8 + i] = toupper((unsigned char)ext[i]);
+	}
+}
+
+struct mem_reader {
+	const unsigned char *data;
+	unsigned pos, len;
+};
+
+static int mem_read_cb(void *ctx, void *buf, unsigned len)
+{
+	struct mem_reader *mr = ctx;
+	unsigned avail = mr->len - mr->pos;
+	if (len > avail) len = avail;
+	if (len > 0) {
+		memcpy(buf, mr->data + mr->pos, len);
+		mr->pos += len;
+	}
+	return (int)len;
+}
+
+static int fread_cb(void *ctx, void *buf, unsigned len)
+{
+	return (int)fread(buf, 1, len, (FILE *)ctx);
+}
+
+static int fwrite_cb(void *ctx, const void *ptr, unsigned len)
+{
+	return fwrite(ptr, 1, len, (FILE *)ctx) == len ? 0 : -1;
+}
+
+struct file_rec {
+	char path[PATH_MAX];
+	char name[300];
+	unsigned char dos_name[11];
+	unsigned size;
+	unsigned csize;
+	unsigned short csum;
+	unsigned offset;
+	unsigned dos_time;
+};
+
+static int create_archive(int nfiles, char **files)
+{
+	struct file_rec *recs = calloc(nfiles, sizeof *recs);
+	if (!recs)
+		err(EXIT_FAILURE, "malloc");
+
+	for (int i = 0; i < nfiles; i++) {
+		struct stat st;
+		if (stat(files[i], &st) < 0)
+			err(EXIT_FAILURE, "%s", files[i]);
+		if (!S_ISREG(st.st_mode))
+			errx(EXIT_FAILURE, "%s: not a regular file", files[i]);
+
+		snprintf(recs[i].path, sizeof recs[i].path, "%s", files[i]);
+		const char *base = strrchr(files[i], '/');
+		base = base ? base + 1 : files[i];
+		snprintf(recs[i].name, sizeof recs[i].name, "%s", base);
+		make_dos_name(recs[i].dos_name, files[i]);
+		recs[i].size = (unsigned)st.st_size;
+		recs[i].dos_time = to_dos_time(st.st_mtime);
+	}
+
+	/* Load the SuperMaster (49152-byte built-in dictionary) */
+	unsigned char *supermaster = malloc(49152);
+	if (!supermaster)
+		err(EXIT_FAILURE, "malloc");
+	int sm_ret = uc2_get_supermaster(supermaster, 49152);
+	if (sm_ret < 0)
+		errx(EXIT_FAILURE, "Failed to load SuperMaster (%d)", sm_ret);
+
+	FILE *out = fopen(opt.archive, "wb");
+	if (!out)
+		err(EXIT_FAILURE, "%s", opt.archive);
+
+	/* Placeholder FHEAD + XHEAD (29 bytes) */
+	unsigned char header[29];
+	memset(header, 0, sizeof header);
+	fwrite(header, 1, 29, out);
+
+	/* Compress each file using SuperMaster dictionary */
+	for (int i = 0; i < nfiles; i++) {
+		recs[i].offset = (unsigned)ftell(out);
+
+		FILE *inf = fopen(recs[i].path, "rb");
+		if (!inf)
+			err(EXIT_FAILURE, "%s", recs[i].path);
+
+		unsigned csize = 0;
+		unsigned short csum = 0;
+		int ret = uc2_compress_ex(opt.level, supermaster, 49152,
+		                          fread_cb, inf, fwrite_cb, out,
+		                          recs[i].size, &csum, &csize);
+		fclose(inf);
+		if (ret < 0)
+			errx(EXIT_FAILURE, "%s: compression error %d", recs[i].path, ret);
+
+		recs[i].csize = csize;
+		recs[i].csum = csum;
+		fprintf(stderr, "  %s: %u -> %u\n", recs[i].name, recs[i].size, csize);
+	}
+
+	/* Build raw central directory */
+	unsigned cdir_cap = 22; /* EndOfCdir + XTAIL + aserial */
+	for (int i = 0; i < nfiles; i++)
+		cdir_cap += 47 + 21 + (unsigned)strlen(recs[i].name) + 1;
+
+	unsigned char *raw_cdir = malloc(cdir_cap);
+	if (!raw_cdir)
+		err(EXIT_FAILURE, "malloc");
+
+	unsigned char *p = raw_cdir;
+	for (int i = 0; i < nfiles; i++) {
+		unsigned namelen = (unsigned)strlen(recs[i].name);
+		/* OHEAD */
+		*p++ = 2; /* FileEntry */
+		/* OSMETA (22 bytes) */
+		w32(p, 0); p += 4;                        /* parent = root */
+		*p++ = 0x20;                               /* attrib = archive */
+		w32(p, recs[i].dos_time); p += 4;
+		memcpy(p, recs[i].dos_name, 11); p += 11;
+		*p++ = 0;                                  /* hidden */
+		*p++ = 1;                                  /* tag = has long name */
+		/* FILEMETA (6 bytes) */
+		w32(p, recs[i].size); p += 4;
+		w16(p, recs[i].csum); p += 2;
+		/* COMPRESS (10 bytes) */
+		w32(p, recs[i].csize); p += 4;
+		w16(p, 1); p += 2;                        /* method = ultra */
+		w32(p, 0); p += 4;                        /* masterPrefix = SuperMaster */
+		/* LOCATION (8 bytes) */
+		w32(p, 1); p += 4;                        /* volume */
+		w32(p, recs[i].offset); p += 4;
+		/* EXTMETA: long name tag (21 + namelen + 1 bytes) */
+		memcpy(p, "AIP:Win95 LongN", 16); p += 16;
+		w32(p, namelen + 1); p += 4;
+		*p++ = 0;                                  /* next = no more tags */
+		memcpy(p, recs[i].name, namelen + 1); p += namelen + 1;
+	}
+
+	/* EndOfCdir */
+	*p++ = 4;
+	/* XTAIL (17 bytes) */
+	*p++ = 0;                                      /* beta */
+	*p++ = 0;                                      /* lock */
+	w32(p, 0); p += 4;                            /* serial */
+	memset(p, ' ', 11); p += 11;                  /* label */
+	/* aserial (4 bytes) */
+	w32(p, 0); p += 4;
+
+	unsigned cdir_size = (unsigned)(p - raw_cdir);
+	unsigned short cdir_csum = fletcher_csum(raw_cdir, cdir_size);
+
+	/* COMPRESS record for cdir (placeholder) */
+	unsigned cdir_offset = (unsigned)ftell(out);
+	unsigned char crec[10];
+	memset(crec, 0, 10);
+	fwrite(crec, 1, 10, out);
+
+	/* Compress cdir */
+	struct mem_reader mr = {.data = raw_cdir, .pos = 0, .len = cdir_size};
+	unsigned cdir_csize = 0;
+	unsigned short cdir_comp_csum = 0;
+	int ret = uc2_compress(opt.level, mem_read_cb, &mr, fwrite_cb, out,
+	                       cdir_size, &cdir_comp_csum, &cdir_csize);
+	free(raw_cdir);
+	if (ret < 0)
+		errx(EXIT_FAILURE, "cdir compression error %d", ret);
+
+	unsigned total = (unsigned)ftell(out);
+
+	/* Fix COMPRESS record for cdir */
+	fseek(out, cdir_offset, SEEK_SET);
+	w32(crec + 0, cdir_csize);
+	w16(crec + 4, 1);
+	w32(crec + 6, 1);
+	fwrite(crec, 1, 10, out);
+
+	/* Fix FHEAD + XHEAD */
+	fseek(out, 0, SEEK_SET);
+	unsigned complen = total - 13;
+	w32(header + 0, 0x1A324355);                   /* "UC2\x1a" */
+	w32(header + 4, complen);
+	w32(header + 8, complen + 0x01B2C3D4);
+	header[12] = 0;                                 /* damageProtected */
+	w32(header + 13, 1);                           /* cdir.volume */
+	w32(header + 17, cdir_offset);                 /* cdir.offset */
+	w16(header + 21, cdir_csum);                   /* fletch */
+	header[23] = 0;                                 /* busy */
+	w16(header + 24, 300);                         /* versionMadeBy = 3.00 */
+	w16(header + 26, 200);                         /* versionNeededToExtract */
+	header[28] = 0;
+	fwrite(header, 1, 29, out);
+
+	fclose(out);
+	free(supermaster);
+	free(recs);
+	printf("Created %s (%d file%s, %u bytes)\n",
+	       opt.archive, nfiles, nfiles == 1 ? "" : "s", total);
+	return EXIT_SUCCESS;
+}
+
 int main(int argc, char *argv[])
 {
 #ifdef __DJGPP__
@@ -478,7 +742,7 @@ int main(int argc, char *argv[])
 		goto usage;
 
 	for (;;) {
-		int o = getopt(argc, argv, "xlatfd:C:cpDTh?");
+		int o = getopt(argc, argv, "xlatfd:C:cpDTh?wL:");
 		if (o == -1)
 			break;
 		switch (o) {
@@ -512,6 +776,14 @@ int main(int argc, char *argv[])
 			opt.no_file_meta = opt.no_dir_meta;
 			opt.no_dir_meta = true;
 			break;
+		case 'w':
+			opt.create = true;
+			break;
+		case 'L':
+			opt.level = atoi(optarg);
+			if (opt.level < 2 || opt.level > 5)
+				errx(EXIT_FAILURE, "Compression level must be 2..5");
+			break;
 		case 'T':
 			opt.sep = '\t';
 			break;
@@ -527,6 +799,7 @@ usage:
 				"uc2 [-afpDT] [-d destination] archive.uc2 [files]...\n"
 				"uc2 -l [-aT] archive.uc2 [files]...\n"
 				"uc2 -t [-a] archive.uc2 [files]...\n"
+				"uc2 -w [-L level] archive.uc2 files...\n"
 			);
 			if (!opt.help)
 				printf("uc2 -h\n");
@@ -534,6 +807,8 @@ usage:
 				printf(
 					" -l      List\n"
 					" -t      Test\n"
+					" -w      Create archive\n"
+					" -L n    Compression level: 2=Fast 3=Normal 4=Tight(default) 5=Ultra\n"
 					" -a      All versions of files\n"
 					" -d path Destination to extract to\n"
 					" -f      Overwrite\n"
@@ -549,6 +824,12 @@ usage:
 	if (argc == optind)
 		errx(EXIT_FAILURE, "Archive not given");
 	opt.archive = argv[optind++];
+
+	if (opt.create) {
+		if (optind == argc)
+			errx(EXIT_FAILURE, "No files to add");
+		return create_archive(argc - optind, argv + optind);
+	}
 
 	FILE *f = fopen(opt.archive, "rb");
 	if (!f) err(EXIT_FAILURE, "%s", opt.archive);

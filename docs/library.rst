@@ -79,6 +79,21 @@ Compression
    :param compressed_size_out: Receives the compressed size.
    :returns: 0 on success, negative ``UC2_*`` error code on failure.
 
+.. c:function:: int uc2_compress_ex(int level, const void *master, unsigned master_size, int (*read)(void *ctx, void *buf, unsigned len), void *read_ctx, int (*write)(void *ctx, const void *ptr, unsigned len), void *write_ctx, unsigned size, unsigned short *checksum_out, unsigned *compressed_size_out)
+
+   Compress with a master-block dictionary prefix.  The master data
+   pre-fills the LZ77 sliding window, allowing back-references into
+   the master for cross-file deduplication.  Pass ``NULL`` / ``0`` for
+   no master (equivalent to :c:func:`uc2_compress`).
+
+   The CLI uses the built-in SuperMaster (49 KB) by default.
+
+.. c:function:: int uc2_get_supermaster(void *buf, unsigned buf_size)
+
+   Decompress the built-in SuperMaster into *buf* (must be at least
+   49152 bytes).  Returns ``49152`` on success, negative error code on
+   failure.
+
 I/O Callbacks
 -------------
 

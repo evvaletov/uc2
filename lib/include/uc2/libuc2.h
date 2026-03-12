@@ -99,6 +99,27 @@ UC2_API int uc2_compress(
 	unsigned *compressed_size_out
 );
 
+/* Compress with a master-block dictionary prefix.
+   The master data pre-fills the LZ77 sliding window, allowing
+   back-references into the master for cross-file deduplication.
+   Set master=NULL, master_size=0 for no master (same as uc2_compress). */
+UC2_API int uc2_compress_ex(
+	int level,
+	const void *master, unsigned master_size,
+	int (*read)(void *context, void *buf, unsigned len),
+	void *read_ctx,
+	int (*write)(void *context, const void *ptr, unsigned len),
+	void *write_ctx,
+	unsigned size,
+	unsigned short *checksum_out,
+	unsigned *compressed_size_out
+);
+
+/* Decompress the built-in SuperMaster (49152 bytes).
+   buf must be at least 49152 bytes.
+   Returns 49152 on success, negative UC2_* error code on failure. */
+UC2_API int uc2_get_supermaster(void *buf, unsigned buf_size);
+
 struct uc2_io {
 	/* Read len bytes from the archive at offset pos into buf.
 	   Return number of bytes read, or less if eof.
