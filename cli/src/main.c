@@ -30,6 +30,7 @@ void setprogname(const char *argv0);
 #include <errno.h>
 #include <assert.h>
 #include <sys/stat.h>
+#include <dirent.h>
 
 #include <uc2/libuc2.h>
 #include <uc2/uc2_version.h>
@@ -571,6 +572,15 @@ static int fwrite_cb(void *ctx, const void *ptr, unsigned len)
 	return fwrite(ptr, 1, len, (FILE *)ctx) == len ? 0 : -1;
 }
 
+struct dir_rec {
+	char path[PATH_MAX];
+	char name[300];
+	unsigned char dos_name[11];
+	unsigned id;       /* unique dir ID (starts from 1) */
+	unsigned parent_id; /* 0 = root */
+	unsigned dos_time;
+};
+
 struct file_rec {
 	char path[PATH_MAX];
 	char name[300];
@@ -580,7 +590,8 @@ struct file_rec {
 	unsigned short csum;
 	unsigned offset;
 	unsigned dos_time;
-	int master_idx; /* 0=SuperMaster, >=2=custom master */
+	unsigned parent_id; /* 0 = root, or dir_rec.id */
+	int master_idx;     /* 0=SuperMaster, >=2=custom master */
 };
 
 struct master_rec {
@@ -595,28 +606,105 @@ struct master_rec {
 	unsigned ref_ctr;
 };
 
-static int create_archive(int nfiles, char **files)
+/* Growable arrays for scanning input paths */
+static struct dir_rec *g_dirs;
+static int g_ndirs, g_dir_cap;
+static struct file_rec *g_files;
+static int g_nfiles, g_file_cap;
+static unsigned g_next_dirid = 1;
+
+static void scan_path(const char *path, unsigned parent_id);
+
+static void add_dir(const char *path, const char *name, unsigned parent_id, unsigned dos_time)
 {
-	struct file_rec *recs = calloc(nfiles, sizeof *recs);
-	if (!recs)
-		err(EXIT_FAILURE, "malloc");
-
-	for (int i = 0; i < nfiles; i++) {
-		struct stat st;
-		if (stat(files[i], &st) < 0)
-			err(EXIT_FAILURE, "%s", files[i]);
-		if (!S_ISREG(st.st_mode))
-			errx(EXIT_FAILURE, "%s: not a regular file", files[i]);
-
-		snprintf(recs[i].path, sizeof recs[i].path, "%s", files[i]);
-		const char *base = strrchr(files[i], '/');
-		base = base ? base + 1 : files[i];
-		snprintf(recs[i].name, sizeof recs[i].name, "%s", base);
-		make_dos_name(recs[i].dos_name, files[i]);
-		recs[i].size = (unsigned)st.st_size;
-		recs[i].dos_time = to_dos_time(st.st_mtime);
-		recs[i].master_idx = 0; /* SuperMaster */
+	if (g_ndirs >= g_dir_cap) {
+		g_dir_cap = g_dir_cap ? g_dir_cap * 2 : 32;
+		g_dirs = realloc(g_dirs, (unsigned)g_dir_cap * sizeof *g_dirs);
+		if (!g_dirs) err(EXIT_FAILURE, "realloc");
 	}
+	struct dir_rec *d = &g_dirs[g_ndirs++];
+	memset(d, 0, sizeof *d);
+	snprintf(d->path, sizeof d->path, "%s", path);
+	snprintf(d->name, sizeof d->name, "%s", name);
+	make_dos_name(d->dos_name, name);
+	d->id = g_next_dirid++;
+	d->parent_id = parent_id;
+	d->dos_time = dos_time;
+}
+
+static void add_file(const char *path, const char *name, unsigned parent_id,
+                     unsigned size, unsigned dos_time)
+{
+	if (g_nfiles >= g_file_cap) {
+		g_file_cap = g_file_cap ? g_file_cap * 2 : 64;
+		g_files = realloc(g_files, (unsigned)g_file_cap * sizeof *g_files);
+		if (!g_files) err(EXIT_FAILURE, "realloc");
+	}
+	struct file_rec *f = &g_files[g_nfiles++];
+	memset(f, 0, sizeof *f);
+	snprintf(f->path, sizeof f->path, "%s", path);
+	snprintf(f->name, sizeof f->name, "%s", name);
+	make_dos_name(f->dos_name, name);
+	f->size = size;
+	f->dos_time = dos_time;
+	f->parent_id = parent_id;
+}
+
+static void scan_dir(const char *dirpath, unsigned dirid)
+{
+	DIR *d = opendir(dirpath);
+	if (!d) err(EXIT_FAILURE, "%s", dirpath);
+	struct dirent *de;
+	while ((de = readdir(d))) {
+		if (de->d_name[0] == '.' &&
+		    (de->d_name[1] == '\0' ||
+		     (de->d_name[1] == '.' && de->d_name[2] == '\0')))
+			continue;
+		char child[PATH_MAX];
+		snprintf(child, sizeof child, "%s/%s", dirpath, de->d_name);
+		scan_path(child, dirid);
+	}
+	closedir(d);
+}
+
+static void scan_path(const char *path, unsigned parent_id)
+{
+	struct stat st;
+	if (stat(path, &st) < 0)
+		err(EXIT_FAILURE, "%s", path);
+
+	const char *base = strrchr(path, '/');
+	base = base ? base + 1 : path;
+
+	if (S_ISDIR(st.st_mode)) {
+		add_dir(path, base, parent_id, to_dos_time(st.st_mtime));
+		unsigned dirid = g_dirs[g_ndirs - 1].id;
+		scan_dir(path, dirid);
+	} else if (S_ISREG(st.st_mode)) {
+		add_file(path, base, parent_id, (unsigned)st.st_size,
+		         to_dos_time(st.st_mtime));
+	} else {
+		warnx("%s: skipping (not a regular file or directory)", path);
+	}
+}
+
+static int create_archive(int nargs, char **args)
+{
+	/* Phase 0: Scan inputs (files and directories) */
+	g_dirs = NULL; g_ndirs = 0; g_dir_cap = 0;
+	g_files = NULL; g_nfiles = 0; g_file_cap = 0;
+	g_next_dirid = 1;
+
+	for (int i = 0; i < nargs; i++)
+		scan_path(args[i], 0);
+
+	int nfiles = g_nfiles, ndirs = g_ndirs;
+	struct file_rec *recs = g_files;
+	struct dir_rec *dirs = g_dirs;
+	g_files = NULL; g_dirs = NULL;
+
+	if (nfiles == 0)
+		errx(EXIT_FAILURE, "No files to compress");
 
 	/* Load the SuperMaster (49152-byte built-in dictionary) */
 	unsigned char *supermaster = malloc(49152);
@@ -626,9 +714,7 @@ static int create_archive(int nfiles, char **files)
 	if (sm_ret < 0)
 		errx(EXIT_FAILURE, "Failed to load SuperMaster (%d)", sm_ret);
 
-	/* Fingerprint files for master-block grouping.
-	   Files sharing identical first 4096 bytes get a custom master
-	   built from the largest file in the group. */
+	/* Phase 1: Fingerprint files for master-block grouping */
 	enum { SampleSize = 4096, MinMasterFile = 1024, MaxMasterSize = 65535 };
 	unsigned *fps = calloc(nfiles, sizeof *fps);
 	bool *grouped = calloc(nfiles, sizeof *grouped);
@@ -655,7 +741,6 @@ static int create_archive(int nfiles, char **files)
 		if (grouped[i] || recs[i].size < MinMasterFile)
 			continue;
 
-		/* Count files with same fingerprint */
 		int count = 0, largest = i;
 		for (int j = i; j < nfiles; j++) {
 			if (recs[j].size >= MinMasterFile && fps[j] == fps[i]) {
@@ -667,8 +752,7 @@ static int create_archive(int nfiles, char **files)
 		if (count < 2)
 			continue;
 
-		/* Build master from first MaxMasterSize bytes of largest file */
-		unsigned midx = 2 + (unsigned)nmasters; /* FirstMaster = 2 */
+		unsigned midx = 2 + (unsigned)nmasters;
 		unsigned msz = recs[largest].size;
 		if (msz > MaxMasterSize) msz = MaxMasterSize;
 		unsigned char *mdata = malloc(msz);
@@ -729,7 +813,7 @@ static int create_archive(int nfiles, char **files)
 		        masters[i].idx, masters[i].size, csize, masters[i].ref_ctr);
 	}
 
-	/* Compress each file */
+	/* Phase 2: Compress each file */
 	for (int i = 0; i < nfiles; i++) {
 		recs[i].offset = (unsigned)ftell(out);
 
@@ -764,10 +848,14 @@ static int create_archive(int nfiles, char **files)
 		        recs[i].master_idx >= 2 ? " (custom master)" : "");
 	}
 
-	/* Build raw central directory */
+	/* Phase 3: Build raw central directory.
+	   Order: masters, then dirs (parent before child), then files.
+	   The scanner guarantees dirs are ordered parent-first. */
 	unsigned cdir_cap = 22; /* EndOfCdir + XTAIL + aserial */
 	for (int i = 0; i < nmasters; i++)
-		cdir_cap += 39; /* OHEAD(1) + MASMETA(20) + COMPRESS(10) + LOCATION(8) */
+		cdir_cap += 39;
+	for (int i = 0; i < ndirs; i++)
+		cdir_cap += 27 + 21 + (unsigned)strlen(dirs[i].name) + 1;
 	for (int i = 0; i < nfiles; i++)
 		cdir_cap += 47 + 21 + (unsigned)strlen(recs[i].name) + 1;
 
@@ -780,20 +868,37 @@ static int create_archive(int nfiles, char **files)
 	/* Master entries */
 	for (int i = 0; i < nmasters; i++) {
 		*p++ = 3; /* MasterEntry */
-		/* MASMETA (20 bytes) */
 		w32(p, masters[i].idx); p += 4;
 		w32(p, masters[i].key); p += 4;
 		w32(p, masters[i].ref_len); p += 4;
 		w32(p, masters[i].ref_ctr); p += 4;
 		w16(p, masters[i].size); p += 2;
 		w16(p, masters[i].csum); p += 2;
-		/* COMPRESS (10 bytes) */
 		w32(p, masters[i].csize); p += 4;
-		w16(p, 1); p += 2;  /* method */
-		w32(p, 0); p += 4;  /* masterPrefix = SuperMaster */
-		/* LOCATION (8 bytes) */
+		w16(p, 1); p += 2;
+		w32(p, 0); p += 4;
 		w32(p, 1); p += 4;
 		w32(p, masters[i].offset); p += 4;
+	}
+
+	/* Directory entries: OHEAD(1) + OSMETA(22) + DIRMETA(4) + EXTMETA */
+	for (int i = 0; i < ndirs; i++) {
+		unsigned namelen = (unsigned)strlen(dirs[i].name);
+		*p++ = 1; /* DirEntry */
+		/* OSMETA (22 bytes) */
+		w32(p, dirs[i].parent_id); p += 4;
+		*p++ = 0x10; /* UC2_Attr_D = directory */
+		w32(p, dirs[i].dos_time); p += 4;
+		memcpy(p, dirs[i].dos_name, 11); p += 11;
+		*p++ = 0; /* hidden */
+		*p++ = 1; /* has tags */
+		/* DIRMETA (4 bytes) */
+		w32(p, dirs[i].id); p += 4;
+		/* EXTMETA: long name tag */
+		memcpy(p, "AIP:Win95 LongN", 16); p += 16;
+		w32(p, namelen + 1); p += 4;
+		*p++ = 0;
+		memcpy(p, dirs[i].name, namelen + 1); p += namelen + 1;
 	}
 
 	/* File entries */
@@ -801,12 +906,12 @@ static int create_archive(int nfiles, char **files)
 		unsigned namelen = (unsigned)strlen(recs[i].name);
 		*p++ = 2; /* FileEntry */
 		/* OSMETA (22 bytes) */
-		w32(p, 0); p += 4;
+		w32(p, recs[i].parent_id); p += 4;
 		*p++ = 0x20;
 		w32(p, recs[i].dos_time); p += 4;
 		memcpy(p, recs[i].dos_name, 11); p += 11;
 		*p++ = 0;
-		*p++ = 1; /* has tags */
+		*p++ = 1;
 		/* FILEMETA (6 bytes) */
 		w32(p, recs[i].size); p += 4;
 		w16(p, recs[i].csum); p += 2;
@@ -826,24 +931,20 @@ static int create_archive(int nfiles, char **files)
 
 	/* EndOfCdir */
 	*p++ = 4;
-	/* XTAIL (17 bytes) */
 	*p++ = 0;
 	*p++ = 0;
 	w32(p, 0); p += 4;
 	memset(p, ' ', 11); p += 11;
-	/* aserial (4 bytes) */
 	w32(p, 0); p += 4;
 
 	unsigned cdir_size = (unsigned)(p - raw_cdir);
 	unsigned short cdir_csum = fletcher_csum(raw_cdir, cdir_size);
 
-	/* COMPRESS record for cdir (placeholder) */
 	unsigned cdir_offset = (unsigned)ftell(out);
 	unsigned char crec[10];
 	memset(crec, 0, 10);
 	fwrite(crec, 1, 10, out);
 
-	/* Compress cdir */
 	struct mem_reader mr = {.data = raw_cdir, .pos = 0, .len = cdir_size};
 	unsigned cdir_csize = 0;
 	unsigned short cdir_comp_csum = 0;
@@ -855,14 +956,12 @@ static int create_archive(int nfiles, char **files)
 
 	unsigned total = (unsigned)ftell(out);
 
-	/* Fix COMPRESS record for cdir */
 	fseek(out, cdir_offset, SEEK_SET);
 	w32(crec + 0, cdir_csize);
 	w16(crec + 4, 1);
 	w32(crec + 6, 1);
 	fwrite(crec, 1, 10, out);
 
-	/* Fix FHEAD + XHEAD */
 	fseek(out, 0, SEEK_SET);
 	unsigned complen = total - 13;
 	w32(header + 0, 0x1A324355);
@@ -883,9 +982,11 @@ static int create_archive(int nfiles, char **files)
 		free(masters[i].data);
 	free(masters);
 	free(supermaster);
+	free(dirs);
 	free(recs);
-	printf("Created %s (%d file%s, %d master%s, %u bytes)\n",
+	printf("Created %s (%d file%s, %d dir%s, %d master%s, %u bytes)\n",
 	       opt.archive, nfiles, nfiles == 1 ? "" : "s",
+	       ndirs, ndirs == 1 ? "" : "s",
 	       nmasters, nmasters == 1 ? "" : "s", total);
 	return EXIT_SUCCESS;
 }

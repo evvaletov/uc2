@@ -36,3 +36,11 @@ add_test(NAME cli_master
         -DTEST_DIR=${CMAKE_CURRENT_BINARY_DIR}/cli_master_test
         -P ${CMAKE_CURRENT_SOURCE_DIR}/test_cli_master.cmake
 )
+
+# CLI directory archival round-trip test
+add_test(NAME cli_dirs
+    COMMAND ${CMAKE_COMMAND}
+        -DUC2_CLI=$<TARGET_FILE:uc2-cli>
+        -DTEST_DIR=${CMAKE_CURRENT_BINARY_DIR}/cli_dirs_test
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/test_cli_dirs.cmake
+)
