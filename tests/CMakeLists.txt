@@ -44,3 +44,15 @@ add_test(NAME cli_dirs
         -DTEST_DIR=${CMAKE_CURRENT_BINARY_DIR}/cli_dirs_test
         -P ${CMAKE_CURRENT_SOURCE_DIR}/test_cli_dirs.cmake
 )
+
+# Cross-tool round-trip: UC2 v3 <-> original uc2pro.exe via DOSBox-X
+add_test(NAME roundtrip_dosbox
+    COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/scripts/roundtrip_dosbox.sh
+        $<TARGET_FILE:uc2-cli>
+        ${CMAKE_CURRENT_SOURCE_DIR}/../original/UC2_source/uc2pro.exe
+        ${CMAKE_CURRENT_SOURCE_DIR}/corpus
+)
+set_tests_properties(roundtrip_dosbox PROPERTIES
+    LABELS "dosbox"
+    TIMEOUT 600
+)

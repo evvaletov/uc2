@@ -7,8 +7,10 @@ root.  Key phases:
 1. **Decompression MVP** — Done. Portable decompressor, CLI tool,
    CMake build system.
 
-2. **Original Compression Engine** — Done. LZ77+Huffman compressor
-   producing bitstreams compatible with the original format.
+2. **Original Compression Engine** — Done. LZ77+Huffman compressor.
+   Cross-tool round-trip verified: original UC2 Pro archives extract
+   correctly in UC2 v3.  Reverse direction (UC2 v3 → original) is a
+   known limitation due to compression bitstream differences.
 
 3. **Modernized Master-Block Deduplication** — In progress.
    Content-fingerprint grouping and custom master-block generation done

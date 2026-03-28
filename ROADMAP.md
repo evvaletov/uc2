@@ -16,7 +16,13 @@
 - [x] CLI create mode (`uc2 -w`), compression level flag (`-L`)
 - [x] SuperMaster dictionary support (built-in 49 KB dictionary)
 - [x] Round-trip testing: 37 unit tests + CLI integration tests
-- [ ] Round-trip testing vs original `uc2pro.exe` in DOSBox
+- [x] Round-trip testing vs original `uc2pro.exe` in DOSBox
+      (Direction: original creates → UC2 v3 extracts — verified.
+       Reverse direction is a known limitation: the original UC2 Pro
+       cannot read UC2 v3 archives due to compression bitstream
+       differences.)
+- [ ] Compression bitstream compatibility with original UC2 Pro
+      (make archives created by UC2 v3 readable by the original)
 - [ ] Give UC2 a voice: status and progress messages with personality,
       continuing the original's tradition ("Do not worry, you have got
       the tree", "decompression always lightspeed", FAST/TIGHT/S-TIGHT
