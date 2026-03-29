@@ -957,9 +957,9 @@ static int create_archive(int nargs, char **args)
 	unsigned total = (unsigned)ftell(out);
 
 	fseek(out, cdir_offset, SEEK_SET);
-	w32(crec + 0, cdir_csize);
-	w16(crec + 4, 1);
-	w32(crec + 6, 1);
+	w32(crec + 0, 0);                 /* csize=0 matches original UC2 Pro */
+	w16(crec + 4, opt.level <= 1 ? 1 : opt.level); /* method = compression level */
+	w32(crec + 6, 1);                 /* masterPrefix = NoMaster */
 	fwrite(crec, 1, 10, out);
 
 	fseek(out, 0, SEEK_SET);

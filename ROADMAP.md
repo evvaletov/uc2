@@ -23,12 +23,14 @@
        differences.)
 - [ ] Compression bitstream compatibility with original UC2 Pro
       (make archives created by UC2 v3 readable by the original).
-      Progress: treegen rewritten to match original's heap ordering,
-      RepairLengths, and single-symbol handling; tree_enc RLE fixed;
-      first block uses default tree.  The original still hangs — the
-      remaining difference is likely in the ASM decompressor kernel's
-      expectations.  Needs bit-level comparison tooling to identify
-      the exact divergence point.
+      Progress: treegen rewritten (heap tie-breaking, RepairLengths,
+      RLE encoding); cdir COMPRESS record matches original (csize=0,
+      method=level); default tree used for all blocks; bitdump.py
+      comparison tool created.  Single-file archives now work (listing
+      + extraction).  Multi-file archives still hang — the cdir
+      bitstream decodes correctly in Python but fails in the original's
+      ASM kernel.  Needs bit-level comparison of a UC2 v3 two-file
+      cdir vs an original two-file cdir of the same content.
 - [ ] Give UC2 a voice: status and progress messages with personality,
       continuing the original's tradition ("Do not worry, you have got
       the tree", "decompression always lightspeed", FAST/TIGHT/S-TIGHT
