@@ -13,9 +13,9 @@ root.  Key phases:
    in both directions.  Automated DOSBox-X test validates 4+5 files.
 
 3. **Modernized Master-Block Deduplication** — In progress.
-   Content-fingerprint grouping and custom master-block generation done
-   (FNV-1a sampling, MASMETA cdir records, SuperMaster-compressed
-   masters).  Remaining: content-defined chunking, Merkle DAG,
+   Content-fingerprint grouping and custom master-block generation done.
+   Content-defined chunking (CDC) library added with Gear rolling hash.
+   Remaining: CDC integration into archive creation, Merkle DAG,
    cross-archive dedup, near-duplicate detection.
 
 4. **Modern Compression Backends** — ANS entropy coding,

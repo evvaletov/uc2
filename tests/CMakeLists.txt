@@ -45,6 +45,12 @@ add_test(NAME cli_dirs
         -P ${CMAKE_CURRENT_SOURCE_DIR}/test_cli_dirs.cmake
 )
 
+add_executable(test_cdc src/test_cdc.c)
+target_link_libraries(test_cdc PRIVATE uc2)
+target_include_directories(test_cdc PRIVATE "${PROJECT_BINARY_DIR}/lib")
+target_compile_features(test_cdc PRIVATE c_std_99)
+add_test(NAME cdc COMMAND test_cdc)
+
 # Cross-tool round-trip: UC2 v3 <-> original uc2pro.exe via DOSBox-X
 add_test(NAME roundtrip_dosbox
     COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/scripts/roundtrip_dosbox.sh
