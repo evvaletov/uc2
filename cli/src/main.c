@@ -910,14 +910,14 @@ static int create_archive(int nargs, char **args)
 		*p++ = 0x20;
 		w32(p, recs[i].dos_time); p += 4;
 		memcpy(p, recs[i].dos_name, 11); p += 11;
-		*p++ = 0;
-		*p++ = 1;
+		*p++ = 0;  /* hidden */
+		*p++ = 1;  /* has tags */
 		/* FILEMETA (6 bytes) */
 		w32(p, recs[i].size); p += 4;
 		w16(p, recs[i].csum); p += 2;
 		/* COMPRESS (10 bytes) */
 		w32(p, recs[i].csize); p += 4;
-		w16(p, 1); p += 2;
+		w16(p, opt.level <= 1 ? 1 : opt.level); p += 2;
 		w32(p, (unsigned)recs[i].master_idx); p += 4;
 		/* LOCATION (8 bytes) */
 		w32(p, 1); p += 4;
@@ -972,7 +972,7 @@ static int create_archive(int nargs, char **args)
 	w32(header + 17, cdir_offset);
 	w16(header + 21, cdir_csum);
 	header[23] = 0;
-	w16(header + 24, 300);
+	w16(header + 24, 203);  /* match original UC2 Pro revision */
 	w16(header + 26, 200);
 	header[28] = 0;
 	fwrite(header, 1, 29, out);

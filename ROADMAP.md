@@ -21,16 +21,17 @@
        Reverse direction is a known limitation: the original UC2 Pro
        cannot read UC2 v3 archives due to compression bitstream
        differences.)
-- [ ] Compression bitstream compatibility with original UC2 Pro
-      (make archives created by UC2 v3 readable by the original).
-      Progress: treegen rewritten (heap tie-breaking, RepairLengths,
-      RLE encoding); cdir COMPRESS record matches original (csize=0,
-      method=level); default tree used for all blocks; bitdump.py
-      comparison tool created.  Single-file archives now work (listing
-      + extraction).  Multi-file archives still hang — the cdir
-      bitstream decodes correctly in Python but fails in the original's
-      ASM kernel.  Needs bit-level comparison of a UC2 v3 two-file
-      cdir vs an original two-file cdir of the same content.
+- [x] Single-file backward compatibility with original UC2 Pro
+      (listing + extraction verified in DOSBox-X)
+- [ ] Multi-file backward compatibility with original UC2 Pro
+      (listing works, extraction hangs).  Single-file archives are
+      byte-level compatible.  The bitstream, cdir, and file data all
+      decode correctly in the Python bitdump.py analyzer, but the
+      original's extraction code hangs for archives with 2+ files.
+      The cdir is parsed correctly (listing works).  The issue is
+      specific to the extraction code path — possibly related to
+      how the original handles multiple file entries during the
+      extract walk.
 - [ ] Give UC2 a voice: status and progress messages with personality,
       continuing the original's tradition ("Do not worry, you have got
       the tree", "decompression always lightspeed", FAST/TIGHT/S-TIGHT
