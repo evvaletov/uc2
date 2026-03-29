@@ -12,6 +12,7 @@
 #include <assert.h>
 
 #include "uc2/libuc2.h"
+#include "uc2/uc2_rans.h"
 #include "uc2_internal.h"
 
 /* ---------- bitstream output ---------- */
@@ -514,6 +515,7 @@ struct compressor {
 	unsigned lazy_depth;
 	unsigned lazy_limit;
 	unsigned give_up;
+	int use_rans;  /* 1 = rANS entropy coding (method 10) */
 
 	/* Total compressed bytes written */
 	unsigned compressed_bytes;
@@ -791,6 +793,126 @@ static int flush_block(struct compressor *c, int is_last)
 	return 0;
 }
 
+/* Flush block using rANS entropy coding (method 10).
+   Encodes symbol IDs with rANS and extra bits separately. */
+static int flush_block_rans(struct compressor *c, int is_last)
+{
+	int r;
+
+	/* Collect symbol IDs and extra bits from ibuf */
+	int *syms = malloc((c->ibuf_pos + 2) * sizeof(int));
+	/* Extra bits: pairs of (value, nbits) */
+	struct { u16 val; u8 bits; } *extras = malloc((c->ibuf_pos + 2) * sizeof *extras);
+	if (!syms || !extras) { free(syms); free(extras); return -1; }
+
+	int nsyms = 0, nextras = 0;
+
+	unsigned i = 0;
+	while (i < c->ibuf_pos) {
+		u16 val = c->ibuf[i++];
+		if (val < 256) {
+			syms[nsyms++] = val;
+		} else {
+			int dsym = val - 256;
+			syms[nsyms++] = NumByteSym + dsym;
+			if (dist_enc[dsym].bits > 0) {
+				extras[nextras].val = c->ibuf[i++];
+				extras[nextras].bits = dist_enc[dsym].bits;
+				nextras++;
+			}
+			u16 len = c->ibuf[i++];
+			int lsym = len_to_sym(len);
+			syms[nsyms++] = NumByteSym + NumDistSym + lsym;
+			if (len_enc[lsym].bits > 0) {
+				extras[nextras].val = (u16)(len - len_enc[lsym].base);
+				extras[nextras].bits = len_enc[lsym].bits;
+				nextras++;
+			}
+		}
+	}
+
+	/* Add EOB marker symbols */
+	int eob_dsym = dist_to_sym(UC2_EOB_MARK);
+	syms[nsyms++] = NumByteSym + eob_dsym;
+	if (dist_enc[eob_dsym].bits > 0) {
+		extras[nextras].val = (u16)(UC2_EOB_MARK - dist_enc[eob_dsym].base);
+		extras[nextras].bits = dist_enc[eob_dsym].bits;
+		nextras++;
+	}
+	syms[nsyms++] = NumByteSym + NumDistSym + 0;  /* length = 3 */
+
+	/* Build rANS frequency table from all symbols */
+	u32 freqs[NumSymbols];
+	memset(freqs, 0, sizeof freqs);
+	for (int j = 0; j < nsyms; j++)
+		freqs[syms[j]]++;
+
+	struct uc2_rans_table tab;
+	uc2_rans_build_table(&tab, freqs, NumSymbols);
+
+	/* Encode symbols with rANS (reverse order) */
+	struct uc2_rans_enc enc;
+	uc2_rans_enc_init(&enc, &tab);
+	for (int j = nsyms - 1; j >= 0; j--)
+		uc2_rans_encode(&enc, syms[j]);
+	uint8_t *rans_data;
+	size_t rans_len = uc2_rans_enc_finish(&enc, &rans_data);
+	uc2_rans_enc_free(&enc);
+
+	/* rANS block format (method 10):
+	   [block-present:1=1] [nsyms:16] [rans_len:16]
+	   [freq_table:344×12bits] [rans_data] [extra_bits]
+	   No Huffman tree — method ID in COMPRESS record signals rANS. */
+	r = bitsout_put(&c->bo, 1, 1);  /* block-present */
+	if (r < 0) goto out;
+
+	/* Write symbol count and rANS data length */
+	r = bitsout_put(&c->bo, (unsigned)(nsyms >> 8), 8);
+	if (r < 0) goto out;
+	r = bitsout_put(&c->bo, (unsigned)(nsyms & 0xFF), 8);
+	if (r < 0) goto out;
+	r = bitsout_put(&c->bo, (unsigned)(rans_len >> 8), 8);
+	if (r < 0) goto out;
+	r = bitsout_put(&c->bo, (unsigned)(rans_len & 0xFF), 8);
+	if (r < 0) goto out;
+
+	/* Write normalized frequency table (344 × 12 bits) */
+	for (int j = 0; j < NumSymbols; j++) {
+		r = bitsout_put(&c->bo, tab.freq[j], 12);
+		if (r < 0) goto out;
+	}
+
+	/* Write rANS encoded data (byte-aligned) */
+	for (size_t j = 0; j < rans_len; j++) {
+		r = bitsout_put(&c->bo, rans_data[j], 8);
+		if (r < 0) goto out;
+	}
+
+	/* Write extra bits */
+	for (int j = 0; j < nextras; j++) {
+		r = bitsout_put(&c->bo, extras[j].val, extras[j].bits);
+		if (r < 0) goto out;
+	}
+
+	/* Reset */
+	c->ibuf_pos = 0;
+	c->block_count++;
+	memset(c->bd_freq, 0, sizeof c->bd_freq);
+	memset(c->l_freq, 0, sizeof c->l_freq);
+
+	if (is_last) {
+		r = bitsout_put(&c->bo, 0, 1);  /* block-present = 0 */
+		if (r < 0) goto out;
+	}
+	r = 0;
+
+out:
+	free(syms);
+	free(extras);
+	free(rans_data);
+	return r;
+}
+
 /* ---------- Public compression API ---------- */
 
 struct compress_ctx {
@@ -831,12 +953,16 @@ int uc2_compress_ex(
 
 	struct compressor *c = &ctx->comp;
 
-	/* Set compression parameters based on level */
-	switch (level) {
+	/* Set compression parameters based on level.
+	   Levels 2-5: Huffman (backward compatible with original UC2 Pro).
+	   Levels 6-9: rANS entropy coding (better compression, UC2 v3 only). */
+	c->use_rans = (level >= 6);
+	int lz_level = c->use_rans ? level - 4 : level;  /* rANS 6→2, 7→3, 8→4, 9→5 */
+	switch (lz_level) {
 	case 2: c->max_search = 15;    c->lazy_depth = 2;    c->lazy_limit = 15;  c->give_up = 25;  break;
 	case 3: c->max_search = 70;    c->lazy_depth = 10;   c->lazy_limit = 30;  c->give_up = 50;  break;
 	case 5: c->max_search = 10000; c->lazy_depth = 5000; c->lazy_limit = 200; c->give_up = 100; break;
-	default: /* level 4 = Tight, default */
+	default: /* level 4 or 8 = Tight */
 	         c->max_search = 600;   c->lazy_depth = 50;   c->lazy_limit = 40;  c->give_up = 100; break;
 	}
 
@@ -931,7 +1057,7 @@ int uc2_compress_ex(
 
 			/* Flush block if intermediate buffer is getting full */
 			if (c->ibuf_pos > 27000) {
-				int r = flush_block(c, 0);
+				int r = c->use_rans ? flush_block_rans(c, 0) : flush_block(c, 0);
 				if (r < 0) { free(ctx); return r; }
 				/* Re-add EOB marker frequency for next block */
 				c->bd_freq[NumByteSym + dist_to_sym(UC2_EOB_MARK)]++;
@@ -948,7 +1074,7 @@ int uc2_compress_ex(
 	}
 
 	/* Flush final block */
-	int r = flush_block(c, 1);
+	int r = c->use_rans ? flush_block_rans(c, 1) : flush_block(c, 1);
 	if (r < 0) { free(ctx); return r; }
 
 	r = bitsout_finish(&c->bo);

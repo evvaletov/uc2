@@ -67,10 +67,10 @@ something no mainstream archiver offers.
 Pluggable algorithms behind new method IDs; original Method 4 kept for
 backward compatibility.
 
-- [x] rANS entropy coder (`uc2_rans.h`): 32-bit table-based rANS with
-      344-symbol alphabet support, <5% overhead vs Shannon entropy.
-      6 unit tests including round-trip, skewed distribution, and
-      comparison against theoretical optimum.
+- [x] rANS entropy coder (`uc2_rans.h`) integrated into archive format
+      as method 10.  Levels 6-9 use rANS (vs 2-5 Huffman).  32-bit
+      table-based rANS, <5% overhead vs Shannon entropy.  End-to-end
+      round-trip verified (create/list/extract/verify).
 - [ ] zstd-inspired dictionary compression integrated with master blocks
       (deduped masters become shared zstd dictionaries — unique synergy)
 - [ ] LZ4 ultra-fast mode for real-time or low-resource scenarios

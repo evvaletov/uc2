@@ -64,6 +64,10 @@ static const char *level_name(int level)
 	case 2:  return "Fast";
 	case 3:  return "Normal";
 	case 5:  return "Ultra";
+	case 6:  return "rANS Fast";
+	case 7:  return "rANS Normal";
+	case 8:  return "rANS Tight";
+	case 9:  return "rANS Ultra";
 	default: return "Tight";
 	}
 }
@@ -1031,7 +1035,7 @@ static int create_archive(int nargs, char **args)
 		w16(p, recs[i].csum); p += 2;
 		/* COMPRESS (10 bytes) */
 		w32(p, recs[i].csize); p += 4;
-		w16(p, opt.level <= 1 ? 1 : opt.level); p += 2;
+		w16(p, opt.level >= 6 ? 10 : (opt.level <= 1 ? 1 : opt.level)); p += 2;
 		w32(p, (unsigned)recs[i].master_idx); p += 4;
 		/* LOCATION (8 bytes) */
 		w32(p, 1); p += 4;
@@ -1072,7 +1076,7 @@ static int create_archive(int nargs, char **args)
 
 	fseek(out, cdir_offset, SEEK_SET);
 	w32(crec + 0, 0);                 /* csize=0 matches original UC2 Pro */
-	w16(crec + 4, opt.level <= 1 ? 1 : opt.level); /* method = compression level */
+	w16(crec + 4, opt.level >= 6 ? 10 : (opt.level <= 1 ? 1 : opt.level));
 	w32(crec + 6, 1);                 /* masterPrefix = NoMaster */
 	fwrite(crec, 1, 10, out);
 
@@ -1157,8 +1161,8 @@ int main(int argc, char *argv[])
 			break;
 		case 'L':
 			opt.level = atoi(optarg);
-			if (opt.level < 2 || opt.level > 5)
-				errx(EXIT_FAILURE, "Compression level must be 2..5");
+			if (opt.level < 2 || opt.level > 9)
+				errx(EXIT_FAILURE, "Compression level must be 2..9 (2-5=Huffman, 6-9=rANS)");
 			break;
 		case 'T':
 			opt.sep = '\t';
@@ -1184,7 +1188,7 @@ usage:
 					" -l      List\n"
 					" -t      Test\n"
 					" -w      Create archive\n"
-					" -L n    Compression level: 2=Fast 3=Normal 4=Tight(default) 5=Ultra\n"
+					" -L n    Level: 2=Fast 3=Normal 4=Tight(default) 5=Ultra 6-9=rANS\n"
 					" -a      All versions of files\n"
 					" -d path Destination to extract to\n"
 					" -f      Overwrite\n"

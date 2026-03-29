@@ -17,6 +17,7 @@
 #include <assert.h>
 
 #include "uc2/libuc2.h"
+#include "uc2/uc2_rans.h"
 
 #if !defined NDEBUG && !defined NDIAG
 #include <stdio.h>
@@ -1001,6 +1002,7 @@ int uc2_extract(
 /* decompress */
 
 static int decompressor_ultra(struct uc2_context *uc2, unsigned master, unsigned delta, struct reader *rd, struct writer *wr, unsigned limit, u16 *csum);
+static int decompressor_rans(struct uc2_context *uc2, unsigned master_id, struct reader *rd, struct writer *wr, unsigned limit, u16 *csum);
 
 static int decompressor(struct uc2_context *uc2, int method, struct reader *rd, struct writer *wr, unsigned master, unsigned len, u16 *csum)
 {
@@ -1022,12 +1024,102 @@ ultra:
 	} else if (method >= 21 && method <= 29) {
 		delta = 1;
 		goto ultra;
+	} else if (method == 10) {
+		ret = decompressor_rans(uc2, master, rd, wr, len, csum);
 	} else if (method == 80) {
 		uc2->message = "Turbo compression not implemented";
 		ret = UC2_Unimplemented;
 	}
 	diag("Decompressor end\n");
 	return ret;
+}
+
+/* rANS decompressor (method 10) */
+static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
+                             struct reader *rd, struct writer *wr,
+                             unsigned limit, u16 *csum)
+{
+	const unsigned EOB = 64001;
+	int ret;
+
+	u8 *buf = u_alloc(uc2, 65536);
+	if (!buf) return UC2_UserFault;
+
+	ret = use_master(uc2, buf, master_id);
+	if (ret < 0) { u_free(uc2, buf); return ret; }
+	u16 tail = (u16)ret;
+	struct csum cs;
+	csum_init(&cs);
+	unsigned remaining = limit;
+
+	struct bits bi;
+	ret = bits_init(&bi, rd);
+	if (ret < 0) { u_free(uc2, buf); return ret; }
+
+	while (bits_get(&bi, 1)) {  /* block-present */
+		unsigned nsyms = (bits_get(&bi, 8) << 8) | bits_get(&bi, 8);
+		unsigned rlen = (bits_get(&bi, 8) << 8) | bits_get(&bi, 8);
+
+		u32 freqs[344];
+		for (int i = 0; i < 344; i++)
+			freqs[i] = bits_get(&bi, 12);
+
+		struct uc2_rans_table tab;
+		uc2_rans_build_table(&tab, freqs, 344);
+
+		u8 *rdata = u_alloc(uc2, rlen ? rlen : 1);
+		if (!rdata) { bits_destroy(&bi); u_free(uc2, buf); return UC2_UserFault; }
+		for (unsigned i = 0; i < rlen; i++)
+			rdata[i] = (u8)bits_get(&bi, 8);
+
+		struct uc2_rans_dec dec;
+		uc2_rans_dec_init(&dec, &tab, rdata, rlen);
+
+		for (unsigned s = 0; s < nsyms && remaining > 0; s++) {
+			int sym = uc2_rans_decode(&dec);
+			if (sym < 256) {
+				buf[tail++] = (u8)sym;
+				remaining--;
+			} else if (sym < 316) {
+				int ds = sym - 256;
+				unsigned dist = (ds < 15) ? ds + 1 :
+					(ds < 30) ? (ds-15+1)*16 + bits_get(&bi, 4) :
+					(ds < 45) ? (ds-30+1)*256 + bits_get(&bi, 8) :
+					            (ds-45+1)*4096 + bits_get(&bi, 12);
+				if (dist == EOB) { s++; if (s < nsyms) uc2_rans_decode(&dec); break; }
+				s++;
+				if (s >= nsyms) break;
+				int ls = uc2_rans_decode(&dec) - 316;
+				if (ls < 0) ls = 0;
+				unsigned length = (ls < 8) ? ls + 3 :
+					(ls < 16) ? (ls-8)*2+11+bits_get(&bi,1) :
+					(ls < 24) ? (ls-16)*8+27+bits_get(&bi,3) :
+					(ls == 24) ? 91+bits_get(&bi,6) :
+					(ls == 25) ? 155+bits_get(&bi,9) :
+					(ls == 26) ? 667+bits_get(&bi,11) :
+					             2715+bits_get(&bi,15);
+				for (unsigned j = 0; j < length && remaining > 0; j++) {
+					buf[tail] = buf[(u16)(tail - dist)];
+					tail++; remaining--;
+				}
+			}
+		}
+		u_free(uc2, rdata);
+	}
+
+	/* Flush output */
+	u16 head = (u16)(tail - (limit - remaining));
+	if (limit > remaining) {
+		unsigned n = limit - remaining;
+		csum_update(&cs, buf + head, n);
+		ret = wr->write(wr->context, buf + head, n);
+		if (ret < 0) { bits_destroy(&bi); u_free(uc2, buf); return UC2_UserFault; }
+	}
+
+	bits_destroy(&bi);
+	u_free(uc2, buf);
+	if (csum) *csum = csum_get(&cs);
+	return limit - remaining;
 }
 
 /* cbuf */
