@@ -63,6 +63,18 @@ target_include_directories(test_blockstore PRIVATE "${PROJECT_BINARY_DIR}/lib")
 target_compile_features(test_blockstore PRIVATE c_std_99)
 add_test(NAME blockstore COMMAND test_blockstore)
 
+add_executable(test_simhash src/test_simhash.c)
+target_link_libraries(test_simhash PRIVATE uc2)
+target_include_directories(test_simhash PRIVATE "${PROJECT_BINARY_DIR}/lib")
+target_compile_features(test_simhash PRIVATE c_std_99)
+add_test(NAME simhash COMMAND test_simhash)
+
+add_executable(test_delta src/test_delta.c)
+target_link_libraries(test_delta PRIVATE uc2)
+target_include_directories(test_delta PRIVATE "${PROJECT_BINARY_DIR}/lib")
+target_compile_features(test_delta PRIVATE c_std_99)
+add_test(NAME delta COMMAND test_delta)
+
 # Cross-tool round-trip: UC2 v3 <-> original uc2pro.exe via DOSBox-X
 add_test(NAME roundtrip_dosbox
     COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/scripts/roundtrip_dosbox.sh

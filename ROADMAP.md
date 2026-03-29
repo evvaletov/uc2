@@ -57,10 +57,13 @@ something no mainstream archiver offers.
       content-addressable chunk storage with two-level directory
       layout, dedup statistics, read-back verification.
       6 unit tests including cross-archive dedup scenario.
-- [ ] Near-duplicate detection via simhash/minhash for fuzzy dedup
-      (patched executables, slightly edited documents)
-- [ ] Delta compression across file versions (xdelta/bsdiff-style binary
-      deltas stored against master blocks)
+- [x] Near-duplicate detection via SimHash (`uc2_simhash.h`):
+      64-bit locality-sensitive fingerprint with Hamming distance,
+      detects patched executables (16 changed bytes in 8KB: dist <= 8).
+      6 unit tests.
+- [x] Delta compression (`uc2_delta.h`): binary diff with COPY/INSERT
+      instructions, hash-based source matching. 96-byte patch in 16KB
+      file → >50% size savings.  6 unit tests including round-trip.
 
 ## Phase 4: Modern Compression Backends
 
