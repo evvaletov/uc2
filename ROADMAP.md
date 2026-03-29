@@ -71,8 +71,10 @@ backward compatibility.
       as method 10.  Levels 6-9 use rANS (vs 2-5 Huffman).  32-bit
       table-based rANS, <5% overhead vs Shannon entropy.  End-to-end
       round-trip verified (create/list/extract/verify).
-- [ ] zstd-inspired dictionary compression integrated with master blocks
-      (deduped masters become shared zstd dictionaries — unique synergy)
+- [x] zstd-inspired dictionary compression (`uc2_dict.h`): formal
+      dictionary metadata with content-hash IDs, integrity checksums,
+      serialization format, and cross-archive sharing via block store.
+      6 unit tests including round-trip and corruption detection.
 - [ ] LZ4 ultra-fast mode for real-time or low-resource scenarios
 - [ ] Content-aware preprocessing pipeline:
       - BWT (Burrows-Wheeler) for text
@@ -90,6 +92,11 @@ No mainstream archiver offers post-quantum encryption.
 - [ ] Hybrid mode: classical ECDH + Kyber for transition period
 - [ ] Passphrase-based key derivation via Argon2
 - [ ] Per-file selective encryption within archives
+- [ ] Plausible deniability: multi-archive-in-one with separate passwords.
+      Each password decrypts a different archive layer.  Under hostile
+      pressure, revealing one password gives access to a decoy layer
+      while the real archive remains hidden and indistinguishable from
+      random padding.  (Inspired by VeraCrypt hidden volumes.)
 
 ## Phase 6: DOS / FreeDOS / Retro-Computing
 

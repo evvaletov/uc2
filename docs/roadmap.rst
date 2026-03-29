@@ -18,9 +18,9 @@ root.  Key phases:
    and delta compression.  All Phase 3 items complete.
 
 4. **Modern Compression Backends** — In progress.  rANS entropy coder
-   integrated as method 10 (levels 6-9).  Remaining: zstd-inspired
-   dictionary compression, content-aware preprocessing (BWT, BCJ, delta
-   filters), LZ4 ultra-fast mode, benchmarking mode.
+   integrated as method 10, zstd-style dictionary metadata with
+   content-hash IDs.  Remaining: content-aware preprocessing (BWT,
+   BCJ, delta filters), LZ4 ultra-fast mode, benchmarking mode.
 
 5. **Quantum-Resistant Encryption** — CRYSTALS-Kyber + AES-256-GCM.
 

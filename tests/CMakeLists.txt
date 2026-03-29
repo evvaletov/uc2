@@ -81,6 +81,12 @@ target_include_directories(test_rans PRIVATE "${PROJECT_BINARY_DIR}/lib")
 target_compile_features(test_rans PRIVATE c_std_99)
 add_test(NAME rans COMMAND test_rans)
 
+add_executable(test_dict src/test_dict.c)
+target_link_libraries(test_dict PRIVATE uc2)
+target_include_directories(test_dict PRIVATE "${PROJECT_BINARY_DIR}/lib")
+target_compile_features(test_dict PRIVATE c_std_99)
+add_test(NAME dict COMMAND test_dict)
+
 # Cross-tool round-trip: UC2 v3 <-> original uc2pro.exe via DOSBox-X
 add_test(NAME roundtrip_dosbox
     COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/scripts/roundtrip_dosbox.sh
