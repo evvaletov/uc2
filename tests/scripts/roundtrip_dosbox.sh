@@ -1,13 +1,14 @@
 #!/bin/bash
-# Round-trip test: original UC2 Pro (uc2pro.exe) -> UC2 v3 via DOSBox-X
+# Cross-tool round-trip test: original UC2 Pro -> UC2 v3 via DOSBox-X
 #
 # Tests that archives created by the original 1992 UC2 Pro can be correctly
-# extracted by UC2 v3.  This is the critical compatibility direction.
+# extracted by UC2 v3 (Direction 2).
 #
-# Note: the reverse direction (UC2 v3 -> original) is a known limitation.
-# The original UC2 Pro cannot read archives created by UC2 v3 due to
-# compression bitstream differences.  Fixing this requires matching the
-# original compressor's exact Huffman/LZ77 encoding.
+# Direction 1 (UC2 v3 -> original) is not yet implemented — the original
+# UC2 Pro hangs reading UC2 v3 archives.  Root cause is under investigation:
+# tree generation and data encoding match the original, but some bitstream-
+# level difference remains (likely in the ASM decompressor's expectations
+# around tree serialization or block structure).
 #
 # Usage: roundtrip_dosbox.sh <uc2-cli> <uc2pro.exe> <corpus-dir>
 
@@ -24,7 +25,6 @@ if ! flatpak info com.dosbox_x.DOSBox-X &>/dev/null; then
     exit 0
 fi
 
-# DOSBox-X flatpak only has filesystem=home access.
 WORK="$(mktemp -d "$HOME/.cache/uc2-dosbox-test.XXXXXX")"
 trap 'rm -rf "$WORK"' EXIT
 
@@ -35,8 +35,6 @@ done
 cp "$UC2PRO" "$WORK/uc2pro.exe"
 
 # --- Session 1: Extract UC2 Pro distribution from SFX ---
-# uc2pro.exe is a UCEXE-compressed self-extracting archive.
-# It extracts into a named directory; decompression takes ~60s in DOSBox.
 echo "=== Session 1: Extracting UC2 Pro tools from SFX ==="
 cat > "$WORK/dosbox.conf" <<DOSBOXCFG
 [sdl]
@@ -64,7 +62,7 @@ if [ ! -f "$WORK/UC2DIST/UC.EXE" ]; then
 fi
 echo "  UC.EXE extracted ($(wc -c < "$WORK/UC2DIST/UC.EXE") bytes)"
 
-# --- Session 2: Create archive with original UC2 Pro ---
+# --- Session 2: original creates archive ---
 echo "=== Session 2: UC2 Pro creates archive ==="
 cat > "$WORK/dosbox.conf" <<DOSBOXCFG
 [sdl]
@@ -92,6 +90,9 @@ if [ ! -f "$WORK/MARKER.TXT" ]; then
     exit 1
 fi
 
+# --- Verify Direction 2 (original -> UC2 v3) ---
+echo "--- Verifying Direction 2 ---"
+FAIL=0
 DOS_ARCHIVE=""
 for candidate in "$WORK/out/DOSTEST.UC2" "$WORK/out/dostest.uc2"; do
     [ -f "$candidate" ] && DOS_ARCHIVE="$candidate" && break
@@ -101,22 +102,17 @@ if [ -z "$DOS_ARCHIVE" ]; then
     ls -la "$WORK/out/" 2>/dev/null
     exit 1
 fi
-echo "  Archive created: $(wc -c < "$DOS_ARCHIVE") bytes"
 
-# --- Extract with UC2 v3 and verify ---
-echo "=== Extracting with UC2 v3 ==="
 "$UC2_CLI" -d "$WORK/output" "$DOS_ARCHIVE"
 
-FAIL=0
 for f in "${FILES[@]}"; do
-    # UC2 v3 extracts with lowercase names from DOS archives
-    extracted=""
     upper=$(echo "$f" | tr '[:lower:]' '[:upper:]')
+    extracted=""
     for candidate in "$WORK/output/$f" "$WORK/output/$upper"; do
         [ -f "$candidate" ] && extracted="$candidate" && break
     done
     if [ -z "$extracted" ]; then
-        echo "  FAIL: $f not extracted"
+        echo "  FAIL: $f not extracted by UC2 v3"
         FAIL=1
         continue
     fi

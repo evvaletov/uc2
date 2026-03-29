@@ -99,183 +99,211 @@ static int bitsout_finish(struct bits_out *bo)
 
 /* ---------- Huffman tree generation ---------- */
 
-/* Generate canonical Huffman code lengths from symbol frequencies.
-   Enforces MaxCodeBits (13) limit via RepairLengths. */
+/* Faithful port of the original UC2 Pro's TreeGen/RepairLengths/CodeGen
+   from TREEGEN.CPP. Matching the original exactly is required for bitstream
+   compatibility with the 1992 UC2 Pro decompressor (which uses an ASM kernel
+   that depends on the exact same Huffman tree shapes). */
 
-struct heap_node {
-	u32 freq;
-	int sym;       /* >= 0: leaf, < 0: internal */
-	int left, right;
-};
+#define NO_MORE (-1)
 
-static void treegen(const u32 *freqs, int nsym, u8 *lengths)
+/* Sift-down for min-heap.  Uses >= for child comparison (prefer right child
+   on ties), matching the original Reheap() at TREEGEN.CPP:138. */
+static void reheap(int entry, int *heap, int heap_len, const u32 *freq)
 {
-	struct heap_node nodes[2 * NumSymbols];
+	int val = heap[entry];
+	while (entry <= (heap_len >> 1)) {
+		int child = entry << 1;
+		if (child < heap_len)
+			if (freq[heap[child]] >= freq[heap[child + 1]])
+				child++;
+		if (freq[val] < freq[heap[child]])
+			break;
+		heap[entry] = heap[child];
+		entry = child;
+	}
+	heap[entry] = val;
+}
+
+static void treegen(const u32 *freqs, int nsym, int max_code_bits, u8 *lengths)
+{
+	/* Frequency array extended for internal nodes (original uses upper half
+	   of a 2*nsym WORD array; we use u32 for safety). */
+	u32 freq[2 * NumSymbols];
 	int heap[NumSymbols + 1];
-	int heap_size = 0;
-	int next_internal = nsym;
+	int father[2 * NumSymbols];
+	int heap_len = 0;
 
 	memset(lengths, 0, nsym);
+	for (int i = 0; i < nsym; i++)
+		freq[i] = freqs[i];
 
-	/* Build initial heap of non-zero frequency symbols */
-	for (int i = 0; i < nsym; i++) {
-		if (freqs[i] > 0) {
-			nodes[i].freq = freqs[i];
-			nodes[i].sym = i;
-			nodes[i].left = nodes[i].right = -1;
-			heap_size++;
-			heap[heap_size] = i;
+	/* BuildHeap: select non-zero symbols, then heapify */
+	for (int i = 0; i < nsym; i++)
+		if (freq[i])
+			heap[++heap_len] = i;
+
+	if (heap_len > 1) {
+		/* Heapify */
+		for (int i = heap_len; i > 0; i--)
+			reheap(i, heap, heap_len, freq);
+
+		/* BuildCodeTree: extract-one-then-combine pattern (TREEGEN.CPP:154-181).
+		   The first extracted min becomes one child; the current heap[1] after
+		   reheap becomes the other.  The combined node replaces heap[1]. */
+		while (heap_len > 1) {
+			int extracted = heap[1];
+			heap[1] = heap[heap_len--];
+			reheap(1, heap, heap_len, freq);
+
+			int internal = heap_len + nsym - 1;
+			freq[internal] = freq[heap[1]] + freq[extracted];
+			father[extracted] = internal;
+			father[heap[1]] = -internal;  /* negative = right child */
+			heap[1] = internal;
+			reheap(1, heap, heap_len, freq);
 		}
-	}
+		father[nsym] = 0;  /* root sentinel */
 
-	if (heap_size == 0)
-		return;
-
-	if (heap_size == 1) {
-		lengths[nodes[heap[1]].sym] = 1;
-		return;
-	}
-
-	/* Heapify (min-heap by frequency) */
-	for (int i = heap_size / 2; i >= 1; i--) {
-		int k = i;
-		int v = heap[k];
-		while (k * 2 <= heap_size) {
-			int j = k * 2;
-			if (j + 1 <= heap_size && nodes[heap[j + 1]].freq < nodes[heap[j]].freq)
-				j++;
-			if (nodes[v].freq <= nodes[heap[j]].freq)
-				break;
-			heap[k] = heap[j];
-			k = j;
-		}
-		heap[k] = v;
-	}
-
-	/* Extract min helper */
-	#define EXTRACT_MIN(out) do { \
-		out = heap[1]; \
-		heap[1] = heap[heap_size--]; \
-		int k_ = 1; \
-		while (k_ * 2 <= heap_size) { \
-			int j_ = k_ * 2; \
-			if (j_ + 1 <= heap_size && nodes[heap[j_ + 1]].freq < nodes[heap[j_]].freq) j_++; \
-			if (nodes[heap[k_]].freq <= nodes[heap[j_]].freq) break; \
-			int t_ = heap[k_]; heap[k_] = heap[j_]; heap[j_] = t_; \
-			k_ = j_; \
-		} \
-	} while (0)
-
-	#define INSERT(idx) do { \
-		heap[++heap_size] = idx; \
-		int k_ = heap_size; \
-		while (k_ > 1 && nodes[heap[k_]].freq < nodes[heap[k_/2]].freq) { \
-			int t_ = heap[k_]; heap[k_] = heap[k_/2]; heap[k_/2] = t_; \
-			k_ /= 2; \
-		} \
-	} while (0)
-
-	/* Build tree */
-	while (heap_size > 1) {
-		int a, b;
-		EXTRACT_MIN(a);
-		EXTRACT_MIN(b);
-		int n = next_internal++;
-		nodes[n].freq = nodes[a].freq + nodes[b].freq;
-		nodes[n].sym = -1;
-		nodes[n].left = a;
-		nodes[n].right = b;
-		INSERT(n);
-	}
-
-	#undef EXTRACT_MIN
-	#undef INSERT
-
-	/* Walk tree to compute code lengths */
-	int stack[64];
-	int depths[64];
-	int sp = 0;
-	stack[sp] = heap[1];
-	depths[sp] = 0;
-
-	while (sp >= 0) {
-		int idx = stack[sp];
-		int depth = depths[sp];
-		sp--;
-		if (nodes[idx].left == -1) {
-			/* Leaf */
-			lengths[nodes[idx].sym] = (u8)(depth > MaxCodeBits ? MaxCodeBits : depth);
-		} else {
-			sp++;
-			stack[sp] = nodes[idx].left;
-			depths[sp] = depth + 1;
-			sp++;
-			stack[sp] = nodes[idx].right;
-			depths[sp] = depth + 1;
-		}
-	}
-
-	/* RepairLengths: enforce MaxCodeBits limit while maintaining Kraft inequality.
-	   If any code length exceeds MaxCodeBits, redistribute by shortening deep
-	   codes and lengthening short codes. */
-	for (;;) {
-		u32 kraft = 0;
-		int max_len = 0;
+		/* GenCodeLengths: walk father chain to compute depths */
 		for (int i = 0; i < nsym; i++) {
-			if (lengths[i] > 0) {
-				kraft += 1u << (MaxCodeBits - lengths[i]);
-				if (lengths[i] > max_len) max_len = lengths[i];
+			if (freq[i]) {
+				int depth = 0;
+				int p = father[i];
+				while (p) {
+					if (p < 0) p = -p;
+					p = father[p];
+					depth++;
+				}
+				lengths[i] = (u8)depth;
 			}
 		}
-		if (max_len <= MaxCodeBits && kraft == (1u << MaxCodeBits))
-			break;
 
-		/* Fix: find longest code and shorten it */
-		if (max_len > MaxCodeBits) {
-			for (int i = 0; i < nsym; i++)
-				if (lengths[i] > MaxCodeBits)
-					lengths[i] = MaxCodeBits;
+		/* RepairLengths: faithful port of TREEGEN.CPP:218-364.
+		   Uses sorted linked lists to redistribute code lengths while
+		   maintaining ascending symbol order within each length group. */
+		struct { int ch; int next; } elems[NumSymbols];
+		int scl[MaxCodeBits + 2];
+		int length_count[MaxCodeBits + 2];
+
+		for (int i = 0; i <= max_code_bits; i++)
+			scl[i] = NO_MORE;
+		memset(length_count, 0, sizeof length_count);
+
+		/* Sort symbols by length (iterate high-to-low, prepend → ascending order) */
+		int pp = 0;
+		for (int i = nsym - 1; i >= 0; i--) {
+			if (lengths[i] != 0) {
+				elems[pp].ch = i;
+				int len = lengths[i];
+				if (len > max_code_bits)
+					len = lengths[i] = (u8)max_code_bits;
+				length_count[len]++;
+				elems[pp].next = scl[len];
+				scl[len] = pp++;
+			}
 		}
 
-		/* Recalculate kraft sum */
-		kraft = 0;
-		for (int i = 0; i < nsym; i++)
-			if (lengths[i] > 0)
-				kraft += 1u << (MaxCodeBits - lengths[i]);
+		/* Calculate DCode (Kraft sum) */
+		u32 dcode = 0;
+		for (int i = 1; i <= max_code_bits; i++)
+			dcode += (1UL << (max_code_bits - i)) * (u32)length_count[i];
 
-		if (kraft == (1u << MaxCodeBits))
-			break;
+		/* Find first set bit in DCode (error position) */
+		int bit = 0;
+		while (bit < max_code_bits && !(dcode & (1UL << bit)))
+			bit++;
 
-		/* Kraft sum too large: lengthen shortest codes */
-		while (kraft > (1u << MaxCodeBits)) {
-			/* Find shortest non-zero code */
-			int min_len = MaxCodeBits + 1, min_i = -1;
-			for (int i = 0; i < nsym; i++)
-				if (lengths[i] > 0 && lengths[i] < min_len) {
-					min_len = lengths[i];
-					min_i = i;
+		/* Repair loop */
+		while (bit != max_code_bits) {
+			int ilen = max_code_bits - bit;
+
+			/* Find shortest length with symbols */
+			int j = ilen;
+			while (j > 0 && !length_count[j - 1])
+				j--;
+			j--;  /* j is the length to lengthen from */
+
+			/* Extract first element from scl[j] and lengthen it */
+			int epp = scl[j];
+			scl[j] = elems[epp].next;
+
+			/* Insert into scl[j+1] maintaining ascending symbol order */
+			if (scl[j + 1] == NO_MORE || elems[scl[j + 1]].ch > elems[epp].ch) {
+				elems[epp].next = scl[j + 1];
+				scl[j + 1] = epp;
+			} else {
+				int qp = scl[j + 1];
+				int rp = elems[qp].next;
+				while (rp != NO_MORE && elems[rp].ch < elems[epp].ch) {
+					qp = rp;
+					rp = elems[rp].next;
 				}
-			if (min_i < 0 || min_len >= MaxCodeBits) break;
-			kraft -= 1u << (MaxCodeBits - lengths[min_i]);
-			lengths[min_i]++;
-			kraft += 1u << (MaxCodeBits - lengths[min_i]);
-		}
+				elems[epp].next = rp;
+				elems[qp].next = epp;
+			}
+			lengths[elems[epp].ch]++;
+			dcode -= 1UL << (max_code_bits - j - 1);
+			length_count[j]--;
+			length_count[j + 1]++;
 
-		/* Kraft sum too small: shorten longest codes */
-		while (kraft < (1u << MaxCodeBits)) {
-			int max_l = 0, max_i = -1;
-			for (int i = 0; i < nsym; i++)
-				if (lengths[i] > max_l) { max_l = lengths[i]; max_i = i; }
-			if (max_i < 0) break;
-			u32 freed = 1u << (MaxCodeBits - lengths[max_i]);
-			u32 needed = 1u << (MaxCodeBits - (lengths[max_i] - 1));
-			if (kraft - freed + needed <= (1u << MaxCodeBits)) {
-				kraft -= freed;
-				lengths[max_i]--;
-				kraft += needed;
-			} else break;
+			/* Fill freed space by shortening codes from longest levels */
+			if (ilen - j > 1) {
+				int space = (1 << (ilen - j - 1)) - 1;
+				while (space > 0) {
+					int count = length_count[ilen] < space ? length_count[ilen] : space;
+					/* Shorten 'count' elements from scl[ilen] to scl[ilen-1] */
+					int headp = scl[ilen];
+					int lastp = headp;
+					for (int k = 0; k < count; k++) {
+						lengths[elems[lastp].ch]--;
+						if (k + 1 < count)
+							lastp = elems[lastp].next;
+					}
+					if (count > 0) {
+						/* Detach shortened chain from scl[ilen] */
+						int tailp = elems[lastp].next;
+						scl[ilen] = tailp;
+						elems[lastp].next = NO_MORE;
+
+						/* Merge chain into scl[ilen-1] in sorted order */
+						int *insert_at = &scl[ilen - 1];
+						int cp = headp;
+						while (*insert_at != NO_MORE && cp != NO_MORE) {
+							if (elems[*insert_at].ch > elems[cp].ch) {
+								int nextp = elems[cp].next;
+								int save = *insert_at;
+								*insert_at = cp;
+								elems[cp].next = save;
+								insert_at = &elems[cp].next;
+								cp = nextp;
+							} else {
+								insert_at = &elems[*insert_at].next;
+							}
+						}
+						if (cp != NO_MORE)
+							*insert_at = cp;
+					}
+
+					length_count[ilen - 1] += count;
+					length_count[ilen] -= count;
+					dcode += (1UL << (max_code_bits - ilen)) * (u32)count;
+					space -= count;
+					space <<= 1;
+					ilen++;
+				}
+			}
+
+			/* Re-check DCode */
+			while (bit < max_code_bits && !(dcode & (1UL << bit)))
+				bit++;
 		}
-		break;
+	} else if (heap_len == 1) {
+		int sym = heap[1];
+		lengths[sym] = 1;
+		lengths[(sym + 1) % nsym] = 1;
+	} else {
+		lengths[0] = 1;
+		lengths[1] = 1;
 	}
 }
 
@@ -378,60 +406,33 @@ static int tree_enc(struct bits_out *bo, const u8 lengths[NumSymbols], u8 sympre
 		if (present[i])
 			stream[stream_len++] = ivval[symprev[i]][lengths[i]];
 
-	/* Compute frequencies of delta/repeat codes for the tree-encoding tree.
-	   Always emit first value of a run as non-repeat (sets decoder's val),
-	   then use RepeatCode for the remaining copies. Each RepeatCode+c
-	   encodes c + MinRepeat - 1 copies. */
+	/* Compute frequencies matching the RLE pattern in the original
+	   InsertExtraCode: trigger at run > MinRepeat (>6), one RepeatCode
+	   per chunk of max RepeatCode+MinRepeat (20), remainder handled by
+	   next iteration. */
 	u32 tfreqs[NumLenCodes];
 	memset(tfreqs, 0, sizeof tfreqs);
 	for (int i = 0; i < stream_len; ) {
 		int run = 1;
 		while (i + run < stream_len && stream[i + run] == stream[i])
 			run++;
-		if (run >= (int)MinRepeat) {
-			tfreqs[stream[i]]++;  /* first as non-repeat */
-			int reps = run - 1;
-			while (reps >= (int)(MinRepeat - 1)) {
-				int copies = reps;
-				if (copies > (int)(NumDeltaCodes - 1 + MinRepeat - 1))
-					copies = NumDeltaCodes - 1 + MinRepeat - 1;
-				tfreqs[RepeatCode]++;
-				tfreqs[copies - (MinRepeat - 1)]++;
-				reps -= copies;
-			}
-			for (int j = 0; j < reps; j++)
-				tfreqs[stream[i]]++;
-			i += run;
+		if (run > (int)MinRepeat) {
+			int chunk = run;
+			if (chunk > (int)(RepeatCode + MinRepeat))
+				chunk = RepeatCode + MinRepeat;
+			tfreqs[stream[i]]++;
+			tfreqs[RepeatCode]++;
+			tfreqs[chunk - MinRepeat]++;
+			i += chunk;
 		} else {
-			for (int j = 0; j < run; j++)
-				tfreqs[stream[i + j]]++;
-			i += run;
+			tfreqs[stream[i]]++;
+			i++;
 		}
 	}
 
-	/* Generate tree-encoding tree (15 symbols, 3-bit length field → max 7) */
+	/* Generate tree-encoding tree (15 symbols, max 7-bit codes) */
 	u8 tlengths[NumLenCodes];
-	treegen(tfreqs, NumLenCodes, tlengths);
-
-	/* Enforce 7-bit limit and repair Kraft inequality */
-	for (int i = 0; i < NumLenCodes; i++)
-		if (tlengths[i] > 7) tlengths[i] = 7;
-	for (;;) {
-		u32 kraft = 0;
-		for (int i = 0; i < NumLenCodes; i++)
-			if (tlengths[i] > 0)
-				kraft += 1u << (MaxCodeBits - tlengths[i]);
-		if (kraft <= (1u << MaxCodeBits))
-			break;
-		int min_len = 8, min_i = -1;
-		for (int i = 0; i < NumLenCodes; i++)
-			if (tlengths[i] > 0 && tlengths[i] < min_len) {
-				min_len = tlengths[i];
-				min_i = i;
-			}
-		if (min_i < 0 || min_len >= 7) break;
-		tlengths[min_i]++;
-	}
+	treegen(tfreqs, NumLenCodes, 7, tlengths);
 
 	u16 tcodes[NumLenCodes];
 	codegen(tlengths, NumLenCodes, tcodes);
@@ -442,38 +443,31 @@ static int tree_enc(struct bits_out *bo, const u8 lengths[NumSymbols], u8 sympre
 		if (r < 0) return r;
 	}
 
-	/* Write delta-coded symbol stream with RLE */
+	/* Write delta-coded symbol stream with RLE.
+	   Matches original InsertExtraCode + encoding loop:
+	   - Trigger at run > MinRepeat (>6, i.e. >=7)
+	   - One RepeatCode per run chunk, max RepeatCode+MinRepeat (20)
+	   - Remainder handled by next iteration */
 	for (int i = 0; i < stream_len; ) {
 		int run = 1;
 		while (i + run < stream_len && stream[i + run] == stream[i])
 			run++;
-		if (run >= (int)MinRepeat) {
-			/* Emit first value as non-repeat (sets decoder's val) */
+		if (run > (int)MinRepeat) {
+			int chunk = run;
+			if (chunk > (int)(RepeatCode + MinRepeat))
+				chunk = RepeatCode + MinRepeat;
 			r = bitsout_put(bo, tcodes[stream[i]], tlengths[stream[i]]);
 			if (r < 0) return r;
-			int reps = run - 1;
-			while (reps >= (int)(MinRepeat - 1)) {
-				int copies = reps;
-				if (copies > (int)(NumDeltaCodes - 1 + MinRepeat - 1))
-					copies = NumDeltaCodes - 1 + MinRepeat - 1;
-				int c = copies - (MinRepeat - 1);
-				r = bitsout_put(bo, tcodes[RepeatCode], tlengths[RepeatCode]);
-				if (r < 0) return r;
-				r = bitsout_put(bo, tcodes[c], tlengths[c]);
-				if (r < 0) return r;
-				reps -= copies;
-			}
-			for (int j = 0; j < reps; j++) {
-				r = bitsout_put(bo, tcodes[stream[i]], tlengths[stream[i]]);
-				if (r < 0) return r;
-			}
-			i += run;
+			int c = chunk - MinRepeat;
+			r = bitsout_put(bo, tcodes[RepeatCode], tlengths[RepeatCode]);
+			if (r < 0) return r;
+			r = bitsout_put(bo, tcodes[c], tlengths[c]);
+			if (r < 0) return r;
+			i += chunk;
 		} else {
-			for (int j = 0; j < run; j++) {
-				r = bitsout_put(bo, tcodes[stream[i + j]], tlengths[stream[i + j]]);
-				if (r < 0) return r;
-			}
-			i += run;
+			r = bitsout_put(bo, tcodes[stream[i]], tlengths[stream[i]]);
+			if (r < 0) return r;
+			i++;
 		}
 	}
 
@@ -509,6 +503,7 @@ struct compressor {
 
 	/* Previous tree lengths (for delta coding) */
 	u8 symprev[NumSymbols];
+	int block_count;
 
 	/* Output bitstream */
 	struct bits_out bo;
@@ -701,11 +696,21 @@ static int flush_block(struct compressor *c, int is_last)
 	/* Generate Huffman trees from frequency data */
 	u8 lengths[NumSymbols];
 
-	/* BD tree (literals + distances) */
-	treegen(c->bd_freq, NumByteSym + NumDistSym, lengths);
+	/* The original compressor uses the default tree (tree-changed=0) for the
+	   first block when ibuf has fewer than 256 entries (ULTRACMP.CPP:1105).
+	   This is critical for backward compatibility with the original's ASM
+	   decompressor, which relies on exact tree encoding byte sequences.
+	   For larger blocks, generate and encode a custom tree. */
+	int use_default = (c->block_count == 0);
 
-	/* Length tree */
-	treegen(c->l_freq, NumLenSym, lengths + NumByteSym + NumDistSym);
+	if (use_default) {
+		uc2_default_lengths(lengths);
+	} else {
+		/* BD tree (literals + distances) */
+		treegen(c->bd_freq, NumByteSym + NumDistSym, MaxCodeBits, lengths);
+		/* Length tree */
+		treegen(c->l_freq, NumLenSym, MaxCodeBits, lengths + NumByteSym + NumDistSym);
+	}
 
 	/* Emit block-present flag */
 	r = bitsout_put(&c->bo, 1, 1);
@@ -777,6 +782,7 @@ static int flush_block(struct compressor *c, int is_last)
 
 	/* Reset intermediate buffer and frequencies */
 	c->ibuf_pos = 0;
+	c->block_count++;
 	memset(c->bd_freq, 0, sizeof c->bd_freq);
 	memset(c->l_freq, 0, sizeof c->l_freq);
 
@@ -845,6 +851,7 @@ int uc2_compress_ex(
 	memset(c->bd_freq, 0, sizeof c->bd_freq);
 	memset(c->l_freq, 0, sizeof c->l_freq);
 	c->ibuf_pos = 0;
+	c->block_count = 0;
 
 	struct count_writer cw = { .write = write, .ctx = write_ctx, .count = &ctx->total_out };
 	bitsout_init(&c->bo, count_write, &cw, c->outbuf, sizeof c->outbuf);

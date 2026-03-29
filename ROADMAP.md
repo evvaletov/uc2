@@ -22,7 +22,13 @@
        cannot read UC2 v3 archives due to compression bitstream
        differences.)
 - [ ] Compression bitstream compatibility with original UC2 Pro
-      (make archives created by UC2 v3 readable by the original)
+      (make archives created by UC2 v3 readable by the original).
+      Progress: treegen rewritten to match original's heap ordering,
+      RepairLengths, and single-symbol handling; tree_enc RLE fixed;
+      first block uses default tree.  The original still hangs — the
+      remaining difference is likely in the ASM decompressor kernel's
+      expectations.  Needs bit-level comparison tooling to identify
+      the exact divergence point.
 - [ ] Give UC2 a voice: status and progress messages with personality,
       continuing the original's tradition ("Do not worry, you have got
       the tree", "decompression always lightspeed", FAST/TIGHT/S-TIGHT

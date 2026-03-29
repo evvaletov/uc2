@@ -9,8 +9,9 @@ root.  Key phases:
 
 2. **Original Compression Engine** — Done. LZ77+Huffman compressor.
    Cross-tool round-trip verified: original UC2 Pro archives extract
-   correctly in UC2 v3.  Reverse direction (UC2 v3 → original) is a
-   known limitation due to compression bitstream differences.
+   correctly in UC2 v3.  Reverse direction (UC2 v3 → original) is
+   in progress — treegen and tree encoding now match the original's
+   algorithms, but a residual bitstream-level incompatibility remains.
 
 3. **Modernized Master-Block Deduplication** — In progress.
    Content-fingerprint grouping and custom master-block generation done
