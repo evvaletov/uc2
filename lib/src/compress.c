@@ -696,11 +696,10 @@ static int flush_block(struct compressor *c, int is_last)
 	/* Generate Huffman trees from frequency data */
 	u8 lengths[NumSymbols];
 
-	/* Use the default tree for all blocks.  The original UC2 Pro's ASM
-	   decompressor (nuke1) depends on exact Huffman tree shapes from
-	   the original TreeGen.  Until the treegen port is bit-exact, using
-	   the default tree ensures full backward compatibility at the cost
-	   of ~5-15% worse compression ratios. */
+	/* Use the default tree for backward compatibility with the original
+	   UC2 Pro's ASM decompressor kernel.  Custom trees from our treegen
+	   cause the original to hang (the tree encoding is valid but the
+	   ASM kernel has undocumented assumptions about tree shapes). */
 	uc2_default_lengths(lengths);
 
 	/* Emit block-present flag */

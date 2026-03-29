@@ -9,9 +9,10 @@ root.  Key phases:
 
 2. **Original Compression Engine** — Done. LZ77+Huffman compressor.
    Cross-tool round-trip verified: original UC2 Pro archives extract
-   correctly in UC2 v3.  Reverse direction partial: single-file UC2
-   v3 archives are now readable by the original (listing + extraction).
-   Multi-file archives still hang; under investigation.
+   correctly in UC2 v3.  Reverse direction: single-file UC2 v3
+   archives are readable by the original (listing + extraction).
+   Multi-file extraction hangs due to undocumented assumptions in the
+   original's ASM decompressor kernel.
 
 3. **Modernized Master-Block Deduplication** — In progress.
    Content-fingerprint grouping and custom master-block generation done
