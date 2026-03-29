@@ -697,9 +697,11 @@ static int flush_block(struct compressor *c, int is_last)
 	u8 lengths[NumSymbols];
 
 	/* Use the default tree for backward compatibility with the original
-	   UC2 Pro's ASM decompressor kernel.  Custom trees from our treegen
-	   cause the original to hang (the tree encoding is valid but the
-	   ASM kernel has undocumented assumptions about tree shapes). */
+	   UC2 Pro's ASM decompressor (nuke1).  Custom trees from our treegen
+	   produce valid bitstreams but nuke1 hangs on them — the original's
+	   tree generation (TREEGEN.CPP) produces different Huffman code
+	   assignments that nuke1 depends on.  The default tree gives ~40%
+	   worse compression but full backward compatibility. */
 	uc2_default_lengths(lengths);
 
 	/* Emit block-present flag */

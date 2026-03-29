@@ -21,14 +21,16 @@
        Reverse direction is a known limitation: the original UC2 Pro
        cannot read UC2 v3 archives due to compression bitstream
        differences.)
-- [x] Single-file backward compatibility with original UC2 Pro
-      (listing + extraction verified in DOSBox-X)
-- [x] Single-file backward compatibility with original UC2 Pro
-      (listing + extraction verified in automated DOSBox-X test).
-- [x] Multi-file backward compatibility with original UC2 Pro
-      (listing + extraction verified for 4 files in automated
-      DOSBox-X test).  Fix: always assign custom master indices
-      (>= 2), never SuperMaster (0), matching the original's behavior.
+- [x] Backward compatibility with original UC2 Pro (listing +
+      extraction verified for multi-file archives in both directions
+      in automated DOSBox-X test).
+- [ ] Custom Huffman tree compatibility with original UC2 Pro.
+      Currently uses the default tree for all blocks (~40% worse
+      compression for text, ~0% for random data).  Our treegen
+      produces valid trees but the original's nuke1 ASM kernel
+      depends on the exact tree shapes from the original TreeGen.
+      Improving this requires bit-exact treegen or understanding
+      nuke1's tree assumptions.
 - [ ] Give UC2 a voice: status and progress messages with personality,
       continuing the original's tradition ("Do not worry, you have got
       the tree", "decompression always lightspeed", FAST/TIGHT/S-TIGHT
