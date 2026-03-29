@@ -49,7 +49,10 @@ something no mainstream archiver offers.
       (`uc2_cdc.h`): chunker library + integration into archive
       creation.  Files sharing content at ANY position (not just
       identical prefixes) are now grouped for master-block dedup.
-- [ ] Merkle DAG of deduplicated blocks (Git pack-style content addressing)
+- [x] Merkle DAG of deduplicated blocks (`uc2_merkle.h`):
+      content-addressable chunk trees with 64-bit FNV-1a hashes,
+      structural similarity comparison, single-byte-change resilience.
+      8 unit tests including partial overlap detection.
 - [ ] Cross-archive and cross-version dedup via shared block stores
 - [ ] Near-duplicate detection via simhash/minhash for fuzzy dedup
       (patched executables, slightly edited documents)
