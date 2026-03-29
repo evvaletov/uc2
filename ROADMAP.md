@@ -24,14 +24,18 @@
 - [x] Single-file backward compatibility with original UC2 Pro
       (listing + extraction verified in DOSBox-X)
 - [ ] Multi-file backward compatibility with original UC2 Pro
-      (listing works, extraction hangs).  Single-file archives are
-      byte-level compatible.  The bitstream, cdir, and file data all
-      decode correctly in the Python bitdump.py analyzer, but the
-      original's extraction code hangs for archives with 2+ files.
-      The cdir is parsed correctly (listing works).  The issue is
-      specific to the extraction code path — possibly related to
-      how the original handles multiple file entries during the
-      extract walk.
+      (listing works, extraction hangs for 2+ files).  Extensively
+      debugged: the bitstream, cdir, and all file data decode correctly
+      in the Python bitdump.py analyzer.  The cdir is parsed correctly
+      by the original (listing shows all files with correct names and
+      sizes).  The hang occurs in the file data decompression phase.
+      Investigated: `LocMacNtx(0)` returns VNULL for SuperMaster but
+      `V(VNULL)` is safe in the original's virtual memory system.
+      Investigated: 0xDEDEDEDE sentinel — this is a legacy compatibility
+      workaround for old archives, not the standard value (original
+      uses masterPrefix=0).  Next: compare the original's in-memory
+      state after cdir parsing for a UC2 v3 archive vs an original
+      archive with the same content.
 - [ ] Give UC2 a voice: status and progress messages with personality,
       continuing the original's tradition ("Do not worry, you have got
       the tree", "decompression always lightspeed", FAST/TIGHT/S-TIGHT

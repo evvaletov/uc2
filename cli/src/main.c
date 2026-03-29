@@ -876,7 +876,7 @@ static int create_archive(int nargs, char **args)
 		w16(p, masters[i].csum); p += 2;
 		w32(p, masters[i].csize); p += 4;
 		w16(p, 1); p += 2;
-		w32(p, 0); p += 4;
+		w32(p, 0); p += 4; /* masterPrefix = SuperMaster */
 		w32(p, 1); p += 4;
 		w32(p, masters[i].offset); p += 4;
 	}
