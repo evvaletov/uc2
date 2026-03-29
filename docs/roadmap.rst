@@ -13,10 +13,10 @@ root.  Key phases:
    in both directions.  Automated DOSBox-X test validates 4+5 files.
 
 3. **Modernized Master-Block Deduplication** — In progress.
-   Content-fingerprint grouping and custom master-block generation done.
-   Content-defined chunking (CDC) library added with Gear rolling hash.
-   Remaining: CDC integration into archive creation, Merkle DAG,
-   cross-archive dedup, near-duplicate detection.
+   Content-defined chunking (CDC) with Gear rolling hash integrated
+   into archive creation — files sharing content at any position are
+   grouped for master-block dedup.  Remaining: Merkle DAG, cross-archive
+   dedup, near-duplicate detection, delta compression.
 
 4. **Modern Compression Backends** — ANS entropy coding,
    zstd-inspired dictionary compression, content-aware preprocessing.

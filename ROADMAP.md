@@ -45,11 +45,10 @@ something no mainstream archiver offers.
 - [x] MASMETA central directory records with full metadata
 - [x] Masters compressed with SuperMaster, files compressed with custom master
 - [x] CLI integration test validating master deduplication round-trip
-- [x] Content-defined chunking (CDC) library with Gear rolling hash
-      (`uc2_cdc.h`): chunker with configurable min/max/target sizes,
-      FNV-1a content addressing, 8 unit tests including dedup detection
-- [ ] Integrate CDC into archive creation (replace fixed-block file
-      grouping with chunk-level dedup)
+- [x] Content-defined chunking (CDC) with Gear rolling hash
+      (`uc2_cdc.h`): chunker library + integration into archive
+      creation.  Files sharing content at ANY position (not just
+      identical prefixes) are now grouped for master-block dedup.
 - [ ] Merkle DAG of deduplicated blocks (Git pack-style content addressing)
 - [ ] Cross-archive and cross-version dedup via shared block stores
 - [ ] Near-duplicate detection via simhash/minhash for fuzzy dedup

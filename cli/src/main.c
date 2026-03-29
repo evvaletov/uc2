@@ -33,6 +33,7 @@ void setprogname(const char *argv0);
 #include <dirent.h>
 
 #include <uc2/libuc2.h>
+#include <uc2/uc2_cdc.h>
 #include <uc2/uc2_version.h>
 
 #include "list.h"
@@ -714,43 +715,82 @@ static int create_archive(int nargs, char **args)
 	if (sm_ret < 0)
 		errx(EXIT_FAILURE, "Failed to load SuperMaster (%d)", sm_ret);
 
-	/* Phase 1: Fingerprint files for master-block grouping */
-	enum { SampleSize = 4096, MinMasterFile = 1024, MaxMasterSize = 65535 };
-	unsigned *fps = calloc(nfiles, sizeof *fps);
-	bool *grouped = calloc(nfiles, sizeof *grouped);
-	if (!fps || !grouped)
-		err(EXIT_FAILURE, "malloc");
+	/* Phase 1: Content-defined chunking for master-block grouping.
+	   Split each file into CDC chunks (Gear hash, avg 8KB), hash each
+	   chunk, and group files that share chunks.  This detects similar
+	   content at ANY position, not just identical file prefixes. */
+	enum { MinMasterFile = 1024, MaxMasterSize = 65535 };
+
+	/* Collect chunk hashes per file */
+	struct { uint32_t hash; int file_idx; } *chunk_map = NULL;
+	int chunk_map_len = 0, chunk_map_cap = 0;
 
 	for (int i = 0; i < nfiles; i++) {
 		if (recs[i].size < MinMasterFile)
 			continue;
-		unsigned char sample[SampleSize];
 		FILE *f = fopen(recs[i].path, "rb");
 		if (!f) err(EXIT_FAILURE, "%s", recs[i].path);
-		unsigned n = (unsigned)fread(sample, 1, SampleSize, f);
+		unsigned char *buf = malloc(recs[i].size);
+		if (!buf) err(EXIT_FAILURE, "malloc");
+		size_t n = fread(buf, 1, recs[i].size, f);
 		fclose(f);
-		fps[i] = fnv1a(sample, n);
+
+		struct uc2_chunker chunker;
+		uc2_chunker_init(&chunker, 12, 0, 0);  /* avg 4KB chunks */
+		size_t off, len;
+		while (uc2_chunker_next(&chunker, buf, n, &off, &len)) {
+			if (chunk_map_len >= chunk_map_cap) {
+				chunk_map_cap = chunk_map_cap ? chunk_map_cap * 2 : 256;
+				chunk_map = realloc(chunk_map, (unsigned)chunk_map_cap * sizeof *chunk_map);
+				if (!chunk_map) err(EXIT_FAILURE, "realloc");
+			}
+			chunk_map[chunk_map_len].hash = uc2_fnv1a(buf + off, len);
+			chunk_map[chunk_map_len].file_idx = i;
+			chunk_map_len++;
+		}
+		/* Final chunk */
+		if (len > 0) {
+			if (chunk_map_len >= chunk_map_cap) {
+				chunk_map_cap = chunk_map_cap ? chunk_map_cap * 2 : 256;
+				chunk_map = realloc(chunk_map, (unsigned)chunk_map_cap * sizeof *chunk_map);
+				if (!chunk_map) err(EXIT_FAILURE, "realloc");
+			}
+			chunk_map[chunk_map_len].hash = uc2_fnv1a(buf + off, len);
+			chunk_map[chunk_map_len].file_idx = i;
+			chunk_map_len++;
+		}
+		free(buf);
 	}
+
+	/* Find chunk hashes shared by 2+ files and group those files */
+	bool *grouped = calloc(nfiles, sizeof *grouped);
+	if (!grouped) err(EXIT_FAILURE, "malloc");
 
 	int nmasters = 0, master_cap = 16;
 	struct master_rec *masters = calloc(master_cap, sizeof *masters);
-	if (!masters)
-		err(EXIT_FAILURE, "malloc");
+	if (!masters) err(EXIT_FAILURE, "malloc");
 
-	for (int i = 0; i < nfiles; i++) {
-		if (grouped[i] || recs[i].size < MinMasterFile)
-			continue;
-
-		int count = 0, largest = i;
-		for (int j = i; j < nfiles; j++) {
-			if (recs[j].size >= MinMasterFile && fps[j] == fps[i]) {
-				count++;
-				if (recs[j].size > recs[largest].size)
-					largest = j;
-			}
+	for (int i = 0; i < chunk_map_len; i++) {
+		uint32_t ch = chunk_map[i].hash;
+		/* Count distinct files sharing this chunk */
+		int file_ids[256];
+		int nf = 0;
+		for (int j = i; j < chunk_map_len && nf < 256; j++) {
+			if (chunk_map[j].hash != ch) continue;
+			int fj = chunk_map[j].file_idx;
+			if (grouped[fj] || recs[fj].size < MinMasterFile) continue;
+			int dup = 0;
+			for (int k = 0; k < nf; k++)
+				if (file_ids[k] == fj) { dup = 1; break; }
+			if (!dup) file_ids[nf++] = fj;
 		}
-		if (count < 2)
-			continue;
+		if (nf < 2) continue;
+
+		/* Group these files: master from the largest */
+		int largest = file_ids[0];
+		for (int k = 1; k < nf; k++)
+			if (recs[file_ids[k]].size > recs[largest].size)
+				largest = file_ids[k];
 
 		unsigned midx = 2 + (unsigned)nmasters;
 		unsigned msz = recs[largest].size;
@@ -763,13 +803,11 @@ static int create_archive(int nargs, char **args)
 		fclose(mf);
 
 		unsigned ref_len = 0, ref_ctr = 0;
-		for (int j = i; j < nfiles; j++) {
-			if (recs[j].size >= MinMasterFile && fps[j] == fps[i]) {
-				recs[j].master_idx = (int)midx;
-				grouped[j] = true;
-				ref_len += recs[j].size;
-				ref_ctr++;
-			}
+		for (int k = 0; k < nf; k++) {
+			recs[file_ids[k]].master_idx = (int)midx;
+			grouped[file_ids[k]] = true;
+			ref_len += recs[file_ids[k]].size;
+			ref_ctr++;
 		}
 
 		if (nmasters >= master_cap) {
@@ -784,7 +822,7 @@ static int create_archive(int nargs, char **args)
 		};
 		nmasters++;
 	}
-	free(fps);
+	free(chunk_map);
 	free(grouped);
 
 	/* Assign a default custom master to all ungrouped files.
