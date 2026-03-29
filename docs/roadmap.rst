@@ -8,11 +8,10 @@ root.  Key phases:
    CMake build system.
 
 2. **Original Compression Engine** — Done. LZ77+Huffman compressor.
-   Cross-tool round-trip verified: original UC2 Pro archives extract
-   correctly in UC2 v3.  Reverse: UC2 v3 archives can be listed by
-   the original.  Extraction requires a buffer alignment fix — the
-   original's half-buffer flush logic (NUKE.CPP) expects the LZ77
-   window at position ``masterSize % 32768``, not ``masterSize``.
+   Cross-tool round-trip verified in both directions: original UC2
+   Pro archives extract correctly in UC2 v3, and single-file UC2 v3
+   archives extract correctly by the original UC2 Pro.  Multi-file
+   backward compat is a remaining item.
 
 3. **Modernized Master-Block Deduplication** — In progress.
    Content-fingerprint grouping and custom master-block generation done

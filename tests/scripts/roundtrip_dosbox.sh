@@ -49,17 +49,44 @@ uc2pro UC2DIST
 exit
 DOSBOXCFG
 
-timeout 300 flatpak run com.dosbox_x.DOSBox-X \
+# SFX decompression takes 3-8 minutes depending on host CPU speed
+timeout 600 flatpak run com.dosbox_x.DOSBox-X \
     -conf "$WORK/dosbox.conf" -nopromptfolder 2>/dev/null || true
 
-if [ ! -f "$WORK/UC2DIST/UC.EXE" ]; then
-    echo "FAIL: UC2 Pro SFX extraction did not produce UC.EXE"
+UC2DIST_COUNT=$(ls "$WORK/UC2DIST/" 2>/dev/null | wc -l)
+if [ ! -f "$WORK/UC2DIST/UC.EXE" ] || [ "$UC2DIST_COUNT" -lt 22 ]; then
+    echo "FAIL: UC2 Pro SFX extraction incomplete ($UC2DIST_COUNT/22 files)"
     exit 1
 fi
-echo "  UC.EXE extracted ($(wc -c < "$WORK/UC2DIST/UC.EXE") bytes)"
+echo "  UC.EXE extracted ($(wc -c < "$WORK/UC2DIST/UC.EXE") bytes, $UC2DIST_COUNT files)"
+
+# --- Direction 1: UC2 v3 creates, original extracts (single file) ---
+echo "=== Direction 1: UC2 v3 creates -> original extracts ==="
+"$UC2_CLI" -w "$WORK/v3single.uc2" "$WORK/corpus/hello.txt"
+mkdir -p "$WORK/dir1_out"
+cat > "$WORK/dosbox.conf" <<DOSBOXCFG
+[sdl]
+output=none
+fullscreen=false
+[dosbox]
+memsize=16
+machine=svga_s3
+[cpu]
+cycles=max
+[autoexec]
+mount c: $WORK
+c:
+cd C:\\DIR1_OUT
+C:\\UC2DIST\\UC eF C:\\V3SINGLE *.*
+echo DIR1 > C:\\DIR1.TXT
+exit
+DOSBOXCFG
+
+timeout 60 flatpak run com.dosbox_x.DOSBox-X \
+    -conf "$WORK/dosbox.conf" -nopromptfolder 2>/dev/null || true
 
 # --- Session 2: original creates archive ---
-echo "=== Session 2: UC2 Pro creates archive ==="
+echo "=== Session 2 (Direction 2): UC2 Pro creates archive ==="
 cat > "$WORK/dosbox.conf" <<DOSBOXCFG
 [sdl]
 output=none
@@ -120,6 +147,24 @@ for f in "${FILES[@]}"; do
     fi
 done
 
+# --- Verify Direction 1 (single-file) ---
+echo "--- Verifying Direction 1 (UC2 v3 -> original, single file) ---"
+if [ -f "$WORK/DIR1.TXT" ]; then
+    extracted=""
+    for candidate in "$WORK/dir1_out/HELLO.TXT" "$WORK/dir1_out/hello.txt"; do
+        [ -f "$candidate" ] && extracted="$candidate" && break
+    done
+    if [ -n "$extracted" ] && cmp -s "$WORK/corpus/hello.txt" "$extracted"; then
+        echo "  OK: hello.txt (Direction 1)"
+    else
+        echo "  FAIL: hello.txt content mismatch (Direction 1)"
+        FAIL=1
+    fi
+else
+    echo "  FAIL: Direction 1 DOSBox session incomplete"
+    FAIL=1
+fi
+
 if [ $FAIL -ne 0 ]; then
     echo "FAILED: some files did not survive cross-tool round-trip"
     echo "Work directory preserved at: $WORK"
@@ -127,4 +172,4 @@ if [ $FAIL -ne 0 ]; then
     exit 1
 fi
 
-echo "PASSED: all files verified (original UC2 Pro -> UC2 v3)"
+echo "PASSED: all files verified (both directions)"

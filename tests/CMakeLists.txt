@@ -54,5 +54,5 @@ add_test(NAME roundtrip_dosbox
 )
 set_tests_properties(roundtrip_dosbox PROPERTIES
     LABELS "dosbox"
-    TIMEOUT 600
+    TIMEOUT 1200
 )
