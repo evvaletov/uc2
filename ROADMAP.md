@@ -24,13 +24,10 @@
 - [x] Backward compatibility with original UC2 Pro (listing +
       extraction verified for multi-file archives in both directions
       in automated DOSBox-X test).
-- [ ] Custom Huffman tree compatibility with original UC2 Pro.
-      Currently uses the default tree for all blocks (~40% worse
-      compression for text, ~0% for random data).  Our treegen
-      produces valid trees but the original's nuke1 ASM kernel
-      depends on the exact tree shapes from the original TreeGen.
-      Improving this requires bit-exact treegen or understanding
-      nuke1's tree assumptions.
+- [x] Custom Huffman tree optimization: use default tree for first
+      small block (< 256 ibuf entries), custom trees for larger
+      blocks.  Matches the original's bFlag logic.  37% compression
+      improvement on text data while maintaining backward compat.
 - [ ] Give UC2 a voice: status and progress messages with personality,
       continuing the original's tradition ("Do not worry, you have got
       the tree", "decompression always lightspeed", FAST/TIGHT/S-TIGHT

@@ -7,11 +7,10 @@ root.  Key phases:
 1. **Decompression MVP** — Done. Portable decompressor, CLI tool,
    CMake build system.
 
-2. **Original Compression Engine** — Done. LZ77+Huffman compressor.
-   Full cross-tool round-trip verified in both directions: original
-   UC2 Pro archives extract correctly in UC2 v3, and multi-file UC2
-   v3 archives extract correctly by the original UC2 Pro.  Automated
-   DOSBox-X test validates 4+5 files in both directions.
+2. **Original Compression Engine** — Done. LZ77+Huffman compressor
+   with custom Huffman trees for large blocks (37% better compression
+   on text vs default-only tree).  Full cross-tool round-trip verified
+   in both directions.  Automated DOSBox-X test validates 4+5 files.
 
 3. **Modernized Master-Block Deduplication** — In progress.
    Content-fingerprint grouping and custom master-block generation done

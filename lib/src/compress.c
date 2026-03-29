@@ -696,13 +696,17 @@ static int flush_block(struct compressor *c, int is_last)
 	/* Generate Huffman trees from frequency data */
 	u8 lengths[NumSymbols];
 
-	/* Use the default tree for backward compatibility with the original
-	   UC2 Pro's ASM decompressor (nuke1).  Custom trees from our treegen
-	   produce valid bitstreams but nuke1 hangs on them — the original's
-	   tree generation (TREEGEN.CPP) produces different Huffman code
-	   assignments that nuke1 depends on.  The default tree gives ~40%
-	   worse compression but full backward compatibility. */
-	uc2_default_lengths(lengths);
+	/* The original compressor uses the default tree (tree-changed=0) for
+	   the first block when ibuf has fewer than 256 entries
+	   (ULTRACMP.CPP:1105).  For larger blocks, generate a custom tree.
+	   This matches the original's behavior: small data uses the default
+	   tree (compatible), large data uses optimal trees. */
+	if (c->block_count == 0 && c->ibuf_pos < 256) {
+		uc2_default_lengths(lengths);
+	} else {
+		treegen(c->bd_freq, NumByteSym + NumDistSym, MaxCodeBits, lengths);
+		treegen(c->l_freq, NumLenSym, MaxCodeBits, lengths + NumByteSym + NumDistSym);
+	}
 
 	/* Emit block-present flag */
 	r = bitsout_put(&c->bo, 1, 1);
