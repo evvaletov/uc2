@@ -25,10 +25,15 @@
       (listing + extraction verified in DOSBox-X)
 - [x] Single-file backward compatibility with original UC2 Pro
       (listing + extraction verified in automated DOSBox-X test).
-- [ ] Multi-file backward compatibility with original UC2 Pro
-      (single-file works, multi-file extraction hangs). The earlier
-      "extraction always hangs" was caused by incomplete SFX extraction
-      (< 22 files) — with complete UC2DIST, single-file works fine.
+- [ ] Multi-file backward compatibility with original UC2 Pro.
+      Root cause identified: the original uses custom masters (index
+      >= 2) for ALL files, never SuperMaster (index 0) in the cdir.
+      UC2 v3 uses SuperMaster for ungrouped files, which triggers the
+      original's `ToToWalk(TTefl, SUPERMASTER, ...)` extraction path
+      — this path hangs.  Fix: assign custom master indices (>= 2)
+      to all files, matching the original's behavior.  This requires
+      always generating at least one custom master block, even for
+      archives without dedup groups.
 - [ ] Give UC2 a voice: status and progress messages with personality,
       continuing the original's tradition ("Do not worry, you have got
       the tree", "decompression always lightspeed", FAST/TIGHT/S-TIGHT
