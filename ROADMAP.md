@@ -67,8 +67,10 @@ something no mainstream archiver offers.
 Pluggable algorithms behind new method IDs; original Method 4 kept for
 backward compatibility.
 
-- [ ] ANS/rANS entropy coder as drop-in Huffman replacement (~5KB pure C,
-      5--15% ratio improvement on skewed distributions)
+- [x] rANS entropy coder (`uc2_rans.h`): 32-bit table-based rANS with
+      344-symbol alphabet support, <5% overhead vs Shannon entropy.
+      6 unit tests including round-trip, skewed distribution, and
+      comparison against theoretical optimum.
 - [ ] zstd-inspired dictionary compression integrated with master blocks
       (deduped masters become shared zstd dictionaries — unique synergy)
 - [ ] LZ4 ultra-fast mode for real-time or low-resource scenarios
