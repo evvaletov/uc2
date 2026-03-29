@@ -787,6 +787,58 @@ static int create_archive(int nargs, char **args)
 	free(fps);
 	free(grouped);
 
+	/* Assign a default custom master to all ungrouped files.
+	   The original UC2 Pro never uses SuperMaster (index 0) in file
+	   COMPRESS records — it always assigns custom master indices (>= 2).
+	   Using SuperMaster triggers a hang in the original's extraction
+	   code path (ToToWalk with SUPERMASTER).  We build a custom master
+	   from the largest ungrouped file's content. */
+	{
+		int largest_ungrouped = -1;
+		for (int i = 0; i < nfiles; i++) {
+			if (recs[i].master_idx == 0) {
+				if (largest_ungrouped < 0 ||
+				    recs[i].size > recs[largest_ungrouped].size)
+					largest_ungrouped = i;
+			}
+		}
+		if (largest_ungrouped >= 0) {
+			unsigned midx = 2 + (unsigned)nmasters;
+			unsigned msz = recs[largest_ungrouped].size;
+			if (msz > MaxMasterSize) msz = MaxMasterSize;
+			if (msz < 1) msz = 1;
+			unsigned char *mdata = calloc(msz, 1);
+			if (!mdata) err(EXIT_FAILURE, "malloc");
+			if (recs[largest_ungrouped].size > 0) {
+				FILE *mf = fopen(recs[largest_ungrouped].path, "rb");
+				if (!mf) err(EXIT_FAILURE, "%s", recs[largest_ungrouped].path);
+				msz = (unsigned)fread(mdata, 1, msz, mf);
+				fclose(mf);
+			}
+
+			unsigned ref_len = 0, ref_ctr = 0;
+			for (int i = 0; i < nfiles; i++) {
+				if (recs[i].master_idx == 0) {
+					recs[i].master_idx = (int)midx;
+					ref_len += recs[i].size;
+					ref_ctr++;
+				}
+			}
+
+			if (nmasters >= master_cap) {
+				master_cap *= 2;
+				masters = realloc(masters, (unsigned)master_cap * sizeof *masters);
+				if (!masters) err(EXIT_FAILURE, "realloc");
+			}
+			masters[nmasters] = (struct master_rec){
+				.idx = midx, .data = mdata, .size = msz,
+				.key = fnv1a(mdata, msz),
+				.ref_len = ref_len, .ref_ctr = ref_ctr
+			};
+			nmasters++;
+		}
+	}
+
 	FILE *out = fopen(opt.archive, "wb");
 	if (!out)
 		err(EXIT_FAILURE, "%s", opt.archive);

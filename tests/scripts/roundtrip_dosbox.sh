@@ -60,9 +60,12 @@ if [ ! -f "$WORK/UC2DIST/UC.EXE" ] || [ "$UC2DIST_COUNT" -lt 22 ]; then
 fi
 echo "  UC.EXE extracted ($(wc -c < "$WORK/UC2DIST/UC.EXE") bytes, $UC2DIST_COUNT files)"
 
-# --- Direction 1: UC2 v3 creates, original extracts (single file) ---
+# --- Direction 1: UC2 v3 creates, original extracts (multi-file) ---
 echo "=== Direction 1: UC2 v3 creates -> original extracts ==="
-"$UC2_CLI" -w "$WORK/v3single.uc2" "$WORK/corpus/hello.txt"
+DIR1_FILES=(hello.txt textfile.txt allbytes.bin random.bin)
+"$UC2_CLI" -w "$WORK/v3multi.uc2" \
+    "$WORK/corpus/hello.txt" "$WORK/corpus/textfile.txt" \
+    "$WORK/corpus/allbytes.bin" "$WORK/corpus/random.bin"
 mkdir -p "$WORK/dir1_out"
 cat > "$WORK/dosbox.conf" <<DOSBOXCFG
 [sdl]
@@ -77,12 +80,12 @@ cycles=max
 mount c: $WORK
 c:
 cd C:\\DIR1_OUT
-C:\\UC2DIST\\UC eF C:\\V3SINGLE *.*
+C:\\UC2DIST\\UC eF C:\\V3MULTI *.*
 echo DIR1 > C:\\DIR1.TXT
 exit
 DOSBOXCFG
 
-timeout 60 flatpak run com.dosbox_x.DOSBox-X \
+timeout 120 flatpak run com.dosbox_x.DOSBox-X \
     -conf "$WORK/dosbox.conf" -nopromptfolder 2>/dev/null || true
 
 # --- Session 2: original creates archive ---
@@ -147,19 +150,25 @@ for f in "${FILES[@]}"; do
     fi
 done
 
-# --- Verify Direction 1 (single-file) ---
-echo "--- Verifying Direction 1 (UC2 v3 -> original, single file) ---"
+# --- Verify Direction 1 (multi-file) ---
+echo "--- Verifying Direction 1 (UC2 v3 -> original) ---"
 if [ -f "$WORK/DIR1.TXT" ]; then
-    extracted=""
-    for candidate in "$WORK/dir1_out/HELLO.TXT" "$WORK/dir1_out/hello.txt"; do
-        [ -f "$candidate" ] && extracted="$candidate" && break
+    for f in "${DIR1_FILES[@]}"; do
+        upper=$(echo "$f" | tr '[:lower:]' '[:upper:]')
+        extracted=""
+        for candidate in "$WORK/dir1_out/$upper" "$WORK/dir1_out/$f"; do
+            [ -f "$candidate" ] && extracted="$candidate" && break
+        done
+        if [ -z "$extracted" ]; then
+            echo "  FAIL: $f not extracted by original (Direction 1)"
+            FAIL=1
+        elif cmp -s "$CORPUS/$f" "$extracted"; then
+            echo "  OK: $f (Direction 1)"
+        else
+            echo "  FAIL: $f content mismatch (Direction 1)"
+            FAIL=1
+        fi
     done
-    if [ -n "$extracted" ] && cmp -s "$WORK/corpus/hello.txt" "$extracted"; then
-        echo "  OK: hello.txt (Direction 1)"
-    else
-        echo "  FAIL: hello.txt content mismatch (Direction 1)"
-        FAIL=1
-    fi
 else
     echo "  FAIL: Direction 1 DOSBox session incomplete"
     FAIL=1

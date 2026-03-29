@@ -8,11 +8,10 @@ root.  Key phases:
    CMake build system.
 
 2. **Original Compression Engine** — Done. LZ77+Huffman compressor.
-   Cross-tool round-trip verified in both directions: original UC2
-   Pro archives extract correctly in UC2 v3, and single-file UC2 v3
-   archives extract correctly by the original.  Multi-file extraction
-   requires custom masters (the original never uses SuperMaster in
-   file COMPRESS records — it hangs on the SuperMaster extraction path).
+   Full cross-tool round-trip verified in both directions: original
+   UC2 Pro archives extract correctly in UC2 v3, and multi-file UC2
+   v3 archives extract correctly by the original UC2 Pro.  Automated
+   DOSBox-X test validates 4+5 files in both directions.
 
 3. **Modernized Master-Block Deduplication** — In progress.
    Content-fingerprint grouping and custom master-block generation done
