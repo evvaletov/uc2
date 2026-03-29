@@ -23,13 +23,16 @@
        differences.)
 - [x] Single-file backward compatibility with original UC2 Pro
       (listing + extraction verified in DOSBox-X)
-- [ ] Multi-file backward compatibility with original UC2 Pro
-      (listing works, extraction hangs for 2+ files).  Requires the
-      default Huffman tree (custom trees hang even for single-file
-      extraction).  The hang is in the original's ASM decompressor
-      kernel (nuke1) which has undocumented assumptions about tree
-      shapes and/or compressed data patterns.  Single-file archives
-      are fully compatible with the default tree.
+- [ ] File extraction backward compatibility with original UC2 Pro.
+      Listing works for all archives.  Extraction hangs due to the
+      original's half-buffer flush logic in nuke1/FlushIt
+      (NUKE.CPP/ULTRACMP.CPP): with a 49152-byte SuperMaster,
+      wTOE starts at 16384 (= 49152-32768), causing FlushIt to
+      trigger immediately and read from the wrong buffer position.
+      Fix: align the compressor's LZ77 window start position to
+      match the decompressor's adjusted wTOE (16384), not the raw
+      SuperMaster size (49152).  Also requires default Huffman tree
+      (custom trees from treegen are incompatible with nuke1 ASM).
 - [ ] Give UC2 a voice: status and progress messages with personality,
       continuing the original's tradition ("Do not worry, you have got
       the tree", "decompression always lightspeed", FAST/TIGHT/S-TIGHT
