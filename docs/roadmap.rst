@@ -13,10 +13,9 @@ root.  Key phases:
    in both directions.  Automated DOSBox-X test validates 4+5 files.
 
 3. **Modernized Master-Block Deduplication** — In progress.
-   CDC with Gear hash + Merkle DAG with 64-bit content addressing.
-   Files sharing content at any position are grouped for master-block
-   dedup.  Remaining: cross-archive dedup, near-duplicate detection,
-   delta compression.
+   CDC with Gear hash, Merkle DAG with 64-bit content addressing,
+   cross-archive block store for shared chunk storage.  Remaining:
+   near-duplicate detection, delta compression.
 
 4. **Modern Compression Backends** — ANS entropy coding,
    zstd-inspired dictionary compression, content-aware preprocessing.

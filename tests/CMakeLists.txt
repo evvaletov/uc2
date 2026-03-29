@@ -57,6 +57,12 @@ target_include_directories(test_merkle PRIVATE "${PROJECT_BINARY_DIR}/lib")
 target_compile_features(test_merkle PRIVATE c_std_99)
 add_test(NAME merkle COMMAND test_merkle)
 
+add_executable(test_blockstore src/test_blockstore.c)
+target_link_libraries(test_blockstore PRIVATE uc2)
+target_include_directories(test_blockstore PRIVATE "${PROJECT_BINARY_DIR}/lib")
+target_compile_features(test_blockstore PRIVATE c_std_99)
+add_test(NAME blockstore COMMAND test_blockstore)
+
 # Cross-tool round-trip: UC2 v3 <-> original uc2pro.exe via DOSBox-X
 add_test(NAME roundtrip_dosbox
     COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/scripts/roundtrip_dosbox.sh

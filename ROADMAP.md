@@ -53,7 +53,10 @@ something no mainstream archiver offers.
       content-addressable chunk trees with 64-bit FNV-1a hashes,
       structural similarity comparison, single-byte-change resilience.
       8 unit tests including partial overlap detection.
-- [ ] Cross-archive and cross-version dedup via shared block stores
+- [x] Cross-archive dedup via shared block store (`uc2_blockstore.h`):
+      content-addressable chunk storage with two-level directory
+      layout, dedup statistics, read-back verification.
+      6 unit tests including cross-archive dedup scenario.
 - [ ] Near-duplicate detection via simhash/minhash for fuzzy dedup
       (patched executables, slightly edited documents)
 - [ ] Delta compression across file versions (xdelta/bsdiff-style binary
