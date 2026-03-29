@@ -51,11 +51,33 @@ struct options {
 	bool no_dir_meta:1;
 	bool no_file_meta:1;
 	bool help:1;
+	bool quiet:1;
 	char sep;
 	int level;
 	char *archive;
 	char *dest;
 } opt = {.sep = ' ', .level = 4};
+
+static const char *level_name(int level)
+{
+	switch (level) {
+	case 2:  return "Fast";
+	case 3:  return "Normal";
+	case 5:  return "Ultra";
+	default: return "Tight";
+	}
+}
+
+/* UC2 talks — warm, confident, slightly quirky.
+   Suppressed by -q for scripting. */
+static void uc2_say(FILE *f, const char *fmt, ...)
+{
+	if (opt.quiet) return;
+	va_list ap;
+	va_start(ap, fmt);
+	vfprintf(f, fmt, ap);
+	va_end(ap);
+}
 
 static int my_read(void *ctx, unsigned pos, void *ptr, unsigned len)
 {
@@ -405,7 +427,7 @@ static bool pipe_cb(struct node *ne, void *ctx, enum cause cause)
 		uc2_handle uc2 = ctx;
 		struct uc2_entry *e = &ne->entry;
 		if (opt.test)
-			printf("Testing %s %u bytes\n", e->name, e->size);
+			uc2_say(stdout, "Testing %s %u bytes\n", e->name, e->size);
 		int ret = uc2_extract(uc2, &e->xi, e->size, write_file, opt.test ? 0 : stdout);
 		if (ret < 0)
 			uc2err(uc2, ret, "%s", e->name);
@@ -691,6 +713,8 @@ static void scan_path(const char *path, unsigned parent_id)
 
 static int create_archive(int nargs, char **args)
 {
+	uc2_say(stderr, "UC2 compression level: %s\n", level_name(opt.level));
+
 	/* Phase 0: Scan inputs (files and directories) */
 	g_dirs = NULL; g_ndirs = 0; g_dir_cap = 0;
 	g_files = NULL; g_nfiles = 0; g_file_cap = 0;
@@ -1074,10 +1098,11 @@ static int create_archive(int nargs, char **args)
 	free(supermaster);
 	free(dirs);
 	free(recs);
-	printf("Created %s (%d file%s, %d dir%s, %d master%s, %u bytes)\n",
-	       opt.archive, nfiles, nfiles == 1 ? "" : "s",
-	       ndirs, ndirs == 1 ? "" : "s",
-	       nmasters, nmasters == 1 ? "" : "s", total);
+	uc2_say(stderr, "Created %s (%d file%s, %d dir%s, %d master%s, %u bytes)\n",
+	        opt.archive, nfiles, nfiles == 1 ? "" : "s",
+	        ndirs, ndirs == 1 ? "" : "s",
+	        nmasters, nmasters == 1 ? "" : "s", total);
+	uc2_say(stderr, "Everything went OK\n");
 	return EXIT_SUCCESS;
 }
 
@@ -1090,7 +1115,7 @@ int main(int argc, char *argv[])
 		goto usage;
 
 	for (;;) {
-		int o = getopt(argc, argv, "xlatfd:C:cpDTh?wL:");
+		int o = getopt(argc, argv, "xlatfd:C:cpDTh?wL:q");
 		if (o == -1)
 			break;
 		switch (o) {
@@ -1127,6 +1152,9 @@ int main(int argc, char *argv[])
 		case 'w':
 			opt.create = true;
 			break;
+		case 'q':
+			opt.quiet = true;
+			break;
 		case 'L':
 			opt.level = atoi(optarg);
 			if (opt.level < 2 || opt.level > 5)
@@ -1141,13 +1169,13 @@ int main(int argc, char *argv[])
 		case 'h':
 			opt.help = true;
 			printf("UC2 " UC2_VERSION_STRING " (UltraCompressor II)\n"
-			       "Decompression based on unuc2 by Jan Bobrowski\n\n");
+			       "\"Fast, reliable and superior compression.\"\n\n");
 usage:
 			printf(
-				"uc2 [-afpDT] [-d destination] archive.uc2 [files]...\n"
-				"uc2 -l [-aT] archive.uc2 [files]...\n"
-				"uc2 -t [-a] archive.uc2 [files]...\n"
-				"uc2 -w [-L level] archive.uc2 files...\n"
+				"uc2 [-afpqDT] [-d destination] archive.uc2 [files]...\n"
+				"uc2 -l [-aqT] archive.uc2 [files]...\n"
+				"uc2 -t [-aq] archive.uc2 [files]...\n"
+				"uc2 -w [-qL level] archive.uc2 files...\n"
 			);
 			if (!opt.help)
 				printf("uc2 -h\n");
@@ -1161,6 +1189,7 @@ usage:
 					" -d path Destination to extract to\n"
 					" -f      Overwrite\n"
 					" -p      To stdout\n"
+					" -q      Quiet (suppress status messages)\n"
 					" -D      Do not set time and permissions of dirs (also files: -DD)\n"
 					" -T      Tab-separated\n"
 					"\nhttps://github.com/evvaletov/uc2\n"
@@ -1238,7 +1267,11 @@ usage:
 	}
 
 	if (opt.pipe || opt.test) {
+		if (opt.test)
+			uc2_say(stderr, "Testing archive integrity...\n");
 		visit_selected(&root, pipe_cb, uc2);
+		if (opt.test)
+			uc2_say(stderr, "Everything went OK\n");
 	} else if (!opt.list) {
 		struct path path = {.uc2 = uc2};
 		char *p = path.buffer;
@@ -1257,6 +1290,8 @@ usage:
 		visit_selected(&root, extract_cb, &path);
 	}
 
+	if (!opt.list && !opt.test && !opt.pipe)
+		uc2_say(stderr, "Decompression complete\n");
 	uc2_close(uc2);
 	return EXIT_SUCCESS;
 }

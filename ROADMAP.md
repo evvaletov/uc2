@@ -28,12 +28,9 @@
       small block (< 256 ibuf entries), custom trees for larger
       blocks.  Matches the original's bFlag logic.  37% compression
       improvement on text data while maintaining backward compat.
-- [ ] Give UC2 a voice: status and progress messages with personality,
-      continuing the original's tradition ("Do not worry, you have got
-      the tree", "decompression always lightspeed", FAST/TIGHT/S-TIGHT
-      levels, `BoosterOn()`).  Not a --fun flag — just how UC2 talks.
-      Warm, confident, slightly quirky, never annoying.  Suppressed
-      by -q/--quiet for scripting.
+- [x] UC2 personality: status messages continuing the original's
+      tradition ("Everything went OK", compression level names,
+      "Fast, reliable and superior compression").  Suppressed by -q.
 
 ## Phase 3: Modernized Master-Block Deduplication
 

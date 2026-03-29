@@ -8,9 +8,9 @@ root.  Key phases:
    CMake build system.
 
 2. **Original Compression Engine** — Done. LZ77+Huffman compressor
-   with custom Huffman trees for large blocks (37% better compression
-   on text vs default-only tree).  Full cross-tool round-trip verified
-   in both directions.  Automated DOSBox-X test validates 4+5 files.
+   with custom Huffman trees, full backward compatibility, and UC2
+   personality (``-q`` for scripting).  Automated DOSBox-X round-trip
+   validates 4+5 files in both directions.
 
 3. **Modernized Master-Block Deduplication** — Done.
    CDC with Gear hash, Merkle DAG with content addressing,
