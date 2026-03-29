@@ -175,6 +175,16 @@ cp -a /snapshot/ | uc2 --ingest backup.uc2    # incremental dedup
 - [ ] Incremental snapshots: `uc2 snapshot /path repo.uc2`
       (borg/restic-style deduplicating backups without filesystem support)
 
+### Foreign archive format support
+
+Read (and optionally write) other archive formats, enabling UC2 as a
+universal archive tool and migration path for legacy collections.
+
+- [ ] ZIP read/write (deflate, store; the universal baseline format)
+- [ ] RAR read (v4/v5; for extraction from existing collections)
+- [ ] TGZ/tar.gz read/write (tar + gzip; Unix ecosystem staple)
+- [ ] ISO 9660 read (CD/DVD images; retro-computing preservation)
+
 ### File manager plugins
 
 Bobrowski already shipped prototypes; update for UC2 v3.
