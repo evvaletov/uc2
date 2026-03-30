@@ -17,7 +17,7 @@
 - [x] SuperMaster dictionary support (built-in 49 KB dictionary)
 - [x] Round-trip testing: 37 unit tests + CLI integration tests
 - [x] Round-trip testing vs original `uc2pro.exe` in DOSBox
-      (Direction: original creates → UC2 v3 extracts — verified.
+      (Direction: original creates -> UC2 v3 extracts  --  verified.
        Reverse direction is a known limitation: the original UC2 Pro
        cannot read UC2 v3 archives due to compression bitstream
        differences.)
@@ -60,7 +60,7 @@ something no mainstream archiver offers.
       6 unit tests.
 - [x] Delta compression (`uc2_delta.h`): binary diff with COPY/INSERT
       instructions, hash-based source matching. 96-byte patch in 16KB
-      file → >50% size savings.  6 unit tests including round-trip.
+      file -> >50% size savings.  6 unit tests including round-trip.
 
 ## Phase 4: Modern Compression Backends
 
@@ -142,17 +142,17 @@ ZK proofs extend the Merkle DAG and encryption layers with
 privacy-preserving verification.  Most valuable for decentralized and
 compliance scenarios; heavyweight, so implemented as an optional module.
 
-- [ ] **Prove archive integrity without revealing contents** — ZK proof
+- [ ] **Prove archive integrity without revealing contents**  --  ZK proof
       that the archive's Merkle root matches claimed file hashes, without
       exposing the tree structure.  Enables auditing of IPFS-shared
       encrypted archives.
-- [ ] **Selective disclosure from encrypted archives** — prove a specific
+- [ ] **Selective disclosure from encrypted archives**  --  prove a specific
       file (by hash) exists in an encrypted archive without decrypting
       anything else.  Useful for collaborative encrypted team archives.
-- [ ] **Verifiable deduplication** — ZK proof that master-block dedup was
+- [ ] **Verifiable deduplication**  --  ZK proof that master-block dedup was
       performed correctly across archives without revealing block contents.
       Builds trust in distributed dedup without data leaks.
-- [ ] **Compliance proofs** — prove properties ("archive created before
+- [ ] **Compliance proofs**  --  prove properties ("archive created before
       date Y", "archive does not contain file with hash H") without
       revealing contents.  For regulatory/legal use cases.
 - [ ] Implementation: Halo2 or Bulletproofs (no trusted setup) via
@@ -218,7 +218,7 @@ Bobrowski already shipped prototypes; update for UC2 v3.
       decompress-on-the-fly with master-block caching)
 - [ ] Compression tournaments / community challenges
 - [ ] Neural/learned compression preprocessor (modern platforms only,
-      not DOS — optional compile-time module)
+      not DOS  --  optional compile-time module)
 - [ ] Jupyter kernel for interactive archive exploration and compression
       research (Python, building on foxkernel experience):
       - Rich HTML tables for archive listings with compression ratios

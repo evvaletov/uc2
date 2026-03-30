@@ -4,3 +4,7 @@ original/UC2_source/**/*.exe binary
 original/UC2_source/**/*.DAT binary
 original/UC2_source/**/*.LIB binary
 original/UC2_source/**/*.PRJ binary
+
+# Test corpus and archives must be byte-exact
+tests/corpus/** binary
+tests/archives/** binary
