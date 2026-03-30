@@ -23,7 +23,7 @@ static void test_roundtrip_text(void)
 	uint8_t *dec = malloc(len);
 	size_t dlen = uc2_lz4_decompress(comp, clen, dec, len);
 	assert(dlen == len);
-	assert(memcmp(dec, text, len) == 0);
+	{ int _r = memcmp(dec, text, len); (void)_r; assert(_r == 0); }
 	free(comp); free(dec);
 }
 
@@ -47,7 +47,7 @@ static void test_roundtrip_binary(void)
 	uint8_t *dec = malloc(len);
 	size_t dlen = uc2_lz4_decompress(comp, clen, dec, len);
 	assert(dlen == len);
-	assert(memcmp(dec, data, len) == 0);
+	{ int _r = memcmp(dec, data, len); (void)_r; assert(_r == 0); }
 	free(data); free(comp); free(dec);
 }
 
@@ -67,7 +67,7 @@ static void test_all_same(void)
 	uint8_t *dec = malloc(len);
 	size_t dlen = uc2_lz4_decompress(comp, clen, dec, len);
 	assert(dlen == len);
-	assert(memcmp(dec, data, len) == 0);
+	{ int _r = memcmp(dec, data, len); (void)_r; assert(_r == 0); }
 	free(data); free(comp); free(dec);
 }
 
@@ -90,7 +90,7 @@ static void test_incompressible(void)
 	uint8_t *dec = malloc(len);
 	size_t dlen = uc2_lz4_decompress(comp, clen, dec, len);
 	assert(dlen == len);
-	assert(memcmp(dec, data, len) == 0);
+	{ int _r = memcmp(dec, data, len); (void)_r; assert(_r == 0); }
 	free(data); free(comp); free(dec);
 }
 
@@ -105,7 +105,7 @@ static void test_small(void)
 	uint8_t dec[3];
 	size_t dlen = uc2_lz4_decompress(comp, clen, dec, 3);
 	assert(dlen == 3);
-	assert(memcmp(dec, data, 3) == 0);
+	{ int _r = memcmp(dec, data, 3); (void)_r; assert(_r == 0); }
 	free(comp);
 }
 

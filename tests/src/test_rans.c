@@ -96,7 +96,7 @@ static void test_roundtrip_skewed(void)
 	struct uc2_rans_dec dec;
 	uc2_rans_dec_init(&dec, &tab, data, len);
 	for (int i = 0; i < 200; i++)
-		assert(uc2_rans_decode(&dec) == syms[i]);
+		{ int _r = uc2_rans_decode(&dec); (void)_r; assert(_r == syms[i]); }
 
 	free(data);
 }
@@ -134,7 +134,7 @@ static void test_roundtrip_large_alphabet(void)
 	struct uc2_rans_dec dec;
 	uc2_rans_dec_init(&dec, &tab, data, len);
 	for (int i = 0; i < nsyms; i++)
-		assert(uc2_rans_decode(&dec) == syms[i]);
+		{ int _r = uc2_rans_decode(&dec); (void)_r; assert(_r == syms[i]); }
 
 	free(syms);
 	free(data);
@@ -161,7 +161,7 @@ static void test_single_symbol(void)
 	struct uc2_rans_dec dec;
 	uc2_rans_dec_init(&dec, &tab, data, len);
 	for (int i = 0; i < 100; i++)
-		assert(uc2_rans_decode(&dec) == 0);
+		{ int _r = uc2_rans_decode(&dec); (void)_r; assert(_r == 0); }
 
 	free(data);
 }
@@ -206,7 +206,7 @@ static void test_vs_huffman_size(void)
 	struct uc2_rans_dec dec;
 	uc2_rans_dec_init(&dec, &tab, data, len);
 	for (int i = 0; i < nsyms; i++)
-		assert(uc2_rans_decode(&dec) == syms[i]);
+		{ int _r = uc2_rans_decode(&dec); (void)_r; assert(_r == syms[i]); }
 
 	free(syms);
 	free(data);

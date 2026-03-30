@@ -13,7 +13,7 @@ static void test_create_verify(void)
 {
 	uint8_t data[] = "Dictionary content for testing purposes.";
 	struct uc2_dict dict;
-	assert(uc2_dict_create(&dict, data, sizeof data) == 0);
+	{ int _r = uc2_dict_create(&dict, data, sizeof data); (void)_r; assert(_r == 0); }
 	assert(dict.size == sizeof data);
 	assert(dict.id != 0);
 	assert(dict.checksum != 0);
@@ -27,7 +27,7 @@ static void test_id_deterministic(void)
 	struct uc2_dict d1, d2;
 	uc2_dict_create(&d1, data, sizeof data);
 	uc2_dict_create(&d2, data, sizeof data);
-	assert(uc2_dict_id(&d1) == uc2_dict_id(&d2));
+	{ int _r = uc2_dict_id(&d1); (void)_r; assert(_r == uc2_dict_id(&d2)); }
 	assert(uc2_dict_match(&d1, &d2));
 	uc2_dict_free(&d1);
 	uc2_dict_free(&d2);
@@ -60,11 +60,11 @@ static void test_serialize_roundtrip(void)
 	assert(buf != NULL);
 
 	struct uc2_dict restored;
-	assert(uc2_dict_deserialize(&restored, buf, len) == 0);
+	{ int _r = uc2_dict_deserialize(&restored, buf, len); (void)_r; assert(_r == 0); }
 	assert(restored.id == orig.id);
 	assert(restored.checksum == orig.checksum);
 	assert(restored.size == orig.size);
-	assert(memcmp(restored.data, orig.data, orig.size) == 0);
+	{ int _r = memcmp(restored.data, orig.data, orig.size); (void)_r; assert(_r == 0); }
 	assert(uc2_dict_verify(&restored));
 
 	free(buf);
@@ -90,7 +90,7 @@ static void test_deserialize_bad_magic(void)
 {
 	uint8_t bad[] = "NOT_UC2D_HEADER_WITH_ENOUGH_BYTES";
 	struct uc2_dict dict;
-	assert(uc2_dict_deserialize(&dict, bad, sizeof bad) == -1);
+	{ int _r = uc2_dict_deserialize(&dict, bad, sizeof bad); (void)_r; assert(_r == -1); }
 }
 
 int main(void)

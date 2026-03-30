@@ -32,7 +32,7 @@ static void test_build_empty(void)
 	struct uc2_merkle tree;
 	uc2_merkle_build(&tree, NULL, 0, 13);
 	assert(tree.nchunks == 0);
-	assert(uc2_merkle_root(&tree) == 0);
+	{ int _r = uc2_merkle_root(&tree); (void)_r; assert(_r == 0); }
 	uc2_merkle_free(&tree);
 }
 
@@ -58,9 +58,9 @@ static void test_identical_files(void)
 	uc2_merkle_build(&t1, data, len, 13);
 	uc2_merkle_build(&t2, data, len, 13);
 
-	assert(uc2_merkle_root(&t1) == uc2_merkle_root(&t2));
+	{ int _r = uc2_merkle_root(&t1); (void)_r; assert(_r == uc2_merkle_root(&t2)); }
 	assert(t1.nchunks == t2.nchunks);
-	assert(uc2_merkle_common(&t1, &t2) == t1.nchunks);
+	{ int _r = uc2_merkle_common(&t1, &t2); (void)_r; assert(_r == t1.nchunks); }
 	assert(fabs(uc2_merkle_similarity(&t1, &t2) - 1.0) < 0.001);
 
 	uc2_merkle_free(&t1);

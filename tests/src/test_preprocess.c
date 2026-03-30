@@ -29,7 +29,7 @@ static void test_bcj_roundtrip(void)
 	assert(memcmp(code, orig, sizeof code) != 0);
 
 	uc2_bcj_revert(code, sizeof code);
-	assert(memcmp(code, orig, sizeof code) == 0);
+	{ int _r = memcmp(code, orig, sizeof code); (void)_r; assert(_r == 0); }
 }
 
 static void test_bcj_normalizes(void)
@@ -72,14 +72,14 @@ static void test_bwt_roundtrip(void)
 	size_t len = 6;
 	uint8_t *bwt;
 	uint32_t pidx;
-	assert(uc2_bwt_apply(data, len, &bwt, &pidx) == 0);
+	{ int _r = uc2_bwt_apply(data, len, &bwt, &pidx); (void)_r; assert(_r == 0); }
 
 	/* BWT of "banana" is well-known: "nnbaaa" with primary index at 3 */
 	printf("(bwt='%.*s' idx=%u) ", (int)len, bwt, pidx);
 
 	uint8_t *orig;
-	assert(uc2_bwt_revert(bwt, len, pidx, &orig) == 0);
-	assert(memcmp(orig, data, len) == 0);
+	{ int _r = uc2_bwt_revert(bwt, len, pidx, &orig); (void)_r; assert(_r == 0); }
+	{ int _r = memcmp(orig, data, len); (void)_r; assert(_r == 0); }
 
 	free(bwt);
 	free(orig);
@@ -93,11 +93,11 @@ static void test_bwt_roundtrip_binary(void)
 
 	uint8_t *bwt;
 	uint32_t pidx;
-	assert(uc2_bwt_apply(data, len, &bwt, &pidx) == 0);
+	{ int _r = uc2_bwt_apply(data, len, &bwt, &pidx); (void)_r; assert(_r == 0); }
 
 	uint8_t *orig;
-	assert(uc2_bwt_revert(bwt, len, pidx, &orig) == 0);
-	assert(memcmp(orig, data, len) == 0);
+	{ int _r = uc2_bwt_revert(bwt, len, pidx, &orig); (void)_r; assert(_r == 0); }
+	{ int _r = memcmp(orig, data, len); (void)_r; assert(_r == 0); }
 
 	free(data);
 	free(bwt);
@@ -118,7 +118,7 @@ static void test_delta_roundtrip(void)
 		assert(data[i] == 2);
 
 	uc2_delta_filter_revert(data, sizeof data, 1);
-	assert(memcmp(data, orig, sizeof data) == 0);
+	{ int _r = memcmp(data, orig, sizeof data); (void)_r; assert(_r == 0); }
 }
 
 static void test_delta_stride2(void)
@@ -134,7 +134,7 @@ static void test_delta_stride2(void)
 	assert(data[4] == 2 && data[5] == 2);
 
 	uc2_delta_filter_revert(data, sizeof data, 2);
-	assert(memcmp(data, orig, sizeof data) == 0);
+	{ int _r = memcmp(data, orig, sizeof data); (void)_r; assert(_r == 0); }
 }
 
 /* --- Content detection tests --- */
@@ -143,26 +143,26 @@ static void test_detect_text(void)
 {
 	uint8_t data[] = "This is plain text content with newlines\n"
 	                 "and more text on the second line.\n";
-	assert(uc2_detect_content(data, sizeof data - 1) == UC2_CONTENT_TEXT);
+	{ int _r = uc2_detect_content(data, sizeof data - 1); (void)_r; assert(_r == UC2_CONTENT_TEXT); }
 }
 
 static void test_detect_x86_mz(void)
 {
 	uint8_t data[] = {'M', 'Z', 0x90, 0x00};
-	assert(uc2_detect_content(data, sizeof data) == UC2_CONTENT_X86);
+	{ int _r = uc2_detect_content(data, sizeof data); (void)_r; assert(_r == UC2_CONTENT_X86); }
 }
 
 static void test_detect_x86_elf(void)
 {
 	uint8_t data[] = {0x7F, 'E', 'L', 'F', 0x02};
-	assert(uc2_detect_content(data, sizeof data) == UC2_CONTENT_X86);
+	{ int _r = uc2_detect_content(data, sizeof data); (void)_r; assert(_r == UC2_CONTENT_X86); }
 }
 
 static void test_detect_binary(void)
 {
 	uint8_t data[64];
 	for (int i = 0; i < 64; i++) data[i] = (uint8_t)(i * 7);
-	assert(uc2_detect_content(data, sizeof data) == UC2_CONTENT_BINARY);
+	{ int _r = uc2_detect_content(data, sizeof data); (void)_r; assert(_r == UC2_CONTENT_BINARY); }
 }
 
 int main(void)

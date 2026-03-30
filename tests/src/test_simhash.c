@@ -15,7 +15,7 @@ static void test_identical(void)
 	uint64_t h1 = uc2_simhash(data, sizeof data - 1);
 	uint64_t h2 = uc2_simhash(data, sizeof data - 1);
 	assert(h1 == h2);
-	assert(uc2_hamming(h1, h2) == 0);
+	{ int _r = uc2_hamming(h1, h2); (void)_r; assert(_r == 0); }
 }
 
 static void test_similar(void)
@@ -70,10 +70,10 @@ static void test_patched_binary(void)
 
 static void test_hamming(void)
 {
-	assert(uc2_hamming(0, 0) == 0);
-	assert(uc2_hamming(0, 1) == 1);
-	assert(uc2_hamming(0xFF, 0x00) == 8);
-	assert(uc2_hamming(0xFFFFFFFFFFFFFFFFULL, 0) == 64);
+	{ int _r = uc2_hamming(0, 0); (void)_r; assert(_r == 0); }
+	{ int _r = uc2_hamming(0, 1); (void)_r; assert(_r == 1); }
+	{ int _r = uc2_hamming(0xFF, 0x00); (void)_r; assert(_r == 8); }
+	{ int _r = uc2_hamming(0xFFFFFFFFFFFFFFFFULL, 0); (void)_r; assert(_r == 64); }
 }
 
 static void test_short_input(void)

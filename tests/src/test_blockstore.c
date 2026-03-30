@@ -32,7 +32,7 @@ static void rmrf(const char *path)
 static void test_open_close(void)
 {
 	struct uc2_blockstore bs;
-	assert(uc2_blockstore_open(&bs, store_path) == 0);
+	{ int _r = uc2_blockstore_open(&bs, store_path); (void)_r; assert(_r == 0); }
 	assert(bs.nblocks == 0);
 	assert(bs.total_bytes == 0);
 	assert(bs.saved_bytes == 0);
@@ -99,7 +99,7 @@ static void test_read_back(void)
 		uint8_t buf[65536];
 		int n = uc2_blockstore_read(&bs, tree.chunks[i].hash, buf, sizeof buf);
 		assert(n == (int)tree.chunks[i].length);
-		assert(memcmp(buf, data + tree.chunks[i].offset, n) == 0);
+		{ int _r = memcmp(buf, data + tree.chunks[i].offset, n); (void)_r; assert(_r == 0); }
 	}
 
 	uc2_blockstore_close(&bs);
