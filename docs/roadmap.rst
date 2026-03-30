@@ -27,8 +27,9 @@ root.  Key phases:
 6. **DOS / FreeDOS / Retro-Computing** — DJGPP toolchain, vintage
    hardware support, self-extracting archives.
 
-7. **Cryptographic Integrity & Timestamping** — BLAKE3 hashing,
-   OpenTimestamps.
+7. **Cryptographic Integrity & Timestamping** — BLAKE3 hashing done
+   (pure C, 256-bit digests).  Remaining: integration into archive
+   blocks, OpenTimestamps.
 
 8. **Decentralized & Cloud Integration** — IPFS pinning,
    content-addressable dedup, cloud archiving.

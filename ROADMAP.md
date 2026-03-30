@@ -115,7 +115,10 @@ No mainstream archiver offers post-quantum encryption.
 
 ## Phase 7: Cryptographic Integrity & Timestamping
 
-- [ ] BLAKE3 content hashing for every block (fast, pure C, ~15KB)
+- [x] BLAKE3 content hashing (`uc2_blake3.h`): pure C implementation,
+      256-bit digests, incremental and one-shot API, constant-time
+      comparison, tree hashing structure.  7 unit tests including
+      avalanche, incremental-vs-oneshot, and single-byte updates.
 - [ ] OpenTimestamps integration: cryptographic proof of archive creation
       time anchored to Bitcoin blockchain (one HTTP call, small proof blob
       stored in archive metadata)
