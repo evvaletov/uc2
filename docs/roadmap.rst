@@ -17,10 +17,10 @@ root.  Key phases:
    cross-archive block store, SimHash near-duplicate detection,
    and delta compression.  All Phase 3 items complete.
 
-4. **Modern Compression Backends** — In progress.  rANS entropy coder
-   integrated as method 10, zstd-style dictionary metadata with
-   content-hash IDs.  Remaining: content-aware preprocessing (BWT,
-   BCJ, delta filters), LZ4 ultra-fast mode, benchmarking mode.
+4. **Modern Compression Backends** — In progress.  rANS entropy coder,
+   zstd-style dictionary metadata, content-aware preprocessing (BCJ,
+   BWT, delta filter with auto-detection).  Remaining: LZ4 ultra-fast
+   mode, benchmarking mode, preprocessing integration into CLI.
 
 5. **Quantum-Resistant Encryption** — CRYSTALS-Kyber + AES-256-GCM.
 

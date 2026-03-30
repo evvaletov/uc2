@@ -76,10 +76,11 @@ backward compatibility.
       serialization format, and cross-archive sharing via block store.
       6 unit tests including round-trip and corruption detection.
 - [ ] LZ4 ultra-fast mode for real-time or low-resource scenarios
-- [ ] Content-aware preprocessing pipeline:
-      - BWT (Burrows-Wheeler) for text
-      - E8/E9 transform for x86 executables (BCJ filter)
-      - Delta filter for structured/tabular data
+- [x] Content-aware preprocessing (`uc2_preprocess.h`):
+      BCJ (E8/E9 x86 address normalization), BWT (Burrows-Wheeler
+      for text), delta filter (byte-wise with configurable stride),
+      automatic content detection (text/x86/structured/binary).
+      11 unit tests.
 - [ ] Built-in `uc2 --benchmark` mode: test all methods on input, report results
 
 ## Phase 5: Quantum-Resistant Encryption
