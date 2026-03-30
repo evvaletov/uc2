@@ -1,7 +1,7 @@
 /* Cross-archive block store for content-addressable deduplication.
  *
  * Chunks are stored as individual files named by their 64-bit hash
- * (hex encoded).  This is simple and portable — no database needed.
+ * (hex encoded).  This is simple and portable  --  no database needed.
  * For large stores, a two-level directory structure (first 2 hex chars
  * as subdirectory) prevents filesystem performance issues. */
 
