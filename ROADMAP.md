@@ -75,7 +75,10 @@ backward compatibility.
       dictionary metadata with content-hash IDs, integrity checksums,
       serialization format, and cross-archive sharing via block store.
       6 unit tests including round-trip and corruption detection.
-- [ ] LZ4 ultra-fast mode for real-time or low-resource scenarios
+- [x] LZ4 ultra-fast mode (`uc2_lz4.h`): single-probe hash table,
+      O(1) match finding, 4-byte minimum match, variable-length
+      literal/match token encoding.  6 unit tests including
+      text, binary, all-same, incompressible, and small inputs.
 - [x] Content-aware preprocessing (`uc2_preprocess.h`):
       BCJ (E8/E9 x86 address normalization), BWT (Burrows-Wheeler
       for text), delta filter (byte-wise with configurable stride),

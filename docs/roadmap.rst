@@ -19,8 +19,8 @@ root.  Key phases:
 
 4. **Modern Compression Backends** — In progress.  rANS entropy coder,
    zstd-style dictionary metadata, content-aware preprocessing (BCJ,
-   BWT, delta filter with auto-detection).  Remaining: LZ4 ultra-fast
-   mode, benchmarking mode, preprocessing integration into CLI.
+   BWT, delta), LZ4 ultra-fast mode.  Remaining: benchmarking mode,
+   integration of preprocessing and LZ4 into the CLI/archive format.
 
 5. **Quantum-Resistant Encryption** — CRYSTALS-Kyber + AES-256-GCM.
 

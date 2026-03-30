@@ -93,6 +93,12 @@ target_include_directories(test_preprocess PRIVATE "${PROJECT_BINARY_DIR}/lib")
 target_compile_features(test_preprocess PRIVATE c_std_99)
 add_test(NAME preprocess COMMAND test_preprocess)
 
+add_executable(test_lz4 src/test_lz4.c)
+target_link_libraries(test_lz4 PRIVATE uc2)
+target_include_directories(test_lz4 PRIVATE "${PROJECT_BINARY_DIR}/lib")
+target_compile_features(test_lz4 PRIVATE c_std_99)
+add_test(NAME lz4 COMMAND test_lz4)
+
 # Cross-tool round-trip: UC2 v3 <-> original uc2pro.exe via DOSBox-X
 add_test(NAME roundtrip_dosbox
     COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/scripts/roundtrip_dosbox.sh
