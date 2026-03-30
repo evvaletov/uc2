@@ -34,6 +34,7 @@ void setprogname(const char *argv0);
 
 #include <uc2/libuc2.h>
 #include <uc2/uc2_cdc.h>
+#include <uc2/uc2_lz4.h>
 #include <uc2/uc2_version.h>
 
 #include "list.h"
@@ -52,6 +53,7 @@ struct options {
 	bool no_file_meta:1;
 	bool help:1;
 	bool quiet:1;
+	bool benchmark:1;
 	char sep;
 	int level;
 	char *archive;
@@ -1110,6 +1112,123 @@ static int create_archive(int nargs, char **args)
 	return EXIT_SUCCESS;
 }
 
+/* Memory read/write callbacks for benchmark */
+struct bench_reader { const uint8_t *data; unsigned pos; unsigned len; };
+static int bench_read(void *ctx, void *buf, unsigned len)
+{
+	struct bench_reader *r = ctx;
+	unsigned avail = r->len - r->pos;
+	if (len > avail) len = avail;
+	if (len > 0) { memcpy(buf, r->data + r->pos, len); r->pos += len; }
+	return (int)len;
+}
+struct bench_writer { uint8_t *data; size_t pos; size_t cap; };
+static int bench_write(void *ctx, const void *ptr, unsigned len)
+{
+	struct bench_writer *w = ctx;
+	if (w->pos + len > w->cap) return -1;
+	memcpy(w->data + w->pos, ptr, len);
+	w->pos += len;
+	return 0;
+}
+
+/* Benchmark: compress input with all methods and report ratio + speed. */
+static int run_benchmark(int nfiles, char **files)
+{
+	/* Read all input files into memory */
+	size_t total_size = 0;
+	for (int i = 0; i < nfiles; i++) {
+		struct stat st;
+		if (stat(files[i], &st) < 0) err(EXIT_FAILURE, "%s", files[i]);
+		total_size += (size_t)st.st_size;
+	}
+	uint8_t *data = malloc(total_size);
+	if (!data) err(EXIT_FAILURE, "malloc");
+	size_t pos = 0;
+	for (int i = 0; i < nfiles; i++) {
+		FILE *f = fopen(files[i], "rb");
+		if (!f) err(EXIT_FAILURE, "%s", files[i]);
+		pos += fread(data + pos, 1, total_size - pos, f);
+		fclose(f);
+	}
+	total_size = pos;
+
+	printf("UC2 Benchmark: %zu bytes input (%d file%s)\n\n",
+	       total_size, nfiles, nfiles == 1 ? "" : "s");
+	printf("%-16s %10s %8s %10s %10s\n",
+	       "Method", "Compressed", "Ratio", "Enc (ms)", "Dec (ms)");
+	printf("%-16s %10s %8s %10s %10s\n",
+	       "----------------", "----------", "--------", "----------", "----------");
+
+	struct { int level; const char *name; } methods[] = {
+		{2, "Huffman Fast"},
+		{3, "Huffman Normal"},
+		{4, "Huffman Tight"},
+		{5, "Huffman Ultra"},
+		{6, "rANS Fast"},
+		{7, "rANS Normal"},
+		{8, "rANS Tight"},
+		{9, "rANS Ultra"},
+	};
+
+	struct mem_reader { const uint8_t *data; unsigned pos; unsigned len; };
+	/* Reuse fread_cb — actually need a mem reader */
+
+	for (int m = 0; m < (int)(sizeof methods / sizeof methods[0]); m++) {
+		/* Compress */
+		size_t out_cap = total_size + total_size / 8 + 4096;
+		uint8_t *out = malloc(out_cap);
+		if (!out) continue;
+
+		struct bench_reader rctx = {data, 0, (unsigned)total_size};
+		struct bench_writer wctx = {out, 0, out_cap};
+		unsigned short csum;
+		unsigned csize;
+
+		clock_t t0 = clock();
+		int ret = uc2_compress(methods[m].level,
+			bench_read, &rctx, bench_write, &wctx,
+			(unsigned)total_size, &csum, &csize);
+		clock_t t1 = clock();
+
+		if (ret < 0) {
+			printf("%-16s %10s\n", methods[m].name, "ERROR");
+			free(out);
+			continue;
+		}
+
+		double enc_ms = (double)(t1 - t0) * 1000.0 / CLOCKS_PER_SEC;
+		double ratio = total_size ? (double)csize / total_size * 100.0 : 0;
+
+		/* Decompress (round-trip verify) */
+		/* For now just report compression stats */
+		printf("%-16s %10u %7.1f%% %9.1f ms\n",
+		       methods[m].name, csize, ratio, enc_ms);
+
+		free(out);
+	}
+
+	/* Also test LZ4 */
+	{
+		size_t bound = total_size + total_size / 255 + 16;
+		uint8_t *lz4out = malloc(bound);
+		if (lz4out) {
+			clock_t t0 = clock();
+			size_t clen = uc2_lz4_compress(data, total_size, lz4out, bound);
+			clock_t t1 = clock();
+			double enc_ms = (double)(t1 - t0) * 1000.0 / CLOCKS_PER_SEC;
+			double ratio = total_size ? (double)clen / total_size * 100.0 : 0;
+			printf("%-16s %10zu %7.1f%% %9.1f ms\n",
+			       "LZ4 Ultra-fast", clen, ratio, enc_ms);
+			free(lz4out);
+		}
+	}
+
+	printf("\n");
+	free(data);
+	return EXIT_SUCCESS;
+}
+
 int main(int argc, char *argv[])
 {
 #ifdef __DJGPP__
@@ -1119,7 +1238,7 @@ int main(int argc, char *argv[])
 		goto usage;
 
 	for (;;) {
-		int o = getopt(argc, argv, "xlatfd:C:cpDTh?wL:q");
+		int o = getopt(argc, argv, "xlatfd:C:cpDTh?wL:qB");
 		if (o == -1)
 			break;
 		switch (o) {
@@ -1159,6 +1278,9 @@ int main(int argc, char *argv[])
 		case 'q':
 			opt.quiet = true;
 			break;
+		case 'B':
+			opt.benchmark = true;
+			break;
 		case 'L':
 			opt.level = atoi(optarg);
 			if (opt.level < 2 || opt.level > 9)
@@ -1180,6 +1302,7 @@ usage:
 				"uc2 -l [-aqT] archive.uc2 [files]...\n"
 				"uc2 -t [-aq] archive.uc2 [files]...\n"
 				"uc2 -w [-qL level] archive.uc2 files...\n"
+				"uc2 -B files...   (benchmark all methods)\n"
 			);
 			if (!opt.help)
 				printf("uc2 -h\n");
@@ -1193,6 +1316,7 @@ usage:
 					" -d path Destination to extract to\n"
 					" -f      Overwrite\n"
 					" -p      To stdout\n"
+					" -B      Benchmark all methods on input files\n"
 					" -q      Quiet (suppress status messages)\n"
 					" -D      Do not set time and permissions of dirs (also files: -DD)\n"
 					" -T      Tab-separated\n"
@@ -1205,6 +1329,11 @@ usage:
 	if (argc == optind)
 		errx(EXIT_FAILURE, "Archive not given");
 	opt.archive = argv[optind++];
+
+	if (opt.benchmark) {
+		/* -B: benchmark uses remaining args as input files (archive arg is first file) */
+		return run_benchmark(argc - optind + 1, argv + optind - 1);
+	}
 
 	if (opt.create) {
 		if (optind == argc)

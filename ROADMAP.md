@@ -84,7 +84,8 @@ backward compatibility.
       for text), delta filter (byte-wise with configurable stride),
       automatic content detection (text/x86/structured/binary).
       11 unit tests.
-- [ ] Built-in `uc2 --benchmark` mode: test all methods on input, report results
+- [x] Built-in benchmark mode (`uc2 -B files...`): tests all 8 Huffman/rANS
+      levels plus LZ4, reports compressed size, ratio, and timing.
 
 ## Phase 5: Quantum-Resistant Encryption
 
