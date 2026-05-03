@@ -27,7 +27,7 @@ static void test_id_deterministic(void)
 	struct uc2_dict d1, d2;
 	uc2_dict_create(&d1, data, sizeof data);
 	uc2_dict_create(&d2, data, sizeof data);
-	{ int _r = uc2_dict_id(&d1); (void)_r; assert(_r == uc2_dict_id(&d2)); }
+	{ uint64_t _r = uc2_dict_id(&d1); (void)_r; assert(_r == uc2_dict_id(&d2)); }
 	assert(uc2_dict_match(&d1, &d2));
 	uc2_dict_free(&d1);
 	uc2_dict_free(&d2);
