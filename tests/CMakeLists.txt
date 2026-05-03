@@ -105,6 +105,34 @@ target_include_directories(test_blake3 PRIVATE "${PROJECT_BINARY_DIR}/lib")
 target_compile_features(test_blake3 PRIVATE c_std_99)
 add_test(NAME blake3 COMMAND test_blake3)
 
+add_executable(test_sha256 src/test_sha256.c)
+target_link_libraries(test_sha256 PRIVATE uc2)
+target_include_directories(test_sha256 PRIVATE "${PROJECT_BINARY_DIR}/lib")
+target_compile_features(test_sha256 PRIVATE c_std_99)
+add_test(NAME sha256 COMMAND test_sha256)
+
+add_executable(test_ots src/test_ots.c)
+target_link_libraries(test_ots PRIVATE uc2)
+target_include_directories(test_ots PRIVATE "${PROJECT_BINARY_DIR}/lib")
+target_compile_features(test_ots PRIVATE c_std_99)
+add_test(NAME ots COMMAND test_ots)
+
+# Optional cross-check: validates uc2 .ots output against the python-opentimestamps
+# reference parser.  Skipped (return code 77) when opentimestamps is not installed.
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_Interpreter_FOUND)
+    add_test(NAME ots_cross_check
+        COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/scripts/cross_check_ots.py
+            $<TARGET_FILE:uc2-cli>
+            ${CMAKE_CURRENT_BINARY_DIR}/ots_cross_check
+    )
+    set_tests_properties(ots_cross_check PROPERTIES
+        SKIP_RETURN_CODE 77
+        LABELS "optional"
+    )
+endif()
+
 # Cross-tool round-trip: UC2 v3 <-> original uc2pro.exe via DOSBox-X
 add_test(NAME roundtrip_dosbox
     COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/scripts/roundtrip_dosbox.sh

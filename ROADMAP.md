@@ -120,9 +120,25 @@ No mainstream archiver offers post-quantum encryption.
       256-bit digests, incremental and one-shot API, constant-time
       comparison, tree hashing structure.  7 unit tests including
       avalanche, incremental-vs-oneshot, and single-byte updates.
-- [ ] OpenTimestamps integration: cryptographic proof of archive creation
-      time anchored to Bitcoin blockchain (one HTTP call, small proof blob
-      stored in archive metadata)
+- [x] SHA-256 (`uc2_sha256.h`): pure-C FIPS 180-4 implementation,
+      one-shot and incremental API.  6 unit tests against published
+      test vectors (empty, "abc", 56-byte, 1M `'a'`, byte-by-byte
+      incremental, every-split-point boundary).
+- [x] OpenTimestamps integration (`uc2_ots.h`): pure-C parser,
+      serializer, and walker for the standard `.ots` proof format.
+      Append-only sidecar trailer (magic-bracketed, reverse-scan-safe)
+      stores the proof verbatim and preserves backward compatibility
+      with the original UC2 Pro reader.  Walker supports the
+      calendar-path subset (APPEND, PREPEND, SHA256); proofs with other
+      crypto ops are accepted as structurally valid but flagged for
+      `ots verify` follow-up.  CLI: `--ots-attach`, `--ots-extract`,
+      `--ots-info`; `uc2 -t` recomputes archive SHA-256 and verifies
+      the leaf and walk.  Strict-canonical-varint parser, 64-bit
+      overflow check, depth-bounded recursion, varbytes cap.
+      17 unit tests.
+- [ ] OTS upgrade: fetch the upgraded proof from the calendar after
+      the Bitcoin attestation has been minted (~1-6h), replace the
+      pending-only trailer with the Bitcoin block-header attestation.
 - [ ] Useful for legal/forensic archiving, software provenance, digital
       preservation
 

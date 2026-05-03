@@ -35,12 +35,21 @@ void setprogname(const char *argv0);
 #include <uc2/libuc2.h>
 #include <uc2/uc2_cdc.h>
 #include <uc2/uc2_lz4.h>
+#include <uc2/uc2_ots.h>
+#include <uc2/uc2_sha256.h>
 #include <uc2/uc2_version.h>
 
 #include "list.h"
 #define endof(T) (T + sizeof T/sizeof*T)
 #define STR(S) STR_(S)
 #define STR_(S) #S
+
+enum ots_mode {
+	OTS_MODE_NONE = 0,
+	OTS_MODE_ATTACH,
+	OTS_MODE_EXTRACT,
+	OTS_MODE_INFO
+};
 
 struct options {
 	bool list:1;
@@ -54,10 +63,12 @@ struct options {
 	bool help:1;
 	bool quiet:1;
 	bool benchmark:1;
+	int ots_mode;
 	char sep;
 	int level;
 	char *archive;
 	char *dest;
+	char *ots_path;
 } opt = {.sep = ' ', .level = 4};
 
 static const char *level_name(int level)
@@ -499,6 +510,356 @@ static bool extract_cb(struct node *ne, void *ctx, enum cause cause)
 		path->ptr -= l + 1;
 	}
 	return true;
+}
+
+/* --- OpenTimestamps (Phase 7) --- */
+
+#ifdef _WIN32
+#  include <io.h>
+static int uc2_truncate(FILE *f, long len)
+{
+	int rc = _chsize_s(_fileno(f), (__int64)len);
+	return rc == 0 ? 0 : -1;
+}
+#else
+static int uc2_truncate(FILE *f, long len)
+{
+	return ftruncate(fileno(f), (off_t)len);
+}
+#endif
+
+static int file_size_of(const char *path, size_t *out)
+{
+	struct stat st;
+	if (stat(path, &st) < 0) return -1;
+	if (st.st_size < 0) return -1;
+	*out = (size_t)st.st_size;
+	return 0;
+}
+
+static int read_all(const char *path, uint8_t **out_data, size_t *out_len)
+{
+	size_t len;
+	if (file_size_of(path, &len) < 0) return -1;
+	uint8_t *buf = malloc(len ? len : 1);
+	if (!buf) return -1;
+	FILE *f = fopen(path, "rb");
+	if (!f) { free(buf); return -1; }
+	size_t got = fread(buf, 1, len, f);
+	fclose(f);
+	if (got != len) { free(buf); return -1; }
+	*out_data = buf;
+	*out_len = len;
+	return 0;
+}
+
+static int sha256_of_prefix(const char *path, size_t prefix_len,
+                            uint8_t out[32])
+{
+	FILE *f = fopen(path, "rb");
+	if (!f) return -1;
+	struct uc2_sha256 ctx;
+	uc2_sha256_init(&ctx);
+	uint8_t buf[8192];
+	size_t remaining = prefix_len;
+	while (remaining) {
+		size_t want = remaining < sizeof buf ? remaining : sizeof buf;
+		size_t got = fread(buf, 1, want, f);
+		if (got == 0) { fclose(f); return -1; }
+		uc2_sha256_update(&ctx, buf, got);
+		remaining -= got;
+	}
+	uc2_sha256_final(&ctx, out);
+	fclose(f);
+	return 0;
+}
+
+static void print_hex(const uint8_t *p, size_t n)
+{
+	for (size_t i = 0; i < n; i++) printf("%02x", p[i]);
+}
+
+/* Locate an existing OTS trailer in the archive on disk.
+ * Returns 0 if a well-formed trailer is found (and fills outputs),
+ *         1 if no trailer (back magic absent),
+ *         negative on parse error (back magic present but malformed).
+ * `*out_buf` is malloc'd; caller frees on success. */
+static int load_trailer(const char *archive_path,
+                        uint8_t **out_buf, size_t *out_buf_len,
+                        uint32_t *out_archive_len,
+                        const uint8_t **out_proof, size_t *out_proof_len)
+{
+	uint8_t *buf;
+	size_t len;
+	if (read_all(archive_path, &buf, &len) < 0)
+		err(EXIT_FAILURE, "%s", archive_path);
+	int rc = uc2_ots_trailer_parse(buf, len, out_archive_len,
+	                               out_proof, out_proof_len);
+	if (rc != 0) { free(buf); return rc; }
+	*out_buf = buf;
+	*out_buf_len = len;
+	return 0;
+}
+
+static int cmd_ots_attach(const char *archive_path, const char *proof_path,
+                          int force)
+{
+	/* Read the .ots proof and validate its envelope. */
+	uint8_t *proof; size_t proof_len;
+	if (read_all(proof_path, &proof, &proof_len) < 0)
+		err(EXIT_FAILURE, "%s", proof_path);
+	uint8_t hash_op;
+	const uint8_t *leaf, *body;
+	size_t leaf_len, body_len;
+	int rc = uc2_ots_parse_file(proof, proof_len, &hash_op,
+	                            &leaf, &leaf_len, &body, &body_len);
+	if (rc < 0) {
+		free(proof);
+		errx(EXIT_FAILURE, "%s: malformed .ots file (%d)", proof_path, rc);
+	}
+	if (hash_op != UC2_OTS_OP_SHA256) {
+		free(proof);
+		errx(EXIT_FAILURE, "%s: only SHA-256 .ots files are supported", proof_path);
+	}
+
+	/* Determine the archive byte range to attest (strip any existing trailer). */
+	size_t archive_file_len;
+	if (file_size_of(archive_path, &archive_file_len) < 0) {
+		free(proof);
+		err(EXIT_FAILURE, "%s", archive_path);
+	}
+
+	size_t attest_len = archive_file_len;
+	{
+		uint8_t *abuf;
+		size_t abuf_len;
+		if (read_all(archive_path, &abuf, &abuf_len) < 0)
+			err(EXIT_FAILURE, "%s", archive_path);
+		uint32_t existing_al;
+		const uint8_t *existing_proof;
+		size_t existing_pl;
+		int trc = uc2_ots_trailer_parse(abuf, abuf_len, &existing_al,
+		                                &existing_proof, &existing_pl);
+		free(abuf);
+		if (trc == UC2_OTS_OK) {
+			if (!force)
+				errx(EXIT_FAILURE,
+				     "%s: OTS trailer already present (use -f to replace)",
+				     archive_path);
+			attest_len = existing_al;
+		} else if (trc < 0) {
+			errx(EXIT_FAILURE,
+			     "%s: existing trailer is malformed (%d); aborting",
+			     archive_path, trc);
+		}
+	}
+
+	if (attest_len > 0xffffffffu) {
+		free(proof);
+		errx(EXIT_FAILURE, "%s: archive too large for v1 OTS trailer", archive_path);
+	}
+
+	/* Verify leaf digest matches the archive's SHA-256. */
+	uint8_t archive_sha[32];
+	if (sha256_of_prefix(archive_path, attest_len, archive_sha) < 0) {
+		free(proof);
+		err(EXIT_FAILURE, "%s", archive_path);
+	}
+	if (leaf_len != 32 || memcmp(archive_sha, leaf, 32) != 0) {
+		fprintf(stderr, "%s: proof leaf does not match archive SHA-256\n",
+		        archive_path);
+		fprintf(stderr, "  archive: "); print_hex(archive_sha, 32); fprintf(stderr, "\n");
+		fprintf(stderr, "  proof:   "); print_hex(leaf, leaf_len); fprintf(stderr, "\n");
+		free(proof);
+		return EXIT_FAILURE;
+	}
+
+	/* Build trailer and rewrite archive. */
+	size_t trailer_cap = UC2_OTS_TRAILER_OVERHEAD + proof_len;
+	uint8_t *trailer = malloc(trailer_cap);
+	if (!trailer) { free(proof); err(EXIT_FAILURE, "malloc"); }
+	int tn = uc2_ots_trailer_build((uint32_t)attest_len,
+	                               proof, proof_len, trailer, trailer_cap);
+	if (tn < 0) { free(trailer); free(proof);
+		errx(EXIT_FAILURE, "trailer build failed (%d)", tn); }
+
+	FILE *f = fopen(archive_path, "rb+");
+	if (!f) { free(trailer); free(proof); err(EXIT_FAILURE, "%s", archive_path); }
+	if (fseek(f, (long)attest_len, SEEK_SET) < 0) {
+		fclose(f); free(trailer); free(proof);
+		err(EXIT_FAILURE, "%s", archive_path);
+	}
+	if (fwrite(trailer, 1, (size_t)tn, f) != (size_t)tn) {
+		fclose(f); free(trailer); free(proof);
+		err(EXIT_FAILURE, "%s", archive_path);
+	}
+	/* Truncate any leftover bytes (e.g. when replacing a longer prior trailer). */
+	long new_end = (long)attest_len + tn;
+	fflush(f);
+	if (uc2_truncate(f, new_end) < 0) {
+		fclose(f); free(trailer); free(proof);
+		err(EXIT_FAILURE, "truncate");
+	}
+	fclose(f);
+
+	free(trailer);
+	free(proof);
+	uc2_say(stderr, "Attached %zu-byte OTS proof to %s\n",
+	        proof_len, archive_path);
+	uc2_say(stderr, "Everything went OK\n");
+	return EXIT_SUCCESS;
+}
+
+static int cmd_ots_extract(const char *archive_path, const char *out_path)
+{
+	uint8_t *buf; size_t buf_len;
+	uint32_t archive_len;
+	const uint8_t *proof; size_t proof_len;
+	int rc = load_trailer(archive_path, &buf, &buf_len,
+	                      &archive_len, &proof, &proof_len);
+	if (rc == 1)
+		errx(EXIT_FAILURE, "%s: no OTS trailer present", archive_path);
+	if (rc < 0)
+		errx(EXIT_FAILURE, "%s: malformed OTS trailer (%d)", archive_path, rc);
+
+	FILE *f = fopen(out_path, "wb");
+	if (!f) err(EXIT_FAILURE, "%s", out_path);
+	if (fwrite(proof, 1, proof_len, f) != proof_len)
+		err(EXIT_FAILURE, "%s", out_path);
+	fclose(f);
+	free(buf);
+	uc2_say(stderr, "Wrote %zu-byte .ots proof to %s\n", proof_len, out_path);
+	return EXIT_SUCCESS;
+}
+
+struct ots_info_ctx {
+	int n_attestations;
+};
+
+static int ots_info_cb(void *vctx,
+                       const uint8_t *tag,
+                       const uint8_t *payload, size_t payload_len,
+                       const uint8_t *digest, size_t digest_len)
+{
+	struct ots_info_ctx *c = vctx;
+	(void)digest; (void)digest_len;
+	c->n_attestations++;
+	const char *name = uc2_ots_attest_name(tag);
+	printf("  attestation: %s", name ? name : "<unknown>");
+	if (name && strcmp(name, "pending") == 0) {
+		/* Pending payload is varbytes(uri). */
+		uint64_t uri_len;
+		size_t consumed;
+		if (payload_len > 0 &&
+		    uc2_ots_varint_decode(payload, payload_len, &uri_len, &consumed) == 0 &&
+		    consumed + uri_len <= payload_len) {
+			printf("  (calendar: ");
+			fwrite(payload + consumed, 1, (size_t)uri_len, stdout);
+			printf(")");
+		}
+	} else if (name && strcmp(name, "Bitcoin") == 0) {
+		uint64_t height; size_t consumed;
+		if (uc2_ots_varint_decode(payload, payload_len, &height, &consumed) == 0)
+			printf("  (block height: %llu)", (unsigned long long)height);
+	}
+	putchar('\n');
+	return 0;
+}
+
+static int cmd_ots_info(const char *archive_path)
+{
+	uint8_t *buf; size_t buf_len;
+	uint32_t archive_len;
+	const uint8_t *proof; size_t proof_len;
+	int rc = load_trailer(archive_path, &buf, &buf_len,
+	                      &archive_len, &proof, &proof_len);
+	if (rc == 1)
+		errx(EXIT_FAILURE, "%s: no OTS trailer present", archive_path);
+	if (rc < 0)
+		errx(EXIT_FAILURE, "%s: malformed OTS trailer (%d)", archive_path, rc);
+
+	uint8_t hash_op;
+	const uint8_t *leaf, *body;
+	size_t leaf_len, body_len;
+	rc = uc2_ots_parse_file(proof, proof_len, &hash_op,
+	                        &leaf, &leaf_len, &body, &body_len);
+	if (rc < 0)
+		errx(EXIT_FAILURE, "%s: malformed .ots envelope (%d)", archive_path, rc);
+
+	printf("OTS proof for %s\n", archive_path);
+	printf("  archive bytes attested: %u\n", archive_len);
+	printf("  hash:    %s\n",
+	       hash_op == UC2_OTS_OP_SHA256 ? "SHA-256" : "<other>");
+	printf("  leaf:    "); print_hex(leaf, leaf_len); printf("\n");
+
+	uint8_t archive_sha[32];
+	if (sha256_of_prefix(archive_path, archive_len, archive_sha) < 0)
+		err(EXIT_FAILURE, "%s", archive_path);
+	int leaf_match = (leaf_len == 32 && memcmp(archive_sha, leaf, 32) == 0);
+	printf("  leaf matches archive: %s\n", leaf_match ? "yes" : "NO");
+
+	struct ots_info_ctx ctx = {0};
+	int wr = uc2_ots_walk(body, body_len, leaf, leaf_len, ots_info_cb, &ctx);
+	if (wr < 0)
+		errx(EXIT_FAILURE, "%s: walker error %d", archive_path, wr);
+	printf("  attestations: %d\n", ctx.n_attestations);
+	if (wr == UC2_OTS_RESULT_STRUCTURAL)
+		printf("  status: structurally valid; contains unsupported ops\n"
+		       "          run `ots verify` for full cryptographic check\n");
+	else
+		printf("  status: structurally valid (calendar-path ops only)\n");
+
+	free(buf);
+	return leaf_match && wr >= 0 ? EXIT_SUCCESS : EXIT_FAILURE;
+}
+
+/* Called from -t after the existing archive integrity check.
+ * Returns 0 if no trailer or trailer verifies; non-zero on mismatch. */
+static int verify_trailer_if_present(const char *archive_path)
+{
+	uint8_t *buf; size_t buf_len;
+	uint32_t archive_len;
+	const uint8_t *proof; size_t proof_len;
+	int rc = load_trailer(archive_path, &buf, &buf_len,
+	                      &archive_len, &proof, &proof_len);
+	if (rc == 1) return 0; /* no trailer */
+	if (rc < 0) {
+		fprintf(stderr, "%s: malformed OTS trailer (%d)\n", archive_path, rc);
+		return 1;
+	}
+	uint8_t hash_op;
+	const uint8_t *leaf, *body;
+	size_t leaf_len, body_len;
+	rc = uc2_ots_parse_file(proof, proof_len, &hash_op,
+	                        &leaf, &leaf_len, &body, &body_len);
+	if (rc < 0) {
+		fprintf(stderr, "%s: malformed .ots envelope (%d)\n", archive_path, rc);
+		free(buf);
+		return 1;
+	}
+	uint8_t archive_sha[32];
+	if (sha256_of_prefix(archive_path, archive_len, archive_sha) < 0) {
+		free(buf);
+		return 1;
+	}
+	if (hash_op != UC2_OTS_OP_SHA256 || leaf_len != 32 ||
+	    memcmp(archive_sha, leaf, 32) != 0) {
+		fprintf(stderr, "%s: OTS leaf does not match archive SHA-256\n",
+		        archive_path);
+		free(buf);
+		return 1;
+	}
+	int wr = uc2_ots_walk(body, body_len, leaf, leaf_len, NULL, NULL);
+	free(buf);
+	if (wr < 0) {
+		fprintf(stderr, "%s: OTS walker error %d\n", archive_path, wr);
+		return 1;
+	}
+	if (wr == UC2_OTS_RESULT_STRUCTURAL)
+		uc2_say(stderr, "OTS proof: structurally valid (run `ots verify` for full check)\n");
+	else
+		uc2_say(stderr, "OTS proof: leaf matches; structure verified\n");
+	return 0;
 }
 
 /* --- Archive creation --- */
@@ -1229,6 +1590,60 @@ static int run_benchmark(int nfiles, char **files)
 	return EXIT_SUCCESS;
 }
 
+/* Pre-parse for OTS long options: --ots-attach, --ots-extract, --ots-info.
+ * Removes matched arguments from argv in place so the existing getopt loop
+ * doesn't see them.  --ots-attach takes a value, accepted as either
+ *   --ots-attach <path>     (separate argv entry; rejected if path starts with '-')
+ *   --ots-attach=<path>     (inline). */
+static int extract_ots_long_opts(int *argcp, char **argv, char **out_value)
+{
+	int argc = *argcp;
+	int mode = OTS_MODE_NONE;
+	*out_value = NULL;
+	for (int i = 1; i < argc; ) {
+		const char *a = argv[i];
+		int matched_args = 0;
+		int new_mode = OTS_MODE_NONE;
+		const char *inline_value = NULL;
+
+		if (strcmp(a, "--ots-attach") == 0) {
+			new_mode = OTS_MODE_ATTACH;
+			matched_args = 1;
+		} else if (strncmp(a, "--ots-attach=", 13) == 0) {
+			new_mode = OTS_MODE_ATTACH;
+			matched_args = 1;
+			inline_value = a + 13;
+		} else if (strcmp(a, "--ots-extract") == 0) {
+			new_mode = OTS_MODE_EXTRACT;
+			matched_args = 1;
+		} else if (strcmp(a, "--ots-info") == 0) {
+			new_mode = OTS_MODE_INFO;
+			matched_args = 1;
+		}
+
+		if (!matched_args) { i++; continue; }
+
+		mode = new_mode;
+		if (new_mode == OTS_MODE_ATTACH) {
+			if (inline_value) {
+				*out_value = (char *)inline_value;
+			} else {
+				if (i + 1 >= argc || argv[i + 1][0] == '-')
+					errx(EXIT_FAILURE,
+					     "--ots-attach requires a path argument "
+					     "(use --ots-attach=<path> if your path starts with '-')");
+				*out_value = argv[i + 1];
+				matched_args = 2;
+			}
+		}
+		for (int j = i; j + matched_args < argc; j++)
+			argv[j] = argv[j + matched_args];
+		argc -= matched_args;
+	}
+	*argcp = argc;
+	return mode;
+}
+
 int main(int argc, char *argv[])
 {
 #ifdef __DJGPP__
@@ -1236,6 +1651,8 @@ int main(int argc, char *argv[])
 #endif
 	if (argc == 1)
 		goto usage;
+
+	opt.ots_mode = extract_ots_long_opts(&argc, argv, &opt.ots_path);
 
 	for (;;) {
 		int o = getopt(argc, argv, "xlatfd:C:cpDTh?wL:qB");
@@ -1303,6 +1720,9 @@ usage:
 				"uc2 -t [-aq] archive.uc2 [files]...\n"
 				"uc2 -w [-qL level] archive.uc2 files...\n"
 				"uc2 -B files...   (benchmark all methods)\n"
+				"uc2 --ots-attach <proof.ots> [-f] archive.uc2\n"
+				"uc2 --ots-extract archive.uc2 <out.ots>\n"
+				"uc2 --ots-info archive.uc2\n"
 			);
 			if (!opt.help)
 				printf("uc2 -h\n");
@@ -1334,6 +1754,17 @@ usage:
 		/* -B: benchmark uses remaining args as input files (archive arg is first file) */
 		return run_benchmark(argc - optind + 1, argv + optind - 1);
 	}
+
+	if (opt.ots_mode == OTS_MODE_ATTACH)
+		return cmd_ots_attach(opt.archive, opt.ots_path, opt.overwrite);
+	if (opt.ots_mode == OTS_MODE_EXTRACT) {
+		const char *out = optind < argc ? argv[optind] : NULL;
+		if (!out)
+			errx(EXIT_FAILURE, "--ots-extract requires an output path");
+		return cmd_ots_extract(opt.archive, out);
+	}
+	if (opt.ots_mode == OTS_MODE_INFO)
+		return cmd_ots_info(opt.archive);
 
 	if (opt.create) {
 		if (optind == argc)
@@ -1403,8 +1834,11 @@ usage:
 		if (opt.test)
 			uc2_say(stderr, "Testing archive integrity...\n");
 		visit_selected(&root, pipe_cb, uc2);
-		if (opt.test)
+		if (opt.test) {
+			if (verify_trailer_if_present(opt.archive))
+				return EXIT_FAILURE;
 			uc2_say(stderr, "Everything went OK\n");
+		}
 	} else if (!opt.list) {
 		struct path path = {.uc2 = uc2};
 		char *p = path.buffer;
