@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* Cross-archive block store for content-addressable deduplication.
  *
  * Stores unique CDC chunks indexed by 64-bit content hash.  Multiple

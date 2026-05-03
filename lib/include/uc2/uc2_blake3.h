@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* BLAKE3 cryptographic hashing for archive integrity.
  *
  * BLAKE3 is a fast cryptographic hash based on the Bao tree hashing

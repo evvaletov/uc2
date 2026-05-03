@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* Content-defined chunking (CDC) for UC2 deduplication.
  *
  * Gear hash: each byte updates the hash by shifting left and XORing

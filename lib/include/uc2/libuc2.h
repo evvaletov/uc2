@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: LGPL-3.0-only */
+
 #ifndef LIBUC2_H
 #define LIBUC2_H
 

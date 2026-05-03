@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* Cross-archive block store for content-addressable deduplication.
  *
  * Chunks are stored as individual files named by their 64-bit hash

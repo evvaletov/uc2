@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* Near-duplicate detection via SimHash.
  *
  * SimHash produces a fixed-size fingerprint where similar documents

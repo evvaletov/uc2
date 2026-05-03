@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* LZ4-compatible ultra-fast compression.
  *
  * Minimal LZ4-like compressor optimized for speed over ratio.

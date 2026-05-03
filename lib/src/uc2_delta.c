@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* Delta compression for file versioning.
  *
  * Uses a hash-based matching approach: hash all 4-byte windows in the

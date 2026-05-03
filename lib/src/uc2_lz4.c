@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* LZ4-compatible ultra-fast compression.
  *
  * Single-probe hash table with 4-byte match minimum.  No hash chains —

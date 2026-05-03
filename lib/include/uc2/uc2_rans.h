@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* rANS (range Asymmetric Numeral Systems) entropy coder.
  *
  * Drop-in replacement for Huffman coding with ~5-15% better compression

@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* Near-duplicate detection via SimHash.
  *
  * Algorithm: extract overlapping 4-byte shingles from the input,

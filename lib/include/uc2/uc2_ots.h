@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* OpenTimestamps integration.
  *
  * UC2 stores an OpenTimestamps proof in a magic-bracketed sidecar

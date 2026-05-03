@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* POSIX utime.h for MSVC (which only provides sys/utime.h) */
 #ifndef _COMPAT_UTIME_H
 #define _COMPAT_UTIME_H

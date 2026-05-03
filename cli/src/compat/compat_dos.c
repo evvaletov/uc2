@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: LGPL-3.0-only */
+
 /* DOS/DJGPP compatibility layer for UC2.
    Provides BSD err.h functions and fnmatch for DJGPP,
    which lacks these POSIX/BSD extensions.

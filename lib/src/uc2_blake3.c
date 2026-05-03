@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* BLAKE3 cryptographic hashing — simplified single-threaded implementation.
  *
  * Based on the BLAKE3 specification (github.com/BLAKE3-team/BLAKE3).

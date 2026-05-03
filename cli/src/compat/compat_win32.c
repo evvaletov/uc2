@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: LGPL-3.0-only */
+
 /* Win32 compatibility layer for UC2 CLI.
    Provides POSIX/BSD functions missing from MSVC and MinGW.
    All file operations use wide-char Windows APIs for UTF-8 support.

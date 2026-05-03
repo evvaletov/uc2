@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: LGPL-3.0-only */
+
 /* list.h by Jan Bobrowski. Inspired by list.h from Linux */
 
 #ifndef LIST_H

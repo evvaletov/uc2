@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* Merkle DAG for content-addressable deduplication.
  *
  * Builds a Merkle tree from CDC chunks: each file is represented as a

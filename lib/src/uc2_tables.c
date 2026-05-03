@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* UC2 shared tables: Huffman delta coding and default tree lengths. */
 
 #include "uc2_internal.h"

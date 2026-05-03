@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 #ifndef _FNMATCH_H
 #define _FNMATCH_H
 

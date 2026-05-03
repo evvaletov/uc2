@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 #ifndef _ERR_H
 #define _ERR_H
 #ifdef __GNUC__

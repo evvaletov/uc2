@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* Delta compression for file versioning.
  *
  * Computes a compact binary delta between a source (old) and target

@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* Dictionary management for zstd-inspired dictionary compression.
  *
  * Formalizes UC2's master blocks as proper dictionaries with content

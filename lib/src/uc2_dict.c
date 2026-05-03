@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* Dictionary management for zstd-inspired dictionary compression. */
 
 #include "uc2/uc2_dict.h"

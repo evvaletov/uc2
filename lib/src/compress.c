@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* UC2 LZ77+Huffman compressor.
    Produces bitstreams compatible with Bobrowski's decompressor (decompress.c).
 

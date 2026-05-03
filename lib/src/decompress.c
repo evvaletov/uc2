@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: LGPL-3.0-only */
+
 /* UltraCompressor II decompression library.
    Copyright © Jan Bobrowski 2020, 2021
    torinak.com/~jb/unuc2/

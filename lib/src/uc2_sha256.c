@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* SHA-256 (FIPS 180-4). Reference textbook implementation. */
 
 #include "uc2/uc2_sha256.h"

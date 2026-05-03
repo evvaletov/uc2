@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* Content-aware preprocessing filters for improved compression.
  *
  * These transforms are applied BEFORE compression to expose redundancy

@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* OpenTimestamps proof parser, serializer, walker, and UC2 trailer.
  *
  * The walker supports the calendar-path subset of opcodes (APPEND,

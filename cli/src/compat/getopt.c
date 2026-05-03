@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* Minimal POSIX getopt() for MSVC.
    Supports short options with optional arguments (e.g., "d:"). */
 

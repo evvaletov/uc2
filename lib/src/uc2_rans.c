@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* rANS (range Asymmetric Numeral Systems) entropy coder.
  *
  * Table-based rANS with 32-bit state.  The state represents a position

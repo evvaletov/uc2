@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* Merkle DAG for content-addressable deduplication.
  *
  * Each file is split into CDC chunks (Gear hash), each chunk hashed

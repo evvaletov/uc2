@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* Minimal POSIX getopt for MSVC */
 #ifndef _COMPAT_GETOPT_H
 #define _COMPAT_GETOPT_H

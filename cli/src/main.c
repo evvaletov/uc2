@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* UltraCompressor II extraction tool.
    Copyright © Jan Bobrowski 2020, 2021
    torinak.com/~jb/unuc2/

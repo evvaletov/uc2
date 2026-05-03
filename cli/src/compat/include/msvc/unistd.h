@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* Minimal POSIX unistd.h for MSVC */
 #ifndef _COMPAT_UNISTD_H
 #define _COMPAT_UNISTD_H

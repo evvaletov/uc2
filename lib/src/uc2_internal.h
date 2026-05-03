@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
 /* UC2 format constants and shared types.
    Used by both the compressor and decompressor. */
 
