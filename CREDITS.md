@@ -8,10 +8,14 @@ versioning.  The original source code is preserved in `original/UC2_source/`.
 
 - Website: <https://nicodevries.com/professional/>
 
-## Source Code Release
+## 2015 LGPL Source Release
 
-**Danny Bezemer** facilitated the public release of the UC2 source code in
-2015 under the LGPL-3.0 license.
+In December 2015, **Vladislav Sagunov** asked Nico de Vries whether
+the UC2 source could be re-released under a free licence.  De Vries
+agreed and personally re-published the full UC2 source under the GNU
+LGPL-3.0 (with a small Borland C/C++ runtime carve-out for DOS-specific
+code).  The release notes are preserved verbatim in
+`original/UC2_source/Read Me First.txt`.
 
 ## Portable Decompressor (unuc2 / libunuc2)
 
@@ -41,9 +45,10 @@ de Vries's 1992 binaries.
 
 ## Additional Contributors
 
+- **Danny Bezemer**  --  co-authored UC2 with de Vries during the
+  original 1992-1996 development.
 - **Jan-Pieter Cornet**  --  early testing, archive samples, and format
   documentation contributions to the unuc2 project.
-- **Vladislav Sagunov**  --  maintained UC2 resources and documentation.
 
 ## UC2 v3.0.0 Revival
 

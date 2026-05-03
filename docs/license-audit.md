@@ -10,9 +10,13 @@ applied across the source tree.
 ## Layer 1: Nico de Vries (1992-1996), released 2015
 
 Nico de Vries authored UltraCompressor II as proprietary DOS software
-between 1992 and 1996.  Danny Bezemer obtained permission to release
-the source code publicly and did so in 2015 under the GNU Lesser
-General Public License v3 (LGPL-3.0).
+between 1992 and 1996, with co-development from Danny Bezemer,
+Jan-Pieter Cornet, and others credited in the original `U_MANUAL.TXT`.
+In December 2015, Vladislav Sagunov asked de Vries whether the source
+could be re-released under a free licence; de Vries agreed and
+personally published the full source under the GNU Lesser General
+Public License v3 (LGPL-3.0), with a small Borland C/C++ runtime
+carve-out for DOS-specific code.
 
 The 2015 release is preserved in this repository under
 `original/UC2_source/` byte-for-byte unchanged, including its license
