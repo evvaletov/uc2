@@ -1,0 +1,1 @@
+{"author":{"id":"40e3ba2788b3b9fc163c354afc44e5f9d225bcf0a27e679aaa878dd6135c6dcb"},"ops":[{"type":1,"timestamp":1777789824,"nonce":"iRulgIkRjkHqcRcM+P24QYIuuak=","title":"Phase 5: Argon2 passphrase-based KDF","message":"Argon2id for passphrase -\u003e key derivation. Calibrated to ~100ms on a typical desktop. Salt + parameters stored in archive header.","files":null}]}
