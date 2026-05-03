@@ -1,1 +1,1 @@
-{"author":{"id":"40e3ba2788b3b9fc163c354afc44e5f9d225bcf0a27e679aaa878dd6135c6dcb"},"ops":[{"type":1,"timestamp":1777789825,"nonce":"JYO+fW1roddvkHsnh4Wti/T43Lk=","title":"Phase 6: Multi-volume archive spanning (floppies)","message":"Span an archive across multiple physical media. Volume header, volume-of-N indicator, resume on volume-mismatch.","files":null}]}
+{"author":{"id":"40e3ba2788b3b9fc163c354afc44e5f9d225bcf0a27e679aaa878dd6135c6dcb"},"ops":[{"type":5,"timestamp":1777789825,"nonce":"AfXx+g3yx+4+TYu7l5us4vmFEMk=","added":["P2-medium"],"removed":null}]}
