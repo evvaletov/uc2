@@ -1,1 +1,1 @@
-{"author":{"id":"40e3ba2788b3b9fc163c354afc44e5f9d225bcf0a27e679aaa878dd6135c6dcb"},"ops":[{"type":1,"timestamp":1777789828,"nonce":"GdsEqOp9s/MtpWD3R+aOhs39qJU=","title":"Phase 10: TGZ (tar.gz) read/write","message":"tar + gzip. Unix ecosystem staple.","files":null}]}
+{"author":{"id":"40e3ba2788b3b9fc163c354afc44e5f9d225bcf0a27e679aaa878dd6135c6dcb"},"ops":[{"type":5,"timestamp":1777789828,"nonce":"D9YD9g4E3khfw5ioB1HdKUSexrA=","added":["P2-medium"],"removed":null}]}
