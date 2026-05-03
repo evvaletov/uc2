@@ -1,1 +1,1 @@
-{"author":{"id":"40e3ba2788b3b9fc163c354afc44e5f9d225bcf0a27e679aaa878dd6135c6dcb"},"ops":[{"type":1,"timestamp":1777789828,"nonce":"yhIEo0pcFtHp3mc866OOSkvWQ90=","title":"Phase 10: ISO 9660 read","message":"CD/DVD images. Retro-computing preservation.","files":null}]}
+{"author":{"id":"40e3ba2788b3b9fc163c354afc44e5f9d225bcf0a27e679aaa878dd6135c6dcb"},"ops":[{"type":5,"timestamp":1777789828,"nonce":"V6wOAqsHY+C6addZFnBESKbFCm8=","added":["P2-medium"],"removed":null}]}
