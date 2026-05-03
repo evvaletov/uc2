@@ -1,1 +1,1 @@
-{"author":{"id":"40e3ba2788b3b9fc163c354afc44e5f9d225bcf0a27e679aaa878dd6135c6dcb"},"ops":[{"type":1,"timestamp":1777789825,"nonce":"cMs4bOKdfi9vBwrJegaDqz4xx94=","title":"Phase 6: ANSI art progress display + CP850 codepage","message":"Optional ANSI/CP850 status line on DOS / FreeDOS. Falls back to plain ASCII on non-DOS unless TERM signals support.","files":null}]}
+{"author":{"id":"40e3ba2788b3b9fc163c354afc44e5f9d225bcf0a27e679aaa878dd6135c6dcb"},"ops":[{"type":5,"timestamp":1777789825,"nonce":"LvVzesRv8qwnZFKxvbF6TzRdhDk=","added":["P2-medium"],"removed":null}]}
