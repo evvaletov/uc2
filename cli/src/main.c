@@ -36,6 +36,7 @@ void setprogname(const char *argv0);
 
 #include <uc2/libuc2.h>
 #include <uc2/uc2_cdc.h>
+#include <uc2/uc2_ingest.h>
 #include <uc2/uc2_lz4.h>
 #include <uc2/uc2_ots.h>
 #include <uc2/uc2_sha256.h>
@@ -53,6 +54,12 @@ enum ots_mode {
 	OTS_MODE_INFO
 };
 
+enum ingest_mode {
+	INGEST_MODE_NONE = 0,
+	INGEST_MODE_WRITE,
+	INGEST_MODE_RESTORE
+};
+
 struct options {
 	bool list:1;
 	bool all:1;
@@ -66,6 +73,7 @@ struct options {
 	bool quiet:1;
 	bool benchmark:1;
 	int ots_mode;
+	int ingest_mode;
 	char sep;
 	int level;
 	char *archive;
@@ -1592,6 +1600,103 @@ static int run_benchmark(int nfiles, char **files)
 	return EXIT_SUCCESS;
 }
 
+/* Pre-parse for ingest long options: --ingest, --ingest-restore.
+ * Both take a single path argument, accepted as either
+ *   --ingest <path>   (separate argv entry; rejected if path starts with '-')
+ *   --ingest=<path>   (inline). */
+static int extract_ingest_long_opts(int *argcp, char **argv, char **out_path)
+{
+	int argc = *argcp;
+	int mode = INGEST_MODE_NONE;
+	*out_path = NULL;
+	for (int i = 1; i < argc; ) {
+		const char *a = argv[i];
+		int matched_args = 0;
+		int new_mode = INGEST_MODE_NONE;
+		const char *inline_value = NULL;
+
+		if (strcmp(a, "--ingest") == 0) {
+			new_mode = INGEST_MODE_WRITE;
+			matched_args = 1;
+		} else if (strncmp(a, "--ingest=", 9) == 0) {
+			new_mode = INGEST_MODE_WRITE;
+			matched_args = 1;
+			inline_value = a + 9;
+		} else if (strcmp(a, "--ingest-restore") == 0) {
+			new_mode = INGEST_MODE_RESTORE;
+			matched_args = 1;
+		} else if (strncmp(a, "--ingest-restore=", 17) == 0) {
+			new_mode = INGEST_MODE_RESTORE;
+			matched_args = 1;
+			inline_value = a + 17;
+		}
+
+		if (!matched_args) { i++; continue; }
+
+		mode = new_mode;
+		if (inline_value) {
+			*out_path = (char *)inline_value;
+		} else {
+			if (i + 1 >= argc || argv[i + 1][0] == '-')
+				errx(EXIT_FAILURE,
+				     "%s requires a path argument", a);
+			*out_path = argv[i + 1];
+			matched_args = 2;
+		}
+		for (int j = i; j + matched_args < argc; j++)
+			argv[j] = argv[j + matched_args];
+		argc -= matched_args;
+	}
+	*argcp = argc;
+	return mode;
+}
+
+static int cmd_ingest_write(const char *archive_path)
+{
+	uint8_t *buf = NULL;
+	size_t cap = 0, len = 0;
+	const size_t chunk = 64 * 1024;
+	for (;;) {
+		if (len + chunk > cap) {
+			size_t ncap = cap ? cap * 2 : chunk;
+			while (ncap < len + chunk) ncap *= 2;
+			uint8_t *p = realloc(buf, ncap);
+			if (!p) { free(buf); err(EXIT_FAILURE, "realloc"); }
+			buf = p;
+			cap = ncap;
+		}
+		size_t n = fread(buf + len, 1, chunk, stdin);
+		len += n;
+		if (n < chunk) {
+			if (ferror(stdin)) {
+				free(buf);
+				err(EXIT_FAILURE, "read stdin");
+			}
+			break;
+		}
+	}
+
+	struct uc2_ingest_stats st;
+	int rc = uc2_ingest_write(archive_path, buf, len, 0, &st);
+	free(buf);
+	if (rc != 0)
+		errx(EXIT_FAILURE, "ingest write failed: %s", archive_path);
+
+	uc2_say(stderr,
+	        "ingested %llu bytes -> %d chunks (%d new, %d deduped, %llu bytes saved)\n",
+	        (unsigned long long)st.bytes_in,
+	        st.chunks_total, st.chunks_new, st.chunks_dedup,
+	        (unsigned long long)st.bytes_saved);
+	return EXIT_SUCCESS;
+}
+
+static int cmd_ingest_restore(const char *archive_path)
+{
+	if (uc2_ingest_restore(archive_path, stdout) != 0)
+		errx(EXIT_FAILURE, "ingest restore failed: %s", archive_path);
+	return EXIT_SUCCESS;
+}
+
 /* Pre-parse for OTS long options: --ots-attach, --ots-extract, --ots-info.
  * Removes matched arguments from argv in place so the existing getopt loop
  * doesn't see them.  --ots-attach takes a value, accepted as either
@@ -1653,6 +1758,15 @@ int main(int argc, char *argv[])
 #endif
 	if (argc == 1)
 		goto usage;
+
+	{
+		char *ingest_path = NULL;
+		opt.ingest_mode = extract_ingest_long_opts(&argc, argv, &ingest_path);
+		if (opt.ingest_mode == INGEST_MODE_WRITE)
+			return cmd_ingest_write(ingest_path);
+		if (opt.ingest_mode == INGEST_MODE_RESTORE)
+			return cmd_ingest_restore(ingest_path);
+	}
 
 	opt.ots_mode = extract_ots_long_opts(&argc, argv, &opt.ots_path);
 
@@ -1725,6 +1839,8 @@ usage:
 				"uc2 --ots-attach <proof.ots> [-f] archive.uc2\n"
 				"uc2 --ots-extract archive.uc2 <out.ots>\n"
 				"uc2 --ots-info archive.uc2\n"
+				"uc2 --ingest <archive>            # stdin -> dedup blockstore\n"
+				"uc2 --ingest-restore <archive>    # blockstore -> stdout\n"
 			);
 			if (!opt.help)
 				printf("uc2 -h\n");

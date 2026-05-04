@@ -207,7 +207,18 @@ tar cf - /project | uc2 --ingest backup.uc2   # dedup tar stream
 cp -a /snapshot/ | uc2 --ingest backup.uc2    # incremental dedup
 ```
 
-- [ ] `uc2 --ingest` mode: streaming input with master-block dedup
+- [x] `uc2 --ingest` mode v1: stdin -> CDC -> sidecar blockstore at
+      `<archive>.blocks/` -> chunk-hash manifest.  `uc2 --ingest-restore`
+      reverses the round-trip.  Tested: small/multichunk round-trip,
+      idempotent dedup on repeat ingest, empty stream, bad-magic
+      rejection.  Not yet integrated with the master-block archive
+      layout (sidecar blockstore is a separate format with magic
+      `UC2INGST`); tar entry boundaries are not preserved.  Follow-up
+      tracked separately.
+- [ ] `uc2 --ingest` v2: integrate with master-block archive layout
+      so output is a real UC2 v3 archive, not a sidecar manifest
+- [ ] Tar-entry preservation: parse tar boundaries inside --ingest
+      so individual files are recoverable as archive entries
 - [ ] Incremental snapshots: `uc2 snapshot /path repo.uc2`
       (borg/restic-style deduplicating backups without filesystem support)
 

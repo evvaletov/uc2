@@ -125,6 +125,12 @@ target_include_directories(test_ots PRIVATE "${PROJECT_BINARY_DIR}/lib")
 target_compile_features(test_ots PRIVATE c_std_99)
 add_test(NAME ots COMMAND test_ots)
 
+add_executable(test_ingest src/test_ingest.c)
+target_link_libraries(test_ingest PRIVATE uc2)
+target_include_directories(test_ingest PRIVATE "${PROJECT_BINARY_DIR}/lib")
+target_compile_features(test_ingest PRIVATE c_std_99)
+add_test(NAME ingest COMMAND test_ingest)
+
 # Optional cross-check: validates uc2 .ots output against the python-opentimestamps
 # reference parser.  Skipped (return code 77) when opentimestamps is not installed.
 find_package(Python3 COMPONENTS Interpreter)
