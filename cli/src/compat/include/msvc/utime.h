@@ -1,12 +1,15 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 
-/* POSIX utime.h for MSVC (which only provides sys/utime.h).
+/* POSIX utime.h for MSVC.
  *
- * Modern MSVC SDKs (Windows 10 SDK 10.0.26100+) declare struct utimbuf
- * in <sys/utime.h>, so we just pull it in.  Older SDKs that hid the
- * struct behind _CRT_DECLARE_NONSTDC_NAMES (which our build disables
- * via NO_OLDNAMES) will not see it; for those, define
- * _COMPAT_UTIMBUF_FALLBACK at the compiler command line. */
+ * Modern MSVC SDKs (Windows 10 SDK 10.0.26100+) provide both
+ * struct utimbuf and an inline wrapper named utime() in <sys/utime.h>.
+ * The inline wrapper is not UTF-8-aware: it forwards to _utime32,
+ * which interprets the path in the local ANSI codepage.
+ *
+ * UC2 needs UTF-8 paths to round-trip correctly, so this shim
+ * substitutes utime() with our compat__utime(), which goes through
+ * compat__wpath() before calling _wutime32. */
 
 #ifndef _COMPAT_UTIME_H
 #define _COMPAT_UTIME_H
@@ -21,6 +24,7 @@ struct utimbuf {
 };
 #endif
 
-int utime(const char *path, struct utimbuf *ut);
+int compat__utime(const char *path, struct utimbuf *ut);
+#define utime compat__utime
 
 #endif

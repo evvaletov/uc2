@@ -310,9 +310,10 @@ int chmod(const char *path, int mode)
 
 #ifdef g_utime
 #include <sys/utime.h>
-/* struct utimbuf comes from <sys/utime.h> on modern Windows SDKs and
- * from the local utime.h shim's _COMPAT_UTIMBUF_FALLBACK on older ones. */
-int utime(const char *path, struct utimbuf *ut)
+/* The Windows SDK declares an inline utime() in <sys/utime.h>.  Our
+ * shim utime.h substitutes utime -> compat__utime at the call site so
+ * UC2's UTF-8 paths round-trip through compat__wpath. */
+int compat__utime(const char *path, struct utimbuf *ut)
 {
 	wchar_t *wpath = compat__wpath(path);
 	if (!wpath)
