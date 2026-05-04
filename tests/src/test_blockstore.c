@@ -4,7 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#ifdef _MSC_VER
+#include <process.h>
+#define getpid _getpid
+#else
 #include <unistd.h>
+#endif
 #include <uc2/uc2_blockstore.h>
 #include <uc2/uc2_merkle.h>
 

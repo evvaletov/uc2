@@ -24,6 +24,14 @@
 #define PATH_MAX 260
 #endif
 
+#include <sys/stat.h>
+#ifndef S_ISDIR
+#define S_ISDIR(m) (((m) & _S_IFMT) == _S_IFDIR)
+#endif
+#ifndef S_ISREG
+#define S_ISREG(m) (((m) & _S_IFMT) == _S_IFREG)
+#endif
+
 /* Provided by compat_win32.c (UTF-8-aware via wide-char APIs) */
 int access(const char *path, int mode);
 int unlink(const char *path);

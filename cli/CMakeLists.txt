@@ -29,7 +29,7 @@ if(WIN32)
         NO_OLDNAMES
         g_err g_errx g_warn g_warnx g_vwarn g_vwarnx g_verr g_verrx
         g_getprogname g_setlinebuf g_fnmatch
-        g_compat__utf8_console g_compat__wpath g_fopen
+        g_compat__utf8_console g_compat__wpath
         g_access g_unlink g_chdir g_mkdir g_chmod g_utime
         g_opendir
     )
