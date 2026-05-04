@@ -31,6 +31,7 @@ if(WIN32)
         g_getprogname g_setlinebuf g_fnmatch
         g_compat__utf8_console g_compat__wpath g_fopen
         g_access g_unlink g_chdir g_mkdir g_chmod g_utime
+        g_opendir
     )
 elseif(DJGPP)
     target_sources(uc2-cli PRIVATE src/compat/compat_dos.c)

@@ -310,11 +310,8 @@ int chmod(const char *path, int mode)
 
 #ifdef g_utime
 #include <sys/utime.h>
-#ifdef _MSC_VER
-/* MSVC's <sys/utime.h> hides utimbuf behind NO_OLDNAMES */
-#include <time.h>
-struct utimbuf { time_t actime; time_t modtime; };
-#endif
+/* struct utimbuf comes from <sys/utime.h> on modern Windows SDKs and
+ * from the local utime.h shim's _COMPAT_UTIMBUF_FALLBACK on older ones. */
 int utime(const char *path, struct utimbuf *ut)
 {
 	wchar_t *wpath = compat__wpath(path);
@@ -322,6 +319,64 @@ int utime(const char *path, struct utimbuf *ut)
 		return -1;
 	struct __utimbuf32 wut = {.actime = (long)ut->actime, .modtime = (long)ut->modtime};
 	return _wutime32(wpath, &wut);
+}
+#endif
+
+#ifdef g_opendir
+#include "dirent.h"
+
+struct UC2_DIR {
+	HANDLE handle;
+	WIN32_FIND_DATAW find;
+	int first;
+	struct dirent ent;
+};
+
+DIR *opendir(const char *path)
+{
+	wchar_t *wpath = compat__wpath(path);
+	if (!wpath)
+		return 0;
+	size_t n = wcslen(wpath);
+	if (n + 3 >= MAX_PATH)
+		return 0;
+	wchar_t pat[MAX_PATH];
+	wcscpy(pat, wpath);
+	if (n > 0 && pat[n-1] != L'\\' && pat[n-1] != L'/')
+		pat[n++] = L'\\';
+	pat[n++] = L'*';
+	pat[n] = 0;
+	DIR *d = malloc(sizeof *d);
+	if (!d) return 0;
+	d->handle = FindFirstFileW(pat, &d->find);
+	if (d->handle == INVALID_HANDLE_VALUE) {
+		free(d);
+		return 0;
+	}
+	d->first = 1;
+	return d;
+}
+
+struct dirent *readdir(DIR *d)
+{
+	if (!d) return 0;
+	if (!d->first && !FindNextFileW(d->handle, &d->find))
+		return 0;
+	d->first = 0;
+	int rc = WideCharToMultiByte(CP_UTF8, 0, d->find.cFileName, -1,
+	                             d->ent.d_name, sizeof d->ent.d_name,
+	                             0, 0);
+	if (rc <= 0) return 0;
+	return &d->ent;
+}
+
+int closedir(DIR *d)
+{
+	if (!d) return -1;
+	if (d->handle != INVALID_HANDLE_VALUE)
+		FindClose(d->handle);
+	free(d);
+	return 0;
 }
 #endif
 
