@@ -1,1 +1,1 @@
-{"author":{"id":"40e3ba2788b3b9fc163c354afc44e5f9d225bcf0a27e679aaa878dd6135c6dcb"},"ops":[{"type":4,"timestamp":1777928125,"nonce":"pq6uKp1wr717Y60RMyUnHb1AbR4=","status":2}]}
+{"author":{"id":"40e3ba2788b3b9fc163c354afc44e5f9d225bcf0a27e679aaa878dd6135c6dcb"},"ops":[{"type":3,"timestamp":1777928132,"nonce":"FmYPvUMYRDxfv6T0Ptj1MgGKcLA=","message":"Fixed across commits 994c584, 345aabd, 87c5cf3, 79e0505, 6d8087f. CI green on Linux, macOS, and Windows MSVC. Closing.","files":null}]}
