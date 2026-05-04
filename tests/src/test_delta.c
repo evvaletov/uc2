@@ -13,8 +13,8 @@ static void test_identical(void)
 {
 	uint8_t data[] = "Hello, World! This is a test of delta compression.";
 	uint8_t *delta; size_t delta_len;
-	assert(uc2_delta_encode(data, sizeof data, data, sizeof data,
-	                        &delta, &delta_len) == 0);
+	{ int _r = uc2_delta_encode(data, sizeof data, data, sizeof data,
+	                            &delta, &delta_len); (void)_r; assert(_r == 0); }
 
 	/* Delta of identical data should be mostly COPY */
 	printf("(delta=%zu vs orig=%zu) ", delta_len, sizeof data);
@@ -22,8 +22,8 @@ static void test_identical(void)
 
 	/* Apply and verify */
 	uint8_t *recon; size_t recon_len;
-	assert(uc2_delta_apply(data, sizeof data, delta, delta_len,
-	                       &recon, &recon_len) == 0);
+	{ int _r = uc2_delta_apply(data, sizeof data, delta, delta_len,
+	                           &recon, &recon_len); (void)_r; assert(_r == 0); }
 	assert(recon_len == sizeof data);
 	{ int _r = memcmp(recon, data, sizeof data); (void)_r; assert(_r == 0); }
 
@@ -45,8 +45,8 @@ static void test_small_change(void)
 	assert(delta_len < tlen);  /* delta should be smaller than full target */
 
 	uint8_t *recon; size_t recon_len;
-	assert(uc2_delta_apply(src, slen, delta, delta_len,
-	                       &recon, &recon_len) == 0);
+	{ int _r = uc2_delta_apply(src, slen, delta, delta_len,
+	                           &recon, &recon_len); (void)_r; assert(_r == 0); }
 	assert(recon_len == tlen);
 	{ int _r = memcmp(recon, tgt, tlen); (void)_r; assert(_r == 0); }
 
@@ -60,12 +60,12 @@ static void test_completely_different(void)
 	uint8_t tgt[] = "ZZZZZZZZZZ";
 
 	uint8_t *delta; size_t delta_len;
-	assert(uc2_delta_encode(src, sizeof src, tgt, sizeof tgt,
-	                        &delta, &delta_len) == 0);
+	{ int _r = uc2_delta_encode(src, sizeof src, tgt, sizeof tgt,
+	                            &delta, &delta_len); (void)_r; assert(_r == 0); }
 
 	uint8_t *recon; size_t recon_len;
-	assert(uc2_delta_apply(src, sizeof src, delta, delta_len,
-	                       &recon, &recon_len) == 0);
+	{ int _r = uc2_delta_apply(src, sizeof src, delta, delta_len,
+	                           &recon, &recon_len); (void)_r; assert(_r == 0); }
 	assert(recon_len == sizeof tgt);
 	{ int _r = memcmp(recon, tgt, sizeof tgt); (void)_r; assert(_r == 0); }
 
@@ -100,8 +100,8 @@ static void test_binary_patch(void)
 	assert(delta_len < len / 2);  /* should be much smaller */
 
 	uint8_t *recon; size_t recon_len;
-	assert(uc2_delta_apply(src, len, delta, delta_len,
-	                       &recon, &recon_len) == 0);
+	{ int _r = uc2_delta_apply(src, len, delta, delta_len,
+	                           &recon, &recon_len); (void)_r; assert(_r == 0); }
 	assert(recon_len == len);
 	{ int _r = memcmp(recon, tgt, len); (void)_r; assert(_r == 0); }
 
@@ -118,8 +118,8 @@ static void test_empty_target(void)
 	{ int _r = uc2_delta_encode(src, sizeof src, NULL, 0, &delta, &delta_len); (void)_r; assert(_r == 0); }
 
 	uint8_t *recon; size_t recon_len;
-	assert(uc2_delta_apply(src, sizeof src, delta, delta_len,
-	                       &recon, &recon_len) == 0);
+	{ int _r = uc2_delta_apply(src, sizeof src, delta, delta_len,
+	                           &recon, &recon_len); (void)_r; assert(_r == 0); }
 	assert(recon_len == 0);
 
 	free(delta);
@@ -137,8 +137,8 @@ static void test_append(void)
 	{ int _r = uc2_delta_encode(src, slen, tgt, tlen, &delta, &delta_len); (void)_r; assert(_r == 0); }
 
 	uint8_t *recon; size_t recon_len;
-	assert(uc2_delta_apply(src, slen, delta, delta_len,
-	                       &recon, &recon_len) == 0);
+	{ int _r = uc2_delta_apply(src, slen, delta, delta_len,
+	                           &recon, &recon_len); (void)_r; assert(_r == 0); }
 	assert(recon_len == tlen);
 	{ int _r = memcmp(recon, tgt, tlen); (void)_r; assert(_r == 0); }
 
