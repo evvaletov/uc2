@@ -105,7 +105,11 @@ No mainstream archiver offers post-quantum encryption.
 
 ## Phase 6: DOS / FreeDOS / Retro-Computing
 
-- [ ] DJGPP cross-compilation toolchain
+- [x] DJGPP cross-compilation toolchain: `cmake/djgpp-toolchain.cmake`
+      builds `uc2.exe` against the prebuilt DJGPP gcc 7.2 / 12.2 from
+      `andrewwutw/build-djgpp`.  Output is a 32-bit DPMI DOS executable
+      (MZ + COFF + go32 stub).  See `cmake/README-djgpp.md` for the
+      one-time setup (CPATH unset is required on hosts that export it).
 - [ ] Test on real vintage hardware and DOSBox/FreeDOS
 - [ ] Method 80 (Turbo) support
 - [ ] Multi-volume archive spanning across physical media (floppies)
