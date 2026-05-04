@@ -19,6 +19,9 @@ jobs:
     name: ${{ matrix.name }}
     steps:
       - uses: actions/checkout@v4
+      - name: Lint -- forbid assert(side-effect)
+        if: runner.os == 'Linux'
+        run: python3 tests/scripts/check_assert_side_effects.py
       - name: Configure
         run: cmake -B build -DCMAKE_BUILD_TYPE=Release
       - name: Build

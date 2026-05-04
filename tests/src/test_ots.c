@@ -19,7 +19,8 @@ static void test_varint_roundtrip(void)
 		size_t n = uc2_ots_varint_encode(cases[i], buf);
 		uint64_t got;
 		size_t consumed;
-		assert(uc2_ots_varint_decode(buf, n, &got, &consumed) == UC2_OTS_OK);
+		int rc = uc2_ots_varint_decode(buf, n, &got, &consumed);
+		assert(rc == UC2_OTS_OK);
 		assert(got == cases[i]);
 		assert(consumed == n);
 	}
@@ -30,7 +31,8 @@ static void test_varint_truncated(void)
 	uint8_t buf[] = { 0x80, 0x80 }; /* unterminated */
 	uint64_t v;
 	size_t c;
-	assert(uc2_ots_varint_decode(buf, 2, &v, &c) == UC2_OTS_ERR_TRUNCATED);
+	int rc = uc2_ots_varint_decode(buf, 2, &v, &c);
+	assert(rc == UC2_OTS_ERR_TRUNCATED);
 }
 
 static void test_varint_noncanonical(void)
@@ -39,7 +41,8 @@ static void test_varint_noncanonical(void)
 	uint8_t buf[] = { 0x80, 0x00 };
 	uint64_t v;
 	size_t c;
-	assert(uc2_ots_varint_decode(buf, 2, &v, &c) == UC2_OTS_ERR_NONCANONICAL);
+	int rc = uc2_ots_varint_decode(buf, 2, &v, &c);
+	assert(rc == UC2_OTS_ERR_NONCANONICAL);
 }
 
 static void test_varint_overflow_64bit(void)
@@ -52,7 +55,8 @@ static void test_varint_overflow_64bit(void)
 	};
 	uint64_t v;
 	size_t c;
-	assert(uc2_ots_varint_decode(buf, sizeof buf, &v, &c) == UC2_OTS_ERR_OVERFLOW);
+	int rc = uc2_ots_varint_decode(buf, sizeof buf, &v, &c);
+	assert(rc == UC2_OTS_ERR_OVERFLOW);
 }
 
 static void test_varint_max_64bit(void)
@@ -62,7 +66,8 @@ static void test_varint_max_64bit(void)
 	size_t n = uc2_ots_varint_encode((uint64_t)-1, buf);
 	uint64_t v;
 	size_t c;
-	assert(uc2_ots_varint_decode(buf, n, &v, &c) == UC2_OTS_OK);
+	int rc = uc2_ots_varint_decode(buf, n, &v, &c);
+	assert(rc == UC2_OTS_OK);
 	assert(v == (uint64_t)-1);
 }
 
@@ -99,8 +104,8 @@ static void test_file_bad_magic(void)
 	uint8_t hash_op;
 	const uint8_t *l, *b;
 	size_t ll, bl;
-	assert(uc2_ots_parse_file(buf, sizeof buf, &hash_op, &l, &ll, &b, &bl)
-	       == UC2_OTS_ERR_BAD_MAGIC);
+	int rc = uc2_ots_parse_file(buf, sizeof buf, &hash_op, &l, &ll, &b, &bl);
+	assert(rc == UC2_OTS_ERR_BAD_MAGIC);
 }
 
 struct cb_ctx {

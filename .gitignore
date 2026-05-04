@@ -3,6 +3,13 @@ build/
 build-*/
 cmake-build-*/
 
+# CTest run outputs (when ctest is invoked outside of build/)
+Testing/
+
+# Python bytecode
+__pycache__/
+*.pyc
+
 # Docs build
 docs/_build/
 
