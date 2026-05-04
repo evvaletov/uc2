@@ -149,12 +149,14 @@ static void test_append(void)
 int main(void)
 {
 	printf("Delta compression tests:\n");
-	TEST(test_identical);
-	TEST(test_small_change);
-	TEST(test_completely_different);
-	TEST(test_binary_patch);
-	TEST(test_empty_target);
-	TEST(test_append);
+	fflush(stdout);
+	TEST(test_identical);          fflush(stdout);
+	TEST(test_small_change);       fflush(stdout);
+	TEST(test_completely_different); fflush(stdout);
+	TEST(test_binary_patch);       fflush(stdout);
+	TEST(test_empty_target);       fflush(stdout);
+	TEST(test_append);             fflush(stdout);
 	printf("%d/%d tests passed\n", tests_passed, tests_run);
+	fflush(stdout);
 	return tests_passed == tests_run ? 0 : 1;
 }

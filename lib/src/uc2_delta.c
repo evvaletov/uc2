@@ -168,7 +168,9 @@ int uc2_delta_apply(const uint8_t *src, size_t src_len,
 		return -1;
 
 	uint32_t tgt_len = get32(delta + 4);
-	uint8_t *tgt = malloc(tgt_len);
+	/* malloc(0) is implementation-defined; ensure at least one byte
+	 * so the returned pointer is canonical and free()-safe. */
+	uint8_t *tgt = malloc(tgt_len ? tgt_len : 1);
 	if (!tgt) return -1;
 
 	size_t dpos = 8;  /* after header */
