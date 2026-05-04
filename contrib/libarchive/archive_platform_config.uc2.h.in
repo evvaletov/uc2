@@ -1,0 +1,56 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
+/* Minimal stand-in for libarchive's generated config.h.
+ *
+ * libarchive's archive_platform.h refuses to include if it can't find
+ * either a generated config.h (via HAVE_CONFIG_H + autoconf) or a
+ * hand-built PLATFORM_CONFIG_H.  This file is the latter.  Only the
+ * minimum needed to compile our bid() and read_header() is set; full
+ * libarchive functionality is not required from this translation unit.
+ */
+
+#ifndef UC2_ARCHIVE_PLATFORM_CONFIG_H
+#define UC2_ARCHIVE_PLATFORM_CONFIG_H
+
+/* Common POSIX feature presence (Linux/macOS/BSD).  Adjust by host
+ * if cross-compiling onto something different. */
+#define HAVE_STDINT_H        1
+#define HAVE_INTTYPES_H      1
+#define HAVE_STDLIB_H        1
+#define HAVE_STRING_H        1
+#define HAVE_SYS_TYPES_H     1
+#define HAVE_UNISTD_H        1
+#define HAVE_ERRNO_H         1
+#define HAVE_LIMITS_H        1
+#define HAVE_FCNTL_H         1
+#define HAVE_LOCALE_H        1
+#define HAVE_WCHAR_H         1
+#define HAVE_WCTYPE_H        1
+#define HAVE_TIME_H          1
+#define HAVE_ICONV_H         1
+#define HAVE_LANGINFO_H      1
+#define HAVE_DECL_NL_LANGINFO 1
+#define HAVE_DECL_INT32_MAX   1
+#define HAVE_DECL_INT32_MIN   1
+#define HAVE_DECL_UINT32_MAX  1
+#define HAVE_DECL_INT64_MAX   1
+#define HAVE_DECL_INT64_MIN   1
+#define HAVE_DECL_UINT64_MAX  1
+#define HAVE_DECL_INTMAX_MAX  1
+#define HAVE_DECL_INTMAX_MIN  1
+#define HAVE_DECL_UINTMAX_MAX 1
+#define HAVE_DECL_SIZE_MAX    1
+#define HAVE_DECL_SSIZE_MAX   1
+
+/* iconv shape on glibc / FreeBSD. */
+#define ICONV_CONST          ""
+
+/* libarchive expects these to be defined to 0 or 1. */
+#define HAVE_ZLIB_H          0
+#define HAVE_BZLIB_H         0
+#define HAVE_LZMA_H          0
+#define HAVE_LZO1X_H         0
+#define HAVE_LZ4_H           0
+#define HAVE_ZSTD_H          0
+
+#endif

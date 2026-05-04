@@ -197,7 +197,12 @@ Highest-leverage integration.  Adding UC2 read/write support to libarchive
 makes `.uc2` a first-class format for `bsdtar`, `cmake`, `pkg(8)`,
 file-roller, Ark, and dozens of other tools across the Linux ecosystem.
 
-- [ ] libarchive read handler (decompression/listing)
+- [-] libarchive read handler (decompression/listing): milestone 1
+      shipped -- bid() recognises UC2 magic via libarchive's private
+      __archive_read_ahead, plugin self-registers via
+      __archive_read_register_format.  Builds cleanly against a
+      libarchive source tree at -DLIBARCHIVE_SOURCE_DIR=<path>.  Full
+      read_header / read_data wiring to libuc2 is milestone 2+.
 - [ ] libarchive write handler (compression, once Phase 2 is done)
 
 ### Streaming dedup ingestion

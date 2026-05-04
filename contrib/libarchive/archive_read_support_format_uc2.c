@@ -2,167 +2,117 @@
 
 /* libarchive read handler for UC2 v3 archives.
  *
- * Skeleton: bid, read_header, read_data, read_data_skip, cleanup.
- * The implementation calls into libuc2 for format parsing and
- * decompression.  See contrib/libarchive/README.md for the architecture
- * and integration plan.
+ * This file uses libarchive's internal API
+ * (archive_read_private.h, __archive_read_ahead,
+ * __archive_read_register_format), so it must be built against a
+ * libarchive source tree, not just installed -devel headers.  Pass
+ * -DLIBARCHIVE_SOURCE_DIR=<libarchive checkout> to cmake to enable
+ * the build.  Eventual home is libarchive/libarchive/ upstream.
  *
- * This file is intended to be merged into libarchive's libarchive/
- * directory.  Until that merge lands, it builds out-of-tree against
- * an installed libarchive-devel and exports
- * archive_read_support_format_uc2() as a single entry point. */
+ * Status: milestone 1 -- bid() with magic check.  read_header,
+ * read_data, read_data_skip, and cleanup are stubs that report
+ * end-of-archive; wiring to libuc2 is milestone 2+.
+ */
 
-#include <archive.h>
-#include <archive_entry.h>
+#include "archive_platform.h"
+
+#include "archive.h"
+#include "archive_entry.h"
+#include "archive_private.h"
+#include "archive_read_private.h"
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <uc2/libuc2.h>
+#define ARCHIVE_FORMAT_UC2  0xC0FF0000  /* placeholder format code */
 
-/* Internal state kept across callbacks for one open archive. */
-struct uc2_format_state {
-	uc2_handle handle;
-	int eof;
-	int entries_read;
-	/* TODO: ring buffer for read_data push-to-pull conversion;
-	 *       master-block dependency tracking;
-	 *       remembered entry list (uc2_read_cdir is one-pass). */
-};
+static int  uc2_la_bid(struct archive_read *, int);
+static int  uc2_la_read_header(struct archive_read *, struct archive_entry *);
+static int  uc2_la_read_data(struct archive_read *, const void **,
+                             size_t *, int64_t *);
+static int  uc2_la_read_data_skip(struct archive_read *);
+static int  uc2_la_cleanup(struct archive_read *);
 
-/* libarchive registers an int magic; pick something large and unused.
- * The libarchive convention is the file's magic number bytes interpreted
- * as a 32-bit integer; for UC2 that is 0x1A324355 (ASCII 'UC2', 0x1A). */
-#define UC2_FORMAT_CODE  0x55433201u  /* little-endian 'UC2\x1A' */
-
-static int uc2_la_bid(struct archive_read *_a, int best_bid);
-static int uc2_la_read_header(struct archive_read *_a,
-                              struct archive_entry *entry);
-static int uc2_la_read_data(struct archive_read *_a,
-                            const void **buff, size_t *size, int64_t *offset);
-static int uc2_la_read_data_skip(struct archive_read *_a);
-static int uc2_la_cleanup(struct archive_read *_a);
-
-/* Public entry point.  Mirrors archive_read_support_format_zip. */
 int
 archive_read_support_format_uc2(struct archive *_a)
 {
 	struct archive_read *a = (struct archive_read *)_a;
-	struct uc2_format_state *state;
+	int r;
 
-	state = calloc(1, sizeof(*state));
-	if (state == NULL) {
-		archive_set_error(_a, ENOMEM,
-		                  "Out of memory allocating UC2 state");
-		return ARCHIVE_FATAL;
-	}
+	archive_check_magic(_a, ARCHIVE_READ_MAGIC,
+	    ARCHIVE_STATE_NEW, "archive_read_support_format_uc2");
 
-	/* TODO: __archive_read_register_format expects internal libarchive
-	 * pointers.  Until this file is merged into libarchive's source
-	 * tree, replace this call with the equivalent registration via
-	 * libarchive's public API where possible, or document the patch
-	 * that needs to be applied to libarchive's archive_read.c.
-	 *
-	 * Reference signature (libarchive internal):
-	 *   __archive_read_register_format(a, state, name, bid, options,
-	 *                                  read_header, read_data,
-	 *                                  read_data_skip, NULL, cleanup,
-	 *                                  NULL, NULL);
-	 */
-	(void)a;
-	(void)uc2_la_bid;
-	(void)uc2_la_read_header;
-	(void)uc2_la_read_data;
-	(void)uc2_la_read_data_skip;
-	(void)uc2_la_cleanup;
+	r = __archive_read_register_format(a,
+	    NULL,
+	    "uc2",
+	    uc2_la_bid,
+	    NULL,
+	    uc2_la_read_header,
+	    uc2_la_read_data,
+	    uc2_la_read_data_skip,
+	    NULL,
+	    uc2_la_cleanup,
+	    NULL,
+	    NULL);
 
-	free(state);
-	archive_set_error(_a, -1,
-	    "UC2 read-format plugin: skeleton only, "
-	    "see contrib/libarchive/README.md");
-	return ARCHIVE_WARN;
+	return (r);
 }
 
+/* Bid: read the first 4 bytes and look for the UC2 magic
+ * (0x55 0x43 0x32 0x1A == 'U' 'C' '2' SUB).  Return 64 on a strong
+ * match; libarchive uses the highest bid to pick the format. */
 static int
 uc2_la_bid(struct archive_read *a, int best_bid)
 {
+	const unsigned char *p;
+
 	(void)best_bid;
 
-	const void *h;
-	/* TODO: replace with __archive_read_ahead(a, 4, NULL).
-	 * Read the first four bytes; UC2 magic is 0x55 0x43 0x32 0x1A
-	 * ('U' 'C' '2' 0x1A), little-endian uint32 = 0x1A324355. */
-	(void)a;
-	h = NULL;
-	if (h == NULL)
-		return 0;
+	p = __archive_read_ahead(a, 4, NULL);
+	if (p == NULL)
+		return (-1);
 
-	const uint8_t *bytes = h;
-	if (bytes[0] == 0x55 && bytes[1] == 0x43 &&
-	    bytes[2] == 0x32 && bytes[3] == 0x1A)
-		return 64;
-	return 0;
+	if (p[0] == 0x55 && p[1] == 0x43 && p[2] == 0x32 && p[3] == 0x1A)
+		return (64);
+	return (0);
 }
 
 static int
 uc2_la_read_header(struct archive_read *a, struct archive_entry *entry)
 {
-	/* TODO:
-	 *   - On first call, instantiate uc2_io callbacks bound to libarchive's
-	 *     filter stack (read=archive_read_ahead+seek, alloc=malloc,
-	 *     free=free, warn=archive_set_error).
-	 *   - Call uc2_open(); cache the handle in state.
-	 *   - Iterate uc2_read_cdir(); skip directory entries that should
-	 *     be reported as ARCHIVE_ENTRY_FILETYPE_DIR; map file entries
-	 *     to archive_entry_set_pathname / size / mtime / mode.
-	 *   - Walk through tagged entries with uc2_get_tag for long names
-	 *     and extended attributes.
-	 *   - Return ARCHIVE_OK / ARCHIVE_EOF.
-	 */
-	(void)a;
 	(void)entry;
-	return ARCHIVE_EOF;
+
+	a->archive.archive_format = ARCHIVE_FORMAT_UC2;
+	a->archive.archive_format_name = "UC2";
+
+	/* Milestone 2: open libuc2 handle, iterate central directory,
+	 * map entries to archive_entry_set_*.  For now report empty so
+	 * 'bsdtar -tf <archive>.uc2' returns gracefully without error. */
+	return (ARCHIVE_EOF);
 }
 
 static int
 uc2_la_read_data(struct archive_read *a,
                  const void **buff, size_t *size, int64_t *offset)
 {
-	/* TODO:
-	 *   - Convert libuc2's push-style uc2_extract callback into the
-	 *     pull-style API libarchive expects.  Simplest: buffer the
-	 *     whole entry once and yield slices on subsequent calls.
-	 *     A streaming version uses a coroutine or a small ring buffer.
-	 *   - Honour ARCHIVE_OK -> bytes returned, ARCHIVE_EOF -> entry done,
-	 *     ARCHIVE_FATAL on libuc2 errors (translate via uc2_message()).
-	 */
 	(void)a;
 	*buff = NULL;
 	*size = 0;
 	*offset = 0;
-	return ARCHIVE_EOF;
+	return (ARCHIVE_EOF);
 }
 
 static int
 uc2_la_read_data_skip(struct archive_read *a)
 {
-	/* TODO:
-	 *   - libuc2 cannot skip decompression cleanly because of
-	 *     master-block dependencies.  Decompress the entry but
-	 *     discard the bytes.  Equivalent to looping read_data
-	 *     until ARCHIVE_EOF and ignoring the buffers.
-	 */
 	(void)a;
-	return ARCHIVE_OK;
+	return (ARCHIVE_OK);
 }
 
 static int
 uc2_la_cleanup(struct archive_read *a)
 {
-	/* TODO:
-	 *   - uc2_close(state->handle);
-	 *   - free state.
-	 */
 	(void)a;
-	return ARCHIVE_OK;
+	return (ARCHIVE_OK);
 }

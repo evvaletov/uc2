@@ -7,15 +7,23 @@ UC2 archives transparently extractable by every libarchive-using tool
 
 ## Status
 
-- `archive_read_support_format_uc2.c` -- skeleton with the five
-  required callbacks (bid, read_header, read_data, read_data_skip,
-  cleanup).  Implementation is annotated with `// TODO` markers at
-  the points where libuc2 calls are wired in.
-- `CMakeLists.txt` -- gated build target.  Only configures if
-  `find_package(LibArchive)` succeeds; produces a static archive that
-  exposes `archive_read_support_format_uc2`.
-- Full implementation is tracked separately in git-bug; the skeleton
-  here is the starting point.
+- **Milestone 1 shipped.**  `archive_read_support_format_uc2.c`
+  implements `bid()` against the real libarchive private API
+  (`__archive_read_ahead` for the magic check,
+  `__archive_read_register_format` for self-registration).  Library
+  builds cleanly against libarchive 3.7.7 source; the resulting
+  `libuc2_libarchive.a` exports `archive_read_support_format_uc2`
+  with the expected three undefined references back into libarchive.
+- `read_header`, `read_data`, `read_data_skip`, and `cleanup` are
+  graceful stubs that report end-of-archive.  Bidder claims the
+  format on magic match (score 64) but yields zero entries; wiring
+  to `libuc2`'s `uc2_open` / `uc2_read_cdir` / `uc2_extract` is
+  milestone 2.
+- `CMakeLists.txt` activates with `-DUC2_BUILD_LIBARCHIVE_PLUGIN=ON
+  -DLIBARCHIVE_SOURCE_DIR=<libarchive-checkout>`.  The pin against a
+  source tree (rather than `find_package(LibArchive)`) is required
+  because the read-format API is internal -- the public `-devel`
+  package ships only `archive.h` and `archive_entry.h`.
 
 ## Why an out-of-tree skeleton?
 
