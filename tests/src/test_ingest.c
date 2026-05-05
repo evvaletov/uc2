@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <assert.h>
 #ifdef _MSC_VER
 #include <process.h>
@@ -111,31 +112,87 @@ static void test_roundtrip_multichunk(void)
 	rmrf(tmp_archive);
 }
 
-static void test_dedup_idempotent(void)
+static void test_intra_call_dedup(void)
 {
 	rmrf(tmp_archive);
-	/* Repeated short pattern -> stable CDC boundaries -> high dedup. */
-	const size_t N = 200000;
+	/* Concatenate the same random buffer twice -- CDC produces the
+	 * same chunk hashes for both halves, so half the chunks should
+	 * dedup within a single ingest call. */
+	const size_t HALF = 200000;
+	const size_t N = 2 * HALF;
 	uint8_t *data = malloc(N);
-	const char *pattern = "the quick brown fox jumps over the lazy dog\n";
-	size_t plen = strlen(pattern);
-	for (size_t i = 0; i < N; i++) data[i] = (uint8_t)pattern[i % plen];
+	fill_random(data, HALF, 0xCAFEBABE);
+	memcpy(data + HALF, data, HALF);
 
-	struct uc2_ingest_stats st1, st2;
-	int rc = uc2_ingest_write(tmp_archive, data, N, 0, &st1);
+	struct uc2_ingest_stats st;
+	int rc = uc2_ingest_write(tmp_archive, data, N, 0, &st);
 	assert(rc == 0);
 	(void)rc;
-	assert(st1.chunks_new == st1.chunks_total);
-	assert(st1.chunks_dedup == 0);
+	assert(st.chunks_total > 1);
+	assert(st.chunks_dedup > 0);  /* at least some chunks repeat */
+	assert(st.bytes_saved > 0);
+	assert(st.chunks_new + st.chunks_dedup == st.chunks_total);
 
-	rc = uc2_ingest_write(tmp_archive, data, N, 0, &st2);
+	/* Round-trip must still reconstruct the full N bytes -- dedup is
+	 * structurally transparent. */
+	char restored[320];
+	snprintf(restored, sizeof restored, "%s.out", tmp_archive);
+	FILE *out = fopen(restored, "wb");
+	assert(out);
+	rc = uc2_ingest_restore(tmp_archive, out);
+	fclose(out);
 	assert(rc == 0);
-	assert(st2.chunks_total == st1.chunks_total);
-	assert(st2.chunks_new == 0);
-	assert(st2.chunks_dedup == st2.chunks_total);
-	assert(st2.bytes_saved == (uint64_t)N);
 
+	size_t got_len;
+	uint8_t *got = slurp(restored, &got_len);
+	assert(got_len == N);
+	assert(memcmp(got, data, N) == 0);
+
+	free(got);
 	free(data);
+	unlink(restored);
+	rmrf(tmp_archive);
+}
+
+static void test_v2_self_contained(void)
+{
+	rmrf(tmp_archive);
+	/* A v2 archive must restore correctly even if the legacy sidecar
+	 * blockstore directory is absent.  The chunk pool lives inside
+	 * the archive file itself. */
+	const size_t N = 50000;
+	uint8_t *data = malloc(N);
+	fill_random(data, N, 0xDEADBEEF);
+
+	struct uc2_ingest_stats st;
+	int rc = uc2_ingest_write(tmp_archive, data, N, 0, &st);
+	assert(rc == 0);
+	(void)rc;
+
+	/* Verify that the .blocks/ sidecar was NOT created for v2. */
+	char blocks_path[320];
+	snprintf(blocks_path, sizeof blocks_path, "%s.blocks", tmp_archive);
+	struct stat sb;
+	int stat_rc = stat(blocks_path, &sb);
+	assert(stat_rc != 0);  /* blockstore dir must not exist for v2 */
+	(void)stat_rc;
+
+	char restored[320];
+	snprintf(restored, sizeof restored, "%s.out", tmp_archive);
+	FILE *out = fopen(restored, "wb");
+	assert(out);
+	rc = uc2_ingest_restore(tmp_archive, out);
+	fclose(out);
+	assert(rc == 0);
+
+	size_t got_len;
+	uint8_t *got = slurp(restored, &got_len);
+	assert(got_len == N);
+	assert(memcmp(got, data, N) == 0);
+
+	free(got);
+	free(data);
+	unlink(restored);
 	rmrf(tmp_archive);
 }
 
@@ -194,7 +251,8 @@ int main(void)
 	printf("Running uc2_ingest tests...\n");
 	TEST(test_roundtrip_small);
 	TEST(test_roundtrip_multichunk);
-	TEST(test_dedup_idempotent);
+	TEST(test_intra_call_dedup);
+	TEST(test_v2_self_contained);
 	TEST(test_empty_stream);
 	TEST(test_bad_magic_rejected);
 	printf("Passed: %d/%d\n", tests_passed, tests_run);

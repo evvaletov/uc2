@@ -225,12 +225,15 @@ cp -a /snapshot/ | uc2 --ingest backup.uc2    # incremental dedup
       `<archive>.blocks/` -> chunk-hash manifest.  `uc2 --ingest-restore`
       reverses the round-trip.  Tested: small/multichunk round-trip,
       idempotent dedup on repeat ingest, empty stream, bad-magic
-      rejection.  Not yet integrated with the master-block archive
-      layout (sidecar blockstore is a separate format with magic
-      `UC2INGST`); tar entry boundaries are not preserved.  Follow-up
-      tracked separately.
-- [ ] `uc2 --ingest` v2: integrate with master-block archive layout
-      so output is a real UC2 v3 archive, not a sidecar manifest
+      rejection.  Now legacy: writer defaults to v2.
+- [x] `uc2 --ingest` v2 (default): self-contained archive with the
+      chunk pool embedded inside the archive file itself.  No sidecar
+      directory.  Manifest entries carry absolute file offsets;
+      duplicate hashes share an offset (intra-call dedup).
+      Cross-archive dedup is not preserved -- the trade-off is the
+      single-file UX.  v1 archives still readable for restore.
+- [ ] `uc2 --ingest` v3: integrate with master-block archive layout
+      so output is a real UC2 v3 archive consumable by uc2 -x / -l
 - [ ] Tar-entry preservation: parse tar boundaries inside --ingest
       so individual files are recoverable as archive entries
 - [ ] Incremental snapshots: `uc2 snapshot /path repo.uc2`

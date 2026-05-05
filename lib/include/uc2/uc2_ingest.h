@@ -3,28 +3,45 @@
 /* Streaming dedup ingest for UC2.
  *
  * uc2 --ingest <archive> reads a byte stream (typically stdin from
- * tar / rsync / cp -a), splits it via CDC, deduplicates chunks against
- * a sidecar block store, and writes a manifest file that lists chunk
- * hashes in order.  uc2 --ingest-restore <archive> reverses this.
+ * tar / rsync / cp -a), splits it via CDC, deduplicates chunks, and
+ * writes a self-contained archive file.  uc2 --ingest-restore <archive>
+ * reverses this.
  *
- * Manifest layout (little-endian):
- *     +0   8B   magic "UC2INGST"
- *     +8   1B   version (1)
- *     +9   1B   cdc_bits
- *    +10   2B   reserved
- *    +12   4B   chunk_count
- *    +16   ...  chunk_count * 12B:  8B hash, 4B length
+ * Two on-disk formats are supported:
  *
- * Block store layout (per uc2_blockstore.h):
- *     <archive>.blocks/<aa>/<hash16>
+ *   v1 (legacy): manifest in <archive>, chunk data in a sidecar
+ *   blockstore directory at <archive>.blocks/.  Cross-archive dedup
+ *   works through shared blockstore directories.  Read-only now;
+ *   writer defaults to v2.
  *
- * Limitations of v1:
+ *   v2 (default): archive is self-contained -- chunks are stored in
+ *   an embedded pool inside the archive itself.  No sidecar
+ *   directory.  Each manifest entry carries its chunk's absolute
+ *   file offset; deduplicated chunks share a single offset.
+ *
+ * Manifest layouts (all little-endian):
+ *
+ *   v1: +0   8B   magic "UC2INGST"
+ *       +8   1B   version (1)
+ *       +9   1B   cdc_bits
+ *      +10   2B   reserved
+ *      +12   4B   chunk_count
+ *      +16   ...  chunk_count * 12B:  8B hash, 4B length
+ *
+ *   v2: +0   8B   magic "UC2INGST"
+ *       +8   1B   version (2)
+ *       +9   1B   cdc_bits
+ *      +10   2B   reserved
+ *      +12   4B   chunk_count
+ *      +16   ...  chunk_count * 16B:  8B hash, 4B length, 4B offset
+ *      ...  chunk pool: unique chunks back-to-back at recorded offsets
+ *
+ * Limitations:
  *   - The whole stream is buffered in memory before chunking.  Suits
  *     CDC's locality-of-boundary requirement and is fine for streams
  *     up to a few GB.  True streaming is a future revision.
- *   - The manifest file is not a UC2 v3 archive; it is a separate
- *     format with its own magic.  Unifying with the master-block
- *     archive layout is a follow-up.
+ *   - The format is not yet a UC2 v3 archive consumable by uc2 -x /
+ *     -l; integrating with the master-block layout is a follow-up.
  */
 
 #ifndef UC2_INGEST_H
