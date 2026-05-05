@@ -46,8 +46,26 @@ plus `cwsdpmi.exe` (shipped with DJGPP at
 - Library (`libuc2.a`) builds without changes.
 - CLI uses the DOS compat layer in `cli/src/compat/compat_dos.c` for
   the BSD `err.h` and POSIX `fnmatch` shims.
-- Not yet run under DOSBox-X end-to-end; smoke-test follow-up tracked
-  separately.
+- Runtime smoke test verified: `uc2 -h` and `uc2 -l <archive>` both
+  succeed under DOSBox-X via `tests/scripts/dos_smoke.sh`.
+
+## Smoke test
+
+```sh
+# 1. Get CWSDPMI extender:
+curl -fsLO http://www.delorie.com/pub/djgpp/current/v2misc/csdpmi7b.zip
+unzip csdpmi7b.zip -d /tmp/cwsdpmi
+
+# 2. Run the smoke test (needs flatpak install com.dosbox_x.DOSBox-X):
+tests/scripts/dos_smoke.sh \
+    build-djgpp/cli/uc2.exe \
+    /tmp/cwsdpmi/bin/CWSDPMI.EXE \
+    tests/archives/basic.uc2
+```
+
+Exits 0 on success.  Skips (with a "SKIP: ..." line) if any of:
+the DJGPP build was not run, CWSDPMI.EXE is missing, or DOSBox-X is
+not installed.
 
 ## Notes
 

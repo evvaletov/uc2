@@ -110,7 +110,10 @@ No mainstream archiver offers post-quantum encryption.
       `andrewwutw/build-djgpp`.  Output is a 32-bit DPMI DOS executable
       (MZ + COFF + go32 stub).  See `cmake/README-djgpp.md` for the
       one-time setup (CPATH unset is required on hosts that export it).
-- [ ] Test on real vintage hardware and DOSBox/FreeDOS
+- [x] DOSBox-X smoke test: `tests/scripts/dos_smoke.sh` runs `uc2 -h`
+      and `uc2 -l <archive>` under DOSBox-X via the flatpak; verifies
+      the cross-compiled binary actually loads under a real DPMI host.
+      Real vintage hardware test still pending.
 - [ ] Method 80 (Turbo) support
 - [ ] Multi-volume archive spanning across physical media (floppies)
 - [ ] Self-extracting archives per platform (DOS COM/EXE, Linux ELF, Windows PE)
