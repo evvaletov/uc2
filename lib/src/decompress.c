@@ -312,6 +312,7 @@ struct bits {
 	u32 bits;
 	unsigned have_bits;
 	unsigned head, tail;
+	int err;
 	struct reader *rd;
 	u8 buffer[4 << 10];
 };
@@ -322,6 +323,7 @@ static int bits_init(struct bits *bi, struct reader *rd)
 	bi->tail = 0;
 	bi->bits = 0;
 	bi->have_bits = 0;
+	bi->err = 0;
 	bi->rd = rd;
 	return 0;
 }
@@ -335,16 +337,23 @@ static void bits_skip(struct bits *bi, unsigned n)
 static int bits_feed(struct bits *bi, unsigned n)
 {
 	assert(n <= 16);
+	if (bi->err)
+		return bi->err;
 	if (bi->have_bits < n) {
-		unsigned have = bi->tail - bi->head;
-		if (have <= 1) {
-			if (have == 1)
-				bi->buffer[0] = bi->buffer[bi->tail - 1];
+		/* The stream is consumed two bytes at a time; keep reading until
+		   at least a full pair is buffered (a reader may legally return
+		   short counts, including a single byte). */
+		while (bi->tail - bi->head < 2) {
+			unsigned have = bi->tail - bi->head;
+			if (have && bi->head)
+				bi->buffer[0] = bi->buffer[bi->head];
+			bi->head = 0;
 			bi->tail = have;
 			int r = bi->rd->read(bi->rd->context, bi->buffer + have, sizeof bi->buffer - have);
-			if (r <= 0)
-				return r ? r : UC2_Truncated;
-			bi->head = 0;
+			if (r <= 0) {
+				bi->err = r ? r : UC2_Truncated;
+				return bi->err;
+			}
 			bi->tail += r;
 		}
 		bi->bits = bi->bits << 16 | bi->buffer[bi->head] | bi->buffer[bi->head + 1] << 8;
@@ -1036,6 +1045,22 @@ ultra:
 	return ret;
 }
 
+/* Flush the unwritten window region [*wpos, tail) in ring order. */
+static int rans_flush(struct writer *wr, struct csum *cs, const u8 *buf,
+                      u16 *wpos, u16 tail)
+{
+	while (*wpos != tail) {
+		unsigned n = (u16)(tail - *wpos);
+		unsigned lin = 0x10000u - *wpos;
+		if (n > lin) n = lin;
+		csum_update(cs, buf + *wpos, n);
+		if (wr->write(wr->context, buf + *wpos, n) < 0)
+			return UC2_UserFault;
+		*wpos = (u16)(*wpos + n);
+	}
+	return 0;
+}
+
 /* rANS decompressor (method 10) */
 static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
                              struct reader *rd, struct writer *wr,
@@ -1050,6 +1075,7 @@ static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
 	ret = use_master(uc2, buf, master_id);
 	if (ret < 0) { u_free(uc2, buf); return ret; }
 	u16 tail = (u16)ret;
+	u16 wpos = tail;  /* window position of the next unwritten output byte */
 	struct csum cs;
 	csum_init(&cs);
 	unsigned remaining = limit;
@@ -1058,13 +1084,17 @@ static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
 	ret = bits_init(&bi, rd);
 	if (ret < 0) { u_free(uc2, buf); return ret; }
 
-	while (bits_get(&bi, 1)) {  /* block-present */
-		unsigned nsyms = (bits_get(&bi, 8) << 8) | bits_get(&bi, 8);
-		unsigned rlen = (bits_get(&bi, 8) << 8) | bits_get(&bi, 8);
+	while (bits_get(&bi, 1) == 1) {  /* block-present */
+		unsigned nsyms = (unsigned)(bits_get(&bi, 8) & 0xff) << 8;
+		nsyms |= (unsigned)(bits_get(&bi, 8) & 0xff);
+		unsigned rlen = (unsigned)(bits_get(&bi, 8) & 0xff) << 8;
+		rlen |= (unsigned)(bits_get(&bi, 8) & 0xff);
+		if (bi.err) break;
 
 		u32 freqs[344];
 		for (int i = 0; i < 344; i++)
-			freqs[i] = bits_get(&bi, 12);
+			freqs[i] = (u32)(bits_get(&bi, 12) & 0xfff);
+		if (bi.err) break;
 
 		struct uc2_rans_table tab;
 		uc2_rans_build_table(&tab, freqs, 344);
@@ -1073,50 +1103,68 @@ static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
 		if (!rdata) { bits_destroy(&bi); u_free(uc2, buf); return UC2_UserFault; }
 		for (unsigned i = 0; i < rlen; i++)
 			rdata[i] = (u8)bits_get(&bi, 8);
+		if (bi.err) { u_free(uc2, rdata); break; }
 
 		struct uc2_rans_dec dec;
 		uc2_rans_dec_init(&dec, &tab, rdata, rlen);
 
-		for (unsigned s = 0; s < nsyms && remaining > 0; s++) {
+		/* Decode all nsyms symbols, including the trailing EOB pair and
+		   its extra bits: stopping at remaining == 0 would leave the bit
+		   cursor mid-block and desynchronize the next block-present bit. */
+		for (unsigned s = 0; s < nsyms; s++) {
 			int sym = uc2_rans_decode(&dec);
 			if (sym < 256) {
-				buf[tail++] = (u8)sym;
-				remaining--;
+				if (remaining) {
+					buf[tail++] = (u8)sym;
+					remaining--;
+					if ((u16)(tail - wpos) >= 0x8000) {
+						ret = rans_flush(wr, &cs, buf, &wpos, tail);
+						if (ret < 0) { bi.err = ret; break; }
+					}
+				}
 			} else if (sym < 316) {
 				int ds = sym - 256;
 				unsigned dist = (ds < 15) ? ds + 1 :
-					(ds < 30) ? (ds-15+1)*16 + bits_get(&bi, 4) :
-					(ds < 45) ? (ds-30+1)*256 + bits_get(&bi, 8) :
-					            (ds-45+1)*4096 + bits_get(&bi, 12);
+					(ds < 30) ? (ds-15+1)*16 + (bits_get(&bi, 4) & 0xf) :
+					(ds < 45) ? (ds-30+1)*256 + (bits_get(&bi, 8) & 0xff) :
+					            (ds-45+1)*4096 + (bits_get(&bi, 12) & 0xfff);
+				if (bi.err) break;
 				if (dist == EOB) { s++; if (s < nsyms) uc2_rans_decode(&dec); break; }
 				s++;
 				if (s >= nsyms) break;
 				int ls = uc2_rans_decode(&dec) - 316;
 				if (ls < 0) ls = 0;
 				unsigned length = (ls < 8) ? ls + 3 :
-					(ls < 16) ? (ls-8)*2+11+bits_get(&bi,1) :
-					(ls < 24) ? (ls-16)*8+27+bits_get(&bi,3) :
-					(ls == 24) ? 91+bits_get(&bi,6) :
-					(ls == 25) ? 155+bits_get(&bi,9) :
-					(ls == 26) ? 667+bits_get(&bi,11) :
-					             2715+bits_get(&bi,15);
+					(ls < 16) ? (ls-8)*2+11+(bits_get(&bi,1) & 0x1) :
+					(ls < 24) ? (ls-16)*8+27+(bits_get(&bi,3) & 0x7) :
+					(ls == 24) ? 91+(bits_get(&bi,6) & 0x3f) :
+					(ls == 25) ? 155+(bits_get(&bi,9) & 0x1ff) :
+					(ls == 26) ? 667+(bits_get(&bi,11) & 0x7ff) :
+					             2715+(bits_get(&bi,15) & 0x7fff);
+				if (bi.err) break;
 				for (unsigned j = 0; j < length && remaining > 0; j++) {
 					buf[tail] = buf[(u16)(tail - dist)];
 					tail++; remaining--;
+					if ((u16)(tail - wpos) >= 0x8000) {
+						ret = rans_flush(wr, &cs, buf, &wpos, tail);
+						if (ret < 0) { bi.err = ret; break; }
+					}
 				}
+				if (bi.err) break;
 			}
 		}
 		u_free(uc2, rdata);
+		if (bi.err) break;
+	}
+	if (bi.err) {
+		bits_destroy(&bi);
+		u_free(uc2, buf);
+		return bi.err;
 	}
 
-	/* Flush output */
-	u16 head = (u16)(tail - (limit - remaining));
-	if (limit > remaining) {
-		unsigned n = limit - remaining;
-		csum_update(&cs, buf + head, n);
-		ret = wr->write(wr->context, buf + head, n);
-		if (ret < 0) { bits_destroy(&bi); u_free(uc2, buf); return UC2_UserFault; }
-	}
+	/* Flush remaining output */
+	ret = rans_flush(wr, &cs, buf, &wpos, tail);
+	if (ret < 0) { bits_destroy(&bi); u_free(uc2, buf); return ret; }
 
 	bits_destroy(&bi);
 	u_free(uc2, buf);

@@ -37,6 +37,14 @@ add_test(NAME cli_master
         -P ${CMAKE_CURRENT_SOURCE_DIR}/test_cli_master.cmake
 )
 
+# CLI >64KB round-trip test (sliding-window edge regression, git-bug d747658)
+add_test(NAME cli_bigfile
+    COMMAND ${CMAKE_COMMAND}
+        -DUC2_CLI=$<TARGET_FILE:uc2-cli>
+        -DTEST_DIR=${CMAKE_CURRENT_BINARY_DIR}/cli_bigfile_test
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/test_cli_bigfile.cmake
+)
+
 # CLI directory archival round-trip test
 add_test(NAME cli_dirs
     COMMAND ${CMAKE_COMMAND}

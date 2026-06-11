@@ -1366,7 +1366,11 @@ static int create_archive(int nargs, char **args)
 		w16(p, masters[i].size); p += 2;
 		w16(p, masters[i].csum); p += 2;
 		w32(p, masters[i].csize); p += 4;
-		w16(p, 1); p += 2;
+		/* Masters are compressed with uc2_compress_ex(opt.level), so the
+		   recorded method must match: 10 (rANS) at levels 6-9.  Levels <= 5
+		   keep method 1 for compatibility with the original UC2 Pro reader
+		   (methods 1-9 share the Huffman bitstream). */
+		w16(p, opt.level >= 6 ? 10 : 1); p += 2;
 		w32(p, 0); p += 4; /* masterPrefix = SuperMaster */
 		w32(p, 1); p += 4;
 		w32(p, masters[i].offset); p += 4;

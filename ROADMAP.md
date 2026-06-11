@@ -282,3 +282,15 @@ Bobrowski already shipped prototypes; update for UC2 v3.
 - Phase 3+: dedup correctness, cross-archive block sharing
 - Phase 5: encryption round-trip, key derivation vectors
 - Phase 9: ZK proof soundness and completeness
+
+## Maintenance Log
+
+- 2026-06-11: Fixed the rANS (L6-9) extraction crash and >64KB silent
+  corruption (git-bug d747658, closed): master COMPRESS records now
+  carry the real method (10 at L6-9); the rANS decoder consumes the
+  EOB pair instead of desyncing the bit cursor; bits_feed handles
+  short reads without overrunning its buffer; compressor chunk loads
+  and rANS output flushing respect the 64KB circular-window edge.
+  Found debugging extraction on sdf.org (NetBSD 10) but reproducible
+  everywhere. New regression test: cli_bigfile. Follow-up filed:
+  bf73896 (ftell offsets >4GB truncate silently; P2).

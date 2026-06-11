@@ -18,8 +18,8 @@ int uc2_bcj_apply(uint8_t *data, size_t len)
 	if (len < 5) return 0;
 	for (size_t i = 0; i + 4 < len; i++) {
 		if (data[i] == 0xE8 || data[i] == 0xE9) {
-			int32_t rel = (int32_t)(data[i+1] | (data[i+2] << 8) |
-			              (data[i+3] << 16) | (data[i+4] << 24));
+			int32_t rel = (int32_t)((uint32_t)data[i+1] | ((uint32_t)data[i+2] << 8) |
+			              ((uint32_t)data[i+3] << 16) | ((uint32_t)data[i+4] << 24));
 			int32_t abs_addr = rel + (int32_t)(i + 5);
 			data[i+1] = (uint8_t)(abs_addr);
 			data[i+2] = (uint8_t)(abs_addr >> 8);
@@ -36,8 +36,8 @@ int uc2_bcj_revert(uint8_t *data, size_t len)
 	if (len < 5) return 0;
 	for (size_t i = 0; i + 4 < len; i++) {
 		if (data[i] == 0xE8 || data[i] == 0xE9) {
-			int32_t abs_addr = (int32_t)(data[i+1] | (data[i+2] << 8) |
-			                   (data[i+3] << 16) | (data[i+4] << 24));
+			int32_t abs_addr = (int32_t)((uint32_t)data[i+1] | ((uint32_t)data[i+2] << 8) |
+			                   ((uint32_t)data[i+3] << 16) | ((uint32_t)data[i+4] << 24));
 			int32_t rel = abs_addr - (int32_t)(i + 5);
 			data[i+1] = (uint8_t)(rel);
 			data[i+2] = (uint8_t)(rel >> 8);

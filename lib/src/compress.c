@@ -1002,9 +1002,13 @@ int uc2_compress_ex(
 	c->l_freq[0]++;  /* length = 3 for EOB marker */
 
 	while (remaining > 0) {
-		/* Load a chunk into the circular buffer */
+		/* Load a chunk into the circular buffer.  Cap the read at the
+		   wrap point: the buffer is circular through u16 indexing, but
+		   the read itself is linear and must not run past the edge. */
 		unsigned chunk = remaining;
 		if (chunk > UC2_READ_SIZE) chunk = UC2_READ_SIZE;
+		unsigned edge = UC2_BUF_SIZE - load_pos;
+		if (chunk > edge) chunk = edge;
 
 		int nread = read(read_ctx, c->data + load_pos, chunk);
 		if (nread <= 0) break;

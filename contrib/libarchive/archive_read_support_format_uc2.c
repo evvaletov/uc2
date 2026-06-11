@@ -139,7 +139,8 @@ dos_to_unix_time(unsigned dos_time)
 	tm.tm_year = ((dos_time >> 25) & 0x7f) + 80;
 #if defined(_WIN32)
 	return _mkgmtime(&tm);
-#elif defined(__GLIBC__) || defined(__APPLE__) || defined(__FreeBSD__)
+#elif defined(__GLIBC__) || defined(__APPLE__) || defined(__FreeBSD__) || \
+      defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
 	return timegm(&tm);
 #else
 	return mktime(&tm);
