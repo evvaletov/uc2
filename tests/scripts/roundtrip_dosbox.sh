@@ -1,11 +1,11 @@
 #!/bin/bash
 # Cross-tool round-trip test: original UC2 Pro -> UC2 v3 via DOSBox-X
 #
-# Tests that archives created by the original 1992 UC2 Pro can be correctly
-# extracted by UC2 v3 (Direction 2).  Single-file UC2 v3 archives are also
-# readable by the original, but multi-file archives still hang — the exact
-# cause is under investigation (treegen + cdir encoding match the original
-# for single-file cdirs but diverge for multi-file cdirs).
+# Tests both directions: UC2 v3 creates a multi-file archive that the
+# original extracts (Direction 1), and the original creates an archive
+# that UC2 v3 extracts (Direction 2).  Multi-file Direction 1 has worked
+# since the custom-Huffman-tree fix; an earlier version of this comment
+# documented a hang that no longer reproduces.
 #
 # Usage: roundtrip_dosbox.sh <uc2-cli> <uc2pro.exe> <corpus-dir>
 

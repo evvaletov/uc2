@@ -1,0 +1,183 @@
+.\" SPDX-License-Identifier: GPL-3.0-or-later
+.Dd June 11, 2026
+.Dt UC2 1
+.Os
+.Sh NAME
+.Nm uc2
+.Nd UltraCompressor II archiver
+.Sh SYNOPSIS
+.Nm
+.Op Fl afpqDT
+.Op Fl C Ar directory
+.Op Fl d Ar destination
+.Ar archive.uc2
+.Op Ar file ...
+.Nm
+.Fl l
+.Op Fl aqT
+.Ar archive.uc2
+.Op Ar file ...
+.Nm
+.Fl t
+.Op Fl aq
+.Ar archive.uc2
+.Op Ar file ...
+.Nm
+.Fl w
+.Op Fl q
+.Op Fl L Ar level
+.Ar archive.uc2
+.Ar file ...
+.Nm
+.Fl B
+.Ar file ...
+.Nm
+.Fl -ots-attach Ar proof.ots
+.Op Fl f
+.Ar archive.uc2
+.Nm
+.Fl -ots-extract
+.Ar archive.uc2 out.ots
+.Nm
+.Fl -ots-info
+.Ar archive.uc2
+.Nm
+.Fl -ingest Ar archive
+.Nm
+.Fl -ingest-restore Ar archive
+.Sh DESCRIPTION
+.Nm
+is a cross-platform revival of UltraCompressor II, the MS-DOS archiver
+published by Nico de Vries (AIP-NL) between 1992 and 1996.
+It reads and writes the original UC2 archive format byte-compatibly:
+archives created by the original
+.Pa uc2pro.exe
+extract correctly, and archives created at compression levels 2 through 5
+can be read by the original DOS program.
+.Pp
+Without a mode option,
+.Nm
+extracts the named archive into the current directory (or into the
+directory given with
+.Fl d ) .
+If
+.Ar file
+arguments are given, only matching entries are processed; shell-style
+wildcards are accepted.
+.Pp
+Compression levels 2 through 5 use the original LZ77 and Huffman
+bitstream.
+Levels 6 through 9 replace the entropy stage with rANS coding for
+better ratios; such archives require
+.Nm
+version 3 and cannot be read by the original DOS program.
+Files with similar content are grouped and compressed against shared
+master blocks, the deduplication scheme UC2 introduced in 1992.
+.Sh OPTIONS
+.Bl -tag -width Ds
+.It Fl a
+Process all stored versions of each file, not only the most recent.
+.It Fl B
+Benchmark every compression method on the given input files and print
+a comparison table; no archive is written.
+.It Fl C Ar directory
+Change to
+.Ar directory
+before reading or writing any files.
+Applies in every mode.
+.It Fl c , Fl p
+Write extracted data to standard output instead of creating files.
+.It Fl D
+Do not restore modification times and permissions of directories.
+Given twice, file metadata is not restored either.
+.It Fl d Ar destination
+Extract into
+.Ar destination
+instead of the current directory.
+.It Fl f
+Overwrite existing files when extracting, and allow
+.Fl -ots-attach
+to replace an existing proof.
+.It Fl h
+Print version, usage, and option summary.
+.It Fl L Ar level
+Select the compression level for
+.Fl w :
+2 (Fast), 3 (Normal), 4 (Tight, the default), 5 (Ultra) for the
+backward-compatible Huffman methods, or 6 through 9 for rANS.
+.It Fl l
+List the archive contents.
+.It Fl q
+Quiet operation; suppress status messages.
+.It Fl T
+Separate listing columns with tabs instead of spaces.
+.It Fl t
+Test archive integrity without writing any files.
+.It Fl w
+Create (write) an archive from the given files and directories.
+.It Fl x
+Extract; this is the default mode.
+.El
+.Pp
+The long options operate on OpenTimestamps proofs and the streaming
+deduplication store:
+.Bl -tag -width Ds
+.It Fl -ots-attach Ar proof.ots
+Attach an OpenTimestamps proof to the archive after verifying that the
+proof commits to the archive contents.
+The proof is stored in a trailer that the original DOS program ignores.
+.It Fl -ots-extract
+Write the attached proof to the named output file, suitable for
+.Ql ots verify .
+.It Fl -ots-info
+Describe the attached proof.
+.It Fl -ingest Ar archive
+Read a data stream from standard input into a content-addressed
+deduplicating block store inside
+.Ar archive .
+.It Fl -ingest-restore Ar archive
+Write the ingested stream from
+.Ar archive
+to standard output.
+.El
+.Sh EXIT STATUS
+.Ex -std
+.Sh EXAMPLES
+Create an archive at the default level and list it:
+.Bd -literal -offset indent
+$ uc2 -w backup.uc2 project/ notes.txt
+$ uc2 -l backup.uc2
+.Ed
+.Pp
+Extract it elsewhere, overwriting existing files (the destination
+directory must exist):
+.Bd -literal -offset indent
+$ mkdir -p /tmp/restore
+$ uc2 -f -d /tmp/restore backup.uc2
+.Ed
+.Pp
+Create a smaller archive readable only by
+.Nm
+version 3, then verify it:
+.Bd -literal -offset indent
+$ uc2 -w -L 9 backup.uc2 project/
+$ uc2 -t backup.uc2
+.Ed
+.Sh HISTORY
+UltraCompressor II was written by Nico de Vries at AIP-NL and sold as
+shareware from 1992 to 1996.
+De Vries re-released the original source under the LGPL in 2015; Jan
+Bobrowski's libunuc2 (2020) built a portable decompressor from it.
+.Nm
+version 3 builds on that lineage as a full reimplementation in C99,
+maintained by Eremey Valetov.
+.Sh AUTHORS
+.An Nico de Vries
+(original UltraCompressor II),
+.An Jan Bobrowski
+(libunuc2),
+.An Eremey Valetov Aq Mt evaletov@protonmail.com
+(version 3).
+.Pp
+Source and issue tracker:
+.Lk https://github.com/evvaletov/uc2
