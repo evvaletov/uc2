@@ -4,11 +4,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <sys/stat.h>
 #ifdef _MSC_VER
 #include <process.h>
+#include <io.h>
+#include <direct.h>
 #define getpid _getpid
+#define rmdir _rmdir
 #else
 #include <unistd.h>
+#include <dirent.h>
 #endif
 #include <uc2/uc2_blockstore.h>
 #include <uc2/uc2_merkle.h>
@@ -18,6 +23,18 @@ static int tests_run = 0, tests_passed = 0;
 
 static char store_path[256];
 
+/* Temp-file base: %TEMP% on Windows, /tmp elsewhere. */
+static const char *tmpdir(void)
+{
+#ifdef _WIN32
+	const char *t = getenv("TEMP");
+	if (!t) t = getenv("TMP");
+	return t ? t : ".";
+#else
+	return "/tmp";
+#endif
+}
+
 static void fill_random(uint8_t *buf, size_t len, uint32_t seed)
 {
 	for (size_t i = 0; i < len; i++) {
@@ -26,12 +43,46 @@ static void fill_random(uint8_t *buf, size_t len, uint32_t seed)
 	}
 }
 
-/* Recursive rm -rf (simple, for test cleanup) */
-static void rmrf(const char *path)
+/* Portable recursive removal for the store's two-level layout. */
+static void rmtree(const char *path)
 {
-	char cmd[512];
-	snprintf(cmd, sizeof cmd, "rm -rf '%s'", path);
-	system(cmd);
+#ifdef _MSC_VER
+	char pattern[512];
+	struct _finddata_t fd;
+	snprintf(pattern, sizeof pattern, "%s/*", path);
+	intptr_t h = _findfirst(pattern, &fd);
+	if (h != -1) {
+		do {
+			if (strcmp(fd.name, ".") == 0 || strcmp(fd.name, "..") == 0)
+				continue;
+			char sub[512];
+			snprintf(sub, sizeof sub, "%s/%s", path, fd.name);
+			if (fd.attrib & _A_SUBDIR)
+				rmtree(sub);
+			else
+				remove(sub);
+		} while (_findnext(h, &fd) == 0);
+		_findclose(h);
+	}
+#else
+	DIR *d = opendir(path);
+	if (d) {
+		struct dirent *e;
+		while ((e = readdir(d))) {
+			if (strcmp(e->d_name, ".") == 0 || strcmp(e->d_name, "..") == 0)
+				continue;
+			char sub[512];
+			snprintf(sub, sizeof sub, "%s/%s", path, e->d_name);
+			struct stat st;
+			if (stat(sub, &st) == 0 && S_ISDIR(st.st_mode))
+				rmtree(sub);
+			else
+				remove(sub);
+		}
+		closedir(d);
+	}
+#endif
+	rmdir(path);
 }
 
 static void test_open_close(void)
@@ -180,24 +231,24 @@ static void test_has(void)
 
 int main(void)
 {
-	snprintf(store_path, sizeof store_path, "/tmp/uc2_blockstore_test_%d",
-	         (int)getpid());
+	snprintf(store_path, sizeof store_path, "%s/uc2_blockstore_test_%d",
+	         tmpdir(), (int)getpid());
 
 	printf("Block store tests:\n");
-	rmrf(store_path);  /* clean start */
+	rmtree(store_path);  /* clean start */
 
 	TEST(test_open_close);
-	rmrf(store_path);
+	rmtree(store_path);
 	TEST(test_ingest_single);
-	rmrf(store_path);
+	rmtree(store_path);
 	TEST(test_dedup_identical);
-	rmrf(store_path);
+	rmtree(store_path);
 	TEST(test_read_back);
-	rmrf(store_path);
+	rmtree(store_path);
 	TEST(test_cross_archive_dedup);
-	rmrf(store_path);
+	rmtree(store_path);
 	TEST(test_has);
-	rmrf(store_path);
+	rmtree(store_path);
 
 	printf("%d/%d tests passed\n", tests_passed, tests_run);
 	return tests_passed == tests_run ? 0 : 1;
