@@ -106,6 +106,18 @@ static void uc2_say(FILE *f, const char *fmt, ...)
 	va_end(ap);
 }
 
+/* Archive positions are 32-bit in the UC2 container; fail loudly
+   rather than wrap when an archive would cross 4 GiB. */
+static unsigned tell32(FILE *f)
+{
+	long pos = ftell(f);
+	if (pos < 0)
+		err(EXIT_FAILURE, "ftell");
+	if ((unsigned long)pos > 0xFFFFFFFFul)
+		errx(EXIT_FAILURE, "archive exceeds the 4 GiB UC2 format limit");
+	return (unsigned)pos;
+}
+
 static int my_read(void *ctx, unsigned pos, void *ptr, unsigned len)
 {
 	if (fseek(ctx, pos, SEEK_SET) < 0)
@@ -1289,7 +1301,7 @@ static int create_archive(int nargs, char **args)
 
 	/* Write master blocks (compressed with SuperMaster) */
 	for (int i = 0; i < nmasters; i++) {
-		masters[i].offset = (unsigned)ftell(out);
+		masters[i].offset = tell32(out);
 		struct mem_reader mr = {.data = masters[i].data, .pos = 0, .len = masters[i].size};
 		unsigned csize = 0;
 		unsigned short csum = 0;
@@ -1306,7 +1318,7 @@ static int create_archive(int nargs, char **args)
 
 	/* Phase 2: Compress each file */
 	for (int i = 0; i < nfiles; i++) {
-		recs[i].offset = (unsigned)ftell(out);
+		recs[i].offset = tell32(out);
 
 		FILE *inf = fopen(recs[i].path, "rb");
 		if (!inf)
@@ -1435,7 +1447,7 @@ static int create_archive(int nargs, char **args)
 	unsigned cdir_size = (unsigned)(p - raw_cdir);
 	unsigned short cdir_csum = fletcher_csum(raw_cdir, cdir_size);
 
-	unsigned cdir_offset = (unsigned)ftell(out);
+	unsigned cdir_offset = tell32(out);
 	unsigned char crec[10];
 	memset(crec, 0, 10);
 	fwrite(crec, 1, 10, out);
@@ -1449,7 +1461,7 @@ static int create_archive(int nargs, char **args)
 	if (ret < 0)
 		errx(EXIT_FAILURE, "cdir compression error %d", ret);
 
-	unsigned total = (unsigned)ftell(out);
+	unsigned total = tell32(out);
 
 	fseek(out, cdir_offset, SEEK_SET);
 	w32(crec + 0, 0);                 /* csize=0 matches original UC2 Pro */

@@ -193,6 +193,11 @@ int uc2_ingest_write(const char *archive_path,
 	/* Reserve manifest entry table; we'll backfill offsets after
 	 * appending the chunk pool. */
 	long manifest_off = ftell(f);
+	if (manifest_off < 0) {
+		fclose(f);
+		uc2_merkle_free(&tree);
+		return -1;
+	}
 	size_t manifest_size = (size_t)tree.nchunks * ENTRY_SIZE_V2;
 	if (tree.nchunks > 0) {
 		uint8_t *zero = calloc(manifest_size, 1);
