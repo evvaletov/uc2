@@ -1,1 +1,1 @@
-{"author":{"id":"40e3ba2788b3b9fc163c354afc44e5f9d225bcf0a27e679aaa878dd6135c6dcb"},"ops":[{"type":5,"timestamp":1781211823,"nonce":"64ZZfFPYCILVs0SO5FtcC6Ao8Mo=","added":["P2-medium"],"removed":null}]}
+{"author":{"id":"40e3ba2788b3b9fc163c354afc44e5f9d225bcf0a27e679aaa878dd6135c6dcb"},"ops":[{"type":3,"timestamp":1781348439,"nonce":"1oZYKGAqrwi4GcfL47yccfHIlZA=","message":"Resolved by 217bf9e (%TEMP% temp paths + portable rmtree). Windows CI green; re-closing (prior close did not persist).","files":null}]}
