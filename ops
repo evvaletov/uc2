@@ -1,1 +1,1 @@
-{"author":{"id":"40e3ba2788b3b9fc163c354afc44e5f9d225bcf0a27e679aaa878dd6135c6dcb"},"ops":[{"type":3,"timestamp":1781348440,"nonce":"3rbvjQGV9Ruj+jCBGtgc2JC/b6k=","message":"M7 round-trip done via test_libarchive_uc2 (reads through libarchive's PUBLIC API, the same path bsdtar uses) + the libarchive CI job (c394106). Commit d26791b. Consolidated under 7bbb6b6.","files":null}]}
+{"author":{"id":"40e3ba2788b3b9fc163c354afc44e5f9d225bcf0a27e679aaa878dd6135c6dcb"},"ops":[{"type":4,"timestamp":1781348440,"nonce":"QC1ctkGJNydAEwlT1o4Ch8yy5uE=","status":2}]}
