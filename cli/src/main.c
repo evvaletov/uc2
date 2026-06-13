@@ -518,7 +518,10 @@ static bool extract_cb(struct node *ne, void *ctx, enum cause cause)
 			int ret = uc2_extract(path->uc2, &e->xi, e->size, write_file, f);
 			if (ret < 0)
 				uc2err(path->uc2, ret, "%s", e->name);
-			fclose(f);
+			/* Report a write error (e.g. a full disk) surfaced at close
+			   rather than silently truncating the extracted file. */
+			if (fclose(f) != 0 && ret >= 0)
+				err(EXIT_FAILURE, "%s", path->buffer);
 			if (!opt.no_file_meta)
 				set_attrs(path->buffer, ne);
 			break;
