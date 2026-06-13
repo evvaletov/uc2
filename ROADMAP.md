@@ -306,3 +306,9 @@ Bobrowski already shipped prototypes; update for UC2 v3.
   fuzzer drove the fixes; a residual rare cdir-parser OOB it surfaces
   is tracked for a systematic hardening + fuzzing pass (git-bug
   69e8e52).
+
+- 2026-06-13: Security task-qa + fixes. A libFuzzer harness (tests/fuzz/)
+  found a heap overflow in the damaged-cdir parse path (fixed, 69e8e52);
+  also fixed Zip-Slip extraction, decoder bounds (tree/LZ/delta), and
+  allocation-overflow guards. v3.0.0-alpha.3 tagged. Residual
+  decompression-bomb DoS tracked (b8f933c).
