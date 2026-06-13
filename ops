@@ -1,1 +1,1 @@
-{"author":{"id":"40e3ba2788b3b9fc163c354afc44e5f9d225bcf0a27e679aaa878dd6135c6dcb"},"ops":[{"type":5,"timestamp":1781183673,"nonce":"zfwTY1906Paxqf3Vm47FU4/0uH4=","added":["P2-medium"],"removed":null}]}
+{"author":{"id":"40e3ba2788b3b9fc163c354afc44e5f9d225bcf0a27e679aaa878dd6135c6dcb"},"ops":[{"type":3,"timestamp":1781348436,"nonce":"vhdHhfTmJBgQpTM8KSABRxUN5BU=","message":"Resolved by b863095 (tell32 guard on all 4 ftell-\u003eu32 sites; ingest manifest ftell checked). CI green; re-closing (prior close did not persist).","files":null}]}
