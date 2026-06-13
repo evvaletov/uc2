@@ -951,7 +951,10 @@ static int cdir_damaged(struct uc2_context *uc2)
 struct delta {
 	u8 size;
 	u8 index;
-	u8 val[8];
+	/* size is the delta stride; decompressor() accepts methods up to 49,
+	   giving strides up to 10, so val[] must cover that (was [8], which
+	   both read out of bounds and mis-decoded strides 9-10). */
+	u8 val[16];
 };
 
 static void delta_init(struct delta *db, u8 type)
@@ -1080,6 +1083,10 @@ static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
 	if (ret < 0) { u_free(uc2, buf); return ret; }
 	u16 tail = (u16)ret;
 	u16 wpos = tail;  /* window position of the next unwritten output byte */
+	/* Bytes written into the 64KB window so far (master fill + output),
+	   saturated at the window size.  A match distance must not exceed it,
+	   else (u16)(tail - dist) would reference unwritten window bytes. */
+	unsigned produced = (unsigned)ret;
 	struct csum cs;
 	csum_init(&cs);
 	unsigned remaining = limit;
@@ -1121,6 +1128,7 @@ static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
 				if (remaining) {
 					buf[tail++] = (u8)sym;
 					remaining--;
+					if (produced < 65536) produced++;
 					if ((u16)(tail - wpos) >= 0x8000) {
 						ret = rans_flush(wr, &cs, buf, &wpos, tail);
 						if (ret < 0) { bi.err = ret; break; }
@@ -1146,9 +1154,11 @@ static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
 					(ls == 26) ? 667+(bits_get(&bi,11) & 0x7ff) :
 					             2715+(bits_get(&bi,15) & 0x7fff);
 				if (bi.err) break;
+				if (dist > produced) { bi.err = UC2_Damaged; break; }
 				for (unsigned j = 0; j < length && remaining > 0; j++) {
 					buf[tail] = buf[(u16)(tail - dist)];
 					tail++; remaining--;
+					if (produced < 65536) produced++;
 					if ((u16)(tail - wpos) >= 0x8000) {
 						ret = rans_flush(wr, &cs, buf, &wpos, tail);
 						if (ret < 0) { bi.err = ret; break; }
@@ -1181,6 +1191,7 @@ static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
 struct cbuffer {
 	u16 head, tail;
 	unsigned limit;
+	unsigned produced;  /* bytes written to the window (master + output), <= 0x10000 */
 	struct csum csum;
 	u8 data[0x10000];
 };
@@ -1352,6 +1363,8 @@ static int ht_dec(u8 lengths[NumSymbols], struct dcinfo *dc, struct bits *bi, u3
 			if (c < 0)
 				return c;
 			int n = c + MinRepeat - 1;
+			if (n > (int)(syme - symp))
+				return UC2_Damaged;  /* malformed tree overruns stream[] */
 			for (; n > 0; n--)
 				*symp++ = val;
 		} else {
@@ -1448,6 +1461,7 @@ static int decompressor_ultra(struct uc2_context *uc2, unsigned master, unsigned
 		goto ret;
 	ultra->cb.limit = limit;
 	ultra->cb.head = ultra->cb.tail = ret;
+	ultra->cb.produced = ret;
 	csum_init(&ultra->cb.csum);
 
 	u8 *dbuf = 0;
@@ -1543,9 +1557,10 @@ static int decompress_block(struct ultra *ultra)
 		int c = huff(ultra->bd_table, &ultra->bi);
 		if (c < 0)
 			return c;
-		if (!(c & 1<<16))
+		if (!(c & 1<<16)) {
 			ultra->cb.data[ultra->cb.tail++] = (u8)c;
-		else {
+			if (ultra->cb.produced < 65536) ultra->cb.produced++;
+		} else {
 			unsigned dist = c & 0xffff;
 			c = c >> 20 & 0xf;
 			if (c)
@@ -1571,9 +1586,15 @@ static int decompress_block(struct ultra *ultra)
 			   path then reports the damage. */
 			if (len > cbuf_space(&ultra->cb))
 				return UC2_Damaged;
+			/* dist must reference already-written history; a too-large
+			   dist (or a negative bits_get above wrapping it huge) would
+			   read unwritten/uninitialised window bytes into the output. */
+			if (dist == 0 || dist > ultra->cb.produced)
+				return UC2_Damaged;
 			do {
 				ultra->cb.data[ultra->cb.tail] = ultra->cb.data[(u16)(ultra->cb.tail - dist)];
 				ultra->cb.tail++;
+				if (ultra->cb.produced < 65536) ultra->cb.produced++;
 			} while (--len);
 		}
 
