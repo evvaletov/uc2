@@ -116,16 +116,21 @@ static int
 extract_write(void *ctx, const void *p, unsigned len)
 {
 	struct extract_buf *eb = (struct extract_buf *)ctx;
-	if (eb->len + len > eb->cap) {
-		size_t ncap = eb->cap ? eb->cap * 2 : 4096;
-		while (ncap < eb->len + len) ncap *= 2;
+	if (eb->len + (size_t)len < eb->len) { eb->err = 1; return -1; }  /* wrap */
+	size_t need = eb->len + (size_t)len;
+	if (need > eb->cap) {
+		size_t ncap = eb->cap ? eb->cap : 4096;
+		while (ncap < need) {
+			if (ncap > ((size_t)-1) / 2) { ncap = need; break; }
+			ncap *= 2;
+		}
 		uint8_t *np = realloc(eb->data, ncap);
 		if (!np) { eb->err = 1; return -1; }
 		eb->data = np;
 		eb->cap = ncap;
 	}
 	memcpy(eb->data + eb->len, p, len);
-	eb->len += len;
+	eb->len = need;
 	return (int)len;
 }
 

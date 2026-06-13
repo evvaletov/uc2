@@ -64,7 +64,7 @@ int uc2_blockstore_ingest(struct uc2_blockstore *bs,
 		uint32_t off = tree->chunks[i].offset;
 		uint32_t clen = tree->chunks[i].length;
 
-		if (off + clen > len) continue;
+		if (off > len || clen > len - off) continue;  /* overflow-safe */
 
 		if (uc2_blockstore_has(bs, h)) {
 			bs->saved_bytes += clen;

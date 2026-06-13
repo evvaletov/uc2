@@ -48,6 +48,7 @@ int uc2_dict_verify(const struct uc2_dict *dict)
 
 size_t uc2_dict_serialize(const struct uc2_dict *dict, uint8_t **out)
 {
+	if (dict->size > (1u << 30)) { *out = NULL; return 0; }  /* sane cap; no wrap */
 	size_t total = HDR_SIZE + dict->size;
 	uint8_t *buf = malloc(total);
 	if (!buf) { *out = NULL; return 0; }

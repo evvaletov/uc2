@@ -198,6 +198,11 @@ int uc2_ingest_write(const char *archive_path,
 		uc2_merkle_free(&tree);
 		return -1;
 	}
+	if (tree.nchunks < 0 || tree.nchunks > (1 << 24)) {
+		fclose(f);
+		uc2_merkle_free(&tree);
+		return -1;
+	}
 	size_t manifest_size = (size_t)tree.nchunks * ENTRY_SIZE_V2;
 	if (tree.nchunks > 0) {
 		uint8_t *zero = calloc(manifest_size, 1);
@@ -366,6 +371,11 @@ static int restore_v2(FILE *f, uint32_t nchunks, FILE *out)
 	if (nchunks == 0)
 		return 0;
 
+	/* nchunks comes from the (untrusted) archive header; cap it so the
+	   manifest size cannot wrap (notably on 32-bit) and to bound memory.
+	   16M chunks exceeds any archive within the 4 GiB container limit. */
+	if (nchunks > (1u << 24))
+		return -1;
 	uint8_t *manifest = malloc((size_t)nchunks * ENTRY_SIZE_V2);
 	if (!manifest) return -1;
 	if (fread(manifest, 1, (size_t)nchunks * ENTRY_SIZE_V2, f)

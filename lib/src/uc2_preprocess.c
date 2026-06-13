@@ -98,6 +98,12 @@ int uc2_bwt_revert(const uint8_t *data, size_t len,
 {
 	if (len == 0) { *out = NULL; return 0; }
 
+	/* primary_index indexes data[]/T[]; reject an out-of-range value
+	   (it can come from an untrusted stream).  Also guard the T[]
+	   allocation multiply against wrap on 32-bit. */
+	if (primary_index >= len || len > ((size_t)-1) / sizeof(uint32_t))
+		return -1;
+
 	uint8_t *result = malloc(len);
 	uint32_t *T = malloc(len * sizeof(uint32_t));
 	if (!result || !T) { free(result); free(T); return -1; }

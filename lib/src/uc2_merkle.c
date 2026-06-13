@@ -46,9 +46,13 @@ void uc2_merkle_build(struct uc2_merkle *tree,
 		if (clen == 0) break;
 
 		if (tree->nchunks >= tree->capacity) {
-			tree->capacity = tree->capacity ? tree->capacity * 2 : 16;
-			tree->chunks = realloc(tree->chunks,
-			                       (size_t)tree->capacity * sizeof *tree->chunks);
+			int ncap = tree->capacity ? tree->capacity * 2 : 16;
+			struct uc2_chunk *nc = realloc(tree->chunks,
+			                       (size_t)ncap * sizeof *tree->chunks);
+			if (!nc)
+				break;  /* out of memory: keep chunks gathered so far */
+			tree->chunks = nc;
+			tree->capacity = ncap;
 		}
 		struct uc2_chunk *c = &tree->chunks[tree->nchunks++];
 		c->hash = uc2_hash64(data + off, clen);
