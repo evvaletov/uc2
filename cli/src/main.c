@@ -1924,6 +1924,8 @@ usage:
 			if (ret == UC2_End)
 				break;
 			uc2err(uc2, ret, 0);
+			uc2_close(uc2);
+			fclose(f);
 			return EXIT_FAILURE;
 		}
 
@@ -1934,6 +1936,9 @@ usage:
 			ret = uc2_get_tag(uc2, &ne->entry, &tag, &data, &size);
 			if (ret < 0) {
 				uc2err(uc2, ret, 0);
+				free(ne);
+				uc2_close(uc2);
+				fclose(f);
 				return EXIT_FAILURE;
 			}
 		}
@@ -1969,8 +1974,11 @@ usage:
 			uc2_say(stderr, "Testing archive integrity...\n");
 		visit_selected(&root, pipe_cb, uc2);
 		if (opt.test) {
-			if (verify_trailer_if_present(opt.archive))
+			if (verify_trailer_if_present(opt.archive)) {
+				uc2_close(uc2);
+				fclose(f);
 				return EXIT_FAILURE;
+			}
 			uc2_say(stderr, "Everything went OK\n");
 		}
 	} else if (!opt.list) {
@@ -1994,5 +2002,6 @@ usage:
 	if (!opt.list && !opt.test && !opt.pipe)
 		uc2_say(stderr, "Decompression complete\n");
 	uc2_close(uc2);
+	fclose(f);
 	return EXIT_SUCCESS;
 }

@@ -704,7 +704,11 @@ static int decompress_cdir(struct uc2_context *uc2, u32 offset, u16 csum)
 		uc2->cdir_buf = u_free(uc2, uc2->cdir_buf);
 	}
 
-	uc2->cdir_range.end = uc2->cdir_buf + size;
+	/* Bound the walk to the bytes actually decompressed, not the
+	   allocation.  A damaged cdir that passes the 16-bit checksum by
+	   chance would otherwise be parsed into uninitialised heap between
+	   the real end and the buffer end. */
+	uc2->cdir_range.end = uc2->cdir_buf + (unsigned)ret;
 	return 0;
 }
 
@@ -1558,7 +1562,15 @@ static int decompress_block(struct ultra *ultra)
 			c = c >> 20 & 0xf;
 			if (c)
 				len += bits_get(&ultra->bi, c);
-			assert(cbuf_space(&ultra->cb) >= len);
+			/* On valid data the loop guard below keeps len within the
+			   window (<= 35482 <= cbuf_space at block entry).  A
+			   corrupt or truncated stream can underflow len (a short
+			   bits_get returns negative); the original assert caught
+			   that only in debug builds, so NDEBUG would let the copy
+			   overrun cb.data.  Bail cleanly instead -- the checksum
+			   path then reports the damage. */
+			if (len > cbuf_space(&ultra->cb))
+				return UC2_Damaged;
 			do {
 				ultra->cb.data[ultra->cb.tail] = ultra->cb.data[(u16)(ultra->cb.tail - dist)];
 				ultra->cb.tail++;
