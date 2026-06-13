@@ -178,7 +178,9 @@ struct range {
 	u8 *ptr, *end;
 };
 
-static unsigned range_len(struct range *r) {return (unsigned)(r->end - r->ptr);}
+/* Defensive: a never-set or stale end (end < ptr) must report an empty
+   range so range_get() refuses rather than handing out wild pointers. */
+static unsigned range_len(struct range *r) {return r->end > r->ptr ? (unsigned)(r->end - r->ptr) : 0;}
 
 struct uc2_context {
 	char *message;
@@ -659,6 +661,30 @@ static int use_master(struct uc2_context *uc2, u8 buffer[65535], u32 id)
 
 static int cdir_damaged(struct uc2_context *uc2);
 
+/* Writer for the central-directory decode that also enforces a
+   compression-ratio ceiling.  A tiny crafted cdir stream can expand via
+   long matches into tens of megabytes (a decompression bomb), turning a
+   few-hundred-byte archive into a multi-second decode.  Abort once the
+   output far outgrows the compressed bytes consumed. */
+struct cdir_writer {
+	struct range out;
+	struct archive_ctx *src;   /* reader context, for bytes consumed */
+	unsigned base;             /* src->offset at decode start */
+	unsigned long produced;
+};
+
+static int cdir_write(void *context, const void *ptr, unsigned size)
+{
+	struct cdir_writer *w = context;
+	w->produced += size;
+	unsigned consumed = w->src->offset - w->base;
+	/* Real cdir metadata compresses well under ~20:1; 64:1 with a
+	   64 KiB floor leaves ample headroom while stopping bombs. */
+	if (w->produced > 65536 + 64ul * consumed)
+		return UC2_Damaged;
+	return buf_write(&w->out, ptr, size);
+}
+
 static int decompress_cdir(struct uc2_context *uc2, u32 offset, u16 csum)
 {
 	assert(!uc2->cdir_buf);
@@ -686,15 +712,20 @@ static int decompress_cdir(struct uc2_context *uc2, u32 offset, u16 csum)
 
 		struct archive_ctx ar = {.offset = offset, .uc2 = uc2};
 		struct reader rd = {.read = archive_read, .context = &ar};
-		struct range wrctx = {.ptr = uc2->cdir_buf, .end = uc2->cdir_buf + size};
-		struct writer wr = {.write = buf_write, .context = &wrctx};
+		struct cdir_writer wctx = {
+			.out = {uc2->cdir_buf, uc2->cdir_buf + size},
+			.src = &ar, .base = offset
+		};
+		struct writer wr = {.write = cdir_write, .context = &wctx};
 		u16 cs;
 		ret = decompressor(uc2, get16(c.method), &rd, &wr, NoMaster, 100000000, &cs);
 		if (ret < 0)
-			return ret;
+			goto fail;
 
-		if (cs != csum)
-			return cdir_damaged(uc2);
+		if (cs != csum) {
+			ret = cdir_damaged(uc2);
+			goto fail;
+		}
 
 		if ((unsigned)ret <= size)
 			break;
@@ -710,6 +741,14 @@ static int decompress_cdir(struct uc2_context *uc2, u32 offset, u16 csum)
 	   the real end and the buffer end. */
 	uc2->cdir_range.end = uc2->cdir_buf + (unsigned)ret;
 	return 0;
+
+	/* On error, free cdir_buf and leave it NULL so the invariant
+	   "cdir_buf != NULL iff cdir_range is fully valid" holds; otherwise
+	   a later uc2_read_cdir / uc2_finish_cdir would walk a range whose
+	   end was never set, handing out wild pointers. */
+fail:
+	uc2->cdir_buf = u_free(uc2, uc2->cdir_buf);
+	return ret;
 }
 
 static int start_read(struct uc2_context *uc2);
