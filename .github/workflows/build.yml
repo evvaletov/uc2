@@ -87,6 +87,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install DJGPP cross-toolchain
         run: |
+          # The prebuilt DJGPP binutils (ar, ld) are linked against the
+          # flex runtime; install it so they load on a clean runner.
+          sudo apt-get update
+          sudo apt-get install -y libfl2
           curl -fsSL -o djgpp.tar.bz2 "$DJGPP_URL"
           echo "${DJGPP_SHA256}  djgpp.tar.bz2" | sha256sum -c -
           sudo tar xjf djgpp.tar.bz2 -C /opt     # -> /opt/djgpp
