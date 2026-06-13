@@ -2,12 +2,16 @@
 
 /* libarchive read handler for UC2 v3 archives.
  *
- * Status: milestones 1-3.
+ * Status: milestones 1-6.
  *   M1 -- bid() with UC2 magic check.
  *   M2 -- read_header iterates uc2_read_cdir, maps each cdir entry to
  *         libarchive's archive_entry shape (name, size, mode, mtime).
  *   M3 -- read_data uses uc2_extract to decompress an entry, buffers
  *         the result, then yields it via libarchive's pull-style API.
+ *   M4 -- master blocks resolve inside libuc2 during uc2_extract.
+ *   M5 -- multi-file archives with full directory paths composed from
+ *         the cdir's directory ids (parent-before-child not assumed).
+ *   M6 -- tagged entries (Win95 long names) resolved via uc2_get_tag.
  *
  * Strategy: on the first read_header call we slurp the entire archive
  * into memory through __archive_read_ahead, then drive libuc2 against
@@ -51,6 +55,7 @@ struct uc2_la_state {
 	/* Cached cdir entries.  uc2_read_cdir is single-pass; we capture
 	 * everything on the first read_header call. */
 	struct uc2_entry *entries;
+	char **paths;         /* composed full path per entry */
 	int n_entries;
 	int n_capacity;
 	int next_entry;
@@ -306,6 +311,79 @@ collect_entries(struct archive_read *a, struct uc2_la_state *st)
 	return (ARCHIVE_OK);
 }
 
+/* Append the full path of directory `id` (with a trailing slash) to
+ * buf.  Returns the new offset, or -1 on overflow.  UC2 directory ids
+ * are archive-global; root is 0.  The depth cap breaks cycles in
+ * damaged directories. */
+static int
+build_dir_path(struct uc2_la_state *st, unsigned id,
+               char *buf, size_t cap, int depth)
+{
+	int i;
+
+	if (id == 0)
+		return (0);
+	if (depth > 64)
+		return (-1); /* cyclic or pathologically deep: corrupt cdir */
+	for (i = 0; i < st->n_entries; i++) {
+		struct uc2_entry *d = &st->entries[i];
+		if (d->is_dir && d->id == id) {
+			int off = build_dir_path(st, d->dirid, buf, cap,
+			                         depth + 1);
+			int n;
+			if (off < 0)
+				return (-1);
+			n = snprintf(buf + off, cap - off, "%s/", d->name);
+			if (n < 0 || (size_t)n >= cap - off)
+				return (-1);
+			return (off + n);
+		}
+	}
+	return (0); /* unknown parent: fall back to root */
+}
+
+/* Compose a full path for every entry: parent directories joined with
+ * '/', directories themselves carrying a trailing slash. */
+static int
+compose_paths(struct archive_read *a, struct uc2_la_state *st)
+{
+	int i;
+
+	st->paths = (char **)calloc((size_t)st->n_entries,
+	                            sizeof *st->paths);
+	if (st->paths == NULL && st->n_entries > 0) {
+		archive_set_error(&a->archive, ENOMEM,
+		    "UC2: out of memory composing paths");
+		return (ARCHIVE_FATAL);
+	}
+
+	for (i = 0; i < st->n_entries; i++) {
+		struct uc2_entry *e = &st->entries[i];
+		char buf[2048];
+		int off = build_dir_path(st, e->dirid, buf, sizeof buf, 0);
+		int n;
+		if (off < 0) {
+			archive_set_error(&a->archive, EINVAL,
+			    "UC2: directory path too long");
+			return (ARCHIVE_FATAL);
+		}
+		n = snprintf(buf + off, sizeof buf - off, "%s%s",
+		             e->name, e->is_dir ? "/" : "");
+		if (n < 0 || (size_t)n >= sizeof buf - off) {
+			archive_set_error(&a->archive, EINVAL,
+			    "UC2: entry path too long");
+			return (ARCHIVE_FATAL);
+		}
+		st->paths[i] = strdup(buf);
+		if (st->paths[i] == NULL) {
+			archive_set_error(&a->archive, ENOMEM,
+			    "UC2: out of memory composing paths");
+			return (ARCHIVE_FATAL);
+		}
+	}
+	return (ARCHIVE_OK);
+}
+
 static int
 uc2_la_read_header(struct archive_read *a, struct archive_entry *entry)
 {
@@ -321,6 +399,9 @@ uc2_la_read_header(struct archive_read *a, struct archive_entry *entry)
 
 		r = collect_entries(a, st);
 		if (r != ARCHIVE_OK) return r;
+
+		r = compose_paths(a, st);
+		if (r != ARCHIVE_OK) return r;
 	}
 
 	if (st->next_entry >= st->n_entries)
@@ -332,7 +413,7 @@ uc2_la_read_header(struct archive_read *a, struct archive_entry *entry)
 	st->entry_len = 0;
 	st->entry_yielded = 0;
 
-	archive_entry_set_pathname(entry, e->name);
+	archive_entry_set_pathname(entry, st->paths[st->next_entry - 1]);
 	archive_entry_set_size(entry, (la_int64_t)e->size);
 	archive_entry_set_mtime(entry, dos_to_unix_time(e->dos_time), 0);
 
@@ -409,6 +490,12 @@ uc2_la_cleanup(struct archive_read *a)
 		return (ARCHIVE_OK);
 	if (st->handle)
 		uc2_close(st->handle);
+	if (st->paths) {
+		int i;
+		for (i = 0; i < st->n_entries; i++)
+			free(st->paths[i]);
+		free(st->paths);
+	}
 	free(st->data);
 	free(st->entries);
 	free(st->entry_data);

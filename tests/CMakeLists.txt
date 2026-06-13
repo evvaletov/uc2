@@ -155,6 +155,26 @@ if(Python3_Interpreter_FOUND)
     )
 endif()
 
+# libarchive plugin round-trip.  Needs -DUC2_BUILD_LIBARCHIVE_PLUGIN=ON,
+# -DLIBARCHIVE_SOURCE_DIR=<source tree>, and -DLIBARCHIVE_LIBRARY=<built
+# libarchive.a> (a deps-disabled static build is enough; see docs).
+if(TARGET uc2_libarchive AND DEFINED LIBARCHIVE_LIBRARY
+   AND DEFINED LIBARCHIVE_SOURCE_DIR)
+    add_executable(test_libarchive_uc2 src/test_libarchive_uc2.c)
+    target_include_directories(test_libarchive_uc2 PRIVATE
+        "${LIBARCHIVE_SOURCE_DIR}/libarchive")
+    target_link_libraries(test_libarchive_uc2 PRIVATE
+        uc2_libarchive "${LIBARCHIVE_LIBRARY}" uc2)
+    target_compile_features(test_libarchive_uc2 PRIVATE c_std_99)
+    add_test(NAME libarchive_roundtrip
+        COMMAND ${CMAKE_COMMAND}
+            -DUC2_CLI=$<TARGET_FILE:uc2-cli>
+            -DLA_TEST=$<TARGET_FILE:test_libarchive_uc2>
+            -DTEST_DIR=${CMAKE_CURRENT_BINARY_DIR}/libarchive_test
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/test_cli_libarchive.cmake
+    )
+endif()
+
 # Cross-tool round-trip: UC2 v3 <-> original uc2pro.exe via DOSBox-X
 add_test(NAME roundtrip_dosbox
     COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/scripts/roundtrip_dosbox.sh

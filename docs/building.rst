@@ -41,6 +41,43 @@ Cross-compile from a Linux host using the DJGPP toolchain:
 
 This produces a DOS executable suitable for DOSBox or real hardware.
 
+libarchive Read Plugin
+----------------------
+
+The optional libarchive read handler (``contrib/libarchive/``) lets any
+libarchive consumer — ``bsdtar``, file managers, language bindings —
+list and extract ``.uc2`` archives. It uses libarchive's internal
+read-format API, so it builds against a libarchive **source tree**
+rather than an installed ``-devel`` package.
+
+Unpack a libarchive release and build a static library (a
+dependency-free configuration is enough for the plugin and its test):
+
+.. code-block:: sh
+
+   curl -LO https://github.com/libarchive/libarchive/releases/download/v3.7.7/libarchive-3.7.7.tar.gz
+   tar xzf libarchive-3.7.7.tar.gz
+   cmake -S libarchive-3.7.7 -B larch-build -DCMAKE_BUILD_TYPE=Release \
+         -DBUILD_SHARED_LIBS=OFF -DENABLE_TEST=OFF
+   cmake --build larch-build --target archive_static
+
+Then configure UC2 with the plugin enabled, pointing at the source tree
+and the static library:
+
+.. code-block:: sh
+
+   cmake -B build -DCMAKE_BUILD_TYPE=Release \
+         -DUC2_BUILD_LIBARCHIVE_PLUGIN=ON \
+         -DLIBARCHIVE_SOURCE_DIR=$PWD/libarchive-3.7.7 \
+         -DLIBARCHIVE_LIBRARY=$PWD/larch-build/libarchive/libarchive.a
+   cmake --build build
+
+This builds ``libuc2_libarchive.a`` and the ``libarchive_roundtrip``
+test, which creates archives at multiple compression levels and reads
+them back through libarchive's public API, verifying every byte. The
+plugin handles multi-file archives with directory paths, master-block
+deduplication, and Win95 long names.
+
 Build Options
 -------------
 
@@ -54,6 +91,9 @@ Build Options
    * - ``UC2_BUILD_TESTS``
      - ``ON``
      - Build test programs
+   * - ``UC2_BUILD_LIBARCHIVE_PLUGIN``
+     - ``OFF``
+     - Build the libarchive read handler (needs ``LIBARCHIVE_SOURCE_DIR``)
    * - ``CMAKE_BUILD_TYPE``
      - (none)
      - ``Release``, ``Debug``, ``RelWithDebInfo``
