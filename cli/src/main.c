@@ -483,6 +483,19 @@ static bool extract_cb(struct node *ne, void *ctx, enum cause cause)
 	switch (cause) {
 	case VisitFile:
 	case EnterDir:;
+		/* Each UC2 entry name is a single path component (the directory
+		   tree is rebuilt from dirid parents).  A name that is empty,
+		   ".", "..", or contains a path separator is malformed or a
+		   path-traversal attempt -- refuse to extract it rather than
+		   write outside the destination. */
+		if (l == 0
+		    || (l == 1 && e->name[0] == '.')
+		    || (l == 2 && e->name[0] == '.' && e->name[1] == '.')
+		    || memchr(e->name, '/', l)
+		    || memchr(e->name, '\\', l))
+			errx(EXIT_FAILURE, "unsafe archive entry name: %.*s",
+			     (int)l, e->name);
+
 		char *p = path->ptr + l;
 		if (p + 1 >= endof(path->buffer))
 			errx(EXIT_FAILURE, "Path too long");
