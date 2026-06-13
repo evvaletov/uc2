@@ -34,3 +34,40 @@ jobs:
         run: .\build\cli\Release\uc2.exe -h
       - name: Test
         run: ctest --test-dir build --output-on-failure -C Release
+
+  libarchive:
+    runs-on: ubuntu-latest
+    name: libarchive plugin
+    env:
+      LIBARCHIVE_VERSION: 3.7.7
+      LIBARCHIVE_SHA256: 4cc540a3e9a1eebdefa1045d2e4184831100667e6d7d5b315bb1cbc951f8ddff
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch libarchive source
+        run: |
+          curl -fsSLO "https://github.com/libarchive/libarchive/releases/download/v${LIBARCHIVE_VERSION}/libarchive-${LIBARCHIVE_VERSION}.tar.gz"
+          echo "${LIBARCHIVE_SHA256}  libarchive-${LIBARCHIVE_VERSION}.tar.gz" | sha256sum -c -
+          tar xzf "libarchive-${LIBARCHIVE_VERSION}.tar.gz"
+      - name: Build libarchive static (dependency-free)
+        run: |
+          cmake -S "libarchive-${LIBARCHIVE_VERSION}" -B larch-build \
+            -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+            -DBUILD_SHARED_LIBS=OFF -DENABLE_TEST=OFF -DENABLE_TAR=OFF \
+            -DENABLE_CPIO=OFF -DENABLE_CAT=OFF -DENABLE_UNZIP=OFF \
+            -DENABLE_WERROR=OFF -DENABLE_ZLIB=OFF -DENABLE_BZip2=OFF \
+            -DENABLE_LZMA=OFF -DENABLE_ZSTD=OFF -DENABLE_LZ4=OFF \
+            -DENABLE_LIBXML2=OFF -DENABLE_EXPAT=OFF -DENABLE_OPENSSL=OFF \
+            -DENABLE_LIBB2=OFF -DENABLE_ICONV=OFF -DENABLE_ACL=OFF \
+            -DENABLE_XATTR=OFF -DENABLE_CNG=OFF -DENABLE_MBEDTLS=OFF \
+            -DENABLE_NETTLE=OFF -DENABLE_PCREPOSIX=OFF -DENABLE_PCRE2POSIX=OFF
+          cmake --build larch-build --target archive_static -j
+      - name: Configure UC2 with libarchive plugin
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release \
+            -DUC2_BUILD_LIBARCHIVE_PLUGIN=ON \
+            -DLIBARCHIVE_SOURCE_DIR="$PWD/libarchive-${LIBARCHIVE_VERSION}" \
+            -DLIBARCHIVE_LIBRARY="$PWD/larch-build/libarchive/libarchive.a"
+      - name: Build
+        run: cmake --build build -j
+      - name: Round-trip test
+        run: ctest --test-dir build --output-on-failure -R libarchive_roundtrip
