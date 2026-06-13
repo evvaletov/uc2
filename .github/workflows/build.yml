@@ -71,3 +71,34 @@ jobs:
         run: cmake --build build -j
       - name: Round-trip test
         run: ctest --test-dir build --output-on-failure -R libarchive_roundtrip
+
+  djgpp:
+    runs-on: ubuntu-latest
+    name: DOS (DJGPP)
+    env:
+      DJGPP_URL: https://github.com/andrewwutw/build-djgpp/releases/download/v3.4/djgpp-linux64-gcc1220.tar.bz2
+      DJGPP_SHA256: 8464f17017d6ab1b2bb2df4ed82357b5bf692e6e2b7fee37e315638f3d505f00
+      # Keep host include dirs out of the cross-compiler's search path in
+      # every step (the toolchain file also forces -nostdinc, but a stray
+      # CPATH on the runner would otherwise leak glibc headers).
+      CPATH: ''
+      CPLUS_INCLUDE_PATH: ''
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install DJGPP cross-toolchain
+        run: |
+          curl -fsSL -o djgpp.tar.bz2 "$DJGPP_URL"
+          echo "${DJGPP_SHA256}  djgpp.tar.bz2" | sha256sum -c -
+          sudo tar xjf djgpp.tar.bz2 -C /opt     # -> /opt/djgpp
+      - name: Configure (DJGPP toolchain)
+        run: |
+          cmake -B build-dos \
+            -DCMAKE_TOOLCHAIN_FILE=cmake/djgpp.cmake \
+            -DDJGPP_ROOT=/opt/djgpp -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build-dos -j
+      - name: Verify DOS executable
+        run: |
+          file build-dos/cli/uc2.exe
+          file build-dos/cli/uc2.exe | grep -q "DJGPP go32 DOS extender" \
+            || { echo "uc2.exe is not a DJGPP DOS executable"; exit 1; }

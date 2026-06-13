@@ -105,7 +105,7 @@ No mainstream archiver offers post-quantum encryption.
 
 ## Phase 6: DOS / FreeDOS / Retro-Computing
 
-- [x] DJGPP cross-compilation toolchain: `cmake/djgpp-toolchain.cmake`
+- [x] DJGPP cross-compilation toolchain: `cmake/djgpp.cmake`
       builds `uc2.exe` against the prebuilt DJGPP gcc 7.2 / 12.2 from
       `andrewwutw/build-djgpp`.  Output is a 32-bit DPMI DOS executable
       (MZ + COFF + go32 stub).  See `cmake/README-djgpp.md` for the
@@ -294,3 +294,15 @@ Bobrowski already shipped prototypes; update for UC2 v3.
   Found debugging extraction on sdf.org (NetBSD 10) but reproducible
   everywhere. New regression test: cli_bigfile. Follow-up filed:
   bf73896 (ftell offsets >4GB truncate silently; P2).
+
+- 2026-06-13: DOS build now has CI coverage (DJGPP v3.4 toolchain,
+  sha-pinned; builds uc2.exe via cmake/djgpp.cmake; git-bug 9379647).
+  Consolidated the two DJGPP toolchain files onto djgpp.cmake and
+  removed the redundant djgpp-toolchain.cmake.
+- 2026-06-13: Damaged-archive decode hardening (git-bug f049d6d):
+  decompress_block match-length overflow guard (runtime check
+  replacing an NDEBUG assert), decompress_cdir end-bounding, and a
+  CLI handle/FILE leak fix on the cdir-error path. A prefix-sweep
+  fuzzer drove the fixes; a residual rare cdir-parser OOB it surfaces
+  is tracked for a systematic hardening + fuzzing pass (git-bug
+  69e8e52).

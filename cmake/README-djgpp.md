@@ -31,7 +31,7 @@ the bundled `cwsdpmi.exe` extender (or any DPMI host).
 ```sh
 unset CPATH CPLUS_INCLUDE_PATH
 cmake -B build-djgpp \
-      -DCMAKE_TOOLCHAIN_FILE=cmake/djgpp-toolchain.cmake \
+      -DCMAKE_TOOLCHAIN_FILE=cmake/djgpp.cmake \
       -DDJGPP_ROOT=/opt/djgpp
 cmake --build build-djgpp
 ```
@@ -42,7 +42,9 @@ plus `cwsdpmi.exe` (shipped with DJGPP at
 
 ## Status
 
-- Compiles clean against DJGPP gcc 7.2.0 and 12.2.0.
+- Compiles clean against the DJGPP gcc 12.2.0 toolchain (the
+  `cmake/djgpp.cmake` include paths are pinned to that version; the
+  CI job and the andrewwutw v3.4 release both use 12.2.0).
 - Library (`libuc2.a`) builds without changes.
 - CLI uses the DOS compat layer in `cli/src/compat/compat_dos.c` for
   the BSD `err.h` and POSIX `fnmatch` shims.
@@ -69,9 +71,9 @@ not installed.
 
 ## Notes
 
-- The toolchain file forces `CMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY`
-  because the compiler check would otherwise try to execute a DOS .exe
-  on the host kernel and fail.
+- The toolchain sets `CMAKE_SYSTEM_NAME Generic` and `-nostdinc` with
+  explicit DJGPP include paths, so the compiler check links a test
+  binary (rather than running one) and host headers never leak in.
 - DJGPP's `unistd.h` provides POSIX-shaped APIs; most of the existing
   source compiles unchanged.  The library has no DOS-specific code
   paths.
