@@ -312,3 +312,15 @@ Bobrowski already shipped prototypes; update for UC2 v3.
   also fixed Zip-Slip extraction, decoder bounds (tree/LZ/delta), and
   allocation-overflow guards. v3.0.0-alpha.3 tagged. Residual
   decompression-bomb DoS tracked (b8f933c).
+
+- 2026-06-14: Decompression-bomb DoS fixed (git-bug b8f933c). The
+  multi-second decode was an integer-underflow loop, not a ratio bomb:
+  a zero-length match code reached the `while (--len)` copy in
+  decompress_block and underflowed to ~4.29 billion iterations. Fix
+  rejects len==0 and checks the distance/length extra-bit reads for
+  truncation. Fuzzing infrastructure landed alongside (git-bug a732e24):
+  a `fuzz` CI job (clang + libFuzzer + ASan) over the read path and a new
+  compress/round-trip harness, a seed corpus and committed regression
+  artifacts, and a portable `fuzz_regression` ctest (30 s TIMEOUT) that
+  guards the hang on every platform in the matrix. Follow-up: ht_dec
+  ht_mktree return check (git-bug c57b865, low severity).

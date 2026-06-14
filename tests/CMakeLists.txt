@@ -186,3 +186,19 @@ set_tests_properties(roundtrip_dosbox PROPERTIES
     LABELS "dosbox"
     TIMEOUT 1200
 )
+
+# Fuzz-harness regression replay (portable; needs no Clang/libFuzzer/ASan).
+# Drives the read-path harness over the committed crash/timeout artifacts so
+# a hang or out-of-bounds regresses visibly in the normal CI matrix.  The
+# len==0 match-underflow artifact (git-bug b8f933c) used to spin the match
+# copy ~4 billion iterations; the TIMEOUT below turns that back into a
+# deterministic failure.
+add_executable(fuzz_replay fuzz/fuzz_extract.c fuzz/fuzz_replay.c)
+target_link_libraries(fuzz_replay PRIVATE uc2)
+target_include_directories(fuzz_replay PRIVATE "${PROJECT_BINARY_DIR}/lib")
+target_compile_features(fuzz_replay PRIVATE c_std_99)
+file(GLOB FUZZ_ARTIFACTS
+    "${CMAKE_CURRENT_SOURCE_DIR}/fuzz/regressions/*"
+    "${CMAKE_CURRENT_SOURCE_DIR}/fuzz/seeds/*")
+add_test(NAME fuzz_regression COMMAND fuzz_replay ${FUZZ_ARTIFACTS})
+set_tests_properties(fuzz_regression PROPERTIES TIMEOUT 30)

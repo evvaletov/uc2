@@ -1602,8 +1602,12 @@ static int decompress_block(struct ultra *ultra)
 		} else {
 			unsigned dist = c & 0xffff;
 			c = c >> 20 & 0xf;
-			if (c)
-				dist += bits_get(&ultra->bi, c);
+			if (c) {
+				int e = bits_get(&ultra->bi, c);
+				if (e < 0)
+					return e;
+				dist += e;
+			}
 
 			c = huff(ultra->l_table, &ultra->bi);
 			if (c < 0)
@@ -1614,16 +1618,20 @@ static int decompress_block(struct ultra *ultra)
 
 			unsigned len = c & 0xffff;
 			c = c >> 20 & 0xf;
-			if (c)
-				len += bits_get(&ultra->bi, c);
-			/* On valid data the loop guard below keeps len within the
-			   window (<= 35482 <= cbuf_space at block entry).  A
-			   corrupt or truncated stream can underflow len (a short
-			   bits_get returns negative); the original assert caught
-			   that only in debug builds, so NDEBUG would let the copy
-			   overrun cb.data.  Bail cleanly instead -- the checksum
-			   path then reports the damage. */
-			if (len > cbuf_space(&ultra->cb))
+			if (c) {
+				int e = bits_get(&ultra->bi, c);
+				if (e < 0)
+					return e;
+				len += e;
+			}
+			/* A zero-length match -- an invalid or unassigned length
+			   code -- would make the `while (--len)` copy below
+			   underflow to ~4 billion iterations, a CPU denial-of-service
+			   on crafted input (git-bug b8f933c).  Real matches are
+			   always >= 3.  The upper bound keeps len within the window
+			   (<= 35482 <= cbuf_space at block entry); without it a
+			   corrupt stream could overrun cb.data under NDEBUG. */
+			if (len == 0 || len > cbuf_space(&ultra->cb))
 				return UC2_Damaged;
 			/* dist must reference already-written history; a too-large
 			   dist (or a negative bits_get above wrapping it huge) would
