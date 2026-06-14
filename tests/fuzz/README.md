@@ -1,42 +1,57 @@
-# Fuzzing the UC2 reader
+# Fuzzing UC2
 
-`fuzz_extract.c` is a libFuzzer harness that drives the full read path
-(`uc2_open` -> `uc2_read_cdir` -> `uc2_finish_cdir` -> `uc2_extract`)
-over arbitrary bytes with an in-memory reader and a discard writer. It
-targets the code that parses **untrusted** `.uc2` archives.
+Two libFuzzer harnesses cover the code that handles **untrusted** input:
 
-It is intentionally **not** part of the CMake build or CI: libFuzzer
-needs a Clang toolchain, and a fuzz run is open-ended rather than
-pass/fail. Build and run it by hand.
+- `fuzz_extract.c` -- the read path. Drives
+  `uc2_open -> uc2_read_cdir -> uc2_finish_cdir -> uc2_extract` over
+  arbitrary bytes with an in-memory reader and a discard writer. This is
+  the security-critical target: it parses attacker-controlled `.uc2`
+  archives.
+- `fuzz_roundtrip.c` -- the compress / round-trip path. Compresses the
+  fuzzer bytes (the first byte selects the level), wraps them in a
+  minimal one-file archive, decompresses, and asserts byte-identity.
+  Catches encoder crashes and any compress<->decompress mismatch.
 
-## Build
+## Build and run by hand
 
-Compile the harness together with the library sources and the embedded
+Compile a harness together with the library sources and the embedded
 super-master, against a configured build tree (for `uc2_version.h` and
 `super_data.S`):
 
 ```sh
-cmake -B build-asan -DCMAKE_BUILD_TYPE=Debug   # any tree works; provides the generated files
+cmake -B build -DCMAKE_BUILD_TYPE=Release      # provides the generated files
 clang -fsanitize=fuzzer,address -O1 -g \
-    -Ilib/include -Ilib/src -Ibuild-asan/lib \
-    tests/fuzz/fuzz_extract.c $(ls lib/src/*.c) build-asan/lib/super_data.S \
+    -Ilib/include -Ilib/src -Ibuild/lib \
+    tests/fuzz/fuzz_extract.c lib/src/*.c build/lib/super_data.S \
     -lm -o fuzz_extract
-```
 
-## Run
-
-```sh
-mkdir -p corpus && cp tests/archives/*.uc2 corpus/
-./fuzz_extract -max_len=65536 -timeout=25 corpus/
+mkdir -p corpus && cp tests/fuzz/seeds/* tests/fuzz/regressions/* corpus/
+./fuzz_extract -max_len=65536 -timeout=20 corpus/
 ```
 
 ASan flags any out-of-bounds access; libFuzzer writes a `crash-*` (or
-`timeout-*`) artifact for each finding. Re-run a single artifact with
-`./fuzz_extract <artifact>`.
+`timeout-*` / `oom-*`) artifact for each finding, and exits non-zero.
+Re-run a single artifact with `./fuzz_extract <artifact>`.
 
-## Status
+## Corpus and regressions
 
-Memory-safety: clean over sustained runs after the 2026-06-13 cdir
-hardening (git-bug 69e8e52). A residual slow-input (decompression-bomb)
-timeout is tracked separately; it is a bounded-CPU issue, not a
-memory-safety one.
+- `seeds/` -- valid sample archives, used to seed coverage.
+- `regressions/` -- minimised crash/timeout artifacts kept as permanent
+  guards. `len0-match-underflow.uc2` is the input behind git-bug
+  `b8f933c`: a zero-length match code made the decoder's copy loop
+  underflow (`while (--len)` with `len == 0`) into ~4 billion iterations,
+  a CPU denial-of-service. Fixed by rejecting `len == 0` and the negative
+  extra-bit reads in `decompress_block`.
+
+## CI
+
+Two layers run automatically:
+
+- `fuzz_regression` (ctest, every platform) -- a portable replay
+  (`fuzz_replay.c`, no Clang/ASan needed) runs the read-path harness over
+  every file in `regressions/` and `seeds/` under a 30 s ctest TIMEOUT,
+  so a hang or out-of-bounds regresses visibly in the normal matrix.
+- the `fuzz` workflow job (Linux) -- builds both harnesses with
+  libFuzzer + ASan, replays the committed artifacts, then runs a bounded
+  coverage-guided session over each path. A crash, OOM, or slow input
+  fails the job and uploads the artifact.

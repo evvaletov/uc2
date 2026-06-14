@@ -106,3 +106,49 @@ jobs:
           file build-dos/cli/uc2.exe
           file build-dos/cli/uc2.exe | grep -q "DJGPP go32 DOS extender" \
             || { echo "uc2.exe is not a DJGPP DOS executable"; exit 1; }
+
+  fuzz:
+    runs-on: ubuntu-latest
+    name: Fuzz (libFuzzer + ASan)
+    env:
+      # Bounded wall-clock per harness; libFuzzer exits non-zero on any
+      # crash, OOM, or input slower than -timeout, failing the job.
+      FUZZ_SECONDS: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure + build (generates super_data.S, uc2_version.h)
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --target uc2 -j
+      - name: Build fuzz harnesses
+        run: |
+          for h in fuzz_extract fuzz_roundtrip; do
+            clang -fsanitize=fuzzer,address -O1 -g \
+              -Ilib/include -Ilib/src -Ibuild/lib \
+              tests/fuzz/$h.c lib/src/*.c build/lib/super_data.S \
+              -lm -o $h
+          done
+      - name: Replay committed regression artifacts
+        run: |
+          ./fuzz_extract tests/fuzz/regressions/* tests/fuzz/seeds/*
+      - name: Fuzz read path
+        run: |
+          mkdir -p corpus_extract
+          cp tests/fuzz/seeds/* tests/fuzz/regressions/* corpus_extract/ || true
+          ./fuzz_extract -max_len=65536 -timeout=20 -rss_limit_mb=2048 \
+            -max_total_time=$FUZZ_SECONDS corpus_extract/
+      - name: Fuzz compress / round-trip path
+        run: |
+          mkdir -p corpus_rt
+          ./fuzz_roundtrip -max_len=16384 -timeout=20 -rss_limit_mb=2048 \
+            -max_total_time=$FUZZ_SECONDS corpus_rt/
+      - name: Upload crash artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-artifacts
+          path: |
+            crash-*
+            timeout-*
+            oom-*
+          if-no-files-found: ignore
