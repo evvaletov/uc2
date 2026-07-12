@@ -23,6 +23,9 @@ docs/_build/
 .DS_Store
 Thumbs.db
 
+# Generated outreach draft (produced by scripts/gen-bboard-post.sh)
+bboard-post.draft.txt
+
 # Original downloads
 original/*.zip
 
