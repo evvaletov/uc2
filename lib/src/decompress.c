@@ -1382,7 +1382,9 @@ static int ht_dec(u8 lengths[NumSymbols], struct dcinfo *dc, struct bits *bi, u3
 		tlengths[i] = (u8)b;
 	}
 
-	ht_mktree(table, tlengths, NumLenCodes, 0, 0);
+	int ret = ht_mktree(table, tlengths, NumLenCodes, 0, 0);
+	if (ret < 0)
+		return ret;
 
 	u8 stream[NumSymbols];
 	u8 *symp = stream;
