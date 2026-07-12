@@ -232,10 +232,20 @@ cp -a /snapshot/ | uc2 --ingest backup.uc2    # incremental dedup
       duplicate hashes share an offset (intra-call dedup).
       Cross-archive dedup is not preserved -- the trade-off is the
       single-file UX.  v1 archives still readable for restore.
-- [ ] `uc2 --ingest` v3: integrate with master-block archive layout
-      so output is a real UC2 v3 archive consumable by uc2 -x / -l
+- [x] `uc2 --ingest` v3 (default): output is a real UC2 archive.  Each
+      CDC chunk occurrence is a `part-N` file entry in stream order;
+      unique chunks are stored once (payload dedup) as NoMaster blocks,
+      so `uc2 -l` lists it and `uc2 -x` extracts it like any archive.
+      `uc2 --ingest-restore` walks the entries in order and concatenates
+      them; v1/v2 archives are still restored via magic auto-detection.
+      Tested (`cli_ingest`): dedup on periodic input, byte-exact
+      round-trip, extract-and-concatenate, empty stream; ASan-clean on
+      large no-dedup and cross-region-dedup streams.  Approach (A) of
+      git-bug 59bec0d; the master-block-backed (B) variant, which would
+      shrink the central directory to one entry per *unique* chunk, is a
+      follow-up.
 - [ ] Tar-entry preservation: parse tar boundaries inside --ingest
-      so individual files are recoverable as archive entries
+      so individual files are recoverable as archive entries (bd13adb)
 - [ ] Incremental snapshots: `uc2 snapshot /path repo.uc2`
       (borg/restic-style deduplicating backups without filesystem support)
 

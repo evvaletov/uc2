@@ -132,13 +132,24 @@ Write the attached proof to the named output file, suitable for
 .It Fl -ots-info
 Describe the attached proof.
 .It Fl -ingest Ar archive
-Read a data stream from standard input into a content-addressed
-deduplicating block store inside
+Read a data stream from standard input, split it into content-defined
+chunks, deduplicate identical chunks, and write a regular UC2 archive to
 .Ar archive .
+Each chunk occurrence becomes an entry named
+.Ql part- Ns Ar N
+in stream order, so the result can be listed with
+.Fl l
+and extracted with
+.Fl x
+like any other archive; repeated chunks share a single stored block.
 .It Fl -ingest-restore Ar archive
-Write the ingested stream from
+Reassemble the original stream from
 .Ar archive
-to standard output.
+by concatenating its entries in order and write it to standard output.
+Archives written by earlier
+.Fl -ingest
+versions (a sidecar block store or self-contained blob) are still
+recognised and restored.
 .El
 .Sh EXIT STATUS
 .Ex -std

@@ -36,12 +36,17 @@
  *      +16   ...  chunk_count * 16B:  8B hash, 4B length, 4B offset
  *      ...  chunk pool: unique chunks back-to-back at recorded offsets
  *
+ * These library entry points implement the self-contained v2 blob (and
+ * read the legacy v1 sidecar-blockstore format).  The `uc2 --ingest`
+ * CLI command instead emits a real, listable/extractable UC2 archive
+ * (one `part-N` entry per chunk occurrence, unique chunks stored once);
+ * that v3 writer lives in the CLI on top of the public compress/reader
+ * API.  `uc2 --ingest-restore` auto-detects the format by magic.
+ *
  * Limitations:
  *   - The whole stream is buffered in memory before chunking.  Suits
  *     CDC's locality-of-boundary requirement and is fine for streams
  *     up to a few GB.  True streaming is a future revision.
- *   - The format is not yet a UC2 v3 archive consumable by uc2 -x /
- *     -l; integrating with the master-block layout is a follow-up.
  */
 
 #ifndef UC2_INGEST_H

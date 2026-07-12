@@ -53,6 +53,14 @@ add_test(NAME cli_dirs
         -P ${CMAKE_CURRENT_SOURCE_DIR}/test_cli_dirs.cmake
 )
 
+# CLI --ingest / --ingest-restore round-trip test (git-bug 59bec0d)
+add_test(NAME cli_ingest
+    COMMAND ${CMAKE_COMMAND}
+        -DUC2_CLI=$<TARGET_FILE:uc2-cli>
+        -DTEST_DIR=${CMAKE_CURRENT_BINARY_DIR}/cli_ingest_test
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/test_cli_ingest.cmake
+)
+
 add_executable(test_cdc src/test_cdc.c)
 target_link_libraries(test_cdc PRIVATE uc2)
 target_include_directories(test_cdc PRIVATE "${PROJECT_BINARY_DIR}/lib")

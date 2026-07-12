@@ -37,6 +37,7 @@ void setprogname(const char *argv0);
 #include <uc2/libuc2.h>
 #include <uc2/uc2_cdc.h>
 #include <uc2/uc2_ingest.h>
+#include <uc2/uc2_merkle.h>
 #include <uc2/uc2_lz4.h>
 #include <uc2/uc2_ots.h>
 #include <uc2/uc2_sha256.h>
@@ -1683,6 +1684,324 @@ static int extract_ingest_long_opts(int *argcp, char **argv, char **out_path)
 	return mode;
 }
 
+/* --- ingest v3: real UC2 archive output (git-bug 59bec0d, approach A) ---
+ *
+ * The ingested byte stream is split into CDC chunks and deduplicated by
+ * content hash.  Each unique chunk is stored once as a NoMaster-compressed
+ * data block; the central directory carries one file entry per chunk
+ * *occurrence* in stream order.  The result is a genuine UC2 v3 archive:
+ * `uc2 -l` lists it and `uc2 -x` extracts the parts.  Occurrences of a
+ * repeated chunk share a single stored block, so the payload is
+ * deduplicated even though the listing is one line per chunk.
+ * `uc2 --ingest-restore` walks the entries in cdir (= stream) order and
+ * concatenates them, reproducing the original stream exactly.
+ *
+ * v1/v2 (the custom UC2INGST blob in libuc2) remain readable; restore
+ * auto-detects the format by magic. */
+
+#define INGEST_CDC_BITS 13  /* avg 8 KiB chunks (uc2_ingest default) */
+
+/* hash -> unique-chunk slot.  Open addressing, power-of-two capacity,
+ * sized up-front to hold every occurrence at load factor <= 0.5 so it
+ * never needs to grow mid-build.  A key collision (or the 0-hash
+ * sentinel shift) is resolved by probing to a distinct slot, and every
+ * hit is confirmed with a byte compare, so distinct chunks never share
+ * storage regardless of hash behaviour. */
+struct ing_map {
+	uint64_t *keys;   /* 0 = empty slot */
+	int      *slots;  /* index into the unique-chunk table */
+	size_t    cap;    /* power of two; may exceed 2^31 for huge streams */
+};
+
+static int ing_map_init(struct ing_map *m, size_t want)
+{
+	size_t cap = 16;
+	while (cap < want) cap *= 2;
+	m->keys = calloc(cap, sizeof *m->keys);
+	m->slots = malloc(cap * sizeof *m->slots);
+	if (!m->keys || !m->slots) {
+		free(m->keys); free(m->slots);
+		m->keys = NULL; m->slots = NULL;
+		return -1;
+	}
+	m->cap = cap;
+	return 0;
+}
+
+static void ing_map_free(struct ing_map *m)
+{
+	free(m->keys); free(m->slots);
+	m->keys = NULL; m->slots = NULL;
+}
+
+struct ing_uniq {
+	unsigned       off;      /* block offset in the archive */
+	unsigned       csize;    /* compressed size */
+	unsigned       usize;    /* uncompressed (chunk) size */
+	unsigned short csum;     /* fletcher checksum of raw chunk */
+	uint32_t       src_off;  /* chunk offset in the source buffer */
+};
+
+/* Build a real UC2 v3 archive from an in-memory stream.  Returns 0 and
+ * fills stats on success; fatal errors exit via err()/errx() as in
+ * create_archive(). */
+static int ingest_write_v3(const char *archive_path,
+                           const uint8_t *data, size_t len,
+                           struct uc2_ingest_stats *stats)
+{
+	struct uc2_merkle tree;
+	uc2_merkle_build(&tree, data, len, INGEST_CDC_BITS);
+	int nocc = tree.nchunks;
+
+	FILE *out = fopen(archive_path, "wb");
+	if (!out) {
+		uc2_merkle_free(&tree);
+		err(EXIT_FAILURE, "%s", archive_path);
+	}
+
+	unsigned char header[29];
+	memset(header, 0, sizeof header);
+	if (fwrite(header, 1, 29, out) != 29)
+		err(EXIT_FAILURE, "%s", archive_path);
+
+	int *occ_uniq = NULL;
+	struct ing_uniq *uniq = NULL;
+	if (nocc > 0) {
+		occ_uniq = malloc((size_t)nocc * sizeof *occ_uniq);
+		uniq = malloc((size_t)nocc * sizeof *uniq);
+		if (!occ_uniq || !uniq) err(EXIT_FAILURE, "malloc");
+	}
+
+	struct ing_map map;
+	if (ing_map_init(&map, nocc > 8 ? (size_t)nocc * 2 : 16) != 0)
+		err(EXIT_FAILURE, "malloc");
+	uint64_t mask = (uint64_t)map.cap - 1;
+
+	unsigned method = opt.level >= 6 ? 10 : (opt.level <= 1 ? 1 : (unsigned)opt.level);
+	int nuniq = 0;
+	uint64_t bytes_stored = 0, bytes_saved = 0;
+
+	for (int i = 0; i < nocc; i++) {
+		uint32_t coff = tree.chunks[i].offset;
+		uint32_t clen = tree.chunks[i].length;
+		uint64_t key = tree.chunks[i].hash;
+		if (key == 0) key = 1;  /* keep 0 as the empty-slot sentinel */
+
+		uint64_t p = key & mask;
+		int slot = -1;
+		while (map.keys[p]) {
+			int s = map.slots[p];
+			if (map.keys[p] == key
+			    && uniq[s].usize == clen
+			    && memcmp(data + uniq[s].src_off, data + coff, clen) == 0) {
+				slot = s;
+				break;
+			}
+			p = (p + 1) & mask;
+		}
+		if (slot >= 0) {
+			occ_uniq[i] = slot;
+			bytes_saved += clen;
+			continue;
+		}
+
+		/* New unique chunk: compress as a standalone NoMaster block. */
+		unsigned here = tell32(out);
+		struct mem_reader mr = { data + coff, 0, clen };
+		unsigned csize = 0;
+		unsigned short csum = 0;
+		int cr = uc2_compress(opt.level, mem_read_cb, &mr, fwrite_cb, out,
+		                      clen, &csum, &csize);
+		if (cr < 0)
+			errx(EXIT_FAILURE, "chunk compression error %d", cr);
+
+		slot = nuniq++;
+		uniq[slot] = (struct ing_uniq){
+			.off = here, .csize = csize, .usize = clen,
+			.csum = csum, .src_off = coff
+		};
+		occ_uniq[i] = slot;
+		bytes_stored += csize;
+
+		map.keys[p] = key;   /* p is the empty slot the probe stopped on */
+		map.slots[p] = slot;
+	}
+	ing_map_free(&map);
+
+	/* Synthetic entry names, zero-padded so lexical order == stream order. */
+	int width = 1;
+	for (int t = nocc - 1; t >= 10; t /= 10) width++;
+
+	/* size_t math: one entry per occurrence, so nocc can be large enough
+	   that a 32-bit product would wrap and undersize the allocation. */
+	size_t cdir_cap = 22;  /* EndOfCdir + XTAIL + aserial */
+	cdir_cap += (size_t)nocc * (size_t)(47 + 21 + (5 + width) + 1);
+
+	unsigned char *raw_cdir = malloc(cdir_cap);
+	if (!raw_cdir) err(EXIT_FAILURE, "malloc");
+	unsigned char *p = raw_cdir;
+
+	for (int i = 0; i < nocc; i++) {
+		char name[32];
+		int namelen = snprintf(name, sizeof name, "part-%0*d", width, i);
+		const struct ing_uniq *u = &uniq[occ_uniq[i]];
+
+		*p++ = 2; /* FileEntry */
+		/* OSMETA (22 bytes) */
+		w32(p, 0); p += 4;           /* parent = root */
+		*p++ = 0x20;                 /* archive attribute */
+		w32(p, 0); p += 4;           /* dos_time */
+		make_dos_name(p, name); p += 11;
+		*p++ = 0;                    /* hidden */
+		*p++ = 1;                    /* has tags */
+		/* FILEMETA (6 bytes) */
+		w32(p, u->usize); p += 4;
+		w16(p, u->csum); p += 2;
+		/* COMPRESS (10 bytes) */
+		w32(p, u->csize); p += 4;
+		w16(p, method); p += 2;
+		w32(p, 1); p += 4;           /* masterPrefix = NoMaster */
+		/* LOCATION (8 bytes) */
+		w32(p, 1); p += 4;           /* volume */
+		w32(p, u->off); p += 4;
+		/* EXTMETA: long name tag */
+		memcpy(p, "AIP:Win95 LongN", 16); p += 16;
+		w32(p, (unsigned)namelen + 1); p += 4;
+		*p++ = 0;
+		memcpy(p, name, (size_t)namelen + 1); p += namelen + 1;
+	}
+
+	/* EndOfCdir + XTAIL + aserial */
+	*p++ = 4;
+	*p++ = 0;
+	*p++ = 0;
+	w32(p, 0); p += 4;
+	memset(p, ' ', 11); p += 11;
+	w32(p, 0); p += 4;
+
+	unsigned cdir_size = (unsigned)(p - raw_cdir);
+	unsigned short cdir_csum = fletcher_csum(raw_cdir, cdir_size);
+
+	unsigned cdir_offset = tell32(out);
+	unsigned char crec[10];
+	memset(crec, 0, 10);
+	fwrite(crec, 1, 10, out);
+
+	struct mem_reader mr = { raw_cdir, 0, cdir_size };
+	unsigned cdir_csize = 0;
+	unsigned short cdir_comp_csum = 0;
+	int ret = uc2_compress(opt.level, mem_read_cb, &mr, fwrite_cb, out,
+	                       cdir_size, &cdir_comp_csum, &cdir_csize);
+	free(raw_cdir);
+	if (ret < 0)
+		errx(EXIT_FAILURE, "cdir compression error %d", ret);
+
+	unsigned total = tell32(out);
+
+	fseek(out, cdir_offset, SEEK_SET);
+	w32(crec + 0, 0);
+	w16(crec + 4, method);
+	w32(crec + 6, 1);                /* masterPrefix = NoMaster */
+	fwrite(crec, 1, 10, out);
+
+	fseek(out, 0, SEEK_SET);
+	unsigned complen = total - 13;
+	w32(header + 0, 0x1A324355);
+	w32(header + 4, complen);
+	w32(header + 8, complen + 0x01B2C3D4);
+	header[12] = 0;
+	w32(header + 13, 1);
+	w32(header + 17, cdir_offset);
+	w16(header + 21, cdir_csum);
+	header[23] = 0;
+	w16(header + 24, 203);
+	w16(header + 26, 200);
+	header[28] = 0;
+	fwrite(header, 1, 29, out);
+
+	free(occ_uniq);
+	free(uniq);
+	if (fclose(out) != 0)
+		err(EXIT_FAILURE, "%s", archive_path);
+	uc2_merkle_free(&tree);
+
+	if (stats) {
+		stats->bytes_in     = (uint64_t)len;
+		stats->chunks_total = nocc;
+		stats->chunks_new   = nuniq;
+		stats->chunks_dedup = nocc - nuniq;
+		stats->bytes_stored = bytes_stored;
+		stats->bytes_saved  = bytes_saved;
+	}
+	return 0;
+}
+
+/* Restore a v3 (real UC2) ingest archive by walking its file entries in
+ * central-directory order through the ordinary reader and concatenating
+ * their contents to out.  Returns 0 on success, -1 on any read/extract
+ * error. */
+static int ingest_restore_v3(const char *archive_path, FILE *out)
+{
+	FILE *f = fopen(archive_path, "rb");
+	if (!f)
+		return -1;
+	uc2_handle uc2 = uc2_open(&io, f);
+	if (!uc2) {
+		fclose(f);
+		return -1;
+	}
+
+	struct { struct uc2_xinfo xi; unsigned size; } *ents = NULL;
+	size_t nents = 0, cap = 0;
+	int rc = 0;
+
+	for (;;) {
+		struct uc2_entry e;
+		int ret = uc2_read_cdir(uc2, &e);
+		if (ret < 0) { rc = -1; break; }
+		if (ret == UC2_End)
+			break;
+
+		bool is_dir = e.is_dir;
+		struct uc2_xinfo xi = e.xi;
+		unsigned size = e.size;
+
+		while (ret == UC2_TaggedEntry) {
+			ret = uc2_get_tag(uc2, &e, NULL, NULL, NULL);
+			if (ret < 0) { rc = -1; break; }
+		}
+		if (rc < 0)
+			break;
+
+		if (!is_dir) {
+			if (nents >= cap) {
+				cap = cap ? cap * 2 : 64;
+				void *np = realloc(ents, cap * sizeof *ents);
+				if (!np) { rc = -1; break; }
+				ents = np;
+			}
+			ents[nents].xi = xi;
+			ents[nents].size = size;
+			nents++;
+		}
+	}
+
+	if (rc == 0) {
+		for (size_t i = 0; i < nents; i++) {
+			if (uc2_extract(uc2, &ents[i].xi, ents[i].size,
+			                write_file, out) < 0) {
+				rc = -1;
+				break;
+			}
+		}
+	}
+
+	free(ents);
+	uc2_close(uc2);
+	fclose(f);
+	return rc;
+}
+
 static int cmd_ingest_write(const char *archive_path)
 {
 	uint8_t *buf = NULL;
@@ -1709,7 +2028,7 @@ static int cmd_ingest_write(const char *archive_path)
 	}
 
 	struct uc2_ingest_stats st;
-	int rc = uc2_ingest_write(archive_path, buf, len, 0, &st);
+	int rc = ingest_write_v3(archive_path, buf, len, &st);
 	free(buf);
 	if (rc != 0)
 		errx(EXIT_FAILURE, "ingest write failed: %s", archive_path);
@@ -1724,7 +2043,23 @@ static int cmd_ingest_write(const char *archive_path)
 
 static int cmd_ingest_restore(const char *archive_path)
 {
-	if (uc2_ingest_restore(archive_path, stdout) != 0)
+	/* Auto-detect the on-disk format: the legacy v1/v2 writer emits a
+	   "UC2INGST" blob handled by libuc2; the v3 writer emits a real UC2
+	   archive restored by walking its entries through the reader. */
+	FILE *f = fopen(archive_path, "rb");
+	if (!f)
+		err(EXIT_FAILURE, "%s", archive_path);
+	char magic[8];
+	size_t n = fread(magic, 1, sizeof magic, f);
+	fclose(f);
+
+	int rc;
+	if (n == sizeof magic && memcmp(magic, "UC2INGST", 8) == 0)
+		rc = uc2_ingest_restore(archive_path, stdout);
+	else
+		rc = ingest_restore_v3(archive_path, stdout);
+
+	if (rc != 0)
 		errx(EXIT_FAILURE, "ingest restore failed: %s", archive_path);
 	return EXIT_SUCCESS;
 }
@@ -1871,8 +2206,8 @@ usage:
 				"uc2 --ots-attach <proof.ots> [-f] archive.uc2\n"
 				"uc2 --ots-extract archive.uc2 <out.ots>\n"
 				"uc2 --ots-info archive.uc2\n"
-				"uc2 --ingest <archive>            # stdin -> dedup blockstore\n"
-				"uc2 --ingest-restore <archive>    # blockstore -> stdout\n"
+				"uc2 --ingest <archive>            # stdin -> dedup UC2 archive\n"
+				"uc2 --ingest-restore <archive>    # archive -> stdout\n"
 			);
 			if (!opt.help)
 				printf("uc2 -h\n");
