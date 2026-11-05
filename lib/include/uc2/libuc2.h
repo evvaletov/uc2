@@ -85,6 +85,7 @@ UC2_API int uc2_extract(
 
 UC2_API const char *uc2_message(uc2_handle, int ret);
 
+#ifndef UC2_HUFFMAN_ONLY
 /* Compress raw data into a UC2 bitstream (no archive framing).
    level: 2=Fast, 3=Normal, 4=Tight(default), 5=Ultra.
    read() should return bytes read (0 at EOF, <0 on error).
@@ -116,6 +117,7 @@ UC2_API int uc2_compress_ex(
 	unsigned short *checksum_out,
 	unsigned *compressed_size_out
 );
+#endif
 
 /* Decompress the built-in SuperMaster (49152 bytes).
    buf must be at least 49152 bytes.

@@ -83,7 +83,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	if (size < 1 || size > (1u << 20))
 		return 0;
 
-	int level = 2 + (data[0] & 3);   /* 2..5 */
+	int level = 2 + (data[0] & 7);   /* 2..9: Huffman and rANS */
 	const unsigned char *payload = data + 1;
 	unsigned plen = (unsigned)(size - 1);
 
@@ -108,7 +108,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	put32(p, plen); p += 4;                    /* FILEMETA length */
 	put16(p, fcsum); p += 2;                   /* fletch */
 	put32(p, comp.len); p += 4;                /* COMPRESS clen */
-	put16(p, 1); p += 2;                       /* method ultra */
+	put16(p, level >= 6 ? 10 : 1); p += 2;     /* entropy method */
 	put32(p, 1); p += 4;                       /* masterPrefix NoMaster */
 	put32(p, 1); p += 4;                       /* LOCATION volume */
 	put32(p, 29); p += 4;                      /* offset */
@@ -149,7 +149,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	membuf_write(&arc, comp.data, comp.len);
 	unsigned char crec[10];
 	put32(crec + 0, cdir.len);
-	put16(crec + 4, 1);
+	put16(crec + 4, level >= 6 ? 10 : 1);
 	put32(crec + 6, 1);
 	membuf_write(&arc, crec, 10);
 	membuf_write(&arc, cdir.data, cdir.len);

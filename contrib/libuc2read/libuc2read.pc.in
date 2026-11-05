@@ -1,0 +1,10 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: libuc2read
+Description: LGPL UC2 Huffman archive reader (no rANS or compression)
+Version: @PROJECT_VERSION@
+Libs: -L${libdir} -luc2read
+Cflags: -I${includedir} -DUC2_SHARED -DUC2_HUFFMAN_ONLY

@@ -19,7 +19,9 @@
 #include <assert.h>
 
 #include "uc2/libuc2.h"
+#ifndef UC2_HUFFMAN_ONLY
 #include "uc2/uc2_rans.h"
+#endif
 
 #if !defined NDEBUG && !defined NDIAG
 #include <stdio.h>
@@ -1059,7 +1061,9 @@ int uc2_extract(
 /* decompress */
 
 static int decompressor_ultra(struct uc2_context *uc2, unsigned master, unsigned delta, struct reader *rd, struct writer *wr, unsigned limit, u16 *csum);
+#ifndef UC2_HUFFMAN_ONLY
 static int decompressor_rans(struct uc2_context *uc2, unsigned master_id, struct reader *rd, struct writer *wr, unsigned limit, u16 *csum);
+#endif
 
 static int decompressor(struct uc2_context *uc2, int method, struct reader *rd, struct writer *wr, unsigned master, unsigned len, u16 *csum)
 {
@@ -1082,7 +1086,12 @@ ultra:
 		delta = 1;
 		goto ultra;
 	} else if (method == 10) {
+#ifdef UC2_HUFFMAN_ONLY
+		uc2->message = "rANS requires the full UC2 reader";
+		ret = UC2_Unimplemented;
+#else
 		ret = decompressor_rans(uc2, master, rd, wr, len, csum);
+#endif
 	} else if (method == 80) {
 		uc2->message = "Turbo compression not implemented";
 		ret = UC2_Unimplemented;
@@ -1091,6 +1100,7 @@ ultra:
 	return ret;
 }
 
+#ifndef UC2_HUFFMAN_ONLY
 /* Flush the unwritten window region [*wpos, tail) in ring order. */
 static int rans_flush(struct writer *wr, struct csum *cs, const u8 *buf,
                       u16 *wpos, u16 tail)
@@ -1224,6 +1234,8 @@ static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
 	if (csum) *csum = csum_get(&cs);
 	return limit - remaining;
 }
+
+#endif /* !UC2_HUFFMAN_ONLY */
 
 /* cbuf */
 

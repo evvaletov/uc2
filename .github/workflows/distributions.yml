@@ -2,7 +2,7 @@ name: Distributions
 
 on:
   push:
-    branches: [main, 'work/python-package-*']
+    branches: [main, 'work/python-package-*', 'work/compression-integrations-*']
     tags: ['v*']
   pull_request:
   workflow_dispatch:

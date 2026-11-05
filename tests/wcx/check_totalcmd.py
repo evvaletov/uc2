@@ -10,6 +10,7 @@ import subprocess
 import time
 
 from pywinauto import Application
+from pywinauto.controls.hwndwrapper import InvalidWindowHandle
 from PIL import ImageGrab
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -41,9 +42,19 @@ app = Application(backend="win32").connect(process=process.pid, timeout=20)
 observed = []
 
 
+def windows():
+    # TC destroys its trial window between EnumWindows and wrapper creation.
+    for _ in range(20):
+        try:
+            return app.windows()
+        except InvalidWindowHandle:
+            time.sleep(0.05)
+    raise RuntimeError("Total Commander window enumeration did not settle")
+
+
 def snapshot():
     rows = []
-    for window in app.windows():
+    for window in windows():
         controls = []
         for child in window.descendants():
             try:
@@ -58,7 +69,7 @@ def snapshot():
 
 def press_trial_prompt():
     # Use the visible trial instruction, without altering registration state.
-    for window in app.windows():
+    for window in windows():
         if window.class_name() == "TNASTYNAGSCREEN":
             # TC exposes the large visible choice digit in a separate panel.
             digits = [c.window_text().strip() for c in window.descendants()
@@ -85,7 +96,7 @@ try:
     while time.monotonic() < deadline:
         snapshot()
         press_trial_prompt()
-        candidates = [w for w in app.windows() if w.class_name().startswith("TTOTAL_CMD")]
+        candidates = [w for w in windows() if w.class_name().startswith("TTOTAL_CMD")]
         if candidates:
             main = candidates[0]
             # A modal trial window may still prevent interaction.
@@ -112,7 +123,7 @@ try:
                for name, data in files.items()):
             break
         snapshot()
-        for window in app.windows():
+        for window in windows():
             if window.handle == main.handle:
                 continue
             for child in window.descendants():

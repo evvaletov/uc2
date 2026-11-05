@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reproducible synthetic collection benchmark; every restore is hash-checked."""
+"""Reproducible collection benchmark; every restore is hash-checked."""
 import argparse
 import csv
 import hashlib
@@ -83,6 +83,8 @@ def main():
     ap.add_argument('--output', type=Path, required=True)
     ap.add_argument('--size-kib', type=int, default=512)
     ap.add_argument('--repeat', type=int, default=3)
+    ap.add_argument('--corpus', type=Path,
+                    help='benchmark this existing flat directory instead of synthetic collections')
     args = ap.parse_args()
     uc2 = args.uc2.resolve()
     root = args.output.resolve()
@@ -96,13 +98,21 @@ def main():
                 'platform': platform.platform(), 'cpu': platform.processor(),
                 'uc2_sha256': digest(uc2), 'seed': 20261105,
                 'size_kib': args.size_kib, 'repeat': args.repeat,
-                'corpus': 'synthetic, eight revisions per collection; not real user data',
+                'corpus': (str(args.corpus.resolve()) if args.corpus else
+                           'synthetic, eight revisions per collection; not real user data'),
                 'rss_scope': 'per process peak RSS in KiB; tar materialization excluded equally',
                 'versions': {}}
     for tool, cmd in [('7zip', [seven]), ('zstd', ['zstd', '--version']), ('uc2', [str(uc2), '-h'])]:
         metadata['versions'][tool] = subprocess.run(cmd, capture_output=True, text=True).stdout.splitlines()[:5]
     rows = []
-    for kind, folder in fixtures(root / 'inputs', args.size_kib * 1024):
+    if args.corpus:
+        folder = args.corpus.resolve()
+        if not folder.is_dir() or not any(folder.iterdir()) or any(not p.is_file() for p in folder.iterdir()):
+            raise SystemExit('--corpus must be a nonempty flat directory of regular files')
+        collections = [(folder.name, folder)]
+    else:
+        collections = fixtures(root / 'inputs', args.size_kib * 1024)
+    for kind, folder in collections:
         expected = manifest(folder)
         total = sum(p.stat().st_size for p in folder.iterdir())
         tar_path = root / f'{kind}.tar'

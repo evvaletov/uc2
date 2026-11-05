@@ -42,7 +42,9 @@
 
 #include <uc2/libuc2.h>
 
-#define ARCHIVE_FORMAT_UC2  0xC0FF0000  /* placeholder format code */
+#ifndef ARCHIVE_FORMAT_UC2
+#define ARCHIVE_FORMAT_UC2  0xC0FF0000  /* local plugin ID, not an upstream allocation */
+#endif
 
 struct uc2_la_state {
 	FILE *input;

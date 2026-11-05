@@ -20,7 +20,7 @@ with tempfile.TemporaryDirectory(prefix='uc2-bsdtar-') as temp:
     (src/'folder'/'long filename.txt').write_bytes(b'libarchive integration\n' * 10000)
     (src/'empty').write_bytes(b'')
     (src/'root.bin').write_bytes(bytes(range(256))*400)
-    for level in (4, 6):
+    for level in ((4,) if '--legacy-only' in sys.argv[3:] else (4, 6)):
         archive=root/f'level{level}.uc2'
         subprocess.run([uc2,'-qw','-L',str(level),str(archive),'folder','empty','root.bin'],cwd=src,check=True)
         listed=subprocess.check_output([tar,'-tf',str(archive)]).decode().splitlines()
@@ -51,4 +51,4 @@ with tempfile.TemporaryDirectory(prefix='uc2-bsdtar-') as temp:
         subprocess.run([tar,'-xf',str(archive),'-C',str(out)],check=True,preexec_fn=limit)
         if sha(large)!=sha(out/'large.bin'): raise AssertionError('large restore mismatch')
         print('128 MiB entry restored under a 96 MiB address-space limit')
-print('Actual bsdtar: listing, Huffman/rANS, pipes, directories, empty entries, selective extraction passed')
+print('Actual bsdtar: listing, supported methods, pipes, directories, empty entries, selective extraction passed')
