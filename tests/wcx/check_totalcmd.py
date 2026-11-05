@@ -18,6 +18,7 @@ parser.add_argument("--app", type=Path, required=True)
 parser.add_argument("--plugin", type=Path, required=True)
 parser.add_argument("--uc2", type=Path, required=True)
 parser.add_argument("--work", type=Path, required=True)
+parser.add_argument("--extension", choices=("uc2", "u2r"), default="uc2")
 args = parser.parse_args()
 root = args.work.resolve()
 root.mkdir(parents=True, exist_ok=False)
@@ -30,7 +31,7 @@ files = {"hello.txt": b"Total Commander native application check\r\n" * 200,
          "nested/data.bin": bytes(range(256)) * 400, "empty": b""}
 for name, data in files.items():
     (source / name).write_bytes(data)
-archive = browse / "fixture.uc2"
+archive = browse / ("fixture." + args.extension)
 subprocess.run([str(args.uc2.resolve()), "-qw", str(archive), "hello.txt", "nested", "empty"],
                cwd=source, check=True)
 ini = root / "wincmd.ini"
@@ -64,7 +65,8 @@ def snapshot():
                 controls.append(dict(handle=child.handle, cls=child.class_name(), text=child.window_text()))
             except Exception:
                 pass
-        rows.append(dict(handle=window.handle, cls=window.class_name(), text=window.window_text(), controls=controls))
+        rows.append(dict(handle=window.handle, cls=window.class_name(), text=window.window_text(),
+                         visible=window.is_visible(), enabled=window.is_enabled(), controls=controls))
     observed.append(rows)
     (root / "windows.json").write_text(json.dumps(observed, indent=2))
     return rows
@@ -73,6 +75,8 @@ def snapshot():
 def press_trial_prompt():
     # Use the visible trial instruction, without altering registration state.
     for window in windows():
+        if not window.is_visible() or not window.is_enabled():
+            continue
         if window.class_name() == "TICONLIBCHANGEDLG":
             for child in window.descendants():
                 if child.window_text() == "Cancel":
@@ -117,11 +121,11 @@ try:
     for _ in range(6):
         press_trial_prompt()
         time.sleep(0.2)
-    main.send_message(1075, 2049, 0)  # cm_GoToFirstEntry: only fixture.uc2 in this panel
+    main.send_message(1075, 2049, 0)  # cm_GoToFirstEntry: only the fixture in this panel
     main.post_message(1075, 1001, 0)  # cm_Return honors the explicit internal association
     deadline = time.monotonic() + 10
     while time.monotonic() < deadline:
-        if any("fixture.uc2" in c.window_text().lower() for c in main.descendants()):
+        if any(archive.name in c.window_text().lower() for c in main.descendants()):
             break
         time.sleep(0.2)
     rows = snapshot()
@@ -135,7 +139,7 @@ try:
         "powershell", "-NoProfile", "-Command",
         f"(Get-Process -Id {process.pid}).Modules | ForEach-Object {{$_.FileName}}"], text=True)
     observed_module = args.plugin.name.lower() in modules.lower()
-    if not any("fixture.uc2" in c.window_text().lower() for c in main.descendants()):
+    if not any(archive.name in c.window_text().lower() for c in main.descendants()):
         raise RuntimeError("Total Commander did not enter the UC2 archive")
     (root / "loaded-modules.txt").write_text(modules)
     # TC's documented WM_USER+51 interface; IDs come from TOTALCMD.INC.
@@ -148,10 +152,11 @@ try:
             break
         snapshot()
         for window in windows():
-            if window.handle == main.handle:
+            if window.handle == main.handle or not window.is_visible() or not window.is_enabled():
                 continue
             for child in window.descendants():
-                if child.window_text().replace("&", "").strip().lower() in ("ok", "unpack", "copy"):
+                if (child.is_visible() and child.is_enabled() and
+                        child.window_text().replace("&", "").strip().lower() in ("ok", "unpack", "copy")):
                     child.send_message(0xF5, 0, 0)
                     break
         time.sleep(0.3)
@@ -162,6 +167,7 @@ try:
                     plugin_sha256=hashlib.sha256(args.plugin.read_bytes()).hexdigest(),
                     files={name: hashlib.sha256(data).hexdigest() for name, data in files.items()},
                     native_application=True, plugin_module_observed=observed_module,
+                    archive_extension=args.extension,
                     archive_opened=True, association="**u2r", packer_type=packer_type,
                     extracted_bytes_verified=True)
     (root / "result.json").write_text(json.dumps(evidence, indent=2) + "\n")

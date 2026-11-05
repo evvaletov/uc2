@@ -17,8 +17,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {arch: x64, suffix: wcx64, app: TOTALCMD64.EXE, python: x64}
-          - {arch: Win32, suffix: wcx, app: TOTALCMD.EXE, python: x86}
+          - {arch: x64, suffix: wcx64, app: TOTALCMD64.EXE, python: x64, extension: uc2}
+          - {arch: Win32, suffix: wcx, app: TOTALCMD.EXE, python: x86, extension: u2r}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -48,7 +48,7 @@ jobs:
         run: python -m pip install pywinauto==0.6.9 Pillow
       - name: Verify listing and extraction in Total Commander itself
         timeout-minutes: 3
-        run: python tests/wcx/check_totalcmd.py --app tcmd/${{ matrix.app }} --plugin build-wcx/contrib/totalcommander/Release/uc2.${{ matrix.suffix }} --uc2 build-wcx/cli/Release/uc2.exe --work totalcmd-evidence
+        run: python tests/wcx/check_totalcmd.py --app tcmd/${{ matrix.app }} --plugin build-wcx/contrib/totalcommander/Release/uc2.${{ matrix.suffix }} --uc2 build-wcx/cli/Release/uc2.exe --work totalcmd-evidence --extension ${{ matrix.extension }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:

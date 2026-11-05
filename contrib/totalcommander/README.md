@@ -12,25 +12,29 @@ to install it. The archive contains both 32-bit and 64-bit plugins, their
 installation metadata, license notices, and a corresponding-source reference.
 Both plugins link the C runtime statically.
 
-In 32-bit Total Commander, also register this plugin for the alias extension
-`u2r` under Configuration, Options, Packer, Configure packer extensions.
-Then add an internal association for `*.uc2` whose Open command is
-`**u2r`. This directs Enter to the plugin instead of TC's historical
-UC2 handler, which otherwise asks for DOS `UC.EXE`. The same association
-works in 64-bit TC. In `wincmd.ini`, the relevant entries look like:
+Total Commander 11.58.1 has different behavior in its two architectures:
+
+- In 64-bit TC, install the plugin for `uc2` and open the archive normally.
+- In 32-bit TC, register the same plugin for the alias extension `u2r` under
+  Configuration, Options, Packer, Configure packer extensions. Make a copy of
+  the archive with extension `.u2r`, then open that copy and extract from it.
+  The file contents stay unchanged. This avoids TC's historical `.uc2` path,
+  which requests DOS `UC.EXE` during extraction even when the WCX plugin was
+  selected for listing. The native application test uses this workaround.
+
+For a manual `wincmd.ini` configuration, add the following to its existing
+section with the correct plugin location:
 
 ```ini
 [PackerPlugins]
+uc2=196,C:\path\to\uc2.wcx
 u2r=196,C:\path\to\uc2.wcx
-[Associations]
-Filter1=*.uc2
-Filter1_open=**u2r
 ```
 
-Use an unused filter number instead of `1` if other internal associations
-already exist. Use `uc2.wcx64` for a 64-bit-only installation. Re-enter the
-archive through Enter after configuring the association; a direct `/L=archive.uc2`
-launch can use the built-in handler.
+Use `uc2.wcx64` for a 64-bit-only installation. An internal association such as
+`**u2r` can select the plugin for listing `.uc2` files, but did not avoid the
+32-bit extraction behavior in this release's native tests. Keep the original
+archive when making the `.u2r` copy; it remains an ordinary UC2 archive.
 
 Download the official [WCX SDK](https://github.com/ghisler/WCX-SDK) and point
 `UC2_WCX_SDK_DIR` at the directory containing `wcxhead.h`. The SDK is a build

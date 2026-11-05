@@ -58,7 +58,8 @@ the additional project-wide task-qa + task-at audit remains open.
   smaller archives. See [the measured results](docs/benchmarks/2026-11-05-compression.md).
 - [x] Added distributable MC helper/installer and 32-/64-bit WCX packages with
   source references and license notices. Native Total Commander application
-  checks complement the DLL ABI and cancellation tests.
+  checks complement the DLL ABI and cancellation tests; 32-bit TC uses the
+  documented `.u2r` copy workaround for its legacy `.uc2` extraction path.
 - [x] Prepared the optional-reader libarchive contribution, including enabled
   and disabled CMake builds, an Autotools build, and upstream-style fixtures.
   The dependency remains LGPL; the core and third-party licenses are unchanged.
