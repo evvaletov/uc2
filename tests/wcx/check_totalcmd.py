@@ -59,6 +59,15 @@ def snapshot():
 def press_trial_prompt():
     # Use the visible trial instruction, without altering registration state.
     for window in app.windows():
+        if window.class_name() == "TNASTYNAGSCREEN":
+            # TC exposes the large visible choice digit in a separate panel.
+            digits = [c.window_text().strip() for c in window.descendants()
+                      if c.window_text().strip() in ("1", "2", "3")]
+            if len(digits) == 1:
+                for child in window.descendants():
+                    if child.window_text() == "&" + digits[0]:
+                        child.send_message(0xF5, 0, 0)  # BM_CLICK
+                        return True
         text = " ".join([window.window_text(), *[c.window_text() for c in window.descendants()]])
         match = re.search(r"(?:button|press)\D{0,30}([123])", text, re.I)
         if match:
@@ -96,7 +105,7 @@ try:
     (root / "loaded-modules.txt").write_text(modules)
     # TC's documented WM_USER+51 interface; IDs come from TOTALCMD.INC.
     main.send_message(1075, 3301, 0)  # cm_SelectAllBoth
-    main.send_message(1075, 905, 0)   # cm_Copy: unpack selected entries to other panel
+    main.post_message(1075, 905, 0)  # cm_Copy opens a modal confirmation
     deadline = time.monotonic() + 30
     while time.monotonic() < deadline:
         if all((output / name).is_file() and (output / name).read_bytes() == data
@@ -108,7 +117,7 @@ try:
                 continue
             for child in window.descendants():
                 if child.window_text().replace("&", "").strip().lower() in ("ok", "unpack", "copy"):
-                    child.click()
+                    child.send_message(0xF5, 0, 0)
                     break
         time.sleep(0.3)
     else:
