@@ -50,7 +50,7 @@ the additional project-wide task-qa + task-at audit remains open.
    Keep exact fixture hashes and application-version evidence. Tracking:
    b3e413f, 81c0c8a.
 
-### Implemented for 3.0.0a6: writer APIs and audit repairs
+### Delivered in 3.0.0a6: writer APIs and audit repairs
 
 - [x] Moved CLI archive assembly into the supported C `uc2_writer` API. Added
   Python `UC2Writer` for recursive directories, files, bytes, and streams.
@@ -62,9 +62,12 @@ the additional project-wide task-qa + task-at audit remains open.
   and removed repeated dash clauses while preserving command flags.
 - [x] Local C/Python tests and sanitizer checks, plus real DOS application
   round trips. The DOSBox harness now uses a supported headless SDL setup.
+- [x] Published [alpha6 on PyPI](https://pypi.org/project/uc2/3.0.0a6/) and
+  [GitHub](https://github.com/evvaletov/uc2/releases/tag/v3.0.0-alpha.6), with
+  twenty wheels, four native CLI packages, integration packages, and source.
 - [ ] Complete the independent three-reviewer audit panel. Subscription/access
-  and credit failures prevented completed reviews in this attempt. Local fixes
-  are complete; this item remains open. Details and release validation are in
+  failures, exhausted quota/credit, and timeouts prevented completed reviews.
+  Local fixes are complete; this item remains open. Release validation is in
   [the alpha6 audit notes](docs/releases/3.0.0a6-qa.md).
 
 ### Delivered: previous priorities 3-5 (3.0.0a5)
