@@ -12,6 +12,26 @@ to install it. The archive contains both 32-bit and 64-bit plugins, their
 installation metadata, license notices, and a corresponding-source reference.
 Both plugins link the C runtime statically.
 
+In 32-bit Total Commander, also register this plugin for the alias extension
+`uc2reader` under Configuration, Options, Packer, Configure packer extensions.
+Then add an internal association for `*.uc2` whose Open command is
+`**uc2reader`. This directs Enter to the plugin instead of TC's historical
+UC2 handler, which otherwise asks for DOS `UC.EXE`. The same association
+works in 64-bit TC. In `wincmd.ini`, the relevant entries look like:
+
+```ini
+[PackerPlugins]
+uc2reader=68,C:\path\to\uc2.wcx
+[Associations]
+Filter1=*.uc2
+Filter1_open=**uc2reader
+```
+
+Use an unused filter number instead of `1` if other internal associations
+already exist. Use `uc2.wcx64` for a 64-bit-only installation. Re-enter the
+archive through Enter after configuring the association; a direct `/L=archive.uc2`
+launch can use the built-in handler.
+
 Download the official [WCX SDK](https://github.com/ghisler/WCX-SDK) and point
 `UC2_WCX_SDK_DIR` at the directory containing `wcxhead.h`. The SDK is a build
 dependency and is not vendored or relicensed here.

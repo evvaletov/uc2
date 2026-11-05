@@ -22,21 +22,24 @@ args = parser.parse_args()
 root = args.work.resolve()
 root.mkdir(parents=True, exist_ok=False)
 source, output = root / "source", root / "output"
+browse = root / "browse"
+browse.mkdir()
 (source / "nested").mkdir(parents=True)
 output.mkdir()
 files = {"hello.txt": b"Total Commander native application check\r\n" * 200,
          "nested/data.bin": bytes(range(256)) * 400, "empty": b""}
 for name, data in files.items():
     (source / name).write_bytes(data)
-archive = root / "fixture.uc2"
+archive = browse / "fixture.uc2"
 subprocess.run([str(args.uc2.resolve()), "-qw", str(archive), "hello.txt", "nested", "empty"],
                cwd=source, check=True)
 ini = root / "wincmd.ini"
 ini.write_text("[Configuration]\nUseIniInProgramDir=0\nFirstTime=0\nUseNewDefFont=1\n"
                "DirBrackets=0\nStartupScreen=0\n[PackerPlugins]\n"
-               f"uc2=68,{args.plugin.resolve()}\n", encoding="utf-8")
+               f"uc2=68,{args.plugin.resolve()}\nuc2reader=68,{args.plugin.resolve()}\n"
+               "[Associations]\nFilter1=*.uc2\nFilter1_open=**uc2reader\n", encoding="utf-8")
 command = [str(args.app.resolve()), "/N", f"/I={ini}", f"/F={root / 'wcx_ftp.ini'}",
-           f"/L={archive}", f"/R={output}"]
+           f"/L={browse}", f"/R={output}"]
 process = subprocess.Popen(command)
 app = Application(backend="win32").connect(process=process.pid, timeout=20)
 observed = []
@@ -110,7 +113,17 @@ try:
         time.sleep(0.5)
     if main is None or not main.is_enabled():
         raise RuntimeError("Total Commander did not finish its visible startup prompt")
-    time.sleep(1)
+    # First-run icon selection can appear just after the trial prompt closes.
+    for _ in range(6):
+        press_trial_prompt()
+        time.sleep(0.2)
+    main.send_message(1075, 2049, 0)  # cm_GoToFirstEntry: only fixture.uc2 in this panel
+    main.post_message(1075, 1001, 0)  # cm_Return honors the explicit internal association
+    deadline = time.monotonic() + 10
+    while time.monotonic() < deadline:
+        if any("fixture.uc2" in c.window_text().lower() for c in main.descendants()):
+            break
+        time.sleep(0.2)
     rows = snapshot()
     # Some TC builds unload a WCX after listing. Record module observation,
     # then require actual application extraction and exact bytes below.
@@ -145,7 +158,7 @@ try:
                     plugin_sha256=hashlib.sha256(args.plugin.read_bytes()).hexdigest(),
                     files={name: hashlib.sha256(data).hexdigest() for name, data in files.items()},
                     native_application=True, plugin_module_observed=observed_module,
-                    archive_opened=True, extracted_bytes_verified=True)
+                    archive_opened=True, association="**uc2reader", extracted_bytes_verified=True)
     (root / "result.json").write_text(json.dumps(evidence, indent=2) + "\n")
     print(json.dumps(evidence))
 finally:
