@@ -3,17 +3,6 @@
 
 /* libarchive read handler for UC2 v3 archives.
  *
- * Status: milestones 1-6.
- *   M1 -- bid() with UC2 magic check.
- *   M2 -- read_header iterates uc2_read_cdir, maps each cdir entry to
- *         libarchive's archive_entry shape (name, size, mode, mtime).
- *   M3 -- read_data uses uc2_extract to decompress an entry, buffers
- *         the result, then yields it via libarchive's pull-style API.
- *   M4 -- master blocks resolve inside libuc2 during uc2_extract.
- *   M5 -- multi-file archives with full directory paths composed from
- *         the cdir's directory ids (parent-before-child not assumed).
- *   M6 -- tagged entries (Win95 long names) resolved via uc2_get_tag.
- *
  * Input and decompressed entries are spooled to anonymous temporary
  * files. Payload RAM is bounded; directory metadata and libuc2's master
  * cache still scale with the archive. This also handles pipes/filters.

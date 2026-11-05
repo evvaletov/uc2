@@ -115,6 +115,26 @@ static void test_empty(void)
 	assert(clen == 0);
 }
 
+static void test_standard_block(void)
+{
+    /* LZ4's terminal five literals and twelve-byte match-start distance. */
+    const uint8_t expected[] = {0x1a, 'A', 1, 0, 0x50, 'A','A','A','A','A'};
+    uint8_t input[20], packed[64], decoded[20];
+    memset(input, 'A', sizeof input);
+    size_t n = uc2_lz4_compress(input, sizeof input, packed, sizeof packed);
+    assert(n == sizeof expected && memcmp(packed, expected, n) == 0);
+    assert(uc2_lz4_decompress(expected, sizeof expected, decoded, sizeof decoded) == 20);
+    assert(memcmp(input, decoded, 20) == 0);
+    assert(uc2_lz4_compress(NULL, 0, packed, sizeof packed) == 1 && packed[0] == 0);
+    assert(uc2_lz4_bound(SIZE_MAX) == 0);
+    for (size_t size = 1; size < 20; ++size) {
+        n = uc2_lz4_compress(input, size, packed, sizeof packed);
+        assert(n && uc2_lz4_decompress(packed, n, decoded, size) == size);
+        assert(memcmp(input, decoded, size) == 0);
+        assert(uc2_lz4_compress(input, size, packed, 1) == 0);
+    }
+}
+
 int main(void)
 {
 	printf("LZ4 tests:\n");
@@ -124,6 +144,7 @@ int main(void)
 	TEST(test_incompressible);
 	TEST(test_small);
 	TEST(test_empty);
+	TEST(test_standard_block);
 	printf("%d/%d tests passed\n", tests_passed, tests_run);
 	return tests_passed == tests_run ? 0 : 1;
 }

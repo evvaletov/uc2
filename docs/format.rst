@@ -16,8 +16,8 @@ Archive Layout
 
 All multi-byte integers are little-endian.
 
-FHEAD — File Header
-~~~~~~~~~~~~~~~~~~~
+FHEAD: File Header
+~~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :widths: 15 15 70
@@ -38,8 +38,8 @@ FHEAD — File Header
      - 1
      - Damage protection flag
 
-XHEAD — Extended Header
-~~~~~~~~~~~~~~~~~~~~~~~
+XHEAD: Extended Header
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :widths: 15 15 70
@@ -103,12 +103,12 @@ across files.  Three kinds exist:
    :widths: 15 85
 
    * - 0
-     - **SuperMaster** — built-in 49 152-byte dictionary, decompressed
+     - **SuperMaster**: built-in 49 152-byte dictionary, decompressed
        from a static blob embedded in the library.
    * - 1
-     - **NoMaster** — 512 zero bytes (minimal dictionary).
+     - **NoMaster**: 512 zero bytes (minimal dictionary).
    * - ≥ 2
-     - **Custom master** — archive-specific, described by a MASMETA
+     - **Custom master**: archive-specific, described by a MASMETA
        record in the central directory.
 
 MASMETA (20 bytes):

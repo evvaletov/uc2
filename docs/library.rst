@@ -15,7 +15,7 @@ Archive Reading
 
    Check whether a buffer contains a UC2 archive header.
 
-   :param magic: Pointer to the first 4--21 bytes of the file.
+   :param magic: Pointer to the first 4-21 bytes of the file.
    :param magic_size: Number of bytes available.
    :returns: ``1`` if UC2, ``0`` if not, ``-1`` if more bytes needed.
 
@@ -71,7 +71,7 @@ Compression
    Compress raw data into a UC2 bitstream (no archive framing).
 
    :param level: Compression level: 2 = Fast, 3 = Normal, 4 = Tight
-                 (default), 5 = Ultra.
+                 (default), 5 = Ultra. Levels 6-9 select rANS Fast through Ultra.
    :param read: Callback returning bytes read (0 at EOF, <0 on error).
    :param write: Callback returning <0 on error.
    :param size: Total input size in bytes.
@@ -86,7 +86,8 @@ Compression
    the master for cross-file deduplication.  Pass ``NULL`` / ``0`` for
    no master (equivalent to :c:func:`uc2_compress`).
 
-   The CLI uses the built-in SuperMaster (49 KB) by default.
+   The CLI builds custom master blocks from input content. Those masters
+   are themselves compressed with the built-in 49,152-byte SuperMaster.
 
 .. c:function:: int uc2_get_supermaster(void *buf, unsigned buf_size)
 

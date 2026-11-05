@@ -28,10 +28,10 @@ The following files in this repository derive directly from Bobrowski's
 work and retain his licence (see `docs/license-audit.md` for the full
 provenance table):
 
-- `lib/src/decompress.c` (LGPL-3.0-only)  --  derived from `libunuc2.c`
-- `lib/src/list.h` (LGPL-3.0-only)  --  byte-identical to upstream
-- `lib/include/uc2/libuc2.h` (LGPL-3.0-only)  --  derived from `libunuc2.h`
-- `cli/src/main.c` (GPL-3.0-or-later)  --  derived from `unuc2.c`,
+- `lib/src/decompress.c` (LGPL-3.0-only): derived from `libunuc2.c`
+- `lib/src/list.h` (LGPL-3.0-only): byte-identical to upstream
+- `lib/include/uc2/libuc2.h` (LGPL-3.0-only): derived from `libunuc2.h`
+- `cli/src/main.c` (GPL-3.0-or-later): derived from `unuc2.c`,
   with substantial additions for archive creation, OTS, and benchmarking
 - `contrib/totalcommander/uc2_wcx.c` (LGPL-3.0-only), adapted from the WCX prototype
 - `cli/src/compat/compat_win32.c` (LGPL-3.0-only)
@@ -46,14 +46,14 @@ de Vries's 1992 binaries.
 
 ## Additional Contributors
 
-- **Danny Bezemer**  --  co-authored UC2 with de Vries during the
+- **Danny Bezemer**: co-authored UC2 with de Vries during the
   original 1992-1996 development.
-- **Jan-Pieter Cornet**  --  early testing, archive samples, and format
+- **Jan-Pieter Cornet**: early testing, archive samples, and format
   documentation contributions to the unuc2 project.
 
 ## UC2 v3.0.0 Revival
 
-**Eremey Valetov**  --  project revival, including:
+**Eremey Valetov**: project revival, including:
 
 - CMake build system and cross-platform porting (Linux, macOS, MSVC, DJGPP)
 - LZ77+Huffman compression engine (compatible with original UC2 Pro)

@@ -14,7 +14,7 @@ exclude_patterns = ["_build"]
 
 html_theme = "furo"
 html_static_path = ["_static"]
-html_title = "UC2 — UltraCompressor II"
+html_title = "UC2: UltraCompressor II"
 html_logo = None
 html_favicon = None
 

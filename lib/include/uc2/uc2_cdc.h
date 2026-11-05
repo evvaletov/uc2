@@ -3,14 +3,14 @@
 /* Content-defined chunking (CDC) for UC2 deduplication.
  *
  * Uses the Gear rolling hash for fast, content-aware chunk boundary
- * detection.  Gear hash is a simple multiplicative hash that XORs each
- * byte with a pre-computed random table, giving O(1) per-byte updates.
+ * detection.  The hash shifts the state and adds a table entry for each byte.
  *
  * Typical usage:
  *   struct uc2_chunker c;
- *   uc2_chunker_init(&c, 13);  // avg chunk ~8KB (2^13)
+ *   uc2_chunker_init(&c, 13, 0, 0);  // avg chunk ~8KB (2^13)
  *   while (uc2_chunker_next(&c, data, len, &chunk_off, &chunk_len))
  *       process(data + chunk_off, chunk_len);
+ *   if (chunk_len) process(data + chunk_off, chunk_len);
  */
 
 #ifndef UC2_CDC_H

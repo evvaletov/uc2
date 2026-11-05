@@ -120,13 +120,13 @@ the additional project-wide task-qa + task-at audit remains open.
   The shared workflows are at
   `/home/evaletov/.claude-skills-shared/task-qa/SKILL.md` and
   `/home/evaletov/.claude-skills-shared/task-at/SKILL.md`.
-- [ ] Fix the confirmed BLAKE3 correctness gap: an independent check against
+- [x] Fixed the confirmed BLAKE3 correctness gap: an independent check against
   the [official vectors](https://github.com/BLAKE3-team/BLAKE3/blob/master/test_vectors/test_vectors.json)
-  matched 11 of 35 cases and failed 24, starting at 65 input bytes. The current
-  unit tests pass without checking those outputs. Include official vectors and
-  incremental block/chunk boundaries in the repair. No BLAKE3 call was found
-  in the current CLI, compressor, decompressor, or blockstore; do not infer
-  ordinary archive corruption from this standalone-module finding.
+  originally matched 11 of 35 cases and failed 24. The repaired implementation
+  passes all 35 official vectors, incremental block/chunk boundaries, repeated
+  finalization, and updates after finalization. It remains a standalone module;
+  the archive format still uses its original checksum. See the
+  [alpha6 audit notes](docs/releases/3.0.0a6-qa.md).
 - [x] Clean up the README's repeated dash clauses and ranges while preserving
   command options. Correct alpha-release status, compatibility scope, module
   versus CLI features, BLAKE3 claims, test instructions, and attribution. Remove
@@ -265,11 +265,9 @@ No mainstream archiver offers post-quantum encryption.
 
 ## Phase 7: Cryptographic Integrity & Timestamping
 
-- [-] BLAKE3 content hashing (`uc2_blake3.h`): implementation present, but
-      official-vector failures require repair (c9edf0b). The original module has
-      256-bit digests, incremental and one-shot API, constant-time
-      comparison, tree hashing structure.  7 unit tests including
-      avalanche, incremental-vs-oneshot, and single-byte updates.
+- [x] BLAKE3 content hashing (`uc2_blake3.h`): repaired and checked against
+      all 35 official unkeyed vectors, with incremental and finalization tests.
+      Not integrated into the archive format.
 - [x] SHA-256 (`uc2_sha256.h`): pure-C FIPS 180-4 implementation,
       one-shot and incremental API.  6 unit tests against published
       test vectors (empty, "abc", 56-byte, 1M `'a'`, byte-by-byte

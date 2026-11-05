@@ -1,12 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 
-/* BLAKE3 cryptographic hashing — simplified single-threaded implementation.
- *
- * Based on the BLAKE3 specification (github.com/BLAKE3-team/BLAKE3).
- * Uses the BLAKE2s round function with Bao tree structure.
- *
- * This implementation handles the common case (single chunk, sequential
- * hashing) and supports the tree structure for inputs > 1024 bytes. */
+/* Unkeyed BLAKE3, with 32-byte output and incremental tree hashing.
+ * See tests/data/blake3-vectors.h for the pinned reference and test vectors. */
 
 #include "uc2/uc2_blake3.h"
 #include <string.h>
@@ -99,7 +94,7 @@ static void chunk_block(struct uc2_blake3 *ctx, const uint8_t block[64],
 }
 
 /* Finalize a chunk: compress the last block with CHUNK_END */
-static void chunk_finalize(struct uc2_blake3 *ctx, uint32_t cv_out[8])
+static void chunk_finalize(const struct uc2_blake3 *ctx, uint32_t cv_out[8])
 {
 	uint8_t flags = ctx->flags | CHUNK_END;
 	if (ctx->blocks_compressed == 0) flags |= CHUNK_START;
@@ -115,7 +110,7 @@ static void chunk_finalize(struct uc2_blake3 *ctx, uint32_t cv_out[8])
 
 /* Merge two chaining values as a parent node */
 static void parent_cv(const uint32_t left[8], const uint32_t right[8],
-                      uint32_t out_cv[8])
+                      uint32_t out_cv[8], uint8_t flags)
 {
 	uint8_t block[64];
 	for (int i = 0; i < 8; i++) {
@@ -131,7 +126,7 @@ static void parent_cv(const uint32_t left[8], const uint32_t right[8],
 		block[32+i*4+3] = (uint8_t)(right[i]>>24);
 	}
 	uint32_t out[16];
-	compress(IV, block, 64, 0, PARENT, out);
+	compress(IV, block, 64, 0, PARENT | flags, out);
 	cv_from_out(out, out_cv);
 }
 
@@ -143,7 +138,7 @@ static void push_cv(struct uc2_blake3 *ctx, const uint32_t cv[8])
 	uint64_t total = ctx->chunk_counter;
 	while (total & 1) {
 		ctx->cv_stack_len--;
-		parent_cv(&ctx->cv_stack[ctx->cv_stack_len * 8], new_cv, new_cv);
+		parent_cv(&ctx->cv_stack[ctx->cv_stack_len * 8], new_cv, new_cv, 0);
 		total >>= 1;
 	}
 	memcpy(&ctx->cv_stack[ctx->cv_stack_len * 8], new_cv, 32);
@@ -160,40 +155,21 @@ void uc2_blake3_update(struct uc2_blake3 *ctx, const void *data, size_t len)
 {
 	const uint8_t *p = data;
 	while (len > 0) {
-		/* If buffer has a full block, process it */
+		/* Retain the last block until more input determines whether it
+		 * ends a chunk, or final() determines whether it is the root. */
 		if (ctx->buf_len == 64) {
-			chunk_block(ctx, ctx->buf, 64, 0);
-			ctx->buf_len = 0;
-
-			/* If we've filled a full chunk (1024 bytes = 16 blocks),
-			   finalize this chunk and start a new one */
-			if (ctx->blocks_compressed == 16) {
-				/* This was the 16th block; we need to finalize with the
-				   PREVIOUS block as the last, and this leftover starts a
-				   new chunk.  Actually, we process blocks as they come
-				   and finalize when the chunk is complete. */
+			if (ctx->blocks_compressed == 15) {
+				uint32_t chunk_cv[8];
+				chunk_finalize(ctx, chunk_cv);
+				push_cv(ctx, chunk_cv);
+				ctx->chunk_counter++;
+				memcpy(ctx->cv, IV, sizeof ctx->cv);
+				ctx->blocks_compressed = 0;
+			} else {
+				chunk_block(ctx, ctx->buf, 64, 0);
 			}
+			ctx->buf_len = 0;
 		}
-
-		/* Check if we're at a chunk boundary */
-		size_t chunk_bytes = (size_t)ctx->blocks_compressed * 64 + ctx->buf_len;
-		if (chunk_bytes >= UC2_BLAKE3_CHUNK_LEN && ctx->buf_len == 0 &&
-		    ctx->blocks_compressed > 0) {
-			/* Finalize current chunk — but we've already processed all
-			   blocks.  The last block was a full block, so re-compress
-			   it with CHUNK_END. */
-			/* Start new chunk */
-			uint32_t chunk_cv[8];
-			/* Recompute final block with CHUNK_END */
-			chunk_finalize(ctx, chunk_cv);
-			push_cv(ctx, chunk_cv);
-
-			ctx->chunk_counter++;
-			memcpy(ctx->cv, IV, 32);
-			ctx->blocks_compressed = 0;
-			ctx->flags = 0;
-		}
-
 		size_t take = 64 - ctx->buf_len;
 		if (take > len) take = len;
 		memcpy(ctx->buf + ctx->buf_len, p, take);
@@ -205,55 +181,27 @@ void uc2_blake3_update(struct uc2_blake3 *ctx, const void *data, size_t len)
 
 void uc2_blake3_final(const struct uc2_blake3 *ctx, uint8_t out[UC2_BLAKE3_OUT_LEN])
 {
-	/* Finalize current chunk */
-	uint32_t chunk_cv[8];
-	struct uc2_blake3 tmp = *ctx;
-
-	/* If this is the only chunk, it gets ROOT flag */
-	if (tmp.chunk_counter == 0 && tmp.cv_stack_len == 0) {
-		uint8_t flags = tmp.flags | CHUNK_START | CHUNK_END | ROOT;
-		uint8_t block[64];
-		memset(block, 0, 64);
-		memcpy(block, tmp.buf, tmp.buf_len);
-		uint32_t result[16];
-		compress(tmp.cv, block, tmp.buf_len, 0, flags, result);
-		for (int i = 0; i < 8; i++) {
-			out[i*4]   = (uint8_t)(result[i]);
-			out[i*4+1] = (uint8_t)(result[i]>>8);
-			out[i*4+2] = (uint8_t)(result[i]>>16);
-			out[i*4+3] = (uint8_t)(result[i]>>24);
-		}
-		return;
-	}
-
-	/* Multi-chunk: finalize current chunk */
-	chunk_finalize(&tmp, chunk_cv);
-
-	/* Merge with stack */
 	uint32_t cv[8];
-	memcpy(cv, chunk_cv, 32);
-	for (int i = (int)tmp.cv_stack_len - 1; i >= 0; i--) {
-		uint32_t merged[8];
-		parent_cv(&tmp.cv_stack[i * 8], cv, merged);
-		memcpy(cv, merged, 32);
+	if (ctx->cv_stack_len == 0) {
+		uint8_t flags = ctx->flags | CHUNK_END | ROOT;
+		uint8_t block[64] = {0};
+		uint32_t result[16];
+		if (ctx->blocks_compressed == 0) flags |= CHUNK_START;
+		memcpy(block, ctx->buf, ctx->buf_len);
+		compress(ctx->cv, block, ctx->buf_len, 0, flags, result);
+		cv_from_out(result, cv);
+	} else {
+		chunk_finalize(ctx, cv);
+		for (int i = (int)ctx->cv_stack_len - 1; i >= 0; i--)
+			/* ROOT applies to the final parent compression, whose block
+			 * contains both children, not to a hash of its chaining value. */
+			parent_cv(&ctx->cv_stack[i * 8], cv, cv, i == 0 ? ROOT : 0);
 	}
-
-	/* Output with ROOT flag */
-	uint8_t block[64];
-	memset(block, 0, 64);
 	for (int i = 0; i < 8; i++) {
-		block[i*4]   = (uint8_t)(cv[i]);
-		block[i*4+1] = (uint8_t)(cv[i]>>8);
-		block[i*4+2] = (uint8_t)(cv[i]>>16);
-		block[i*4+3] = (uint8_t)(cv[i]>>24);
-	}
-	uint32_t result[16];
-	compress(IV, block, 32, 0, PARENT | ROOT, result);
-	for (int i = 0; i < 8; i++) {
-		out[i*4]   = (uint8_t)(result[i]);
-		out[i*4+1] = (uint8_t)(result[i]>>8);
-		out[i*4+2] = (uint8_t)(result[i]>>16);
-		out[i*4+3] = (uint8_t)(result[i]>>24);
+		out[i*4]   = (uint8_t)cv[i];
+		out[i*4+1] = (uint8_t)(cv[i]>>8);
+		out[i*4+2] = (uint8_t)(cv[i]>>16);
+		out[i*4+3] = (uint8_t)(cv[i]>>24);
 	}
 }
 

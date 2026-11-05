@@ -1,11 +1,8 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 
-/* LZ4-compatible ultra-fast compression.
- *
- * Single-probe hash table with 4-byte match minimum.  No hash chains —
- * each hash slot holds only the most recent position, giving O(1)
- * match finding at the cost of missing some matches.  This trades
- * compression ratio for extreme speed. */
+/* LZ4 block compression with a single-probe match table.
+ * End-of-block constraints follow the upstream block format specification:
+ * https://github.com/lz4/lz4/blob/dev/doc/lz4_Block_format.md */
 
 #include "uc2/uc2_lz4.h"
 #include <string.h>
@@ -37,19 +34,20 @@ static void write_len(uint8_t **dst, size_t len)
 size_t uc2_lz4_compress(const uint8_t *src, size_t src_len,
                         uint8_t *dst, size_t dst_cap)
 {
-	if (src_len == 0 || dst_cap < 1) return 0;
+	if (!dst || dst_cap < 1 || (src_len && !src) || src_len > UINT32_MAX) return 0;
+	if (src_len == 0) { dst[0] = 0; return 1; }
 
 	uint32_t htab[HASH_SIZE];
 	memset(htab, 0, sizeof htab);
 
 	const uint8_t *ip = src;
 	const uint8_t *const iend = src + src_len;
-	const uint8_t *const mflimit = iend - MIN_MATCH;
+	const uint8_t *const mflimit = src_len >= 12 ? iend - 12 : src;
 	const uint8_t *anchor = ip;
 	uint8_t *op = dst;
 	uint8_t *const oend = dst + dst_cap;
 
-	if (src_len < MIN_MATCH + 1) goto emit_last;
+	if (src_len < 13) goto emit_last;
 
 	ip++;  /* first byte can't be a match ref */
 
@@ -74,12 +72,13 @@ size_t uc2_lz4_compress(const uint8_t *src, size_t src_len,
 		size_t match_len = MIN_MATCH;
 
 		/* Extend match forward */
-		while (ip + match_len < iend && ref[match_len] == ip[match_len])
+		while (match_len < (size_t)(iend - ip) - 5 && ref[match_len] == ip[match_len])
 			match_len++;
 
 		/* Emit token */
-		if (op + 1 + (lit_len > 14 ? lit_len/255 + 1 : 0) + lit_len + 2 +
-		    (match_len - MIN_MATCH > 14 ? (match_len - MIN_MATCH)/255 + 1 : 0) > oend)
+		size_t overhead = 3 + (lit_len > 14 ? lit_len/255 + 1 : 0) +
+		    (match_len - MIN_MATCH > 14 ? (match_len - MIN_MATCH)/255 + 1 : 0);
+		if (lit_len > (size_t)(oend - op) || overhead > (size_t)(oend - op) - lit_len)
 			return 0;  /* output overflow */
 
 		uint8_t *token = op++;
@@ -112,7 +111,8 @@ size_t uc2_lz4_compress(const uint8_t *src, size_t src_len,
 emit_last:;
 	/* Emit final literal run */
 	size_t last_lit = (size_t)(iend - anchor);
-	if (op + 1 + (last_lit > 14 ? last_lit/255 + 1 : 0) + last_lit > oend)
+	if (last_lit > (size_t)(oend - op) ||
+	    1 + (last_lit > 14 ? last_lit/255 + 1 : 0) > (size_t)(oend - op) - last_lit)
 		return 0;
 
 	uint8_t *token = op++;
@@ -129,6 +129,7 @@ emit_last:;
 size_t uc2_lz4_decompress(const uint8_t *src, size_t src_len,
                           uint8_t *dst, size_t dst_cap)
 {
+	if (!src || !dst || !src_len) return 0;
 	const uint8_t *ip = src;
 	const uint8_t *const iend = src + src_len;
 	uint8_t *op = dst;
@@ -144,12 +145,13 @@ size_t uc2_lz4_decompress(const uint8_t *src, size_t src_len,
 			do {
 				if (ip >= iend) return 0;
 				b = *ip++;
+				if (lit_len > SIZE_MAX - b) return 0;
 				lit_len += b;
 			} while (b == 255);
 		}
 
 		/* Copy literals */
-		if (ip + lit_len > iend || op + lit_len > oend) return 0;
+		if (lit_len > (size_t)(iend - ip) || lit_len > (size_t)(oend - op)) return 0;
 		memcpy(op, ip, lit_len);
 		ip += lit_len;
 		op += lit_len;
@@ -157,7 +159,7 @@ size_t uc2_lz4_decompress(const uint8_t *src, size_t src_len,
 		if (ip >= iend) break;  /* end of stream (last token has no match) */
 
 		/* Match offset */
-		if (ip + 2 > iend) return 0;
+		if ((size_t)(iend - ip) < 2) return 0;
 		uint16_t offset = ip[0] | ((uint16_t)ip[1] << 8);
 		ip += 2;
 		if (offset == 0 || op - dst < offset) return 0;
@@ -169,12 +171,13 @@ size_t uc2_lz4_decompress(const uint8_t *src, size_t src_len,
 			do {
 				if (ip >= iend) return 0;
 				b = *ip++;
+				if (match_len > SIZE_MAX - b) return 0;
 				match_len += b;
 			} while (b == 255);
 		}
 
 		/* Copy match */
-		if (op + match_len > oend) return 0;
+		if (match_len > (size_t)(oend - op)) return 0;
 		const uint8_t *ref = op - offset;
 		for (size_t i = 0; i < match_len; i++)
 			op[i] = ref[i];  /* byte-by-byte for overlapping matches */

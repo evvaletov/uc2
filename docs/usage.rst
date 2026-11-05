@@ -26,18 +26,15 @@ Modes
    Extract a file to stdout.
 
 ``uc2 -w archive.uc2 files...``
-   Create a new archive from the given files.  The original LZ77+Huffman
-   algorithm is used.  Compression level defaults to 4 (Tight); use
+   Create a new archive from the given files.  Levels 2-5 use LZ77+Huffman; levels 6-9 use rANS.  Compression level defaults to 4 (Tight); use
    ``-L`` to change it.
 
-   The archiver automatically groups similar files using content
-   fingerprinting: files sharing identical first 4096 bytes are assigned a
-   custom master block built from the largest file in the group.  This
-   pre-fills the LZ77 sliding window with shared content, improving
-   compression for collections of structurally similar files (e.g. log
-   rotations, versioned configs, same-format data files).  Files that
-   don't group (or are smaller than 1 KB) use the built-in 49 KB
-   SuperMaster dictionary.
+   The archiver groups files that share CDC chunk fingerprints and builds
+   custom master dictionaries from their content. A fingerprint collision
+   can affect grouping and compression ratio; each file is still compressed
+   in full against its assigned dictionary. Masters contain at most 64,000
+   bytes. Ungrouped files receive a fallback custom master, because direct
+   use of SuperMaster in file records hangs the original UC2 Pro reader.
 
 Options
 -------
@@ -56,7 +53,7 @@ Options
      - Create archive
    * - ``-L n``
      - Compression level: 2 = Fast, 3 = Normal, 4 = Tight (default),
-       5 = Ultra
+       5 = Ultra; 6-9 = rANS Fast, Normal, Tight, Ultra
    * - ``-a``
      - Include all file versions (not just latest)
    * - ``-d path``

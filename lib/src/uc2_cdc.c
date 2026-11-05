@@ -1,21 +1,11 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 
-/* Content-defined chunking (CDC) for UC2 deduplication.
- *
- * Gear hash: each byte updates the hash by shifting left and XORing
- * with a pre-computed random table entry.  This gives uniform
- * distribution and O(1) per-byte cost.  A chunk boundary is detected
- * when (hash & mask) == 0, giving an average chunk size of 2^bits.
- *
- * Reference: "A Framework for Analyzing and Improving Content-Based
- * Chunking Algorithms" (Xia et al., HP Labs, 2005).
- */
+/* Content-defined chunking using a fixed Gear table and a boundary mask. */
 
 #include "uc2/uc2_cdc.h"
 #include <string.h>
 
-/* Gear hash lookup table: 256 random 32-bit values.
-   Generated from a PRNG seeded with the string "UC2 Gear CDC". */
+/* Fixed table: changing it changes chunk boundaries in existing workflows. */
 static const uint32_t gear_table[256] = {
 	0x5c27b2e4, 0x8a3b9c01, 0xf7e52d9f, 0x3d14a867, 0xc6f893b2, 0x91d047e5, 0x2e6b1fa8, 0xe4a37c63,
 	0x7f582b1d, 0xb90c64f6, 0x46d1e823, 0x13a95f7b, 0xd87e24c9, 0xa5430168, 0x6c9fb3d4, 0x028e7a1f,
@@ -79,16 +69,18 @@ int uc2_chunker_next(struct uc2_chunker *c,
                      const uint8_t *data, size_t len,
                      size_t *chunk_off, size_t *chunk_len)
 {
-	if (c->pos >= len)
+	if (c->pos >= len) {
+		*chunk_off = len;
+		*chunk_len = 0;
 		return 0;
+	}
 
 	size_t start = c->pos;
-	size_t end = start + c->max_chunk;
-	if (end > len) end = len;
+	size_t room = len - start;
+	size_t end = start + (c->max_chunk < room ? c->max_chunk : room);
 
 	/* Skip minimum chunk size before checking boundaries */
-	size_t scan = start + c->min_chunk;
-	if (scan > end) scan = end;
+	size_t scan = start + (c->min_chunk < end - start ? c->min_chunk : end - start);
 
 	uint32_t h = 0;
 	/* Prime the hash over the min_chunk prefix */

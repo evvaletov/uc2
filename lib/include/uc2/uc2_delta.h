@@ -26,6 +26,7 @@
 #include <stddef.h>
 
 /* Encode a delta from source to target.
+ * Source size is limited to INT32_MAX; target size to UINT32_MAX.
  * Allocates *out_delta (caller must free).
  * Returns 0 on success, -1 on error. */
 int uc2_delta_encode(const uint8_t *src, size_t src_len,
@@ -42,9 +43,9 @@ int uc2_delta_apply(const uint8_t *src, size_t src_len,
 /* Delta format:
  *   Header: "UC2D" (4 bytes) + target_len (4 bytes LE)
  *   Instructions:
- *     COPY:   0x01 + offset(4 LE) + length(4 LE)  — copy from source
- *     INSERT: 0x02 + length(4 LE) + data[length]  — insert new bytes
- *     END:    0x00                                 — end of delta
+ *     COPY:   0x01 + offset(4 LE) + length(4 LE): copy from source
+ *     INSERT: 0x02 + length(4 LE) + data[length]: insert new bytes
+ *     END:    0x00                               : end of delta
  */
 
 #endif

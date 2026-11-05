@@ -10,6 +10,7 @@
 
 #include "uc2/uc2_delta.h"
 #include <stdlib.h>
+#include <limits.h>
 #include <string.h>
 
 #define HASH_SIZE 65536
@@ -42,15 +43,19 @@ struct obuf {
 
 static int obuf_append(struct obuf *o, const void *data, size_t len)
 {
+	if (len > SIZE_MAX - o->len) return -1;
 	if (o->len + len > o->cap) {
-		size_t newcap = o->cap ? o->cap * 2 : 256;
-		while (newcap < o->len + len) newcap *= 2;
+		size_t newcap = o->cap ? o->cap : 256;
+		while (newcap < o->len + len) {
+			if (newcap > SIZE_MAX / 2) { newcap = o->len + len; break; }
+			newcap *= 2;
+		}
 		uint8_t *p = realloc(o->data, newcap);
 		if (!p) return -1;
 		o->data = p;
 		o->cap = newcap;
 	}
-	memcpy(o->data + o->len, data, len);
+	if (len) memcpy(o->data + o->len, data, len);
 	o->len += len;
 	return 0;
 }
@@ -77,8 +82,11 @@ int uc2_delta_encode(const uint8_t *src, size_t src_len,
                      const uint8_t *tgt, size_t tgt_len,
                      uint8_t **out_delta, size_t *out_delta_len)
 {
+	if (!out_delta || !out_delta_len) return -1;
 	*out_delta = NULL;
 	*out_delta_len = 0;
+	if (src_len > INT32_MAX || tgt_len > UINT32_MAX ||
+	    (src_len && !src) || (tgt_len && !tgt)) return -1;
 
 	/* Build hash table of source positions */
 	int32_t *htab = calloc(HASH_SIZE, sizeof(int32_t));
@@ -97,14 +105,14 @@ int uc2_delta_encode(const uint8_t *src, size_t src_len,
 	/* Header */
 	uint8_t hdr[8] = {'U','C','2','D', 0,0,0,0};
 	put32(hdr + 4, (uint32_t)tgt_len);
-	obuf_append(&out, hdr, 8);
+	if (obuf_append(&out, hdr, 8) < 0) goto fail;
 
 	/* Scan target, emit COPY or INSERT */
 	size_t tpos = 0;
 	size_t insert_start = 0;
 	int in_insert = 0;
 
-	while (tpos + WINDOW <= tgt_len) {
+	while (tgt_len - tpos >= WINDOW) {
 		uint32_t h = roll_hash(tgt + tpos) & (HASH_SIZE - 1);
 		int32_t spos = htab[h];
 
@@ -119,12 +127,12 @@ int uc2_delta_encode(const uint8_t *src, size_t src_len,
 
 			if (match_len >= MIN_MATCH) {
 				/* Flush pending insert */
-				if (in_insert && tpos > insert_start)
-					emit_insert(&out, tgt + insert_start,
-					            (uint32_t)(tpos - insert_start));
+				if (in_insert && tpos > insert_start &&
+				    emit_insert(&out, tgt + insert_start,
+				                (uint32_t)(tpos - insert_start)) < 0) goto fail;
 				in_insert = 0;
 
-				emit_copy(&out, (uint32_t)spos, (uint32_t)match_len);
+				if (emit_copy(&out, (uint32_t)spos, (uint32_t)match_len) < 0) goto fail;
 				tpos += match_len;
 				insert_start = tpos;
 				continue;
@@ -143,28 +151,33 @@ int uc2_delta_encode(const uint8_t *src, size_t src_len,
 	if (in_insert || trailing > 0) {
 		size_t ins_start = in_insert ? insert_start : tpos;
 		size_t ins_len = tgt_len - ins_start;
-		if (ins_len > 0)
-			emit_insert(&out, tgt + ins_start, (uint32_t)ins_len);
+		if (ins_len > 0 &&
+		    emit_insert(&out, tgt + ins_start, (uint32_t)ins_len) < 0) goto fail;
 	}
 
 	/* End marker */
 	uint8_t end = 0x00;
-	obuf_append(&out, &end, 1);
+	if (obuf_append(&out, &end, 1) < 0) goto fail;
 
 	free(htab);
 	*out_delta = out.data;
 	*out_delta_len = out.len;
 	return 0;
+fail:
+	free(htab);
+	free(out.data);
+	return -1;
 }
 
 int uc2_delta_apply(const uint8_t *src, size_t src_len,
                     const uint8_t *delta, size_t delta_len,
                     uint8_t **out_tgt, size_t *out_tgt_len)
 {
+	if (!out_tgt || !out_tgt_len) return -1;
 	*out_tgt = NULL;
 	*out_tgt_len = 0;
 
-	if (delta_len < 9 || memcmp(delta, "UC2D", 4) != 0)
+	if (!delta || (src_len && !src) || delta_len < 9 || memcmp(delta, "UC2D", 4) != 0)
 		return -1;
 
 	uint32_t tgt_len = get32(delta + 4);
@@ -178,30 +191,31 @@ int uc2_delta_apply(const uint8_t *src, size_t src_len,
 
 	while (dpos < delta_len) {
 		uint8_t op = delta[dpos++];
-		if (op == 0x00) break;  /* END */
+		if (op == 0x00) {
+			if (tpos != tgt_len || dpos != delta_len) goto err;
+			*out_tgt = tgt;
+			*out_tgt_len = tpos;
+			return 0;
+		}
 
 		if (op == 0x01) {  /* COPY */
-			if (dpos + 8 > delta_len) goto err;
+			if (delta_len - dpos < 8) goto err;
 			uint32_t offset = get32(delta + dpos); dpos += 4;
 			uint32_t length = get32(delta + dpos); dpos += 4;
-			if ((size_t)offset + length > src_len) goto err;
-			if (tpos + length > tgt_len) goto err;
-			memcpy(tgt + tpos, src + offset, length);
+			if (offset > src_len || length > src_len - offset) goto err;
+			if (length > tgt_len - tpos) goto err;
+			if (length) memcpy(tgt + tpos, src + offset, length);
 			tpos += length;
 		} else if (op == 0x02) {  /* INSERT */
-			if (dpos + 4 > delta_len) goto err;
+			if (delta_len - dpos < 4) goto err;
 			uint32_t length = get32(delta + dpos); dpos += 4;
-			if (dpos + length > delta_len) goto err;
-			if (tpos + length > tgt_len) goto err;
+			if (length > delta_len - dpos) goto err;
+			if (length > tgt_len - tpos) goto err;
 			memcpy(tgt + tpos, delta + dpos, length);
 			dpos += length;
 			tpos += length;
 		} else goto err;
 	}
-
-	*out_tgt = tgt;
-	*out_tgt_len = tpos;
-	return 0;
 
 err:
 	free(tgt);

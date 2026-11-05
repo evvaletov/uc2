@@ -34,10 +34,9 @@ stdout, tab-separated listings, and a quiet mode for scripts.
 
 The library also contains a 64-bit Merkle DAG, a shared block store, SimHash,
 binary delta coding, dictionary metadata, and BCJ/BWT/delta preprocessing.
-These modules are not all connected to the CLI archive writer. Its BLAKE3
-module currently fails official test vectors and must not be used for integrity
-claims; it is not used by the current archive read/write path. The repair is
-tracked in [ROADMAP.md](ROADMAP.md).
+These modules are not all connected to the CLI archive writer. The standalone BLAKE3
+module passes the official unkeyed test vectors. It is not used by the current
+archive read/write path; archive checksums do not authenticate content.
 
 See the [updated collection benchmarks](docs/benchmarks/2026-11-05-compression.md) for measured
 size, time, and memory comparisons with 7z and tar+zstd.

@@ -1,5 +1,5 @@
-UC2 — UltraCompressor II
-========================
+UC2: UltraCompressor II
+=======================
 
 A cross-platform revival of UltraCompressor II, the DOS-era archiver by
 Nico de Vries (1992--1996).  UC2 was notable for its advanced

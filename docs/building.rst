@@ -15,7 +15,7 @@ Linux / macOS
 
    cmake -B build -DCMAKE_BUILD_TYPE=Release
    cmake --build build
-   ctest --test-dir build
+   ctest --test-dir build --output-on-failure -E roundtrip_dosbox
 
 The binary is ``build/cli/uc2`` and the library is
 ``build/lib/libuc2.a``.
@@ -27,7 +27,7 @@ Windows (MSVC)
 
    cmake -B build
    cmake --build build --config Release
-   ctest --test-dir build -C Release
+   ctest --test-dir build -C Release --output-on-failure -E roundtrip_dosbox
 
 DOS (DJGPP Cross-Compilation)
 -----------------------------
@@ -74,8 +74,9 @@ its per-user installation. It requires the UC2 CLI on PATH or in ``UC2``.
 
 ``contrib/totalcommander/README.md`` describes the Windows WCX plugin. Enable
 ``UC2_BUILD_WCX`` and provide ``UC2_WCX_SDK_DIR`` containing the official SDK's
-``wcxhead.h``. The 64-bit DLL has been tested through its ABI under Wine; native
-Total Commander UI validation and a 32-bit build remain release follow-ups.
+``wcxhead.h``. The alpha5 packages include 32- and 64-bit DLLs tested in native
+Total Commander 11.58.1. The 32-bit host needs the documented ``.u2r`` copy
+workaround for its built-in legacy ``.uc2`` extraction routing.
 
 Build Options
 -------------
@@ -105,11 +106,10 @@ Running Tests
 
 .. code-block:: sh
 
-   ctest --test-dir build --output-on-failure
+   ctest --test-dir build --output-on-failure -E roundtrip_dosbox
 
-Tests include:
-
-- **identify**: UC2 magic detection
-- **extract**: decompression against reference archives
-- **roundtrip**: compress → archive → decompress → verify (8 patterns
-  × 4 compression levels = 32 tests)
+The regular suite covers format detection, fixture extraction, all eight
+compression levels, master dictionaries, directories, checksums, ingestion,
+integrations, and saved fuzz regressions. The separate ``roundtrip_dosbox``
+test needs DOSBox-X and checks both directions against the original UC2 Pro.
+See ``tests/scripts/roundtrip_dosbox.sh`` for its environment requirements.
