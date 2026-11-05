@@ -50,9 +50,9 @@ To build a patched bsdtar, first build the UC2 CLI above, then run:
 
 .. code-block:: sh
 
-   curl -fsSLO https://github.com/libarchive/libarchive/releases/download/v3.8.11/libarchive-3.8.11.tar.gz
-   echo 'a3dc0872b1b39da34dc18ef1b944f0f11ffd37425d70ae04be679279f1cf43d2  libarchive-3.8.11.tar.gz' | sha256sum -c -
-   tar xzf libarchive-3.8.11.tar.gz
+   curl -fsSLO https://github.com/libarchive/libarchive/releases/download/v3.8.11/libarchive-3.8.11.tar.xz
+   echo 'a3dc0872b1b39da34dc18ef1b944f0f11ffd37425d70ae04be679279f1cf43d2  libarchive-3.8.11.tar.xz' | sha256sum -c -
+   tar xf libarchive-3.8.11.tar.xz
    python3 contrib/libarchive/build_bsdtar.py --source libarchive-3.8.11 --build build-bsdtar
    python3 tests/scripts/check_bsdtar.py build/cli/uc2 build-bsdtar/build/bin/bsdtar
 

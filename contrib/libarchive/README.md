@@ -31,7 +31,7 @@ It leaves the supplied libarchive tree untouched. The generated binary is a
 patched distribution including GPL/LGPL components. This is not an upstream
 libarchive release.
 
-The November 5 build used libarchive 3.8.11, archive SHA-256
+The November 5 build used libarchive 3.8.11, `.tar.xz` archive SHA-256
 `a3dc0872b1b39da34dc18ef1b944f0f11ffd37425d70ae04be679279f1cf43d2`.
 The executable test covers listing, directories, empty files, selected-member
 extraction, both entropy methods, and pipe input. On Linux it also restores a

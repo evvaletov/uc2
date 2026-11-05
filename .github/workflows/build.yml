@@ -45,9 +45,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Fetch libarchive source
         run: |
-          curl -fsSLO "https://github.com/libarchive/libarchive/releases/download/v${LIBARCHIVE_VERSION}/libarchive-${LIBARCHIVE_VERSION}.tar.gz"
-          echo "${LIBARCHIVE_SHA256}  libarchive-${LIBARCHIVE_VERSION}.tar.gz" | sha256sum -c -
-          tar xzf "libarchive-${LIBARCHIVE_VERSION}.tar.gz"
+          curl -fsSLO "https://github.com/libarchive/libarchive/releases/download/v${LIBARCHIVE_VERSION}/libarchive-${LIBARCHIVE_VERSION}.tar.xz"
+          echo "${LIBARCHIVE_SHA256}  libarchive-${LIBARCHIVE_VERSION}.tar.xz" | sha256sum -c -
+          tar xf "libarchive-${LIBARCHIVE_VERSION}.tar.xz"
       - name: Build libarchive static (dependency-free)
         run: |
           cmake -S "libarchive-${LIBARCHIVE_VERSION}" -B larch-build \
@@ -125,7 +125,7 @@ jobs:
       - name: Verify DOS executable
         run: |
           file build-dos/cli/uc2.exe
-          file build-dos/cli/uc2.exe | grep -q "DJGPP go32 DOS extender" \
+          file build-dos/cli/uc2.exe | grep -Eq "DJGPP go32( v[^ ]+)? DOS extender" \
             || { echo "uc2.exe is not a DJGPP DOS executable"; exit 1; }
 
   fuzz:

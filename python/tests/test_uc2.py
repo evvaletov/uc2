@@ -145,6 +145,19 @@ def test_native_cli(archive):
     assert subprocess.check_output([str(executable()), "-h"]).startswith(b"UC2 3.0.0a4")
 
 
+def test_native_cli_binary_streams(tmp_path):
+    payload = bytes(range(256)) * 256 + b"\r\n\x1a\n" * 31
+    ingested = tmp_path / "stream.uc2"
+    subprocess.run([str(executable()), "--ingest", str(ingested)], input=payload,
+                   check=True, capture_output=True)
+    assert subprocess.check_output([str(executable()), "--ingest-restore", str(ingested)]) == payload
+    (tmp_path / "bytes.bin").write_bytes(payload)
+    archive = tmp_path / "binary.uc2"
+    subprocess.run([str(executable()), "-qw", str(archive), "bytes.bin"], cwd=tmp_path,
+                   check=True, capture_output=True)
+    assert subprocess.check_output([str(executable()), "-qp", str(archive)]) == payload
+
+
 def test_damaged_payload_preserves_destination(tmp_path):
     (tmp_path / "checksum.bin").write_bytes(bytes(range(256)) * 100)
     path = tmp_path / "damaged.uc2"

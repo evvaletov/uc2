@@ -34,9 +34,11 @@ void setprogname(const char *argv0);
 #include <sys/stat.h>
 #include <dirent.h>
 #include <fcntl.h>
+#if defined(_WIN32) || defined(__DJGPP__)
+#include <io.h>
+#endif
 #ifdef _WIN32
 #include <windows.h>
-#include <io.h>
 #include <process.h>
 #define getpid _getpid
 #define open _open
@@ -461,6 +463,19 @@ static void set_attrs(char *path, struct node *ne)
 	}
 	if (ne->entry.attr & UC2_Attr_R)
 		(void)chmod(path, 0444);
+}
+
+static void binary_stream(FILE *file)
+{
+#ifdef _WIN32
+	if (_setmode(_fileno(file), _O_BINARY) == -1)
+		err(EXIT_FAILURE, "binary stream mode");
+#elif defined(__DJGPP__)
+	if (setmode(fileno(file), O_BINARY) == -1)
+		err(EXIT_FAILURE, "binary stream mode");
+#else
+	(void)file;
+#endif
 }
 
 static int write_file(void *file, const void *ptr, unsigned len)
@@ -2131,6 +2146,7 @@ static int ingest_restore_v3(const char *archive_path, FILE *out)
 
 static int cmd_ingest_write(const char *archive_path)
 {
+	binary_stream(stdin);
 	struct uc2_ingest_stats st;
 	int rc = ingest_write_v3(archive_path, stdin, &st);
 	if (rc != 0)
@@ -2146,6 +2162,7 @@ static int cmd_ingest_write(const char *archive_path)
 
 static int cmd_ingest_restore(const char *archive_path)
 {
+	binary_stream(stdout);
 	/* Auto-detect the on-disk format: the legacy v1/v2 writer emits a
 	   "UC2INGST" blob handled by libuc2; the v3 writer emits a real UC2
 	   archive restored by walking its entries through the reader. */
@@ -2359,6 +2376,8 @@ usage:
 			errx(EXIT_FAILURE, "No files to add");
 		return create_archive(argc - optind, argv + optind);
 	}
+	if (opt.pipe && !opt.test && !opt.list)
+		binary_stream(stdout);
 
 	FILE *f = fopen(opt.archive, "rb");
 	if (!f) err(EXIT_FAILURE, "%s", opt.archive);
