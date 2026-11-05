@@ -33,6 +33,19 @@ void setprogname(const char *argv0);
 #include <assert.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <fcntl.h>
+#ifdef _WIN32
+#include <windows.h>
+#include <io.h>
+#include <process.h>
+#define getpid _getpid
+#define open _open
+#define close _close
+#define fdopen _fdopen
+#endif
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
 
 #include <uc2/libuc2.h>
 #include <uc2/uc2_cdc.h>
@@ -145,8 +158,11 @@ static void my_warn(void *ctx, char *f, ...)
 	va_end(ap);
 }
 
+static int had_error;
+
 static void uc2err(uc2_handle uc2, int err, char *f, ...)
 {
+	had_error = 1;
 	fprintf(stderr, "%s", opt.archive);
 	if (f) {
 		fprintf(stderr, " (");
@@ -1702,8 +1718,8 @@ static int extract_ingest_long_opts(int *argcp, char **argv, char **out_path)
 #define INGEST_CDC_BITS 13  /* avg 8 KiB chunks (uc2_ingest default) */
 
 /* hash -> unique-chunk slot.  Open addressing, power-of-two capacity,
- * sized up-front to hold every occurrence at load factor <= 0.5 so it
- * never needs to grow mid-build.  A key collision (or the 0-hash
+ * grown as unique chunks arrive to keep the load factor <= 0.5.
+ * A key collision (or the 0-hash
  * sentinel shift) is resolved by probing to a distinct slot, and every
  * hit is confirmed with a byte compare, so distinct chunks never share
  * storage regardless of hash behaviour. */
@@ -1734,30 +1750,105 @@ static void ing_map_free(struct ing_map *m)
 	m->keys = NULL; m->slots = NULL;
 }
 
+static int ing_map_grow(struct ing_map *m)
+{
+	struct ing_map next;
+	if (m->cap > SIZE_MAX / (2 * sizeof *m->keys) ||
+	    ing_map_init(&next, m->cap * 2) != 0) return -1;
+	for (size_t i = 0; i < m->cap; i++) {
+		if (!m->keys[i]) continue;
+		size_t p = m->keys[i] & (next.cap - 1);
+		while (next.keys[p]) p = (p + 1) & (next.cap - 1);
+		next.keys[p] = m->keys[i]; next.slots[p] = m->slots[i];
+	}
+	ing_map_free(m); *m = next;
+	return 0;
+}
+
+static int seek_spool(FILE *f, uint64_t offset)
+{
+#ifdef _WIN32
+	return _fseeki64(f, (__int64)offset, SEEK_SET);
+#elif defined(__DJGPP__)
+	if (offset > LONG_MAX) return -1;
+	return fseek(f, (long)offset, SEEK_SET);
+#else
+	return fseeko(f, (off_t)offset, SEEK_SET);
+#endif
+}
+
+static char *staged_path;
+
+static void discard_staged_output(void)
+{
+	if (staged_path) unlink(staged_path);
+}
+
+static FILE *stage_output(const char *path)
+{
+	staged_path = malloc(strlen(path) + 96);
+	if (!staged_path) err(EXIT_FAILURE, "malloc");
+	for (unsigned i = 0; i < 128; i++) {
+		sprintf(staged_path, "%s.tmp-%lu-%lu-%u", path,
+		        (unsigned long)getpid(), (unsigned long)time(NULL), i);
+#ifdef _WIN32
+		wchar_t wide[32768];
+		if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, staged_path, -1,
+		                        wide, sizeof wide / sizeof *wide))
+			errx(EXIT_FAILURE, "invalid output path");
+		int fd = _wopen(wide, _O_CREAT | _O_EXCL | _O_RDWR | _O_BINARY, 0600);
+#else
+		int fd = open(staged_path, O_CREAT | O_EXCL | O_RDWR | O_BINARY, 0600);
+#endif
+		if (fd >= 0) {
+			atexit(discard_staged_output);
+			FILE *f = fdopen(fd, "w+b");
+			if (!f) { close(fd); err(EXIT_FAILURE, "fdopen"); }
+			return f;
+		}
+		if (errno != EEXIST) err(EXIT_FAILURE, "%s", staged_path);
+	}
+	errx(EXIT_FAILURE, "cannot create temporary output for %s", path);
+	return NULL;
+}
+
+static void commit_staged_output(const char *path)
+{
+#ifdef _WIN32
+	int na = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, staged_path, -1, NULL, 0);
+	int nb = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path, -1, NULL, 0);
+	wchar_t *a = malloc((size_t)na * sizeof *a), *b = malloc((size_t)nb * sizeof *b);
+	if (!na || !nb || !a || !b) errx(EXIT_FAILURE, "invalid output path");
+	MultiByteToWideChar(CP_UTF8, 0, staged_path, -1, a, na);
+	MultiByteToWideChar(CP_UTF8, 0, path, -1, b, nb);
+	if (!MoveFileExW(a, b, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
+		errx(EXIT_FAILURE, "cannot commit %s (Windows error %lu)", path, GetLastError());
+	free(a); free(b);
+#else
+	if (rename(staged_path, path) != 0) err(EXIT_FAILURE, "%s", path);
+#endif
+	free(staged_path); staged_path = NULL;
+}
+
 struct ing_uniq {
 	unsigned       off;      /* block offset in the archive */
 	unsigned       csize;    /* compressed size */
 	unsigned       usize;    /* uncompressed (chunk) size */
 	unsigned short csum;     /* fletcher checksum of raw chunk */
-	uint32_t       src_off;  /* chunk offset in the source buffer */
+	uint32_t       src_off;  /* chunk offset in the raw temporary spool */
 };
 
-/* Build a real UC2 v3 archive from an in-memory stream.  Returns 0 and
+/* Build a real UC2 v3 archive with bounded payload RAM. Returns 0 and
  * fills stats on success; fatal errors exit via err()/errx() as in
  * create_archive(). */
 static int ingest_write_v3(const char *archive_path,
-                           const uint8_t *data, size_t len,
+                           FILE *input,
                            struct uc2_ingest_stats *stats)
 {
-	struct uc2_merkle tree;
-	uc2_merkle_build(&tree, data, len, INGEST_CDC_BITS);
-	int nocc = tree.nchunks;
-
-	FILE *out = fopen(archive_path, "wb");
-	if (!out) {
-		uc2_merkle_free(&tree);
-		err(EXIT_FAILURE, "%s", archive_path);
-	}
+	int nocc = 0;
+	FILE *out = stage_output(archive_path);
+	FILE *raw = tmpfile();
+	if (!raw) err(EXIT_FAILURE, "temporary chunk spool");
 
 	unsigned char header[29];
 	memset(header, 0, sizeof header);
@@ -1766,48 +1857,71 @@ static int ingest_write_v3(const char *archive_path,
 
 	int *occ_uniq = NULL;
 	struct ing_uniq *uniq = NULL;
-	if (nocc > 0) {
-		occ_uniq = malloc((size_t)nocc * sizeof *occ_uniq);
-		uniq = malloc((size_t)nocc * sizeof *uniq);
-		if (!occ_uniq || !uniq) err(EXIT_FAILURE, "malloc");
-	}
+	size_t occ_cap = 0, uniq_cap = 0;
 
 	struct ing_map map;
-	if (ing_map_init(&map, nocc > 8 ? (size_t)nocc * 2 : 16) != 0)
+	if (ing_map_init(&map, 16) != 0)
 		err(EXIT_FAILURE, "malloc");
-	uint64_t mask = (uint64_t)map.cap - 1;
 
 	unsigned method = opt.level >= 6 ? 10 : (opt.level <= 1 ? 1 : (unsigned)opt.level);
 	int nuniq = 0;
 	uint64_t bytes_stored = 0, bytes_saved = 0;
-
-	for (int i = 0; i < nocc; i++) {
-		uint32_t coff = tree.chunks[i].offset;
-		uint32_t clen = tree.chunks[i].length;
-		uint64_t key = tree.chunks[i].hash;
+	uint64_t bytes_in = 0, raw_size = 0;
+	uint8_t data[1 << (INGEST_CDC_BITS + 2)], compare[sizeof data];
+	size_t buffered = 0;
+	int at_end = 0;
+	for (;;) {
+		if (!at_end && buffered < sizeof data) {
+			size_t got = fread(data + buffered, 1, sizeof data - buffered, input);
+			buffered += got;
+			if (ferror(input)) err(EXIT_FAILURE, "read stdin");
+			at_end = feof(input);
+		}
+		if (!buffered) break;
+		struct uc2_chunker chunker;
+		uc2_chunker_init(&chunker, INGEST_CDC_BITS, 0, 0);
+		size_t coff, length;
+		uc2_chunker_next(&chunker, data, buffered, &coff, &length);
+		unsigned clen = (unsigned)length;
+		if (clen > UINT32_MAX - bytes_in)
+			errx(EXIT_FAILURE, "input exceeds the 4 GiB UC2 ingest limit");
+		bytes_in += clen;
+		if ((size_t)nocc == occ_cap) {
+			if (occ_cap > INT_MAX / 2) errx(EXIT_FAILURE, "too many chunks");
+			occ_cap = occ_cap ? occ_cap * 2 : 64;
+			int *grown = realloc(occ_uniq, occ_cap * sizeof *grown);
+			if (!grown) err(EXIT_FAILURE, "realloc");
+			occ_uniq = grown;
+		}
+		if ((size_t)nuniq >= map.cap / 2 && ing_map_grow(&map) != 0)
+			err(EXIT_FAILURE, "dedup index");
+		uint64_t mask = (uint64_t)map.cap - 1;
+		uint64_t key = uc2_hash64(data, clen);
 		if (key == 0) key = 1;  /* keep 0 as the empty-slot sentinel */
 
 		uint64_t p = key & mask;
 		int slot = -1;
 		while (map.keys[p]) {
 			int s = map.slots[p];
-			if (map.keys[p] == key
-			    && uniq[s].usize == clen
-			    && memcmp(data + uniq[s].src_off, data + coff, clen) == 0) {
-				slot = s;
-				break;
+			if (map.keys[p] == key && uniq[s].usize == clen) {
+				if (seek_spool(raw, uniq[s].src_off) != 0 ||
+				    fread(compare, 1, clen, raw) != clen)
+					err(EXIT_FAILURE, "chunk spool read");
+				if (memcmp(compare, data, clen) == 0) { slot = s; break; }
 			}
 			p = (p + 1) & mask;
 		}
 		if (slot >= 0) {
-			occ_uniq[i] = slot;
+			occ_uniq[nocc++] = slot;
 			bytes_saved += clen;
+			memmove(data, data + clen, buffered - clen);
+			buffered -= clen;
 			continue;
 		}
 
 		/* New unique chunk: compress as a standalone NoMaster block. */
 		unsigned here = tell32(out);
-		struct mem_reader mr = { data + coff, 0, clen };
+		struct mem_reader mr = { data, 0, clen };
 		unsigned csize = 0;
 		unsigned short csum = 0;
 		int cr = uc2_compress(opt.level, mem_read_cb, &mr, fwrite_cb, out,
@@ -1815,18 +1929,30 @@ static int ingest_write_v3(const char *archive_path,
 		if (cr < 0)
 			errx(EXIT_FAILURE, "chunk compression error %d", cr);
 
+		if ((size_t)nuniq == uniq_cap) {
+			uniq_cap = uniq_cap ? uniq_cap * 2 : 64;
+			struct ing_uniq *grown = realloc(uniq, uniq_cap * sizeof *grown);
+			if (!grown) err(EXIT_FAILURE, "realloc");
+			uniq = grown;
+		}
 		slot = nuniq++;
 		uniq[slot] = (struct ing_uniq){
 			.off = here, .csize = csize, .usize = clen,
-			.csum = csum, .src_off = coff
+			.csum = csum, .src_off = (uint32_t)raw_size
 		};
-		occ_uniq[i] = slot;
+		if (seek_spool(raw, raw_size) != 0 || fwrite(data, 1, clen, raw) != clen)
+			err(EXIT_FAILURE, "chunk spool write");
+		raw_size += clen;
+		occ_uniq[nocc++] = slot;
 		bytes_stored += csize;
 
 		map.keys[p] = key;   /* p is the empty slot the probe stopped on */
 		map.slots[p] = slot;
+		memmove(data, data + clen, buffered - clen);
+		buffered -= clen;
 	}
 	ing_map_free(&map);
+	if (fclose(raw) != 0) err(EXIT_FAILURE, "chunk spool close");
 
 	/* Synthetic entry names, zero-padded so lexical order == stream order. */
 	int width = 1;
@@ -1836,6 +1962,7 @@ static int ingest_write_v3(const char *archive_path,
 	   that a 32-bit product would wrap and undersize the allocation. */
 	size_t cdir_cap = 22;  /* EndOfCdir + XTAIL + aserial */
 	cdir_cap += (size_t)nocc * (size_t)(47 + 21 + (5 + width) + 1);
+	if (cdir_cap > UINT32_MAX) errx(EXIT_FAILURE, "central directory too large");
 
 	unsigned char *raw_cdir = malloc(cdir_cap);
 	if (!raw_cdir) err(EXIT_FAILURE, "malloc");
@@ -1885,7 +2012,7 @@ static int ingest_write_v3(const char *archive_path,
 	unsigned cdir_offset = tell32(out);
 	unsigned char crec[10];
 	memset(crec, 0, 10);
-	fwrite(crec, 1, 10, out);
+	if (fwrite(crec, 1, 10, out) != 10) err(EXIT_FAILURE, "write directory placeholder");
 
 	struct mem_reader mr = { raw_cdir, 0, cdir_size };
 	unsigned cdir_csize = 0;
@@ -1898,13 +2025,13 @@ static int ingest_write_v3(const char *archive_path,
 
 	unsigned total = tell32(out);
 
-	fseek(out, cdir_offset, SEEK_SET);
+	if (seek_spool(out, cdir_offset) != 0) err(EXIT_FAILURE, "seek output");
 	w32(crec + 0, 0);
 	w16(crec + 4, method);
 	w32(crec + 6, 1);                /* masterPrefix = NoMaster */
-	fwrite(crec, 1, 10, out);
+	if (fwrite(crec, 1, 10, out) != 10) err(EXIT_FAILURE, "write directory header");
 
-	fseek(out, 0, SEEK_SET);
+	if (seek_spool(out, 0) != 0) err(EXIT_FAILURE, "seek output");
 	unsigned complen = total - 13;
 	w32(header + 0, 0x1A324355);
 	w32(header + 4, complen);
@@ -1917,16 +2044,16 @@ static int ingest_write_v3(const char *archive_path,
 	w16(header + 24, 203);
 	w16(header + 26, 200);
 	header[28] = 0;
-	fwrite(header, 1, 29, out);
+	if (fwrite(header, 1, 29, out) != 29) err(EXIT_FAILURE, "write archive header");
 
 	free(occ_uniq);
 	free(uniq);
 	if (fclose(out) != 0)
 		err(EXIT_FAILURE, "%s", archive_path);
-	uc2_merkle_free(&tree);
+	commit_staged_output(archive_path);
 
 	if (stats) {
-		stats->bytes_in     = (uint64_t)len;
+		stats->bytes_in     = bytes_in;
 		stats->chunks_total = nocc;
 		stats->chunks_new   = nuniq;
 		stats->chunks_dedup = nocc - nuniq;
@@ -2004,32 +2131,8 @@ static int ingest_restore_v3(const char *archive_path, FILE *out)
 
 static int cmd_ingest_write(const char *archive_path)
 {
-	uint8_t *buf = NULL;
-	size_t cap = 0, len = 0;
-	const size_t chunk = 64 * 1024;
-	for (;;) {
-		if (len + chunk > cap) {
-			size_t ncap = cap ? cap * 2 : chunk;
-			while (ncap < len + chunk) ncap *= 2;
-			uint8_t *p = realloc(buf, ncap);
-			if (!p) { free(buf); err(EXIT_FAILURE, "realloc"); }
-			buf = p;
-			cap = ncap;
-		}
-		size_t n = fread(buf + len, 1, chunk, stdin);
-		len += n;
-		if (n < chunk) {
-			if (ferror(stdin)) {
-				free(buf);
-				err(EXIT_FAILURE, "read stdin");
-			}
-			break;
-		}
-	}
-
 	struct uc2_ingest_stats st;
-	int rc = ingest_write_v3(archive_path, buf, len, &st);
-	free(buf);
+	int rc = ingest_write_v3(archive_path, stdin, &st);
 	if (rc != 0)
 		errx(EXIT_FAILURE, "ingest write failed: %s", archive_path);
 
@@ -2330,7 +2433,7 @@ usage:
 				fclose(f);
 				return EXIT_FAILURE;
 			}
-			uc2_say(stderr, "Everything went OK\n");
+			if (!had_error) uc2_say(stderr, "Everything went OK\n");
 		}
 	} else if (!opt.list) {
 		struct path path = {.uc2 = uc2};
@@ -2354,5 +2457,5 @@ usage:
 		uc2_say(stderr, "Decompression complete\n");
 	uc2_close(uc2);
 	fclose(f);
-	return EXIT_SUCCESS;
+	return had_error ? EXIT_FAILURE : EXIT_SUCCESS;
 }

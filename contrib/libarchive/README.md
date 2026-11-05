@@ -1,166 +1,69 @@
-# UC2 read-format plugin for libarchive
+# UC2 reader for libarchive
 
-This directory contains the design and a skeleton implementation of a
-read-only `.uc2` format handler for libarchive.  The goal is to make
-UC2 archives transparently extractable by every libarchive-using tool
-(`bsdtar`, `cmake`, `pkg(8)`, file-roller, Ark, and others).
+The adapter reads UC2 directories, long-name tags, file versions, master blocks,
+and Huffman/rANS payloads through libarchive's normal read interface. It is an
+opt-in integration using libarchive's private API. It cannot be loaded as a
+runtime plugin into an unmodified system libarchive. Stored versions are
+returned as repeated pathnames; normal bsdtar extraction leaves the last one.
 
-## Status
+Input and each decoded file are spooled to anonymous temporary files. Payload
+RAM is bounded by the read/decode buffers; directory metadata and the decoder's
+master cache still scale with archive contents. Temporary disk space can reach
+the compressed archive size plus the largest decoded entry. A file is decoded
+and checked before its first data block is returned. Pipes and filter input
+work, but this is not low-latency incremental decompression.
 
-- **Milestones 1-3 shipped.**  `archive_read_support_format_uc2.c`
-  implements:
-  - `bid()` -- `__archive_read_ahead` reads the first 4 bytes,
-    returns 64 on UC2 magic.
-  - `read_header()` -- on first call, slurps the entire archive
-    into memory via `__archive_read_ahead` + `__archive_read_consume`,
-    opens a `libuc2` handle bound to the slurped buffer, walks
-    `uc2_read_cdir` to cache every entry (with `uc2_get_tag`
-    resolution for tagged entries), then yields entries one per call
-    via `archive_entry_set_pathname` / `set_size` / `set_mtime` /
-    `set_filetype` / `set_perm`.
-  - `read_data()` -- on first call per entry, runs `uc2_extract`
-    with a buffering write callback, then yields the whole entry
-    in one slice; subsequent calls return `ARCHIVE_EOF`.
-  - `read_data_skip()` and `cleanup()` -- correct.
-- Memory model: archive is slurped fully on the first `read_header`,
-  so memory use scales with archive size.  Acceptable for v1; future
-  work can swap in a seekable adapter when the underlying filter
-  supports `__archive_read_seek`.
-- `CMakeLists.txt` activates with `-DUC2_BUILD_LIBARCHIVE_PLUGIN=ON
-  -DLIBARCHIVE_SOURCE_DIR=<libarchive-checkout>`.  The pin against a
-  source tree (rather than `find_package(LibArchive)`) is required
-  because the read-format API is internal -- the public `-devel`
-  package ships only `archive.h` and `archive_entry.h`.
+## Build actual bsdtar with UC2 support
 
-## Integration recipe (manual, until upstream merge)
-
-To actually exercise the plugin from `bsdtar`, the plugin must be
-linked into the libarchive binary itself (the relevant API is internal
-and not exported from the system shared library).  Two paths:
-
-1. **Drop-in patch.**  Copy `archive_read_support_format_uc2.c` into
-   `libarchive/libarchive/`, then add one line to
-   `libarchive/libarchive/archive_read_support_format_all.c`:
-
-   ```c
-   archive_read_support_format_uc2(a);
-   ```
-
-   plus one entry in `libarchive/libarchive/CMakeLists.txt` next to
-   the other `archive_read_support_format_*.c` sources.  Rebuild
-   libarchive; then `bsdtar -tf archive.uc2` lists entries.
-
-2. **External link.**  Build `libuc2_libarchive.a` from this directory
-   (`cmake -DUC2_BUILD_LIBARCHIVE_PLUGIN=ON -DLIBARCHIVE_SOURCE_DIR=...`).
-   Build a custom `libarchive_static.a` that includes the same
-   `LIBARCHIVE_SOURCE_DIR`.  Link both into a small driver program
-   that calls `archive_read_support_format_uc2(a)`.
-
-The upstream PR (milestone 8 in the original issue) replaces both
-recipes with a single first-class `bsdtar` integration.
-
-## Why an out-of-tree skeleton?
-
-libarchive's read-format plugin API is internal.
-`archive_read_register_format` is a static function, not part of the
-public ABI.  An out-of-tree `.so` cannot be loaded into an unmodified
-libarchive at runtime.
-
-The supported integration paths are:
-
-1. **Upstream merge.**  Submit
-   `archive_read_support_format_uc2.c` as a PR against
-   `libarchive/libarchive`.  Once merged, distros pick it up and
-   every tool that links libarchive sees `.uc2` automatically.  This
-   is the long-term goal.
-
-2. **Patched libarchive build.**  Distribute a small patch that
-   includes the UC2 plugin against a known libarchive version.
-   Useful for testing before upstream merge and for users who want
-   `.uc2` support before the upstream release reaches their distro.
-
-3. **Static-library wrapper.**  Build the plugin as part of a custom
-   tool that statically links libarchive + this plugin.  Useful for
-   demo binaries; not a substitute for upstream merge because the
-   wrapper still won't be picked up by `bsdtar` etc.
-
-## Architecture
-
-UC2 archives use a fixed front header (29 bytes), a record stream
-of compressed bodies, and a compressed central directory whose
-offset is recorded in the front header.  The central directory
-holds OHEAD records for masters, dirs, and files; entry attributes
-are in OSMETA + DIRMETA / FILEMETA.
-
-The plugin uses libuc2 for parsing and decompression and adapts the
-results to libarchive's `struct archive_entry` model.  libuc2 already
-exposes a streaming read API (`uc2_open`, `uc2_read_cdir`,
-`uc2_extract`) and is GPL-3.0 / LGPL-3.0; the plugin is GPL-3.0-or-later
-to match the cli/main.c license boundary.  See
-[`docs/license-audit.md`](../../docs/license-audit.md) for the
-provenance table.
-
-### Callback responsibilities
-
-- **bid**: read the first 4 bytes via `__archive_read_ahead`, check
-  for the UC2 magic (`0x1A324355`).  Return 64 on match, 0 otherwise.
-  libarchive uses the highest bid to pick a format; 64 is the
-  conventional "format-recognised" score.
-
-- **read_header**: on first call, open the libuc2 handle and read
-  the central directory into memory.  On every call, return one
-  entry's metadata via `archive_entry_*` setters.  When entries are
-  exhausted, return `ARCHIVE_EOF`.
-
-- **read_data**: stream decompressed bytes for the current entry.
-  libuc2's `uc2_extract` invokes a write callback per chunk; the
-  plugin needs to convert this push model into libarchive's pull
-  model (the standard way: a small ring buffer, plus a generator
-  loop or coroutine).  The simplest first implementation buffers
-  the whole entry, which is correct but increases memory pressure
-  for very large files; refine later.
-
-- **read_data_skip**: advance to the next entry without producing
-  data.  Decompression cannot be safely skipped (master-block
-  dependencies), so the plugin still decompresses, just discards.
-
-- **cleanup**: close the libuc2 handle, free buffers.
-
-### libuc2 IO callbacks
-
-libuc2 takes user-supplied callbacks for read/alloc/free/warn.  The
-plugin wires these to libarchive's filter stack:
-- `read` -> `__archive_read_seek` + `__archive_read_ahead`
-- `alloc`/`free` -> `malloc`/`free`
-- `warn` -> push to libarchive's warning log via
-  `archive_set_error`.
-
-## Build
-
-The CMake target only configures when libarchive headers are present.
-Install on Fedora/RHEL with `dnf install libarchive-devel`, on Debian
-with `apt install libarchive-dev`, or build libarchive from source.
+Download a libarchive source release, then run:
 
 ```sh
-cmake -B build -DUC2_BUILD_LIBARCHIVE_PLUGIN=ON
-cmake --build build --target uc2_libarchive
+python3 contrib/libarchive/build_bsdtar.py \
+  --source /path/to/libarchive-3.8.11 --build build-bsdtar
+build-bsdtar/build/bin/bsdtar -tf tests/archives/basic.uc2
+python3 tests/scripts/check_bsdtar.py \
+  build/cli/uc2 build-bsdtar/build/bin/bsdtar
 ```
 
-The built object can be linked into a libarchive-using application or
-patched into libarchive's source tree (`libarchive/libarchive/`).
+The script copies libarchive into its new build directory, registers the UC2
+reader in `archive_read_support_format_all`, and links the current UC2 core.
+It leaves the supplied libarchive tree untouched. The generated binary is a
+patched distribution including GPL/LGPL components. This is not an upstream
+libarchive release.
 
-## Roadmap
+The November 5 build used libarchive 3.8.11, archive SHA-256
+`a3dc0872b1b39da34dc18ef1b944f0f11ffd37425d70ae04be679279f1cf43d2`.
+The executable test covers listing, directories, empty files, selected-member
+extraction, both entropy methods, and pipe input. On Linux it also restores a
+128 MiB entry under a 96 MiB address-space limit.
 
-The current skeleton compiles into a stub library that registers a
-no-op format.  The implementation milestones, in order:
+## Build the separate adapter target
 
-1. bid function with magic check (~20 lines)
-2. read_header for the first entry only (single-file archives)
-3. read_data for uncompressed-by-master entries
-4. Master-block decompression and dependency tracking
-5. Multi-file archives + directory entries
-6. Tagged entries (long names, extended attributes)
-7. Round-trip test against bsdtar built from a patched libarchive
-8. Upstream PR
+For applications already linking their own static libarchive build:
 
-Each milestone is independently shippable as a working subset.
+```sh
+cmake -B build-larch -DUC2_BUILD_LIBARCHIVE_PLUGIN=ON \
+  -DLIBARCHIVE_SOURCE_DIR=/path/to/libarchive-source \
+  -DLIBARCHIVE_LIBRARY=/path/to/libarchive.a
+cmake --build build-larch
+ctest --test-dir build-larch -R libarchive_roundtrip --output-on-failure
+```
+
+Call `archive_read_support_format_uc2()` before opening input. The target needs
+private libarchive headers, so installed development headers alone are
+insufficient. Explicitly requesting the target with missing prerequisites is a
+configuration error. Test against the same libarchive source/library version.
+
+## Licensing and upstream work
+
+On November 5, 2026, Eremey Valetov approved dual licensing of his adapter and
+independently written integration glue under
+`GPL-3.0-or-later OR BSD-2-Clause`. The BSD license is supplied in this directory.
+The UC2 core and third-party code retain their existing licenses. In particular,
+Bobrowski's LGPL decoder has not been relicensed.
+
+The adapter can therefore be offered under BSD, but upstream still needs to
+accept a compatible external dependency arrangement or an independently
+licensed decoder. It also needs to assign an official format number; this
+prototype uses `0xC0FF0000`. The distribution recipe and tests are ready for
+review. No upstream acceptance or submission is implied.

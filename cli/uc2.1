@@ -1,5 +1,5 @@
 .\" SPDX-License-Identifier: GPL-3.0-or-later
-.Dd June 11, 2026
+.Dd November 5, 2026
 .Dt UC2 1
 .Os
 .Sh NAME
@@ -142,6 +142,12 @@ in stream order, so the result can be listed with
 and extracted with
 .Fl x
 like any other archive; repeated chunks share a single stored block.
+Payload buffers are bounded, while chunk indexes and directory entries grow
+with the number of chunks. Unique raw chunks use temporary disk space.
+The output is staged beside its destination and replaces it after a successful
+close. Forced termination can leave the temporary file behind.
+Input is limited to 2^32-1 bytes, and archive offsets are 32-bit; some platforms
+have lower seek limits. Tar input is preserved as bytes, not individual entries.
 .It Fl -ingest-restore Ar archive
 Reassemble the original stream from
 .Ar archive

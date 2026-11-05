@@ -10,6 +10,7 @@ include(cmake/UC2Platform.cmake)
 add_subdirectory(lib)
 add_subdirectory(cli)
 add_subdirectory(contrib/libarchive)
+add_subdirectory(contrib/totalcommander)
 
 option(UC2_BUILD_TESTS "Build tests" ON)
 if(UC2_BUILD_TESTS AND NOT DJGPP)

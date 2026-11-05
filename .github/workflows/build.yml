@@ -39,8 +39,8 @@ jobs:
     runs-on: ubuntu-latest
     name: libarchive plugin
     env:
-      LIBARCHIVE_VERSION: 3.7.7
-      LIBARCHIVE_SHA256: 4cc540a3e9a1eebdefa1045d2e4184831100667e6d7d5b315bb1cbc951f8ddff
+      LIBARCHIVE_VERSION: 3.8.11
+      LIBARCHIVE_SHA256: a3dc0872b1b39da34dc18ef1b944f0f11ffd37425d70ae04be679279f1cf43d2
     steps:
       - uses: actions/checkout@v4
       - name: Fetch libarchive source
@@ -71,6 +71,27 @@ jobs:
         run: cmake --build build -j
       - name: Round-trip test
         run: ctest --test-dir build --output-on-failure -R libarchive_roundtrip
+      - name: Build actual bsdtar with UC2 support
+        run: python3 contrib/libarchive/build_bsdtar.py --source "libarchive-${LIBARCHIVE_VERSION}" --build build-bsdtar
+      - name: Test actual bsdtar, pipes and bounded payload RAM
+        run: python3 tests/scripts/check_bsdtar.py build/cli/uc2 build-bsdtar/build/bin/bsdtar
+
+  totalcommander:
+    runs-on: windows-latest
+    name: Total Commander WCX (64-bit)
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned official SDK header
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory wcx-sdk
+          Invoke-WebRequest https://raw.githubusercontent.com/ghisler/WCX-SDK/13b5af8f4265733becf423e61bf000276dc528f8/src/wcxhead.h -OutFile wcx-sdk/wcxhead.h
+      - name: Configure and build
+        run: |
+          cmake -B build-wcx -A x64 -DUC2_BUILD_TESTS=OFF -DUC2_BUILD_WCX=ON -DUC2_WCX_SDK_DIR="${{ github.workspace }}/wcx-sdk"
+          cmake --build build-wcx --config Release --target uc2-cli uc2_wcx test_wcx
+      - name: Test DLL through WCX ABI
+        run: python tests/wcx/run_fixture.py --uc2 build-wcx/cli/Release/uc2.exe --plugin build-wcx/contrib/totalcommander/Release/uc2.wcx64 --host build-wcx/contrib/totalcommander/Release/test_wcx.exe --work build-wcx-fixture
 
   djgpp:
     runs-on: ubuntu-latest

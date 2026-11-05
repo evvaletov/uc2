@@ -1,5 +1,12 @@
 # UC2 tests
 
+# Assertions in the test executables must remain active in Release CI.
+if(MSVC)
+    add_compile_options(/UNDEBUG)
+else()
+    add_compile_options(-UNDEBUG)
+endif()
+
 add_executable(test_identify src/test_identify.c)
 target_link_libraries(test_identify PRIVATE uc2)
 target_include_directories(test_identify PRIVATE "${PROJECT_BINARY_DIR}/lib")
@@ -149,8 +156,12 @@ add_test(NAME ingest COMMAND test_ingest)
 
 # Optional cross-check: validates uc2 .ots output against the python-opentimestamps
 # reference parser.  Skipped (return code 77) when opentimestamps is not installed.
-find_package(Python3 COMPONENTS Interpreter)
+find_package(Python3 3.11 COMPONENTS Interpreter)
 if(Python3_Interpreter_FOUND)
+    add_test(NAME integrations
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_integrations.py
+                $<TARGET_FILE:uc2-cli> ${PROJECT_SOURCE_DIR}/contrib/mc/uc2)
+    set_tests_properties(integrations PROPERTIES TIMEOUT 90)
     add_test(NAME ots_cross_check
         COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/scripts/cross_check_ots.py

@@ -13,6 +13,10 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <errno.h>
+#ifdef _WIN32
+#include <direct.h>
+#define mkdir(path, mode) _mkdir(path)
+#endif
 
 static void hash_path(const struct uc2_blockstore *bs, uint64_t hash,
                       char *buf, size_t buf_size)

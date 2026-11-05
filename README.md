@@ -1,32 +1,41 @@
-# UC2 v3.0.0  --  UltraCompressor II
+# UC2: UltraCompressor II
 
 A cross-platform revival of UltraCompressor II, the DOS-era archiver by
-Nico de Vries (1992--1996).  UC2 was notable for its advanced deduplication
-("master blocks"), file versioning, and competitive compression ratios on
-the hardware of its day.
+Nico de Vries (1992-1996). UC2 used shared compression dictionaries
+("master blocks") and file versioning.
 
-UC2 v3 brings it back as a modern, portable C99 tool with full
-backward compatibility  --  archives created by UC2 v3 can be extracted
-by the original 1992 UC2 Pro, and vice versa.
+UC2 v3 is under development in portable C99. The latest tagged release is
+`v3.0.0-alpha.3`. Compression levels 2-5 use the original Huffman format;
+levels 6-9 require the new rANS reader. Original-format compatibility is
+covered by DOSBox-X fixtures, but some legacy methods, including Turbo/method
+80, remain unsupported.
 
 ## Features
 
-- **Full compression and decompression**  --  LZ77+Huffman (levels 2--5),
-  rANS entropy coding (levels 6--9), LZ4 ultra-fast mode
-- **Backward compatible** with the original UC2 Pro (verified via
-  automated DOSBox-X cross-tool round-trip testing)
-- **Content-defined chunking** (CDC) with Gear rolling hash for
-  position-independent deduplication
-- **Merkle DAG** content addressing with 64-bit hashes
-- **Cross-archive dedup** via shared block store
-- **Near-duplicate detection** via SimHash
-- **Delta compression** for binary patching
-- **Content-aware preprocessing**  --  BCJ (x86), BWT (text), delta filter
-- **BLAKE3** cryptographic hashing for archive integrity
-- **Benchmark mode**  --  test all methods on input data
-- **Personality**  --  warm, confident status messages (`-q` for scripting)
-- Directory archival with nested hierarchies
-- Cross-platform: Linux, macOS, Windows (MSVC), DOS (DJGPP)
+The command-line tool creates, lists, tests, and extracts archives. It supports
+nested directories, stored file versions, shared master blocks, output to
+stdout, tab-separated listings, and a quiet mode for scripts.
+
+- LZ77 with Huffman coding at levels 2-5, or rANS at levels 6-9.
+- Content-defined chunking and identical-chunk deduplication through `--ingest`.
+  The resulting archive is self-contained; `--ingest-restore` reconstructs the
+  input stream. A tar input remains a byte stream of `part-N` entries.
+- Compression comparisons through `-B`, including the library's LZ4 method.
+- OpenTimestamps proof attachment, extraction, and inspection.
+- Readers for [libarchive/bsdtar](contrib/libarchive/README.md),
+  [Midnight Commander](contrib/mc/README.md), and
+  [Total Commander](contrib/totalcommander/README.md).
+- Builds for Linux, macOS, Windows (MSVC), and DOS (DJGPP).
+
+The library also contains a 64-bit Merkle DAG, a shared block store, SimHash,
+binary delta coding, dictionary metadata, and BCJ/BWT/delta preprocessing.
+These modules are not all connected to the CLI archive writer. Its BLAKE3
+module currently fails official test vectors and must not be used for integrity
+claims; it is not used by the current archive read/write path. The repair is
+tracked in [ROADMAP.md](ROADMAP.md).
+
+See the [collection benchmarks](docs/benchmarks/2026-11-05.md) for measured
+size, time, and memory comparisons with 7z and tar+zstd.
 
 ## Building
 
@@ -35,8 +44,12 @@ Requires CMake >= 3.16 and a C99 compiler (GCC, Clang, or MSVC).
 ```sh
 cmake -B build
 cmake --build build
-ctest --test-dir build    # 16 unit tests
+ctest --test-dir build --output-on-failure -E roundtrip_dosbox
 ```
+
+Python 3.11 or newer enables the Python integration tests. The separate
+`roundtrip_dosbox` test requires the DOSBox-X environment described in
+`tests/scripts/roundtrip_dosbox.sh`.
 
 ## Usage
 
@@ -63,8 +76,8 @@ uc2 -B files...                        # Benchmark all methods
 | 8 | rANS | Tight |
 | 9 | rANS | Ultra |
 
-Levels 2--5 produce archives readable by the original 1992 UC2 Pro.
-Levels 6--9 use rANS entropy coding (UC2 v3 only, better compression).
+Levels 2-5 produce archives readable by the original 1992 UC2 Pro.
+Levels 6-9 use rANS entropy coding (UC2 v3 only).
 
 ### Options
 
@@ -73,7 +86,7 @@ Levels 6--9 use rANS entropy coding (UC2 v3 only, better compression).
 | `-w` | Create archive |
 | `-l` | List archive contents |
 | `-t` | Test archive integrity |
-| `-L n` | Compression level (2--9) |
+| `-L n` | Compression level (2-9) |
 | `-B` | Benchmark all methods on input files |
 | `-d path` | Extract to specified directory |
 | `-f` | Overwrite existing files |
@@ -82,6 +95,19 @@ Levels 6--9 use rANS entropy coding (UC2 v3 only, better compression).
 | `-a` | Include all file versions |
 | `-D` | Skip directory metadata; `-DD` also skips file metadata |
 | `-T` | Tab-separated output |
+
+### Stream ingestion
+
+```sh
+tar cf - project/ | uc2 --ingest backup.uc2
+uc2 --ingest-restore backup.uc2 > restored.tar
+```
+
+Ingestion keeps a small payload buffer and spools unique raw chunks to a
+temporary file. Memory for chunk indexes and directory entries grows with the
+number of chunks. The writer replaces the output only after completing the
+archive. A killed process can leave a sibling `.tmp-*` file; the previous
+output remains intact. The format and this writer use 32-bit size limits.
 
 ## Project Structure
 
@@ -93,26 +119,33 @@ UC2/
   cli/              uc2 command-line tool
   tests/            unit tests and test corpus
   original/         preserved original UC2 Pro sources (reference only)
-  docs/             Sphinx documentation
+  contrib/          libarchive and file-manager integrations
+  docs/             documentation and benchmark results
 ```
 
 ## Credits
 
-- **Nico de Vries**  --  Original UltraCompressor II (1992--1996)
-- **Danny Bezemer**  --  Facilitated source code release (2015)
-- **Jan Bobrowski**  --  Clean-room portable decompressor (unuc2/libunuc2, 2020--2021)
-- **Eremey Valetov**  --  UC2 v3 revival, compression engine, deduplication, and ongoing development
+- **Nico de Vries**: Original UltraCompressor II (1992-1996)
+- **Danny Bezemer**: Co-developed the original UC2
+- **Vladislav Sagunov**: Requested the free-software source release (2015)
+- **Jan Bobrowski**: Clean-room portable decompressor (unuc2/libunuc2, 2020-2021)
+- **Eremey Valetov**: UC2 v3 revival, compression engine, deduplication, and ongoing development
 
 See [CREDITS.md](CREDITS.md) for full attribution.
 
 ## History
 
-- **v1.0--v2.3** (1992--1996) Original DOS releases by Nico de Vries
-- **2015** Source code released under LGPL-3.0 by Danny Bezemer
-- **2020--2021** Jan Bobrowski writes unuc2/libunuc2 (portable decompressor)
-- **2026** UC2 v3.0.0: cross-platform revival with full compression engine,
-  backward compatibility, and modern deduplication
+- **v1.0 to v2.3** (1992-1996) Original DOS releases by Nico de Vries
+- **2015** Nico de Vries releases the source under LGPL-3.0 after a request
+  from Vladislav Sagunov
+- **2020-2021** Jan Bobrowski writes unuc2/libunuc2 (portable decompressor)
+- **2026** UC2 v3 development adds a compression engine, rANS, and stream
+  deduplication
 
 ## License
 
-GPL-3.0.  See [LICENSE](LICENSE) and [CREDITS.md](CREDITS.md).
+The project combines GPL-3.0-or-later code and LGPL-3.0-only components.
+The libarchive adapter and independently written integration glue are available
+under `GPL-3.0-or-later OR BSD-2-Clause`. The Total Commander adapter retains
+Bobrowski's LGPL license. See [LICENSE](LICENSE), [CREDITS.md](CREDITS.md), and
+the [per-file license audit](docs/license-audit.md).

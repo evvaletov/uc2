@@ -33,6 +33,7 @@ provenance table):
 - `lib/include/uc2/libuc2.h` (LGPL-3.0-only)  --  derived from `libunuc2.h`
 - `cli/src/main.c` (GPL-3.0-or-later)  --  derived from `unuc2.c`,
   with substantial additions for archive creation, OTS, and benchmarking
+- `contrib/totalcommander/uc2_wcx.c` (LGPL-3.0-only), adapted from the WCX prototype
 - `cli/src/compat/compat_win32.c` (LGPL-3.0-only)
 - `cli/src/compat/compat_dos.c` (LGPL-3.0-only, DOS adaptation by Valetov)
 
@@ -71,8 +72,10 @@ de Vries's 1992 binaries.
 - Backward compatibility with original UC2 Pro (verified via DOSBox-X)
 - Automated test infrastructure (19 unit tests, DOSBox-X cross-tool testing)
 
-All files under "UC2 v3.0.0 Revival" are licensed GPL-3.0-or-later by
-Eremey Valetov (2026).  See `docs/license-audit.md` for the per-file
+New core modules are licensed GPL-3.0-or-later by Eremey Valetov (2026).
+The libarchive adapter and independently written integration glue are
+dual-licensed GPL-3.0-or-later OR BSD-2-Clause. Derived files retain their
+upstream licenses.  See `docs/license-audit.md` for the per-file
 provenance table and the LGPL-3.0 / GPL-3.0 chain rationale.
 
 - GitHub: <https://github.com/evvaletov/uc2>

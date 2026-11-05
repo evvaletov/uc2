@@ -1,4 +1,5 @@
-/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* SPDX-License-Identifier: GPL-3.0-or-later OR BSD-2-Clause */
+/* Copyright (c) 2026 Eremey Valetov. See LICENSE.BSD-2-Clause. */
 
 /* libarchive read handler for UC2 v3 archives.
  *
@@ -13,11 +14,9 @@
  *         the cdir's directory ids (parent-before-child not assumed).
  *   M6 -- tagged entries (Win95 long names) resolved via uc2_get_tag.
  *
- * Strategy: on the first read_header call we slurp the entire archive
- * into memory through __archive_read_ahead, then drive libuc2 against
- * that buffer.  This is correct for any input but uses memory equal
- * to the archive size; future revisions can swap in a seekable adapter
- * when the underlying filter supports __archive_read_seek.
+ * Input and decompressed entries are spooled to anonymous temporary
+ * files. Payload RAM is bounded; directory metadata and libuc2's master
+ * cache still scale with the archive. This also handles pipes/filters.
  *
  * Built against libarchive's internal API
  * (archive_read_private.h, __archive_read_ahead,
@@ -34,6 +33,8 @@
 #include "archive_read_private.h"
 
 #include <errno.h>
+#include <limits.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,10 +45,9 @@
 #define ARCHIVE_FORMAT_UC2  0xC0FF0000  /* placeholder format code */
 
 struct uc2_la_state {
-	/* Slurped archive */
-	uint8_t *data;
-	size_t   len;
-	int      slurped;     /* 0 = not yet, 1 = done */
+	FILE *input;
+	uint64_t len;
+	int prepared;
 
 	/* libuc2 */
 	uc2_handle handle;
@@ -61,25 +61,37 @@ struct uc2_la_state {
 	int next_entry;
 	char label[12];
 
-	/* Per-entry decompressed buffer for read_data. */
-	uint8_t *entry_data;
-	size_t   entry_cap;
-	size_t   entry_len;
-	int      entry_yielded;
+	FILE *entry_file;
+	uint8_t entry_data[65536];
+	uint64_t entry_pos;
+	int entry_ready;
+	int entry_yielded;
 };
 
-/* libuc2 IO callbacks bound to the slurped buffer. */
+static int
+seek_file(FILE *f, uint64_t pos)
+{
+#ifdef _WIN32
+	return _fseeki64(f, (__int64)pos, SEEK_SET);
+#else
+	return fseeko(f, (off_t)pos, SEEK_SET);
+#endif
+}
+
+/* libuc2 requires random access, including on non-seekable input. */
 static int
 slurp_read(void *ctx, unsigned pos, void *buf, unsigned len)
 {
 	struct uc2_la_state *st = (struct uc2_la_state *)ctx;
-	if ((size_t)pos >= st->len)
+	if ((uint64_t)pos >= st->len)
 		return 0;
-	unsigned avail = (unsigned)(st->len - pos);
+	uint64_t avail = st->len - pos;
 	if (len > avail)
-		len = avail;
-	memcpy(buf, st->data + pos, len);
-	return (int)len;
+		len = (unsigned)avail;
+	if (len > INT_MAX) len = INT_MAX;
+	if (seek_file(st->input, pos) != 0) return -1;
+	size_t n = fread(buf, 1, len, st->input);
+	return ferror(st->input) ? -1 : (int)n;
 }
 
 static void *
@@ -103,35 +115,20 @@ static struct uc2_io slurp_io = {
 	.warn  = NULL,
 };
 
-/* Push-style write callback for uc2_extract.  Buffer everything and
- * let read_data yield it in one slice. */
+/* Bridge libuc2's push API to libarchive's pull API through a temp file. */
 struct extract_buf {
-	uint8_t *data;
-	size_t   cap;
-	size_t   len;
-	int      err;
+	FILE *file;
+	uint64_t len, limit;
 };
 
 static int
 extract_write(void *ctx, const void *p, unsigned len)
 {
 	struct extract_buf *eb = (struct extract_buf *)ctx;
-	if (eb->len + (size_t)len < eb->len) { eb->err = 1; return -1; }  /* wrap */
-	size_t need = eb->len + (size_t)len;
-	if (need > eb->cap) {
-		size_t ncap = eb->cap ? eb->cap : 4096;
-		while (ncap < need) {
-			if (ncap > ((size_t)-1) / 2) { ncap = need; break; }
-			ncap *= 2;
-		}
-		uint8_t *np = realloc(eb->data, ncap);
-		if (!np) { eb->err = 1; return -1; }
-		eb->data = np;
-		eb->cap = ncap;
-	}
-	memcpy(eb->data + eb->len, p, len);
-	eb->len = need;
-	return (int)len;
+	if (len > eb->limit - eb->len || fwrite(p, 1, len, eb->file) != len)
+		return -1;
+	eb->len += len;
+	return 0;
 }
 
 /* DOS date/time -> Unix time_t (UTC; DOS times are local but we treat
@@ -215,11 +212,15 @@ uc2_la_bid(struct archive_read *a, int best_bid)
 	return (0);
 }
 
-/* Slurp the entire archive into state->data via __archive_read_ahead +
- * __archive_read_consume.  Returns ARCHIVE_OK or ARCHIVE_FATAL. */
+/* Spool without holding compressed payloads in RAM. */
 static int
 slurp_archive(struct archive_read *a, struct uc2_la_state *st)
 {
+	st->input = tmpfile();
+	if (!st->input) {
+		archive_set_error(&a->archive, errno, "UC2: cannot create input spool");
+		return ARCHIVE_FATAL;
+	}
 	for (;;) {
 		ssize_t avail;
 		const void *p = __archive_read_ahead(a, 1, &avail);
@@ -234,27 +235,21 @@ slurp_archive(struct archive_read *a, struct uc2_la_state *st)
 		if (avail <= 0)
 			break;
 
-		if (st->len + (size_t)avail > st->len /* overflow guard */) {
-			size_t need = st->len + (size_t)avail;
-			if (need > (size_t)0x80000000u) {
-				archive_set_error(&a->archive, ENOMEM,
-				    "UC2: archive too large to slurp (>2GB)");
-				return (ARCHIVE_FATAL);
-			}
-			/* grow to power-of-two */
-			size_t cap = st->len ? st->len : 4096;
-			while (cap < need) cap *= 2;
-			uint8_t *np = (uint8_t *)realloc(st->data, cap);
-			if (!np) {
-				archive_set_error(&a->archive, ENOMEM,
-				    "UC2: out of memory slurping archive");
-				return (ARCHIVE_FATAL);
-			}
-			st->data = np;
+		if (avail > 65536) avail = 65536;
+		if ((uint64_t)avail > UINT32_MAX - st->len) {
+			archive_set_error(&a->archive, EFBIG, "UC2: archive exceeds 4 GiB format limit");
+			return ARCHIVE_FATAL;
 		}
-		memcpy(st->data + st->len, p, (size_t)avail);
-		st->len += (size_t)avail;
-		__archive_read_consume(a, avail);
+		if (fwrite(p, 1, (size_t)avail, st->input) != (size_t)avail ||
+		    __archive_read_consume(a, avail) != avail) {
+			archive_set_error(&a->archive, EIO, "UC2: input spool write failed");
+			return ARCHIVE_FATAL;
+		}
+		st->len += (uint64_t)avail;
+	}
+	if (fflush(st->input) != 0) {
+		archive_set_error(&a->archive, EIO, "UC2: input spool flush failed");
+		return ARCHIVE_FATAL;
 	}
 	return (ARCHIVE_OK);
 }
@@ -273,6 +268,12 @@ collect_entries(struct archive_read *a, struct uc2_la_state *st)
 
 	for (;;) {
 		if (st->n_entries >= st->n_capacity) {
+			if (st->n_capacity > INT_MAX / 2 ||
+			    (size_t)(st->n_capacity ? st->n_capacity : 16) >
+			    SIZE_MAX / (2 * sizeof *st->entries)) {
+				archive_set_error(&a->archive, ENOMEM, "UC2: too many entries");
+				return ARCHIVE_FATAL;
+			}
 			int ncap = st->n_capacity ? st->n_capacity * 2 : 32;
 			struct uc2_entry *ne = (struct uc2_entry *)realloc(
 			    st->entries, (size_t)ncap * sizeof *ne);
@@ -312,7 +313,10 @@ collect_entries(struct archive_read *a, struct uc2_la_state *st)
 		st->n_entries++;
 	}
 
-	uc2_finish_cdir(st->handle, st->label);
+	if (uc2_finish_cdir(st->handle, st->label) < 0) {
+		archive_set_error(&a->archive, EINVAL, "UC2: invalid directory trailer");
+		return ARCHIVE_FATAL;
+	}
 	return (ARCHIVE_OK);
 }
 
@@ -344,7 +348,7 @@ build_dir_path(struct uc2_la_state *st, unsigned id,
 			return (off + n);
 		}
 	}
-	return (0); /* unknown parent: fall back to root */
+	return (-1); /* a missing parent is a damaged directory */
 }
 
 /* Compose a full path for every entry: parent directories joined with
@@ -397,10 +401,10 @@ uc2_la_read_header(struct archive_read *a, struct archive_entry *entry)
 	a->archive.archive_format = ARCHIVE_FORMAT_UC2;
 	a->archive.archive_format_name = "UC2";
 
-	if (!st->slurped) {
+	if (!st->prepared) {
 		int r = slurp_archive(a, st);
 		if (r != ARCHIVE_OK) return r;
-		st->slurped = 1;
+		st->prepared = 1;
 
 		r = collect_entries(a, st);
 		if (r != ARCHIVE_OK) return r;
@@ -414,8 +418,10 @@ uc2_la_read_header(struct archive_read *a, struct archive_entry *entry)
 
 	struct uc2_entry *e = &st->entries[st->next_entry++];
 
-	/* Reset per-entry buffer state. */
-	st->entry_len = 0;
+	if (st->entry_file) fclose(st->entry_file);
+	st->entry_file = NULL;
+	st->entry_pos = 0;
+	st->entry_ready = 0;
 	st->entry_yielded = 0;
 
 	archive_entry_set_pathname(entry, st->paths[st->next_entry - 1]);
@@ -457,32 +463,40 @@ uc2_la_read_data(struct archive_read *a,
 		return (ARCHIVE_EOF);
 	}
 
-	/* Decompress the whole entry once. */
-	struct extract_buf eb = { .data = st->entry_data, .cap = st->entry_cap };
-	int ret = uc2_extract(st->handle, &e->xi, e->size,
-	                      extract_write, &eb);
-	st->entry_data = eb.data;
-	st->entry_cap = eb.cap;
-	st->entry_len = eb.len;
-
-	if (ret < 0 || eb.err) {
-		archive_set_error(&a->archive, EIO,
-		    "UC2: uc2_extract failed: %s",
-		    uc2_message(st->handle, ret));
-		return (ARCHIVE_FATAL);
+	if (!st->entry_ready) {
+		st->entry_file = tmpfile();
+		if (!st->entry_file) {
+			archive_set_error(&a->archive, errno, "UC2: cannot create entry spool");
+			return ARCHIVE_FATAL;
+		}
+		struct extract_buf eb = { .file = st->entry_file, .limit = e->size };
+		int ret = uc2_extract(st->handle, &e->xi, e->size, extract_write, &eb);
+		if (ret < 0 || eb.len != e->size || fflush(st->entry_file) != 0 ||
+		    seek_file(st->entry_file, 0) != 0) {
+			archive_set_error(&a->archive, EIO, "UC2: extraction or entry spool failed (%d)", ret);
+			return ARCHIVE_FATAL;
+		}
+		st->entry_ready = 1;
 	}
-
-	st->entry_yielded = 1;
+	size_t n = fread(st->entry_data, 1, sizeof st->entry_data, st->entry_file);
+	if (ferror(st->entry_file)) {
+		archive_set_error(&a->archive, EIO, "UC2: entry spool read failed");
+		return ARCHIVE_FATAL;
+	}
 	*buff = st->entry_data;
-	*size = st->entry_len;
-	*offset = 0;
-	return (ARCHIVE_OK);
+	*size = n;
+	*offset = (int64_t)st->entry_pos;
+	st->entry_pos += n;
+	if (!n) st->entry_yielded = 1;
+	return n ? ARCHIVE_OK : ARCHIVE_EOF;
 }
 
 static int
 uc2_la_read_data_skip(struct archive_read *a)
 {
 	struct uc2_la_state *st = (struct uc2_la_state *)a->format->data;
+	if (st->entry_file) fclose(st->entry_file);
+	st->entry_file = NULL;
 	st->entry_yielded = 1;
 	return (ARCHIVE_OK);
 }
@@ -501,9 +515,9 @@ uc2_la_cleanup(struct archive_read *a)
 			free(st->paths[i]);
 		free(st->paths);
 	}
-	free(st->data);
+	if (st->input) fclose(st->input);
+	if (st->entry_file) fclose(st->entry_file);
 	free(st->entries);
-	free(st->entry_data);
 	free(st);
 	a->format->data = NULL;
 	return (ARCHIVE_OK);

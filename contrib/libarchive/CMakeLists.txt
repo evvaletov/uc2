@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later OR BSD-2-Clause
 # Optional libarchive read-format plugin for UC2.
 #
 # Enable with -DUC2_BUILD_LIBARCHIVE_PLUGIN=ON.  Because libarchive's
@@ -7,26 +8,25 @@
 # checkout (or extracted release tarball) of libarchive.
 
 option(UC2_BUILD_LIBARCHIVE_PLUGIN
-       "Build the libarchive read-format plugin (milestone 1: bid)" OFF)
+       "Build the libarchive UC2 reader" OFF)
 
 if(NOT UC2_BUILD_LIBARCHIVE_PLUGIN)
     return()
 endif()
 
 if(NOT DEFINED LIBARCHIVE_SOURCE_DIR)
-    message(WARNING
+    message(FATAL_ERROR
         "UC2_BUILD_LIBARCHIVE_PLUGIN=ON but LIBARCHIVE_SOURCE_DIR is "
         "not set.  Pass -DLIBARCHIVE_SOURCE_DIR=<path-to-libarchive-source>; "
         "the plugin needs libarchive's private headers (archive_read_private.h, "
-        "archive_platform.h).  Skipping plugin build.")
+        "archive_platform.h).")
     return()
 endif()
 
 if(NOT EXISTS "${LIBARCHIVE_SOURCE_DIR}/libarchive/archive_read_private.h")
-    message(WARNING
+    message(FATAL_ERROR
         "LIBARCHIVE_SOURCE_DIR=${LIBARCHIVE_SOURCE_DIR} does not look like "
-        "a libarchive source tree (archive_read_private.h not found).  "
-        "Skipping plugin build.")
+        "a libarchive source tree (archive_read_private.h not found).")
     return()
 endif()
 
@@ -54,5 +54,4 @@ target_include_directories(uc2_libarchive PRIVATE
     "${CMAKE_CURRENT_BINARY_DIR}"
 )
 
-message(STATUS "UC2: libarchive plugin enabled "
-               "(milestone 1, source=${LIBARCHIVE_SOURCE_DIR})")
+message(STATUS "UC2: libarchive reader enabled (source=${LIBARCHIVE_SOURCE_DIR})")

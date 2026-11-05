@@ -41,42 +41,41 @@ Cross-compile from a Linux host using the DJGPP toolchain:
 
 This produces a DOS executable suitable for DOSBox or real hardware.
 
-libarchive Read Plugin
-----------------------
+libarchive reader and bsdtar
+---------------------------
 
-The optional libarchive read handler (``contrib/libarchive/``) lets any
-libarchive consumer — ``bsdtar``, file managers, language bindings —
-list and extract ``.uc2`` archives. It uses libarchive's internal
-read-format API, so it builds against a libarchive **source tree**
-rather than an installed ``-devel`` package.
-
-Unpack a libarchive release and build a static library (a
-dependency-free configuration is enough for the plugin and its test):
+The optional reader uses libarchive's private API and must be compiled against
+its source tree. It cannot be loaded into an arbitrary system libarchive.
+To build a patched bsdtar, first build the UC2 CLI above, then run:
 
 .. code-block:: sh
 
-   curl -LO https://github.com/libarchive/libarchive/releases/download/v3.7.7/libarchive-3.7.7.tar.gz
-   tar xzf libarchive-3.7.7.tar.gz
-   cmake -S libarchive-3.7.7 -B larch-build -DCMAKE_BUILD_TYPE=Release \
-         -DBUILD_SHARED_LIBS=OFF -DENABLE_TEST=OFF
-   cmake --build larch-build --target archive_static
+   curl -fsSLO https://github.com/libarchive/libarchive/releases/download/v3.8.11/libarchive-3.8.11.tar.gz
+   echo 'a3dc0872b1b39da34dc18ef1b944f0f11ffd37425d70ae04be679279f1cf43d2  libarchive-3.8.11.tar.gz' | sha256sum -c -
+   tar xzf libarchive-3.8.11.tar.gz
+   python3 contrib/libarchive/build_bsdtar.py --source libarchive-3.8.11 --build build-bsdtar
+   python3 tests/scripts/check_bsdtar.py build/cli/uc2 build-bsdtar/build/bin/bsdtar
 
-Then configure UC2 with the plugin enabled, pointing at the source tree
-and the static library:
+The build directory must be new. The recipe copies the supplied source before
+registering the UC2 reader. It handles directories, long names, masters,
+Huffman/rANS, and pipes. Payloads spool to temporary files; metadata and cached
+masters still consume memory proportional to archive contents.
 
-.. code-block:: sh
+The separate ``uc2_libarchive`` target and its public-API test are documented in
+``contrib/libarchive/README.md``. The adapter has a BSD license option, but the
+patched distribution still includes GPL/LGPL components. Upstream acceptance
+requires a compatible dependency arrangement.
 
-   cmake -B build -DCMAKE_BUILD_TYPE=Release \
-         -DUC2_BUILD_LIBARCHIVE_PLUGIN=ON \
-         -DLIBARCHIVE_SOURCE_DIR=$PWD/libarchive-3.7.7 \
-         -DLIBARCHIVE_LIBRARY=$PWD/larch-build/libarchive/libarchive.a
-   cmake --build build
+File-manager readers
+--------------------
 
-This builds ``libuc2_libarchive.a`` and the ``libarchive_roundtrip``
-test, which creates archives at multiple compression levels and reads
-them back through libarchive's public API, verifying every byte. The
-plugin handles multi-file archives with directory paths, master-block
-deduplication, and Win95 long names.
+``contrib/mc/README.md`` describes the read-only Midnight Commander helper and
+its per-user installation. It requires the UC2 CLI on PATH or in ``UC2``.
+
+``contrib/totalcommander/README.md`` describes the Windows WCX plugin. Enable
+``UC2_BUILD_WCX`` and provide ``UC2_WCX_SDK_DIR`` containing the official SDK's
+``wcxhead.h``. The 64-bit DLL has been tested through its ABI under Wine; native
+Total Commander UI validation and a 32-bit build remain release follow-ups.
 
 Build Options
 -------------
@@ -94,6 +93,9 @@ Build Options
    * - ``UC2_BUILD_LIBARCHIVE_PLUGIN``
      - ``OFF``
      - Build the libarchive read handler (needs ``LIBARCHIVE_SOURCE_DIR``)
+   * - ``UC2_BUILD_WCX``
+     - ``OFF``
+     - Build the Windows WCX reader (needs ``UC2_WCX_SDK_DIR``)
    * - ``CMAKE_BUILD_TYPE``
      - (none)
      - ``Release``, ``Debug``, ``RelWithDebInfo``

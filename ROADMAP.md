@@ -1,5 +1,118 @@
 # UC2 Roadmap
 
+## Recommended next priorities (2026-11-05)
+
+These five recommendations focus on making the existing engine useful and easy
+to obtain. The phases below remain the longer-term feature inventory. The
+additional task-qa + task-at TODO is a prerequisite for publishing a new release,
+not a claim that either workflow has already run.
+
+1. [ ] **Ship a Python package and downloadable CLI releases.**
+   Provide a familiar `UC2File` context manager for listing entries, reading
+   bytes, verification, and safe extraction. Bundle the native C engine so users
+   do not need a compiler or a separately installed executable. Use the existing
+   CMake build with [scikit-build-core](https://scikit-build-core.readthedocs.io/)
+   and test Linux, macOS, and Windows wheels with
+   [cibuildwheel](https://cibuildwheel.pypa.io/). Start with the reader API; move
+   archive creation out of CLI-only code before exposing a Python writer.
+   Add the required extension/PIC and installation targets and accurate license
+   metadata for the bundled components. Ship native CLI downloads from the same
+   release. The `uc2` PyPI project page and JSON endpoint returned 404 on this
+   date, which does not guarantee that the name can be registered. Check at
+   publication time; `ultracompressor2` is a possible distribution-name fallback.
+   A normal Python package also supports notebooks without a custom kernel.
+
+2. [ ] **Build a browser-only UC2 reader and inspector.**
+   Let someone drop an old archive onto a page, inspect entries and versions,
+   verify supported content, and download extracted files. Process archive bytes
+   locally, with no upload. Compile the C reader using
+   [Emscripten](https://emscripten.org/docs/porting/connecting_cpp_and_javascript/Interacting-with-code.html)
+   and run it in a worker with resource limits. First prove listing and reading
+   one fixture; use the existing generated-C approach for the SuperMaster data
+   instead of assuming the native assembly embedding works in WebAssembly.
+   This would give preservation users a useful first experience without an
+   installation and provide a concrete demo to share.
+
+3. [ ] **Make UC2 a preservation and migration toolkit.**
+   Add batch inventory and migration to ZIP or tar, with a machine-readable
+   manifest of original paths, versions, timestamps, attributes, and verified
+   file hashes. Preserve the source archive and report metadata that cannot be
+   represented in the destination. Reuse existing output-format libraries.
+   Build a redistributable compatibility corpus from real old archives and use
+   it to prioritize missing methods, especially Turbo/method 80 (b3e413f).
+   Start with one directory-to-manifest migration and verify every restored
+   file. The product hypothesis is that rescuing old collections is a clearer
+   reason to adopt UC2 than general compression claims.
+
+4. [ ] **Improve compression where the measurements show a gap.**
+   The [five collection benchmarks](docs/benchmarks/2026-11-05.md) verified all
+   60 round trips. Ingest improves on ordinary UC2 for related versions, but 7z
+   and tar+zstd make smaller archives on every tested collection. Profile match
+   selection, master construction, and per-chunk metadata before adding
+   snapshots or version bundles. Retest promising changes on the synthetic
+   corpus and redistributable real collections, including the random-data
+   control and all archive overhead.
+
+5. [ ] **Package the working integrations for users and upstream review.**
+   Package native releases with matching sources and license notices. Test the
+   WCX plugin inside Total Commander on native Windows and build the 32-bit
+   variant. Prepare the libarchive contribution around its BSD-option adapter;
+   resolve the core dependency license and official format ID before seeking
+   acceptance. The current recipe produces a patched bsdtar using private APIs.
+   No upstream submission has been made. Tracking: 7bbb6b6, 61ed856, 65daf3b.
+
+### Delivered from the previous priorities 4-5 (2026-11-05)
+
+- [x] Actual patched bsdtar 3.8.11 with pipe input, directories, master blocks,
+  Huffman/rANS, and selective extraction. A 128 MiB entry restores under a
+  96 MiB address-space limit. Payloads spool to temporary files; metadata and
+  cached masters still grow with archive contents.
+- [x] Read-only Midnight Commander extfs reader, tested through its interface
+  and in the actual MC TUI. Literal wildcard and version-looking names work.
+- [x] 64-bit Total Commander WCX reader, built with MinGW and exercised through
+  a Wine DLL host: Unicode archive path, list/skip/test/extract, file comparisons,
+  and cancellation preserving existing output. Native UI/32-bit tests remain.
+- [x] Targeted dual license approved by Eremey: GPL-3.0-or-later OR BSD-2-Clause
+  for the libarchive adapter and independent glue. Third-party and core licenses
+  stay in place; the derived WCX adapter retains LGPL.
+- [x] Reproducible 7z/tar+zstd benchmarks with JSON/CSV and SHA-256 verification.
+  Version-bundle expansion is deferred based on these measurements.
+- [x] Streamed CLI ingest with bounded payload buffers, collision byte checks
+  via a disk spool, staged destination replacement, and explicit format limits.
+  A 64 MiB input passes under a 48 MiB address-space limit.
+
+### Additional TODO requested by the user: task-qa + task-at
+
+- [ ] Run **task-qa + task-at** before the next public release. Tracked in
+  git-bug **c9edf0b**. This is an additional task alongside the five priorities.
+  The shared workflows are at
+  `/home/evaletov/.claude-skills-shared/task-qa/SKILL.md` and
+  `/home/evaletov/.claude-skills-shared/task-at/SKILL.md`.
+- [ ] Fix the confirmed BLAKE3 correctness gap: an independent check against
+  the [official vectors](https://github.com/BLAKE3-team/BLAKE3/blob/master/test_vectors/test_vectors.json)
+  matched 11 of 35 cases and failed 24, starting at 65 input bytes. The current
+  unit tests pass without checking those outputs. Include official vectors and
+  incremental block/chunk boundaries in the repair. No BLAKE3 call was found
+  in the current CLI, compressor, decompressor, or blockstore; do not infer
+  ordinary archive corruption from this standalone-module finding.
+- [x] Clean up the README's repeated dash clauses and ranges while preserving
+  command options. Correct alpha-release status, compatibility scope, module
+  versus CLI features, BLAKE3 claims, test instructions, and attribution. Remove
+  invalid cp/rsync pipes and the unsupported ingest novelty claim below.
+  The full task-at workflow remains pending.
+- [ ] Reconcile the release state before distribution. On 2026-11-05 local
+  `main` was `5e3f096`, five commits ahead of live GitHub `main` (`3dc9f96`),
+  including decoder fixes and ingest v3. This assessment did not publish them.
+
+Assessment evidence: a fresh GCC 14.3.1 Debug build passed 23 selected CTests,
+including OTS cross-check and fuzz-regression replay. DOSBox was excluded and
+the optional libarchive build was not enabled. The separate BLAKE3 vector
+comparison failed as described above; reproduction details are in c9edf0b.
+This was a project assessment, not the full task-qa or task-at workflow.
+The integration work subsequently passed 25 selected Debug CTests, 24 Release
+CTests with assertions enabled, and four focused ASan/UBSan checks. DOSBox, native MSVC, and the native Total Commander
+UI were not run in this pass. New CI jobs are configuration awaiting execution.
+
 ## Phase 1: Decompression MVP (DONE)
 
 - [x] Port Bobrowski's libunuc2 decompression engine
@@ -123,7 +236,8 @@ No mainstream archiver offers post-quantum encryption.
 
 ## Phase 7: Cryptographic Integrity & Timestamping
 
-- [x] BLAKE3 content hashing (`uc2_blake3.h`): pure C implementation,
+- [-] BLAKE3 content hashing (`uc2_blake3.h`): implementation present, but
+      official-vector failures require repair (c9edf0b). The original module has
       256-bit digests, incremental and one-shot API, constant-time
       comparison, tree hashing structure.  7 unit tests including
       avalanche, incremental-vs-oneshot, and single-byte updates.
@@ -196,37 +310,32 @@ an opt-in feature, not on the critical path.  Prototype in a fork first.
 
 ### libarchive plugin
 
-Highest-leverage integration.  Adding UC2 read/write support to libarchive
-makes `.uc2` a first-class format for `bsdtar`, `cmake`, `pkg(8)`,
-file-roller, Ark, and dozens of other tools across the Linux ecosystem.
+A libarchive integration could make UC2 available to its consumers. The
+current recipe demonstrates actual bsdtar support; other applications need
+their own builds and validation.
 
-- [-] libarchive read handler (decompression/listing): milestones
-      1-3 shipped -- bid() recognises UC2 magic; read_header() slurps
-      the archive, walks uc2_read_cdir, yields each entry mapped onto
-      archive_entry; read_data() drives uc2_extract through a buffering
-      write callback and yields the result via libarchive's pull API.
-      Memory scales with archive size in v1.  Remaining: master-block
-      dependency tracking (M4), seekable adapter (deferred), bsdtar
-      round-trip test (M7), upstream PR (M8).
+- [x] libarchive read handler: magic recognition, directories, long-name tags,
+      masters, and Huffman/rANS. Temporary-file spooling bounds payload RAM.
+      Both the public-API driver and actual bsdtar are tested. Upstream work
+      remains open (7bbb6b6).
 - [ ] libarchive write handler (compression, once Phase 2 is done)
 
 ### Streaming dedup ingestion
 
-Position UC2 as a deduplicating storage layer that other tools pipe into.
-No other CLI archiver offers this.
+UC2 accepts byte streams from tools that emit archive data. The benchmarks
+above determine which performance claims are supported.
 
 ```sh
-rsync -a /data/ | uc2 --ingest repo.uc2      # dedup on receive
-tar cf - /project | uc2 --ingest backup.uc2   # dedup tar stream
-cp -a /snapshot/ | uc2 --ingest backup.uc2    # incremental dedup
+tar cf - project/ | uc2 --ingest backup.uc2
+uc2 --ingest-restore backup.uc2 > restored.tar
 ```
 
 - [x] `uc2 --ingest` mode v1: stdin -> CDC -> sidecar blockstore at
       `<archive>.blocks/` -> chunk-hash manifest.  `uc2 --ingest-restore`
       reverses the round-trip.  Tested: small/multichunk round-trip,
       idempotent dedup on repeat ingest, empty stream, bad-magic
-      rejection.  Now legacy: writer defaults to v2.
-- [x] `uc2 --ingest` v2 (default): self-contained archive with the
+      rejection.  Now legacy: writer defaults to v3.
+- [x] `uc2 --ingest` v2 (legacy): self-contained archive with the
       chunk pool embedded inside the archive file itself.  No sidecar
       directory.  Manifest entries carry absolute file offsets;
       duplicate hashes share an offset (intra-call dedup).
@@ -263,8 +372,9 @@ universal archive tool and migration path for legacy collections.
 
 Bobrowski already shipped prototypes; update for UC2 v3.
 
-- [ ] Midnight Commander VFS plugin (update `misc/mc.ext` and `misc/uuc2`)
-- [ ] Total Commander WCX plugin (update `misc/unuc2-wcx.c`)
+- [x] Midnight Commander extfs reader (`contrib/mc/`, 61ed856)
+- [x] Total Commander WCX reader (`contrib/totalcommander/`, 65daf3b);
+      64-bit DLL tested in Wine, native host/32-bit validation pending
 
 ## Phase 11: Advanced Features
 
@@ -294,6 +404,13 @@ Bobrowski already shipped prototypes; update for UC2 v3.
 - Phase 9: ZK proof soundness and completeness
 
 ## Maintenance Log
+
+- 2026-11-05: Delivered integrations and collection benchmarks described above.
+  CLI extraction errors now produce a failing exit status, allowing the MC
+  helper to preserve destinations on error. Release test executables retain
+  assertions. Added actual bsdtar and native Windows WCX CI jobs. README prose
+  and claims corrected; full task-qa + task-at and BLAKE3 repair remain open.
+
 
 - 2026-06-11: Fixed the rANS (L6-9) extraction crash and >64KB silent
   corruption (git-bug d747658, closed): master COMPRESS records now

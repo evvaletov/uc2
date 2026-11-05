@@ -561,7 +561,7 @@ static int resolve_master(struct uc2_context *uc2, unsigned master)
 		if (!uc2->supermaster)
 			return UC2_UserFault;
 
-#ifdef _MSC_VER
+#ifdef UC2_SUPER_C
 		extern u8 uc2_supermaster_compressed[];
 		extern const unsigned int uc2_supermaster_compressed_size;
 		struct range br = {.ptr = uc2_supermaster_compressed, .end = uc2_supermaster_compressed + uc2_supermaster_compressed_size};

@@ -2,8 +2,8 @@
 
 set(LIBUC2_SOURCES src/decompress.c src/compress.c src/uc2_tables.c src/uc2_cdc.c src/uc2_merkle.c src/uc2_blockstore.c src/uc2_simhash.c src/uc2_delta.c src/uc2_rans.c src/uc2_dict.c src/uc2_preprocess.c src/uc2_lz4.c src/uc2_blake3.c src/uc2_sha256.c src/uc2_ots.c src/uc2_ingest.c)
 
-# Embed super.bin: use .S with .incbin on GCC/Clang, generated C array on MSVC
-if(MSVC)
+# Embed super.bin: generated C on Windows, assembly .incbin elsewhere.
+if(WIN32)
     set(SUPER_C "${CMAKE_CURRENT_BINARY_DIR}/super_data.c")
     add_custom_command(
         OUTPUT "${SUPER_C}"
@@ -22,6 +22,9 @@ else()
 endif()
 
 add_library(uc2 STATIC ${LIBUC2_SOURCES})
+if(WIN32)
+    target_compile_definitions(uc2 PRIVATE UC2_SUPER_C)
+endif()
 
 target_include_directories(uc2
     PUBLIC  include

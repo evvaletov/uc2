@@ -1,0 +1,8 @@
+[plugininstall]
+description=UltraCompressor II archive reader
+description64=UltraCompressor II archive reader (64-bit)
+type=wcx
+file=uc2.wcx
+file64=uc2.wcx64
+defaultdir=uc2
+defaultextension=uc2

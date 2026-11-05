@@ -20,6 +20,12 @@ if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
     install(TARGETS uc2-cli RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
     if(UNIX)
         install(FILES uc2.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+        install(PROGRAMS ${PROJECT_SOURCE_DIR}/contrib/mc/uc2
+                DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}/mc/extfs.d)
+        install(FILES ${PROJECT_SOURCE_DIR}/contrib/mc/mc.ext.ini
+                DESTINATION ${CMAKE_INSTALL_DATADIR}/uc2/mc)
+        install(FILES ${PROJECT_SOURCE_DIR}/contrib/libarchive/LICENSE.BSD-2-Clause
+                DESTINATION ${CMAKE_INSTALL_DATADIR}/uc2/mc)
     endif()
 endif()
 

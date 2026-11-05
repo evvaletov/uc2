@@ -1,6 +1,6 @@
 # UC2 License Audit
 
-Status: 2026-05-03. Maintained by Eremey Valetov.
+Status: 2026-11-05. Maintained by Eremey Valetov.
 
 UC2 v3 builds on three layers of prior work, each released under its
 own free-software licence.  This document records per-file provenance,
@@ -48,6 +48,7 @@ retain his original licence:
 | `lib/src/list.h`                      | `original/unuc2-0.6/list.h` (identical)  | LGPL-3.0-only |
 | `lib/src/super.bin`                   | `original/unuc2-0.6/super.bin` (identical) | data (de Vries) |
 | `lib/include/uc2/libuc2.h`            | `original/unuc2-0.6/libunuc2.h`          | LGPL-3.0-only |
+| `contrib/totalcommander/uc2_wcx.c`    | `original/unuc2-0.6/misc/unuc2-wcx.c` | LGPL-3.0-only |
 | `cli/src/main.c`                      | `original/unuc2-0.6/unuc2.c`             | GPL-3.0-or-later |
 | `cli/src/compat/compat_win32.c`       | `original/unuc2-0.6/compat/compat.c` (Win32 portions) | LGPL-3.0-only |
 | `cli/src/compat/compat_dos.c`         | derived from `compat/compat.c` (DOS adaptation by Valetov) | LGPL-3.0-only |
@@ -94,6 +95,28 @@ copyrighted work) and use BLAKE3, SHA-256, LZ4, rANS, etc. from
 public-domain or self-authored reference implementations.  None of
 these modules link to or derive from Bobrowski's code beyond using
 shared header types declared in `uc2_internal.h`.
+
+## Targeted integration dual license (2026-11-05)
+
+Eremey Valetov explicitly approved `GPL-3.0-or-later OR BSD-2-Clause` for
+his libarchive adapter and independently written integration glue:
+
+- `contrib/libarchive/archive_read_support_format_uc2.c`
+- `contrib/libarchive/build_bsdtar.py`
+- `contrib/mc/uc2` and `contrib/mc/mc.ext.ini`
+- The new integration CMake recipes in `contrib/`.
+
+The BSD text is in `contrib/libarchive/LICENSE.BSD-2-Clause`; the GPL text
+remains at the repository root. This permission applies only to the named new
+work. The UC2 core and third-party files retain their existing licenses.
+`contrib/totalcommander/uc2_wcx.c` derives from Bobrowski's prototype and keeps
+LGPL-3.0-only. The external WCX SDK is not included or relicensed.
+
+A BSD option for the adapter alone does not make the linked UC2 core BSD.
+The patched bsdtar and WCX distributions still include GPL/LGPL components.
+An upstream libarchive contribution therefore needs agreement on compatible
+dependencies as well as the adapter source license. No upstream approval has
+been obtained.
 
 ## Relicensing rationale
 
