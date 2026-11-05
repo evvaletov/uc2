@@ -329,10 +329,10 @@ static void codegen(const u8 *lengths, int nsym, u16 *codes)
    the previous block's tree (stored in symprev).
 
    Bitstream format (matches decompress.c ht_dec):
-     tree-changed:1  — 0 = use default tree, 1 = new tree follows
-     t:2             — (has_hi<<1)|has_lo
-     tlengths:15×3   — tree-encoding tree (delta/repeat code lengths)
-     stream:var      — delta-coded symbol lengths via tree-encoding tree
+     tree-changed:1 : 0 = use default tree, 1 = new tree follows
+     t:2            : (has_hi<<1)|has_lo
+     tlengths:15×3  : tree-encoding tree (delta/repeat code lengths)
+     stream:var     : delta-coded symbol lengths via tree-encoding tree
 
    The present[] array must exactly match the decoder's rle[][] table:
      t=0: {9,10,12,13, 32..127, 256..343}        = 188 symbols
@@ -862,7 +862,7 @@ static int flush_block_rans(struct compressor *c, int is_last)
 	/* rANS block format (method 10):
 	   [block-present:1=1] [nsyms:16] [rans_len:16]
 	   [freq_table:344×12bits] [rans_data] [extra_bits]
-	   No Huffman tree — method ID in COMPRESS record signals rANS. */
+	   No Huffman tree: method ID in COMPRESS record signals rANS. */
 	r = bitsout_put(&c->bo, 1, 1);  /* block-present */
 	if (r < 0) goto out;
 
@@ -1038,7 +1038,7 @@ int uc2_compress_ex(
 					unsigned len2 = find_match(c, c->pos + 1,
 					                           c->lazy_depth, c->give_up, &dist2);
 					if (len2 > len) {
-						/* Better match at next position — emit literal */
+						/* Better match at next position: emit literal */
 						c->bd_freq[c->data[(u16)c->pos]]++;
 						c->ibuf[c->ibuf_pos++] = c->data[(u16)c->pos];
 						c->pos++;

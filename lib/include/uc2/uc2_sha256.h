@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 
-/* SHA-256 (FIPS 180-4) -- pure C implementation.
+/* SHA-256 (FIPS 180-4): pure C implementation.
  *
  * Used by the OpenTimestamps integration; calendars accept SHA-256
  * digests as proof leaves. */

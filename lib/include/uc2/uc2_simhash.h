@@ -8,7 +8,7 @@
  * than a threshold number of bits.
  *
  * This detects patched executables, slightly edited documents, and
- * minor revisions — cases where CDC chunks might not align but the
+ * minor revisions: cases where CDC chunks might not align but the
  * overall content is structurally similar.
  *
  * Usage:

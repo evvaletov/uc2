@@ -112,8 +112,7 @@ static const char *level_name(int level)
 	}
 }
 
-/* UC2 talks — warm, confident, slightly quirky.
-   Suppressed by -q for scripting. */
+/* Quiet mode suppresses progress output for scripts. */
 static void uc2_say(FILE *f, const char *fmt, ...)
 {
 	if (opt.quiet) return;
@@ -519,7 +518,7 @@ static bool extract_cb(struct node *ne, void *ctx, enum cause cause)
 		/* Each UC2 entry name is a single path component (the directory
 		   tree is rebuilt from dirid parents).  A name that is empty,
 		   ".", "..", or contains a path separator is malformed or a
-		   path-traversal attempt -- refuse to extract it rather than
+		   path-traversal attempt; refuse to extract it rather than
 		   write outside the destination. */
 		if (l == 0
 		    || (l == 1 && e->name[0] == '.')
@@ -1199,7 +1198,7 @@ static int run_benchmark(int nfiles, char **files)
 	};
 
 	struct mem_reader { const uint8_t *data; unsigned pos; unsigned len; };
-	/* Reuse fread_cb — actually need a mem reader */
+	/* Benchmark each method against the same in-memory input. */
 
 	for (int m = 0; m < (int)(sizeof methods / sizeof methods[0]); m++) {
 		/* Compress */

@@ -37,7 +37,7 @@ enum {
 	UC2_MAX_DIST  = 125 * 512,       /* 64000 */
 	UC2_READ_SIZE = 512,
 	UC2_BUF_SIZE  = 65536,           /* circular buffer: u16 index wraps */
-	UC2_EOB_MARK  = 125 * 512 + 1,   /* 64001 — end-of-block distance */
+	UC2_EOB_MARK  = 125 * 512 + 1,   /* 64001: end-of-block distance */
 	UC2_MIN_MATCH = 3,
 	UC2_MAX_LEN   = 200,             /* direct match limit */
 	UC2_MAX_XLEN  = 32760,           /* extended match limit */

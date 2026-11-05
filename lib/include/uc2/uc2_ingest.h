@@ -2,22 +2,14 @@
 
 /* Streaming dedup ingest for UC2.
  *
- * uc2 --ingest <archive> reads a byte stream (typically stdin from
- * tar / rsync / cp -a), splits it via CDC, deduplicates chunks, and
- * writes a self-contained archive file.  uc2 --ingest-restore <archive>
- * reverses this.
+ * This library module reads legacy v1/v2 ingestion containers and writes v2.
+ * The CLI writes ordinary UC2 archives as ingest v3; its restore command
+ * recognizes both legacy containers and v3. A tar stream is suitable input.
+ * Neither cp nor rsync emits an archive byte stream for this interface.
  *
- * Two on-disk formats are supported:
- *
- *   v1 (legacy): manifest in <archive>, chunk data in a sidecar
- *   blockstore directory at <archive>.blocks/.  Cross-archive dedup
- *   works through shared blockstore directories.  Read-only now;
- *   writer defaults to v2.
- *
- *   v2 (default): archive is self-contained -- chunks are stored in
- *   an embedded pool inside the archive itself.  No sidecar
- *   directory.  Each manifest entry carries its chunk's absolute
- *   file offset; deduplicated chunks share a single offset.
+ * v1 stores a manifest and an external <archive>.blocks/ chunk pool.
+ * v2 embeds the pool in the container; repeated chunks share an offset.
+ * These containers are distinct from the ordinary UC2 archive format.
  *
  * Manifest layouts (all little-endian):
  *

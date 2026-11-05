@@ -7,9 +7,9 @@
  * is reversible (apply/revert) and content-type specific.
  *
  * Filters:
- *   BCJ  — x86 branch/call/jump address normalization (E8/E9 transform)
- *   BWT  — Burrows-Wheeler transform for text (groups similar contexts)
- *   Delta — byte-wise delta encoding for structured/tabular data
+ *   BCJ : x86 branch/call/jump address normalization (E8/E9 transform)
+ *   BWT : Burrows-Wheeler transform for text (groups similar contexts)
+ *   Delta: byte-wise delta encoding for structured/tabular data
  */
 
 #ifndef UC2_PREPROCESS_H

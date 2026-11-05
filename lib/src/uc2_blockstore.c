@@ -3,9 +3,8 @@
 /* Cross-archive block store for content-addressable deduplication.
  *
  * Chunks are stored as individual files named by their 64-bit hash
- * (hex encoded).  This is simple and portable  --  no database needed.
- * For large stores, a two-level directory structure (first 2 hex chars
- * as subdirectory) prevents filesystem performance issues. */
+ * (hex encoded). The first two hex characters select a subdirectory,
+ * distributing files across 256 directories. */
 
 #include "uc2/uc2_blockstore.h"
 #include <stdio.h>
