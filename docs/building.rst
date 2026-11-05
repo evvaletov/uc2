@@ -42,7 +42,7 @@ Cross-compile from a Linux host using the DJGPP toolchain:
 This produces a DOS executable suitable for DOSBox or real hardware.
 
 libarchive reader and bsdtar
----------------------------
+----------------------------
 
 The optional reader uses libarchive's private API and must be compiled against
 its source tree. It cannot be loaded into an arbitrary system libarchive.
