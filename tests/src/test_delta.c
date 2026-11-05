@@ -151,15 +151,19 @@ static void test_malformed(void)
     const uint8_t valid[] = {'U','C','2','D',1,0,0,0,2,1,0,0,0,'x',0};
     uint8_t *out = NULL, bad[sizeof valid + 1]; size_t len = 0;
     for (size_t n = 0; n < sizeof valid; ++n) {
-        assert(uc2_delta_apply(NULL, 0, valid, n, &out, &len) == -1);
+        int rc = uc2_delta_apply(NULL, 0, valid, n, &out, &len);
+        assert(rc == -1);
         assert(out == NULL && len == 0);
     }
     memcpy(bad, valid, sizeof valid); bad[sizeof valid] = 0;
-    assert(uc2_delta_apply(NULL, 0, bad, sizeof bad, &out, &len) == -1);
+    int rc = uc2_delta_apply(NULL, 0, bad, sizeof bad, &out, &len);
+    assert(rc == -1);
     bad[8] = 0;
-    assert(uc2_delta_apply(NULL, 0, bad, 9, &out, &len) == -1);
-    assert(uc2_delta_encode((const uint8_t *)"", (size_t)INT32_MAX + 1,
-                            NULL, 0, &out, &len) == -1);
+    rc = uc2_delta_apply(NULL, 0, bad, 9, &out, &len);
+    assert(rc == -1);
+    rc = uc2_delta_encode((const uint8_t *)"", (size_t)INT32_MAX + 1,
+                          NULL, 0, &out, &len);
+    assert(rc == -1);
 }
 
 int main(void)

@@ -123,15 +123,19 @@ static void test_standard_block(void)
     memset(input, 'A', sizeof input);
     size_t n = uc2_lz4_compress(input, sizeof input, packed, sizeof packed);
     assert(n == sizeof expected && memcmp(packed, expected, n) == 0);
-    assert(uc2_lz4_decompress(expected, sizeof expected, decoded, sizeof decoded) == 20);
+    n = uc2_lz4_decompress(expected, sizeof expected, decoded, sizeof decoded);
+    assert(n == 20);
     assert(memcmp(input, decoded, 20) == 0);
-    assert(uc2_lz4_compress(NULL, 0, packed, sizeof packed) == 1 && packed[0] == 0);
+    n = uc2_lz4_compress(NULL, 0, packed, sizeof packed);
+    assert(n == 1 && packed[0] == 0);
     assert(uc2_lz4_bound(SIZE_MAX) == 0);
     for (size_t size = 1; size < 20; ++size) {
         n = uc2_lz4_compress(input, size, packed, sizeof packed);
-        assert(n && uc2_lz4_decompress(packed, n, decoded, size) == size);
+        size_t decoded_size = uc2_lz4_decompress(packed, n, decoded, size);
+        assert(n && decoded_size == size);
         assert(memcmp(input, decoded, size) == 0);
-        assert(uc2_lz4_compress(input, size, packed, 1) == 0);
+        n = uc2_lz4_compress(input, size, packed, 1);
+        assert(n == 0);
     }
 }
 
