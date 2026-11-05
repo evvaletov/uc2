@@ -228,7 +228,7 @@ static PyObject *reader_read(Reader *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "nK", &index, &limit)) return NULL;
     struct uc2_entry *entry = get_entry(self, index, limit);
     if (!entry) return NULL;
-#if PY_SSIZE_T_MAX < UINT_MAX
+#if SIZE_MAX <= UINT_MAX
     if (entry->size > (unsigned)PY_SSIZE_T_MAX) return PyErr_NoMemory();
 #endif
     PyObject *bytes = PyBytes_FromStringAndSize(NULL, (Py_ssize_t)entry->size);
