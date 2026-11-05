@@ -488,13 +488,12 @@ struct compressor {
 	u8 data[UC2_BUF_SIZE];
 
 	/* Hash chains */
-	u16 head[8192];     /* hash -> most recent position */
-	u16 prev[UC2_BUF_SIZE]; /* position -> previous position with same hash */
+	uint64_t head[8192];     /* hash -> most recent position */
+	uint64_t prev[UC2_BUF_SIZE]; /* position -> previous position with same hash */
 
 	/* Current position and limits */
-	u16 pos;            /* current compression position */
-	u16 end;            /* end of valid data */
-	unsigned data_len;  /* total bytes loaded so far */
+	uint64_t pos;       /* absolute positions disambiguate ring generations */
+	uint64_t end;       /* end of valid data */
 
 	/* Intermediate buffer for literals/distances/lengths */
 	u16 ibuf[32768];
@@ -523,40 +522,41 @@ struct compressor {
 	unsigned compressed_bytes;
 };
 
-static inline u16 hash3(const u8 *p)
+static inline u16 hash_at(const struct compressor *c, uint64_t pos)
 {
-	return (u16)(p[0] ^ (p[1] << 3) ^ ((0x7f & p[2]) << 6));
+	return (u16)(c->data[(u16)pos] ^ (c->data[(u16)(pos + 1)] << 3) ^
+	             ((0x7f & c->data[(u16)(pos + 2)]) << 6));
 }
 
 /* Find longest match at current position. Returns match length (0 if none). */
-static unsigned find_match(struct compressor *c, u16 pos, unsigned max_depth,
+static unsigned find_match(struct compressor *c, uint64_t pos, unsigned max_depth,
                            unsigned give_up, unsigned *match_dist)
 {
 	unsigned best_len = UC2_MIN_MATCH - 1;
 	unsigned best_dist = 0;
 
-	u16 h = hash3(c->data + pos);
-	u16 chain = c->head[h];
+	u16 h = hash_at(c, pos);
+	uint64_t chain = c->head[h];
 	unsigned depth = 0;
 
 	while (depth < max_depth) {
-		u16 dist = (u16)(pos - chain);
-		if (dist == 0 || dist > UC2_MAX_DIST)
+		if (chain >= pos || pos - chain > UC2_MAX_DIST)
 			break;
+		unsigned dist = (unsigned)(pos - chain);
 
 		/* Quick filter: check byte at best_len position first */
 		if (c->data[(u16)(chain + best_len)] == c->data[(u16)(pos + best_len)]) {
 			/* Full comparison */
 			unsigned len = 0;
 			unsigned max_len = UC2_MAX_LEN;
-			u16 avail = (u16)(c->end - pos);
+			unsigned avail = (unsigned)(c->end - pos);
 			if (max_len > avail) max_len = avail;
 
 			while (len < max_len &&
 			       c->data[(u16)(chain + len)] == c->data[(u16)(pos + len)])
 				len++;
 
-			if (len > best_len) {
+			if (len > best_len && (len > 3 || dist <= 255)) {
 				best_len = len;
 				best_dist = dist;
 				if (len >= give_up)
@@ -564,20 +564,18 @@ static unsigned find_match(struct compressor *c, u16 pos, unsigned max_depth,
 			}
 		}
 
-		chain = c->prev[chain];
+		chain = c->prev[(u16)chain];
 		depth++;
-		if ((u16)(pos - chain) > UC2_MAX_DIST)
-			break;
 	}
 
 	*match_dist = best_dist;
 	return best_len >= UC2_MIN_MATCH ? best_len : 0;
 }
 
-static void hash_enter(struct compressor *c, u16 pos)
+static void hash_enter(struct compressor *c, uint64_t pos)
 {
-	u16 h = hash3(c->data + pos);
-	c->prev[pos] = c->head[h];
+	u16 h = hash_at(c, pos);
+	c->prev[(u16)pos] = c->head[h];
 	c->head[h] = pos;
 }
 
@@ -971,7 +969,7 @@ int uc2_compress_ex(
 	/* Initialize */
 	csum_init(&ctx->csum);
 	uc2_default_lengths(c->symprev);
-	memset(c->head, 0, sizeof c->head);
+	memset(c->head, 0xff, sizeof c->head);
 	memset(c->bd_freq, 0, sizeof c->bd_freq);
 	memset(c->l_freq, 0, sizeof c->l_freq);
 	c->ibuf_pos = 0;
@@ -987,11 +985,10 @@ int uc2_compress_ex(
 	/* Pre-fill circular buffer with master data (LZ77 dictionary prefix) */
 	if (master && master_size > 0) {
 		unsigned ms = master_size;
-		if (ms > UC2_BUF_SIZE - UC2_MIN_MATCH)
-			ms = UC2_BUF_SIZE - UC2_MIN_MATCH;
+		if (ms > UC2_BUF_SIZE - 1) { free(ctx); return UC2_UserFault; }
 		memcpy(c->data, master, ms);
 		for (unsigned i = 0; i + 2 < ms; i++)
-			hash_enter(c, (u16)i);
+			hash_enter(c, i);
 		load_pos = (u16)ms;
 		c->pos = load_pos;
 		c->end = load_pos;
@@ -1011,41 +1008,41 @@ int uc2_compress_ex(
 		if (chunk > edge) chunk = edge;
 
 		int nread = read(read_ctx, c->data + load_pos, chunk);
-		if (nread <= 0) break;
+		if (nread <= 0 || (unsigned)nread > chunk) {
+			free(ctx);
+			return nread < 0 ? nread : UC2_UserFault;
+		}
 
 		csum_update(&ctx->csum, c->data + load_pos, nread);
 		remaining -= nread;
 
 		load_pos = (u16)(load_pos + nread);
-		c->end = load_pos;
+		c->end += (unsigned)nread;
 
 		/* Compress loaded data */
-		while ((u16)(c->end - c->pos) >= UC2_MIN_MATCH) {
-			/* Enter current position into hash */
-			if ((u16)(c->end - c->pos) >= 3)
-				hash_enter(c, c->pos);
-
+		while (c->end - c->pos >= UC2_MIN_MATCH) {
 			unsigned dist;
 			unsigned len = find_match(c, c->pos, c->max_search, c->give_up, &dist);
+			/* Search before insertion: the current position is not a match. */
+			hash_enter(c, c->pos);
 
 			if (len == 0) {
 				/* Literal */
-				c->bd_freq[c->data[c->pos]]++;
-				c->ibuf[c->ibuf_pos++] = c->data[c->pos];
+				c->bd_freq[c->data[(u16)c->pos]]++;
+				c->ibuf[c->ibuf_pos++] = c->data[(u16)c->pos];
 				c->pos++;
 			} else {
 				/* Lazy evaluation: if match is short, check next position */
-				if (len < c->lazy_limit && (u16)(c->end - c->pos) > len) {
+				if (len < c->lazy_limit && c->end - c->pos > len) {
 					unsigned dist2;
-					if ((u16)(c->end - (u16)(c->pos + 1)) >= 3)
-						hash_enter(c, (u16)(c->pos + 1));
-					unsigned len2 = find_match(c, (u16)(c->pos + 1),
+					unsigned len2 = find_match(c, c->pos + 1,
 					                           c->lazy_depth, c->give_up, &dist2);
 					if (len2 > len) {
 						/* Better match at next position — emit literal */
-						c->bd_freq[c->data[c->pos]]++;
-						c->ibuf[c->ibuf_pos++] = c->data[c->pos];
+						c->bd_freq[c->data[(u16)c->pos]]++;
+						c->ibuf[c->ibuf_pos++] = c->data[(u16)c->pos];
 						c->pos++;
+						hash_enter(c, c->pos);
 						len = len2;
 						dist = dist2;
 					}
@@ -1056,9 +1053,9 @@ int uc2_compress_ex(
 				encode_len(c, len);
 
 				/* Enter skipped positions into hash */
-				for (unsigned j = 1; j < len && (u16)(c->end - (u16)(c->pos + j)) >= 3; j++)
-					hash_enter(c, (u16)(c->pos + j));
-				c->pos = (u16)(c->pos + len);
+				for (unsigned j = 1; j < len && c->end - (c->pos + j) >= 3; j++)
+					hash_enter(c, c->pos + j);
+				c->pos += len;
 			}
 
 			/* Flush block if intermediate buffer is getting full */
@@ -1074,8 +1071,8 @@ int uc2_compress_ex(
 
 	/* Handle trailing bytes (less than MIN_MATCH) */
 	while (c->pos != c->end) {
-		c->bd_freq[c->data[c->pos]]++;
-		c->ibuf[c->ibuf_pos++] = c->data[c->pos];
+		c->bd_freq[c->data[(u16)c->pos]]++;
+		c->ibuf[c->ibuf_pos++] = c->data[(u16)c->pos];
 		c->pos++;
 	}
 

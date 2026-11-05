@@ -1,0 +1,77 @@
+name: Integration releases
+
+on:
+  push:
+    branches: [main, 'work/compression-integrations-*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  wcx:
+    name: Native Total Commander (${{ matrix.arch }})
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {arch: x64, suffix: wcx64, app: TOTALCMD64.EXE}
+          - {arch: Win32, suffix: wcx, app: TOTALCMD.EXE}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Fetch pinned official SDK and trial application
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory wcx-sdk
+          Invoke-WebRequest https://raw.githubusercontent.com/ghisler/WCX-SDK/13b5af8f4265733becf423e61bf000276dc528f8/src/wcxhead.h -OutFile wcx-sdk/wcxhead.h
+          Invoke-WebRequest https://totalcommander.ch/115801/tcmd115801x32_64.exe -OutFile tcmd-setup.exe
+          if ((Get-FileHash tcmd-setup.exe -Algorithm SHA256).Hash.ToLower() -ne '4696c3ac8a4b7f889e99e7348940e3e08f4b6cf62c4c572a71ae4252d813ea1d') { throw 'TC checksum mismatch' }
+          $signature = Get-AuthenticodeSignature tcmd-setup.exe
+          if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notlike '*Ghisler Software GmbH*') { throw 'TC signature validation failed' }
+          7z x -y -otcmd-setup tcmd-setup.exe
+          7z x -y -otcmd tcmd-setup/INSTALL.CAB
+      - name: Build standalone plugin and ABI host
+        run: |
+          cmake -B build-wcx -A ${{ matrix.arch }} -DUC2_BUILD_TESTS=OFF -DUC2_BUILD_WCX=ON -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DUC2_WCX_SDK_DIR="${{ github.workspace }}/wcx-sdk"
+          cmake --build build-wcx --config Release --target uc2-cli uc2_wcx test_wcx
+      - name: Verify native WCX ABI and cancellation
+        run: python tests/wcx/run_fixture.py --uc2 build-wcx/cli/Release/uc2.exe --plugin build-wcx/contrib/totalcommander/Release/uc2.${{ matrix.suffix }} --host build-wcx/contrib/totalcommander/Release/test_wcx.exe --work wcx-fixture
+      - name: Install native UI test dependencies
+        run: python -m pip install pywinauto==0.6.9 Pillow
+      - name: Verify listing and extraction in Total Commander itself
+        run: python tests/wcx/check_totalcmd.py --app tcmd/${{ matrix.app }} --plugin build-wcx/contrib/totalcommander/Release/uc2.${{ matrix.suffix }} --uc2 build-wcx/cli/Release/uc2.exe --work totalcmd-evidence
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: totalcmd-evidence-${{ matrix.arch }}
+          path: totalcmd-evidence/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wcx-${{ matrix.arch }}
+          path: build-wcx/contrib/totalcommander/Release/uc2.${{ matrix.suffix }}
+          if-no-files-found: error
+  packages:
+    needs: wcx
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: wcx-*
+          merge-multiple: true
+          path: binaries
+      - run: python3 scripts/package_integrations.py wcx --binaries binaries --output integration-dist
+      - run: python3 scripts/package_integrations.py mc --output integration-dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: integration-packages
+          path: integration-dist/*
+          if-no-files-found: error

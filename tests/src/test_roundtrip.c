@@ -183,7 +183,7 @@ static int build_archive(const unsigned char *file_compressed, unsigned file_csi
 
 	/* COMPRESS */
 	put_u32le(p, file_csize); p += 4;     /* compressedLength */
-	put_u16le(p, 1); p += 2;              /* method = ultra */
+	put_u16le(p, level >= 6 ? 10 : 1); p += 2; /* entropy method */
 	put_u32le(p, master_id); p += 4;      /* masterPrefix */
 
 	/* LOCATION */
@@ -248,7 +248,7 @@ static int build_archive(const unsigned char *file_compressed, unsigned file_csi
 	/* COMPRESS record for cdir (10 bytes) */
 	unsigned char cdir_compress_rec[10];
 	put_u32le(cdir_compress_rec + 0, cdir_compressed.len); /* compressedLength */
-	put_u16le(cdir_compress_rec + 4, 1);                    /* method = ultra */
+	put_u16le(cdir_compress_rec + 4, level >= 6 ? 10 : 1);                    /* method = ultra */
 	put_u32le(cdir_compress_rec + 6, 1);                    /* masterPrefix = NoMaster */
 	membuf_append(archive, cdir_compress_rec, 10);
 
@@ -410,12 +410,30 @@ static unsigned char *gen_text(unsigned *out_len)
 
 int main(void)
 {
-	int levels[] = {2, 3, 4, 5};
+	int levels[] = {2, 3, 4, 5, 6, 7, 8, 9};
 	int nlev = (int)(sizeof levels / sizeof *levels);
 
 	for (int li = 0; li < nlev; li++) {
 		int level = levels[li];
 		printf("Level %d:\n", level);
+
+		/* A literal-only encoder used to pass every round-trip test.  Require
+		   actual LZ matching, including repeated circular-window generations. */
+		{
+			unsigned length = 262147;
+			unsigned char *pattern = gen_random(length, 712);
+			for (unsigned i = 4096; i < length; i++) pattern[i] = pattern[i % 4096];
+			struct membuf compressed;
+			unsigned short checksum;
+			int rc = compress_data(pattern, length, level, NULL, 0, &compressed, &checksum);
+			if (rc < 0 || compressed.len > length / 8) {
+				fprintf(stderr, "LZ regression at level %d: %u bytes\n", level, compressed.len);
+				failures++;
+			}
+			membuf_free(&compressed);
+			test_roundtrip("repeated_random_256k", pattern, length, level);
+			free(pattern);
+		}
 
 		/* Empty */
 		{

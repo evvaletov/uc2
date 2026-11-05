@@ -142,7 +142,7 @@ def test_native_cli(archive):
     result = subprocess.run([sys.executable, "-m", "uc2", "-qt", str(path)],
                             capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
-    assert subprocess.check_output([str(executable()), "-h"]).startswith(b"UC2 3.0.0a4")
+    assert subprocess.check_output([str(executable()), "-h"]).startswith(b"UC2 3.0.0a5")
 
 
 def test_native_cli_binary_streams(tmp_path):

@@ -1180,7 +1180,7 @@ static int create_archive(int nargs, char **args)
 	   Split each file into CDC chunks (Gear hash, avg 8KB), hash each
 	   chunk, and group files that share chunks.  This detects similar
 	   content at ANY position, not just identical file prefixes. */
-	enum { MinMasterFile = 1024, MaxMasterSize = 65535 };
+	enum { MinMasterFile = 1024, MaxMasterSize = 64000 };
 
 	/* Collect chunk hashes per file */
 	struct { uint32_t hash; int file_idx; } *chunk_map = NULL;
