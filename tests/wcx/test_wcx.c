@@ -12,6 +12,7 @@ typedef int (__stdcall *process_fn)(void *, int, WCHAR *, WCHAR *);
 typedef int (__stdcall *close_fn)(void *);
 typedef void (__stdcall *set_fn)(void *, tProcessDataProcW);
 typedef BOOL (__stdcall *can_fn)(WCHAR *);
+typedef int (__stdcall *caps_fn)(void);
 static int __stdcall cancel(WCHAR *name, int bytes) { (void)name; (void)bytes; return 0; }
 
 static int equal(const wchar_t *a, const wchar_t *b)
@@ -47,7 +48,9 @@ int wmain(int argc,wchar_t **argv)
     close_fn close=(close_fn)GetProcAddress(dll,"CloseArchive");
     set_fn set=(set_fn)GetProcAddress(dll,"SetProcessDataProcW");
     can_fn can=(can_fn)GetProcAddress(dll,"CanYouHandleThisFileW");
-    if(!open||!read||!process||!close||!set||!can)return 1;
+    caps_fn caps=(caps_fn)GetProcAddress(dll,"GetPackerCaps");
+    if(!open||!read||!process||!close||!set||!can||!caps)return 1;
+    if(caps() != (PK_CAPS_MULTIPLE | PK_CAPS_BY_CONTENT | PK_CAPS_SEARCHTEXT))return 1;
     if(reject){
         tOpenArchiveDataW ad={0};ad.ArcName=argv[3];ad.OpenMode=PK_OM_EXTRACT;
         void *r=open(&ad);

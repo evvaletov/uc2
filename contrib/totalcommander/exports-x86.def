@@ -7,7 +7,7 @@ EXPORTS
     ProcessFile=_ProcessFile@16
     ProcessFileW=_ProcessFileW@16
     CloseArchive=_CloseArchive@4
-    GetPackCaps=_GetPackCaps@0
+    GetPackerCaps=_GetPackerCaps@0
     CanYouHandleThisFile=_CanYouHandleThisFile@4
     CanYouHandleThisFileW=_CanYouHandleThisFileW@4
     SetChangeVolProc=_SetChangeVolProc@8

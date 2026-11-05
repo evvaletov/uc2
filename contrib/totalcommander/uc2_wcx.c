@@ -286,7 +286,7 @@ API int __stdcall ProcessFile(void *r, int op, char *path, char *name)
         (name && !MultiByteToWideChar(CP_ACP, 0, name, -1, wn, 32768))) return E_SMALL_BUF;
     return ProcessFileW(r, op, path ? wp : NULL, name ? wn : NULL);
 }
-API int __stdcall GetPackCaps(void)
+API int __stdcall GetPackerCaps(void)
 { return PK_CAPS_MULTIPLE | PK_CAPS_BY_CONTENT | PK_CAPS_SEARCHTEXT; }
 API BOOL __stdcall CanYouHandleThisFileW(WCHAR *path)
 {

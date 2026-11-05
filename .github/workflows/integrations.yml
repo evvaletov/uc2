@@ -17,8 +17,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {arch: x64, suffix: wcx64, app: TOTALCMD64.EXE}
-          - {arch: Win32, suffix: wcx, app: TOTALCMD.EXE}
+          - {arch: x64, suffix: wcx64, app: TOTALCMD64.EXE, python: x64}
+          - {arch: Win32, suffix: wcx, app: TOTALCMD.EXE, python: x86}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -26,6 +26,7 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+          architecture: ${{ matrix.python }}
       - name: Fetch pinned official SDK and trial application
         shell: pwsh
         run: |
