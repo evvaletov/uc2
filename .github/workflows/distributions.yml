@@ -1,0 +1,77 @@
+name: Distributions
+
+on:
+  push:
+    branches: [main, 'work/python-package-*']
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: distributions-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  wheels:
+    name: Wheels and CLI (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-24.04, target: linux-x86_64, arch: x86_64}
+          - {os: macos-15-intel, target: macos-x86_64, arch: x86_64}
+          - {os: macos-15, target: macos-arm64, arch: arm64}
+          - {os: windows-2022, target: windows-x86_64, arch: AMD64}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Build and test installed wheels
+        uses: pypa/cibuildwheel@f9b966cfadf4109556cadc5bb39ddb72d0ce664e # v4.3.5
+        env:
+          CIBW_ARCHS: ${{ matrix.arch }}
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+      - name: Package and smoke-test standalone CLI
+        run: python scripts/package_cli.py --wheels wheelhouse --platform ${{ matrix.target }} --output cli-dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.target }}
+          path: wheelhouse/*.whl
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cli-${{ matrix.target }}
+          path: cli-dist/*
+          if-no-files-found: error
+
+  sdist:
+    name: Source distribution and metadata
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: python -m pip install build twine pytest
+      - name: Build source archive and rebuild its wheel
+        run: python -m build
+      - name: Validate metadata
+        run: python -m twine check --strict dist/*
+      - name: Install wheel rebuilt from source archive
+        run: python -m pip install dist/*.whl
+      - name: Test installed package
+        run: python -m pytest python/tests -q
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error

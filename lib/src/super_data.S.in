@@ -10,3 +10,7 @@
 symbol(uc2_supermaster_compressed):
 .incbin "@SUPER_BIN_ABS_PATH@"
 symbol(uc2_supermaster_compressed_end):
+
+#ifdef __ELF__
+.section .note.GNU-stack,"",@progbits
+#endif

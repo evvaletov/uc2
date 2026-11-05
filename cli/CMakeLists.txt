@@ -16,7 +16,9 @@ target_include_directories(uc2-cli PRIVATE
 target_compile_features(uc2-cli PRIVATE c_std_99)
 
 # Skip installation when uc2 is embedded via add_subdirectory()
-if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+if(UC2_BUILD_PYTHON)
+    install(TARGETS uc2-cli RUNTIME DESTINATION uc2/bin COMPONENT python)
+elseif(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
     install(TARGETS uc2-cli RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
     if(UNIX)
         install(FILES uc2.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)

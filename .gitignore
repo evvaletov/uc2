@@ -9,6 +9,10 @@ Testing/
 # Python bytecode
 __pycache__/
 *.pyc
+dist/
+wheelhouse/
+*.egg-info/
+.pytest_cache/
 
 # Docs build
 docs/_build/

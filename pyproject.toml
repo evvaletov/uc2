@@ -1,0 +1,56 @@
+[build-system]
+requires = ["scikit-build-core>=1.0,<2"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "uc2"
+version = "3.0.0a4"
+description = "Read UltraCompressor II archives in Python, with a bundled native CLI"
+readme = "python/README.md"
+requires-python = ">=3.10"
+license = "GPL-3.0-or-later AND LGPL-3.0-only"
+license-files = ["LICENSE", "LICENSES/*", "CREDITS.md", "docs/license-audit.md"]
+authors = [{name = "Eremey Valetov"}]
+keywords = ["uc2", "ultracompressor", "archive", "preservation", "compression"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: C",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: MacOS",
+  "Operating System :: Microsoft :: Windows",
+  "Topic :: System :: Archiving :: Compression",
+]
+
+[project.urls]
+Homepage = "https://github.com/evvaletov/uc2"
+Source = "https://github.com/evvaletov/uc2"
+Issues = "https://github.com/evvaletov/uc2/issues"
+
+[project.scripts]
+uc2 = "uc2._cli:main"
+
+[tool.scikit-build]
+minimum-version = "build-system.requires"
+cmake.version = ">=3.26.1"
+cmake.build-type = "Release"
+wheel.packages = ["python/uc2"]
+install.components = ["python"]
+sdist.exclude = [".github", "original", "docs/benchmarks"]
+
+[tool.scikit-build.cmake.define]
+UC2_BUILD_PYTHON = "ON"
+UC2_BUILD_TESTS = "OFF"
+UC2_BUILD_LIBARCHIVE_PLUGIN = "OFF"
+UC2_BUILD_WCX = "OFF"
+UC2_VERSION_LABEL = "3.0.0a4"
+
+[tool.cibuildwheel]
+build = "cp3{10,11,12,13,14}-*"
+skip = "*-win32 *-manylinux_i686 *-musllinux_*"
+test-requires = ["pytest>=8"]
+test-command = "python -m pytest {project}/python/tests -q"
+
+[tool.pytest.ini_options]
+testpaths = ["python/tests"]
