@@ -2,27 +2,11 @@
 
 ## Recommended next priorities (2026-11-05)
 
-These five recommendations focus on making the existing engine useful and easy
-to obtain. The phases below remain the longer-term feature inventory. The
-additional task-qa + task-at TODO is a prerequisite for publishing a new release,
-not a claim that either workflow has already run.
+The Python reader and native CLI releases are published. These are the next
+five priorities. The phases below remain the longer-term feature inventory;
+the additional project-wide task-qa + task-at audit remains open.
 
-1. [ ] **Ship a Python package and downloadable CLI releases.**
-   Provide a familiar `UC2File` context manager for listing entries, reading
-   bytes, verification, and safe extraction. Bundle the native C engine so users
-   do not need a compiler or a separately installed executable. Use the existing
-   CMake build with [scikit-build-core](https://scikit-build-core.readthedocs.io/)
-   and test Linux, macOS, and Windows wheels with
-   [cibuildwheel](https://cibuildwheel.pypa.io/). Start with the reader API; move
-   archive creation out of CLI-only code before exposing a Python writer.
-   Add the required extension/PIC and installation targets and accurate license
-   metadata for the bundled components. Ship native CLI downloads from the same
-   release. The `uc2` PyPI project page and JSON endpoint returned 404 on this
-   date, which does not guarantee that the name can be registered. Check at
-   publication time; `ultracompressor2` is a possible distribution-name fallback.
-   A normal Python package also supports notebooks without a custom kernel.
-
-2. [ ] **Build a browser-only UC2 reader and inspector.**
+1. [ ] **Build a browser-only UC2 reader and inspector.**
    Let someone drop an old archive onto a page, inspect entries and versions,
    verify supported content, and download extracted files. Process archive bytes
    locally, with no upload. Compile the C reader using
@@ -33,7 +17,7 @@ not a claim that either workflow has already run.
    This would give preservation users a useful first experience without an
    installation and provide a concrete demo to share.
 
-3. [ ] **Make UC2 a preservation and migration toolkit.**
+2. [ ] **Make UC2 a preservation and migration toolkit.**
    Add batch inventory and migration to ZIP or tar, with a machine-readable
    manifest of original paths, versions, timestamps, attributes, and verified
    file hashes. Preserve the source archive and report metadata that cannot be
@@ -44,7 +28,7 @@ not a claim that either workflow has already run.
    file. The product hypothesis is that rescuing old collections is a clearer
    reason to adopt UC2 than general compression claims.
 
-4. [ ] **Improve compression where the measurements show a gap.**
+3. [ ] **Improve compression where the measurements show a gap.**
    The [five collection benchmarks](docs/benchmarks/2026-11-05.md) verified all
    60 round trips. Ingest improves on ordinary UC2 for related versions, but 7z
    and tar+zstd make smaller archives on every tested collection. Profile match
@@ -53,13 +37,40 @@ not a claim that either workflow has already run.
    corpus and redistributable real collections, including the random-data
    control and all archive overhead.
 
-5. [ ] **Package the working integrations for users and upstream review.**
+4. [ ] **Package the working integrations for users and upstream review.**
    Package native releases with matching sources and license notices. Test the
    WCX plugin inside Total Commander on native Windows and build the 32-bit
    variant. Prepare the libarchive contribution around its BSD-option adapter;
    resolve the core dependency license and official format ID before seeking
    acceptance. The current recipe produces a patched bsdtar using private APIs.
    No upstream submission has been made. Tracking: 7bbb6b6, 61ed856, 65daf3b.
+
+5. [ ] **Mount UC2 archives as read-only folders.**
+   Prototype a Linux [FUSE](https://github.com/libfuse/libfuse) filesystem with
+   listing, metadata, and file reads. Expose stored versions in a separate
+   namespace so ordinary tools can compare them. Bound decoded-file and master
+   caches, define behavior for corrupted entries, and test concurrent reads.
+   Start with one reference archive mounted without extracting the whole
+   collection to disk. Reuse the reader API before expanding platform support.
+
+### Delivered: Python package and native CLI releases (2026-11-05)
+
+- [x] Published [uc2 3.0.0a4 on PyPI](https://pypi.org/project/uc2/3.0.0a4/):
+  `UC2File`, versioned entry metadata, reads, streamed copies, verification,
+  bounded extraction, and the bundled CLI. Python archive creation remains
+  available through the CLI, pending a library writer API.
+- [x] Twenty wheels cover CPython 3.10-3.14 on Linux x86-64, Windows x86-64,
+  and Intel/Apple Silicon macOS. Each installed wheel passes 35 tests.
+- [x] [Native CLI downloads](https://github.com/evvaletov/uc2/releases/tag/v3.0.0-alpha.4)
+  for all four targets, matching source, license texts, build information, and
+  SHA-256 checksums. The release commit is `bc33446`.
+- [x] Source-distribution rebuild, ASan/UBSan, native platform tests, bounded
+  fuzzing, actual bsdtar, and native Windows WCX ABI checks. Windows ingestion
+  and stdout extraction now preserve binary bytes.
+- [x] Release-scoped QA and prose checks produced fixes for negative limits,
+  ambiguous metadata, exception consistency, installation rules, and permission
+  documentation. Only one external reviewer completed; the full audit below
+  remains open. See [release verification](docs/releases/3.0.0a4-qa.md).
 
 ### Delivered from the previous priorities 4-5 (2026-11-05)
 
@@ -83,8 +94,11 @@ not a claim that either workflow has already run.
 
 ### Additional TODO requested by the user: task-qa + task-at
 
-- [ ] Run **task-qa + task-at** before the next public release. Tracked in
+- [ ] Complete the project-wide **task-qa + task-at** audit. Tracked in
   git-bug **c9edf0b**. This is an additional task alongside the five priorities.
+  The Python alpha received release-scoped checks and one completed Gemini
+  review; Claude access failed, Grok timed out, and API fallbacks were
+  unavailable. This does not complete the three-reviewer or whole-project audit.
   The shared workflows are at
   `/home/evaletov/.claude-skills-shared/task-qa/SKILL.md` and
   `/home/evaletov/.claude-skills-shared/task-at/SKILL.md`.
@@ -99,10 +113,9 @@ not a claim that either workflow has already run.
   command options. Correct alpha-release status, compatibility scope, module
   versus CLI features, BLAKE3 claims, test instructions, and attribution. Remove
   invalid cp/rsync pipes and the unsupported ingest novelty claim below.
-  The full task-at workflow remains pending.
-- [ ] Reconcile the release state before distribution. On 2026-11-05 local
-  `main` was `5e3f096`, five commits ahead of live GitHub `main` (`3dc9f96`),
-  including decoder fixes and ingest v3. This assessment did not publish them.
+  The whole-project task-at workflow remains pending.
+- [x] Reconcile the release state. The previously unpublished decoder fixes
+  and ingest v3 are now included in GitHub `main` and `v3.0.0-alpha.4`.
 
 Assessment evidence: a fresh GCC 14.3.1 Debug build passed 23 selected CTests,
 including OTS cross-check and fuzz-regression replay. DOSBox was excluded and
@@ -404,6 +417,10 @@ Bobrowski already shipped prototypes; update for UC2 v3.
 - Phase 9: ZK proof soundness and completeness
 
 ## Maintenance Log
+
+- 2026-11-05: Published the Python reader and four native CLI packages as
+  `3.0.0a4` / `v3.0.0-alpha.4`. Release evidence and review limitations are in
+  `docs/releases/3.0.0a4-qa.md`. The full audit and BLAKE3 repair remain open.
 
 - 2026-11-05: Delivered integrations and collection benchmarks described above.
   CLI extraction errors now produce a failing exit status, allowing the MC

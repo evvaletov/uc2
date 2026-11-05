@@ -1,42 +1,21 @@
 Roadmap
 =======
 
-The development roadmap is maintained in ``ROADMAP.md`` at the project
-root.  Key phases:
+UC2 3.0.0a4 provides a Python reader, twenty platform wheels, and four
+standalone CLI downloads. The next priorities are:
 
-1. **Decompression MVP**  --  Done. Portable decompressor, CLI tool,
-   CMake build system.
+1. A browser-only reader and inspector, with archive bytes kept on the device.
+2. A preservation and migration toolkit with version-aware inventories and
+   verified ZIP/tar exports.
+3. Compression improvements guided by measured gaps against 7z and tar+zstd.
+4. Packaged file-manager integrations and a compatible libarchive contribution.
+5. A read-only archive filesystem, starting with a Linux FUSE prototype.
 
-2. **Original Compression Engine**  --  Done. LZ77+Huffman compressor
-   with custom Huffman trees, full backward compatibility, and UC2
-   personality (``-q`` for scripting).  Automated DOSBox-X round-trip
-   validates 4+5 files in both directions.
+The project-wide task-qa + task-at audit and the unused standalone BLAKE3
+module's official-vector failures remain open. The Python release received
+scoped tests and review; it does not establish correctness of every library
+module or support for every historical UC2 method.
 
-3. **Modernized Master-Block Deduplication**  --  Done.
-   CDC with Gear hash, Merkle DAG with content addressing,
-   cross-archive block store, SimHash near-duplicate detection,
-   and delta compression.  All Phase 3 items complete.
-
-4. **Modern Compression Backends**  --  Done.  rANS entropy coder (method
-   10), zstd-style dictionary metadata, content-aware preprocessing
-   (BCJ, BWT, delta), LZ4 ultra-fast, benchmark mode (``uc2 -B``).
-
-5. **Quantum-Resistant Encryption**  --  CRYSTALS-Kyber + AES-256-GCM.
-
-6. **DOS / FreeDOS / Retro-Computing**  --  DJGPP toolchain, vintage
-   hardware support, self-extracting archives.
-
-7. **Cryptographic Integrity & Timestamping**  --  BLAKE3 hashing done
-   (pure C, 256-bit digests).  Remaining: integration into archive
-   blocks, OpenTimestamps.
-
-8. **Decentralized & Cloud Integration**  --  IPFS pinning,
-   content-addressable dedup, cloud archiving.
-
-9. **Zero-Knowledge Proofs**  --  Privacy-preserving archive verification.
-
-10. **Ecosystem Integrations**  --  libarchive plugin, streaming dedup
-    ingestion, file manager plugins.
-
-See the full roadmap: `ROADMAP.md on GitHub
-<https://github.com/evvaletov/uc2/blob/main/ROADMAP.md>`_.
+See `ROADMAP.md on GitHub
+<https://github.com/evvaletov/uc2/blob/main/ROADMAP.md>`_ for the full inventory,
+completed work, benchmark evidence, and tracking references.
