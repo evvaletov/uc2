@@ -105,9 +105,14 @@ his libarchive adapter and independently written integration glue:
 - `contrib/libarchive/build_bsdtar.py`
 - `contrib/mc/uc2` and `contrib/mc/mc.ext.ini`
 - The new integration CMake recipes in `contrib/`.
+- `python/native.c`, `python/uc2/`, and `python/CMakeLists.txt`, which provide
+  the Python reader integration. The Python package bundles the existing core
+  and CLI, whose licenses remain GPL-3.0-or-later and LGPL-3.0-only.
 
-The BSD text is in `contrib/libarchive/LICENSE.BSD-2-Clause`; the GPL text
-remains at the repository root. This permission applies only to the named new
+The BSD text is in `LICENSES/BSD-2-Clause.txt` and
+`contrib/libarchive/LICENSE.BSD-2-Clause`; the GPL text remains at the repository
+root. `LICENSES/LGPL-3.0-only.txt` accompanies binary distributions.
+This permission applies only to the named new
 work. The UC2 core and third-party files retain their existing licenses.
 `contrib/totalcommander/uc2_wcx.c` derives from Bobrowski's prototype and keeps
 LGPL-3.0-only. The external WCX SDK is not included or relicensed.

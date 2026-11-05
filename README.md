@@ -4,8 +4,7 @@ A cross-platform revival of UltraCompressor II, the DOS-era archiver by
 Nico de Vries (1992-1996). UC2 used shared compression dictionaries
 ("master blocks") and file versioning.
 
-UC2 v3 is under development in portable C99. The latest tagged release is
-`v3.0.0-alpha.3`. Compression levels 2-5 use the original Huffman format;
+UC2 v3 is under development in portable C99. Compression levels 2-5 use the original Huffman format;
 levels 6-9 require the new rANS reader. Original-format compatibility is
 covered by DOSBox-X fixtures, but some legacy methods, including Turbo/method
 80, remain unsupported.
@@ -25,6 +24,8 @@ stdout, tab-separated listings, and a quiet mode for scripts.
 - Readers for [libarchive/bsdtar](contrib/libarchive/README.md),
   [Midnight Commander](contrib/mc/README.md), and
   [Total Commander](contrib/totalcommander/README.md).
+- A [Python reader API](python/README.md) with entry metadata, stored versions,
+  streamed decoding, verification, and extraction limits.
 - Builds for Linux, macOS, Windows (MSVC), and DOS (DJGPP).
 
 The library also contains a 64-bit Merkle DAG, a shared block store, SimHash,
@@ -36,6 +37,30 @@ tracked in [ROADMAP.md](ROADMAP.md).
 
 See the [collection benchmarks](docs/benchmarks/2026-11-05.md) for measured
 size, time, and memory comparisons with 7z and tar+zstd.
+
+## Install
+
+```sh
+python -m pip install --pre uc2
+uc2 -l archive.uc2
+```
+
+The Python package includes the native CLI. Wheels support CPython 3.10-3.14
+on Linux x86-64, Windows x86-64, and Intel/Apple Silicon macOS.
+[Standalone CLI downloads](https://github.com/evvaletov/uc2/releases)
+do not require Python. These are alpha releases.
+
+```python
+from uc2 import UC2File
+
+with UC2File("archive.uc2") as archive:
+    print(archive.namelist())
+    archive.verify()
+    archive.extractall("restored")
+```
+
+See the [Python documentation](python/README.md) for limits, stored versions,
+error handling, and extraction behavior.
 
 ## Building
 
@@ -117,6 +142,7 @@ UC2/
     include/uc2/    public headers (libuc2, uc2_cdc, uc2_merkle, uc2_rans, ...)
     src/            library implementation
   cli/              uc2 command-line tool
+  python/           Python reader API and native extension
   tests/            unit tests and test corpus
   original/         preserved original UC2 Pro sources (reference only)
   contrib/          libarchive and file-manager integrations
