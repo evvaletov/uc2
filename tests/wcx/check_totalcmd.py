@@ -36,8 +36,8 @@ subprocess.run([str(args.uc2.resolve()), "-qw", str(archive), "hello.txt", "nest
 ini = root / "wincmd.ini"
 ini.write_text("[Configuration]\nUseIniInProgramDir=0\nFirstTime=0\nUseNewDefFont=1\n"
                "DirBrackets=0\nStartupScreen=0\n[PackerPlugins]\n"
-               f"uc2=196,{args.plugin.resolve()}\nuc2reader=196,{args.plugin.resolve()}\n"
-               "[Associations]\nFilter1=*.uc2\nFilter1_open=**uc2reader\n", encoding="utf-8")
+               f"uc2=196,{args.plugin.resolve()}\nu2r=196,{args.plugin.resolve()}\n"
+               "[Associations]\nFilter1=*.uc2\nFilter1_open=**u2r\n", encoding="utf-8")
 command = [str(args.app.resolve()), "/N", f"/I={ini}", f"/F={root / 'wcx_ftp.ini'}",
            f"/L={browse}", f"/R={output}"]
 process = subprocess.Popen(command)
@@ -125,6 +125,10 @@ try:
             break
         time.sleep(0.2)
     rows = snapshot()
+    packer_type = main.send_message(1074, 1025, 0)  # WM_USER+50: left panel archive type
+    (root / "packer-type.txt").write_text(str(packer_type) + "\n")
+    if packer_type < 10000:
+        raise RuntimeError(f"Total Commander used handler {packer_type}, expected the WCX plugin")
     # Some TC builds unload a WCX after listing. Record module observation,
     # then require actual application extraction and exact bytes below.
     modules = subprocess.check_output([
@@ -158,7 +162,8 @@ try:
                     plugin_sha256=hashlib.sha256(args.plugin.read_bytes()).hexdigest(),
                     files={name: hashlib.sha256(data).hexdigest() for name, data in files.items()},
                     native_application=True, plugin_module_observed=observed_module,
-                    archive_opened=True, association="**uc2reader", extracted_bytes_verified=True)
+                    archive_opened=True, association="**u2r", packer_type=packer_type,
+                    extracted_bytes_verified=True)
     (root / "result.json").write_text(json.dumps(evidence, indent=2) + "\n")
     print(json.dumps(evidence))
 finally:

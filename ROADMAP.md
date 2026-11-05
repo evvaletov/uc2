@@ -2,8 +2,8 @@
 
 ## Recommended next priorities (2026-11-05)
 
-The Python reader and native CLI releases are published. These are the next
-five priorities. The phases below remain the longer-term feature inventory;
+The Python reader, native CLI, mount, and integration packages are delivered.
+These are the next five priorities. The phases below remain the longer-term feature inventory;
 the additional project-wide task-qa + task-at audit remains open.
 
 1. [ ] **Build a browser-only UC2 reader and inspector.**
@@ -28,30 +28,46 @@ the additional project-wide task-qa + task-at audit remains open.
    file. The product hypothesis is that rescuing old collections is a clearer
    reason to adopt UC2 than general compression claims.
 
-3. [ ] **Improve compression where the measurements show a gap.**
-   The [five collection benchmarks](docs/benchmarks/2026-11-05.md) verified all
-   60 round trips. Ingest improves on ordinary UC2 for related versions, but 7z
-   and tar+zstd make smaller archives on every tested collection. Profile match
-   selection, master construction, and per-chunk metadata before adding
-   snapshots or version bundles. Retest promising changes on the synthetic
-   corpus and redistributable real collections, including the random-data
-   control and all archive overhead.
+3. [ ] **Expose archive creation through the C and Python APIs.**
+   Move the CLI's archive assembly behind a supported writer interface, then
+   offer `UC2Writer` with file, directory, and streaming inputs. Preserve atomic
+   destination replacement and make size, filename, and method limits explicit.
+   This would let backup tools and notebooks use UC2 without shelling out.
 
-4. [ ] **Package the working integrations for users and upstream review.**
-   Package native releases with matching sources and license notices. Test the
-   WCX plugin inside Total Commander on native Windows and build the 32-bit
-   variant. Prepare the libarchive contribution around its BSD-option adapter;
-   resolve the core dependency license and official format ID before seeking
-   acceptance. The current recipe produces a patched bsdtar using private APIs.
-   No upstream submission has been made. Tracking: 7bbb6b6, 61ed856, 65daf3b.
+4. [ ] **Turn stream deduplication into incremental collection snapshots.**
+   Start with two snapshots of a source tree and a portable manifest that maps
+   files and versions to shared chunks. Measure the second snapshot's added
+   bytes, restore cost, metadata overhead, and corruption recovery against the
+   current tar-ingest baseline. Connect the existing CDC and block-store modules
+   only where those measurements support the design. Tracking: 0013121, bd13adb.
 
-5. [ ] **Mount UC2 archives as read-only folders.**
-   Prototype a Linux [FUSE](https://github.com/libfuse/libfuse) filesystem with
-   listing, metadata, and file reads. Expose stored versions in a separate
-   namespace so ordinary tools can compare them. Bound decoded-file and master
-   caches, define behavior for corrupted entries, and test concurrent reads.
-   Start with one reference archive mounted without extracting the whole
-   collection to disk. Reuse the reader API before expanding platform support.
+5. [ ] **Advance the prepared libarchive reader toward upstream acceptance.**
+   The [review patch](contrib/libarchive/upstream/REVIEW.md) now has an optional
+   external LGPL reader, BSD adapter, CMake/Autotools wiring, and fixtures.
+   Bound metadata and dictionary growth, then seek maintainer agreement on the
+   dependency and format ID. Submission is a separate step; none has been made.
+   The proposed reader supports legacy Huffman methods; the full UC2 package
+   also supports rANS. Tracking: 7bbb6b6.
+
+### Delivered: previous priorities 3-5 (3.0.0a5)
+
+- [x] Repaired LZ77 match lookup, circular-window hashing, stale hash chains,
+  and master-prefix alignment. Added compression-ratio regression coverage
+  across all eight levels. The two real source collections shrink by 62.6%
+  and 69.4% compared with alpha4. Random input costs more CPU; 7z still makes
+  smaller archives. See [the measured results](docs/benchmarks/2026-11-05-compression.md).
+- [x] Added distributable MC helper/installer and 32-/64-bit WCX packages with
+  source references and license notices. Native Total Commander application
+  checks complement the DLL ABI and cancellation tests.
+- [x] Prepared the optional-reader libarchive contribution, including enabled
+  and disabled CMake builds, an Autotools build, and upstream-style fixtures.
+  The dependency remains LGPL; the core and third-party licenses are unchanged.
+- [x] Added `uc2-mount` for Linux, exposing newest files and stored versions.
+  Decoded files are verified before being cached; disk and master caches have
+  limits. Real FUSE tests cover parallel random reads, eviction, version paths,
+  and denied writes. See [mounting archives](docs/mount.md).
+- [x] Recorded release checks and remaining limits in
+  [the alpha5 verification notes](docs/releases/3.0.0a5-qa.md).
 
 ### Delivered: Python package and native CLI releases (2026-11-05)
 
@@ -82,7 +98,8 @@ the additional project-wide task-qa + task-at audit remains open.
   and in the actual MC TUI. Literal wildcard and version-looking names work.
 - [x] 64-bit Total Commander WCX reader, built with MinGW and exercised through
   a Wine DLL host: Unicode archive path, list/skip/test/extract, file comparisons,
-  and cancellation preserving existing output. Native UI/32-bit tests remain.
+  and cancellation preserving existing output. Alpha5 adds native UI/32-bit
+  validation and release packages.
 - [x] Targeted dual license approved by Eremey: GPL-3.0-or-later OR BSD-2-Clause
   for the libarchive adapter and independent glue. Third-party and core licenses
   stay in place; the derived WCX adapter retains LGPL.
@@ -124,7 +141,8 @@ comparison failed as described above; reproduction details are in c9edf0b.
 This was a project assessment, not the full task-qa or task-at workflow.
 The integration work subsequently passed 25 selected Debug CTests, 24 Release
 CTests with assertions enabled, and four focused ASan/UBSan checks. DOSBox, native MSVC, and the native Total Commander
-UI were not run in this pass. New CI jobs are configuration awaiting execution.
+UI were not run in that assessment. Later release checks are recorded in
+`docs/releases/3.0.0a4-qa.md` and `docs/releases/3.0.0a5-qa.md`.
 
 ## Phase 1: Decompression MVP (DONE)
 
@@ -143,10 +161,7 @@ UI were not run in this pass. New CI jobs are configuration awaiting execution.
 - [x] SuperMaster dictionary support (built-in 49 KB dictionary)
 - [x] Round-trip testing: 37 unit tests + CLI integration tests
 - [x] Round-trip testing vs original `uc2pro.exe` in DOSBox
-      (Direction: original creates -> UC2 v3 extracts  --  verified.
-       Reverse direction is a known limitation: the original UC2 Pro
-       cannot read UC2 v3 archives due to compression bitstream
-       differences.)
+      (Both directions are covered for supported Huffman fixtures.)
 - [x] Backward compatibility with original UC2 Pro (listing +
       extraction verified for multi-file archives in both directions
       in automated DOSBox-X test).
@@ -387,12 +402,12 @@ Bobrowski already shipped prototypes; update for UC2 v3.
 
 - [x] Midnight Commander extfs reader (`contrib/mc/`, 61ed856)
 - [x] Total Commander WCX reader (`contrib/totalcommander/`, 65daf3b);
-      64-bit DLL tested in Wine, native host/32-bit validation pending
+      native 32-/64-bit host tests and packaged builds added in alpha5
 
 ## Phase 11: Advanced Features
 
-- [ ] Archive-as-filesystem: FUSE mount for `.uc2` on Linux (read-only,
-      decompress-on-the-fly with master-block caching)
+- [x] Archive-as-filesystem: read-only Linux FUSE mount with version views,
+      verified decoded-file caching, and bounded master caching (`uc2-mount`).
 - [ ] Compression tournaments / community challenges
 - [ ] Neural/learned compression preprocessor (modern platforms only,
       not DOS  --  optional compile-time module)
@@ -417,6 +432,11 @@ Bobrowski already shipped prototypes; update for UC2 v3.
 - Phase 9: ZK proof soundness and completeness
 
 ## Maintenance Log
+
+- 2026-11-05: Completed the compression, integration packaging, and FUSE work
+  for alpha5. The measured source-collection improvements and CPU tradeoffs
+  are in `docs/benchmarks/2026-11-05-compression.md`. The libarchive review patch
+  is prepared locally; upstream acceptance and the full audit remain open.
 
 - 2026-11-05: Published the Python reader and four native CLI packages as
   `3.0.0a4` / `v3.0.0-alpha.4`. Release evidence and review limitations are in

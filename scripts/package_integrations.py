@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later OR BSD-2-Clause
-"""Package MC source helpers or both tested Windows WCX binaries."""
+"""Package MC helpers, tested Windows WCX binaries, or the libarchive proposal."""
 import argparse
 import hashlib
 import json
@@ -12,7 +12,7 @@ import tomllib
 import zipfile
 
 ap = argparse.ArgumentParser(description=__doc__)
-ap.add_argument("kind", choices=["mc", "wcx"])
+ap.add_argument("kind", choices=["mc", "wcx", "libarchive-review"])
 ap.add_argument("--binaries", type=Path, help="directory containing uc2.wcx and uc2.wcx64")
 ap.add_argument("--output", type=Path, required=True)
 args = ap.parse_args()
@@ -30,7 +30,7 @@ with tempfile.TemporaryDirectory(prefix="uc2-integration-package-") as tmp:
     if args.kind == "mc":
         for item in ("uc2", "install.py", "mc.ext.ini", "README.md"):
             shutil.copy2(repository / "contrib/mc" / item, root / item)
-    else:
+    elif args.kind == "wcx":
         if not args.binaries:
             ap.error("wcx packaging requires --binaries")
         for item, machine in (("uc2.wcx", 0x14C), ("uc2.wcx64", 0x8664)):
@@ -42,6 +42,14 @@ with tempfile.TemporaryDirectory(prefix="uc2-integration-package-") as tmp:
             shutil.copyfile(source, root / item)
         for item in ("pluginst.inf", "README.md"):
             shutil.copyfile(repository / "contrib/totalcommander" / item, root / item)
+    else:
+        proposal = repository / "contrib/libarchive/upstream"
+        patch = proposal / "libarchive-3.8.11-uc2-review.patch"
+        metadata = json.loads((proposal / "review.json").read_text())
+        if metadata["patch_sha256"] != hashlib.sha256(patch.read_bytes()).hexdigest():
+            raise SystemExit("libarchive review patch checksum mismatch")
+        for item in (patch.name, "review.json", "REVIEW.md"):
+            shutil.copyfile(proposal / item, root / item)
     (root / "SOURCE.txt").write_text(f"UC2 {version}\nCorresponding source: uc2-{version}.tar.gz\n"
                                     "https://github.com/evvaletov/uc2/releases\n")
     manifest = {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest()

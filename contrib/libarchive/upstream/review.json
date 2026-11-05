@@ -1,0 +1,25 @@
+{
+  "base": "libarchive 3.8.11",
+  "submitted": false,
+  "format_id": "0x110000 (proposed, not allocated)",
+  "decoder": "optional shared libuc2read; existing LGPL-3.0-only sources",
+  "adapter_license": "BSD-2-Clause option",
+  "patch_sha256": "2587c893a68fc02168ab499ef48d0f15d4524d07cc4058261f197ad408ee2011",
+  "files": [
+    "CMakeLists.txt",
+    "Makefile.am",
+    "build/cmake/config.h.in",
+    "configure.ac",
+    "doc/uc2-reader.md",
+    "libarchive/CMakeLists.txt",
+    "libarchive/archive.h",
+    "libarchive/archive_read_set_format.c",
+    "libarchive/archive_read_support_format_all.c",
+    "libarchive/archive_read_support_format_by_code.c",
+    "libarchive/archive_read_support_format_uc2.c",
+    "libarchive/test/CMakeLists.txt",
+    "libarchive/test/test_read_format_uc2.c",
+    "libarchive/test/test_read_format_uc2_4.uc2.uu",
+    "libarchive/test/test_read_format_uc2_6.uc2.uu"
+  ]
+}

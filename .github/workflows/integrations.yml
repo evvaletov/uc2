@@ -73,6 +73,7 @@ jobs:
           path: binaries
       - run: python3 scripts/package_integrations.py wcx --binaries binaries --output integration-dist
       - run: python3 scripts/package_integrations.py mc --output integration-dist
+      - run: python3 scripts/package_integrations.py libarchive-review --output integration-dist
       - uses: actions/upload-artifact@v4
         with:
           name: integration-packages

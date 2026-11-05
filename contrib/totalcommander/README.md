@@ -13,18 +13,18 @@ installation metadata, license notices, and a corresponding-source reference.
 Both plugins link the C runtime statically.
 
 In 32-bit Total Commander, also register this plugin for the alias extension
-`uc2reader` under Configuration, Options, Packer, Configure packer extensions.
+`u2r` under Configuration, Options, Packer, Configure packer extensions.
 Then add an internal association for `*.uc2` whose Open command is
-`**uc2reader`. This directs Enter to the plugin instead of TC's historical
+`**u2r`. This directs Enter to the plugin instead of TC's historical
 UC2 handler, which otherwise asks for DOS `UC.EXE`. The same association
 works in 64-bit TC. In `wincmd.ini`, the relevant entries look like:
 
 ```ini
 [PackerPlugins]
-uc2reader=68,C:\path\to\uc2.wcx
+u2r=196,C:\path\to\uc2.wcx
 [Associations]
 Filter1=*.uc2
-Filter1_open=**uc2reader
+Filter1_open=**u2r
 ```
 
 Use an unused filter number instead of `1` if other internal associations

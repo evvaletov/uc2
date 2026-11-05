@@ -47,3 +47,13 @@ python3 tests/scripts/check_bsdtar.py /path/to/uc2 \
 The maintainers still need to decide whether to accept this optional LGPL
 dependency and the proposed format number. Full permissive-source rANS support
 would require separate licensing work; this patch does not grant it.
+
+The Autotools path was also built and exercised on Linux. After applying the
+patch, run `autoreconf -fi` in the libarchive tree, then configure in a separate
+build directory with `--with-uc2read`. For a private installation prefix, set
+`PKG_CONFIG_PATH` to its `lib/pkgconfig` or `lib64/pkgconfig` directory and
+`LD_LIBRARY_PATH` to the matching library directory during both configure and
+execution. Configure runs linked test programs, so setting the runtime path
+only when running bsdtar is insufficient. This validation built bsdtar with
+`--disable-shared --without-xml2 --without-expat` and restored the legacy fixture
+byte for byte; it does not establish support for every optional dependency.
