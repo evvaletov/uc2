@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Exercise literal MC extraction, streamed ingest, and atomic replacement."""
 import hashlib
+import importlib.util
 import os
 from pathlib import Path
 import random
@@ -20,6 +21,26 @@ def run(args, **kw):
 
 with tempfile.TemporaryDirectory(prefix='uc2-integrations-') as temporary:
     root = Path(temporary)
+    if os.name == 'posix':
+        spec = importlib.util.spec_from_file_location('mc_install', Path(mc).with_name('install.py'))
+        installer = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(installer)
+        config = root / 'config/mc/mc.ext.ini'
+        config.parent.mkdir(parents=True)
+        original = '# [Default] is below\n[mc.ext.ini]\nVersion=4.0\n[UserRule]\nRegex=custom\n[Default]\nOpen=old\n'
+        config.write_text(original)
+        installer.install(Path(mc).parent, data_home=root / 'data', config_home=root / 'config', cli=Path(uc2))
+        installed = config.read_text()
+        installer.install(Path(mc).parent, data_home=root / 'data', config_home=root / 'config', cli=Path(uc2))
+        if config.read_text() != installed or installed.count('[UC2]') != 1:
+            raise AssertionError('MC installation is not idempotent')
+        if '[UserRule]\nRegex=custom' not in installed or installed.index('\n[UC2]\n') > installed.index('\n[Default]\n'):
+            raise AssertionError('MC installer changed existing rules or section priority')
+        backups = list(config.parent.glob('mc.ext.ini.before-uc2-*'))
+        if len(backups) != 1 or backups[0].read_text() != original:
+            raise AssertionError('MC configuration backup is missing or incorrect')
+        # Exercise the installed helper without an inherited UC2 override.
+        installed_helper = root / 'data/mc/extfs.d/uc2'
     source = root/'input'
     source.mkdir()
     (source/'sub dir').mkdir()
@@ -35,6 +56,12 @@ with tempfile.TemporaryDirectory(prefix='uc2-integrations-') as temporary:
     names = sorted({Path(n).parts[0] for n in files})
     run([uc2, '-qw', archive, *names], cwd=source)
     listing = run([sys.executable, mc, 'list', archive]).stdout.decode()
+    if os.name == 'posix':
+        installed_env = dict(os.environ)
+        installed_env.pop('UC2', None)
+        packaged_listing = subprocess.check_output([sys.executable, str(installed_helper), 'list', str(archive)], env=installed_env).decode()
+        if packaged_listing != listing:
+            raise AssertionError('installed MC helper did not use its configured CLI')
     for name, data in files.items():
         if name not in listing: raise AssertionError('missing listing: '+name)
         target = root/'copy'

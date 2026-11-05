@@ -1,5 +1,11 @@
 # UC2 reader for libarchive
 
+For the optional LGPL-only legacy-reader proposal, see
+[the upstream review bundle](upstream/REVIEW.md) and
+[`prepare_upstream.py`](prepare_upstream.py). That proposal is separate from
+the full Huffman/rANS integration below. Its format ID and dependency design
+await maintainer acceptance; nothing has been submitted upstream.
+
 The adapter reads UC2 directories, long-name tags, file versions, master blocks,
 and Huffman/rANS payloads through libarchive's normal read interface. It is an
 opt-in integration using libarchive's private API. It cannot be loaded as a

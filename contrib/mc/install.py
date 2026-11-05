@@ -4,7 +4,9 @@
 import argparse
 import os
 from pathlib import Path
+import re
 import shutil
+import shlex
 import tempfile
 
 BEGIN = "# BEGIN UC2 integration (managed by uc2 installer)"
@@ -35,7 +37,7 @@ def install(root, *, data_home, config_home, cli):
         if system is None:
             raise FileNotFoundError("MC extension configuration missing; install Midnight Commander first")
         text = system.read_text()
-    if "[mc.ext.ini]" not in text:
+    if not re.search(r"(?m)^\[mc\.ext\.ini\][ \t]*$", text):
         raise ValueError("MC extension configuration lacks its [mc.ext.ini] metadata")
     if (BEGIN in text) != (END in text):
         raise ValueError("incomplete UC2 configuration block; repair it before installing")
@@ -43,13 +45,17 @@ def install(root, *, data_home, config_home, cli):
         start, finish = text.index(BEGIN), text.index(END) + len(END)
         text = text[:start] + text[finish:].lstrip("\n")
     snippet = (root / "mc.ext.ini").read_text().strip()
-    # An earlier manual installation may already contain exactly this section.
-    if snippet not in text:
-        if "[UC2]" in text:
-            raise ValueError("an existing customized [UC2] section requires manual reconciliation")
-        block = BEGIN + "\n" + snippet + "\n" + END + "\n\n"
-        offset = text.find("[Default]")
-        text = text[:offset] + block + text[offset:] if offset >= 0 else text.rstrip() + "\n\n" + block
+    # Adopt an exact manual copy; preserve customized sections for manual review.
+    if snippet in text:
+        text = text.replace(snippet, "", 1)
+    if re.search(r"(?m)^\[UC2\][ \t]*$", text):
+        raise ValueError("an existing customized [UC2] section requires manual reconciliation")
+    command = shlex.quote(str(cli)).replace("%", "%%")
+    snippet = snippet.replace(" uc2 -la -- %f", f" {command} -la -- %f")
+    block = BEGIN + "\n" + snippet + "\n" + END + "\n\n"
+    section = re.search(r"(?m)^\[Default\][ \t]*$", text)
+    offset = section.start() if section else -1
+    text = text[:offset] + block + text[offset:] if offset >= 0 else text.rstrip() + "\n\n" + block
     backup = None
     if config.exists() and config.read_text() != text:
         fd, name = tempfile.mkstemp(prefix="mc.ext.ini.before-uc2-", dir=config.parent)

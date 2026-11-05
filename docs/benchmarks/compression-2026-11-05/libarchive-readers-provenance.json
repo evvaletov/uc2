@@ -1,0 +1,246 @@
+{
+  "source": "https://github.com/libarchive/libarchive/releases/tag/v3.8.11",
+  "tar_sha256": "a3dc0872b1b39da34dc18ef1b944f0f11ffd37425d70ae04be679279f1cf43d2",
+  "files": [
+    {
+      "path": "libarchive/archive_read.c",
+      "file": "archive_read.c",
+      "sha256": "90692b2cd900eacd7f72c519f73643e0dd326ffb2a51c7e5764da62acce4a1ef"
+    },
+    {
+      "path": "libarchive/archive_read_add_passphrase.c",
+      "file": "archive_read_add_passphrase.c",
+      "sha256": "0f087d8605d00151de2dda70831451013a2ae7b4036869af47c3c024528927f7"
+    },
+    {
+      "path": "libarchive/archive_read_append_filter.c",
+      "file": "archive_read_append_filter.c",
+      "sha256": "29237922b635bc09cf2c59e29a1d88e3fc0145be5d8c2257cefe86396b50c5ab"
+    },
+    {
+      "path": "libarchive/archive_read_data_into_fd.c",
+      "file": "archive_read_data_into_fd.c",
+      "sha256": "46192eecaabf3ed0a15fa767c26c41afcb302955ac14b542f2da515fc933f89d"
+    },
+    {
+      "path": "libarchive/archive_read_disk_entry_from_file.c",
+      "file": "archive_read_disk_entry_from_file.c",
+      "sha256": "3a345e35ce293d6d64e6cc43c2205a384a044a3a6395902139657f34aa6f50e9"
+    },
+    {
+      "path": "libarchive/archive_read_disk_posix.c",
+      "file": "archive_read_disk_posix.c",
+      "sha256": "4598c168ea6ee632a3819221eacf1278f7b1dd4a90f39b01bbcf49899ebd96a0"
+    },
+    {
+      "path": "libarchive/archive_read_disk_set_standard_lookup.c",
+      "file": "archive_read_disk_set_standard_lookup.c",
+      "sha256": "697137b80f9e977c08ec0e7420c2ee6503835cf9dd2b203106c3c179610741bc"
+    },
+    {
+      "path": "libarchive/archive_read_disk_windows.c",
+      "file": "archive_read_disk_windows.c",
+      "sha256": "bdbc7fd25bc41816e858c6fb1c7521d21ec0d4579054e48460e51d51b709f293"
+    },
+    {
+      "path": "libarchive/archive_read_extract.c",
+      "file": "archive_read_extract.c",
+      "sha256": "faf2aa768527a4532fe5d3a0e5525fa83d6504a059a8c70c4bc72f27772872b3"
+    },
+    {
+      "path": "libarchive/archive_read_extract2.c",
+      "file": "archive_read_extract2.c",
+      "sha256": "dc9bbe6b16079fbd25da434587e3c4abac043f5a32da5df5ea20726f8c01487c"
+    },
+    {
+      "path": "libarchive/archive_read_open_fd.c",
+      "file": "archive_read_open_fd.c",
+      "sha256": "796cb2dbadfb206d4105142ccc2ca0327fe6bd5249290f66c1490a217b6e0349"
+    },
+    {
+      "path": "libarchive/archive_read_open_file.c",
+      "file": "archive_read_open_file.c",
+      "sha256": "cffa8855519c50b89467508bfe55467695201b5f77712bbcb6e9be70a270e8b1"
+    },
+    {
+      "path": "libarchive/archive_read_open_filename.c",
+      "file": "archive_read_open_filename.c",
+      "sha256": "a2973f46ad7a1cfe0c7f69faf7f17fa769d90dadffdbb9484c75685e4d60b275"
+    },
+    {
+      "path": "libarchive/archive_read_open_memory.c",
+      "file": "archive_read_open_memory.c",
+      "sha256": "dd93869d24bac346af8cdad0d32c4b670a0cd7eddd0f9eb372dd15a0fd52365c"
+    },
+    {
+      "path": "libarchive/archive_read_set_format.c",
+      "file": "archive_read_set_format.c",
+      "sha256": "524ed05c882e559055b50d9b7b1f2b8703cdd71aecf2fda031a3ff78f1dcd986"
+    },
+    {
+      "path": "libarchive/archive_read_set_options.c",
+      "file": "archive_read_set_options.c",
+      "sha256": "5c94ff58e66366c4f08237161f882c70b31b4f883dc1125dc58c5b32d37677ce"
+    },
+    {
+      "path": "libarchive/archive_read_support_filter_all.c",
+      "file": "archive_read_support_filter_all.c",
+      "sha256": "ebedac57b0b1d5fa43a68bee809392f432ab7558f6c45897a3e2c9a2bcb4bfcc"
+    },
+    {
+      "path": "libarchive/archive_read_support_filter_by_code.c",
+      "file": "archive_read_support_filter_by_code.c",
+      "sha256": "a561025abb3f547f9d46f59cf00ed4f5b9b2c674746da769f23f6d0db397bf54"
+    },
+    {
+      "path": "libarchive/archive_read_support_filter_bzip2.c",
+      "file": "archive_read_support_filter_bzip2.c",
+      "sha256": "b57a1d3f693d777d8093c68be44bd5c489dae1a9468cc09f0d9e172e0e2c6b79"
+    },
+    {
+      "path": "libarchive/archive_read_support_filter_compress.c",
+      "file": "archive_read_support_filter_compress.c",
+      "sha256": "35d7a4e9863ede41acf271fefcdf1a7b753513590e7038b41504640e3f845ee6"
+    },
+    {
+      "path": "libarchive/archive_read_support_filter_grzip.c",
+      "file": "archive_read_support_filter_grzip.c",
+      "sha256": "7c86e143bd253f56d303fca0597167683a9b1d376122ac7e2fb7084facdeb7a3"
+    },
+    {
+      "path": "libarchive/archive_read_support_filter_gzip.c",
+      "file": "archive_read_support_filter_gzip.c",
+      "sha256": "9f37f04eea150613f3b23086c98996dd1eb2731b9e9ea60cc740cf373539614a"
+    },
+    {
+      "path": "libarchive/archive_read_support_filter_lrzip.c",
+      "file": "archive_read_support_filter_lrzip.c",
+      "sha256": "3170f305f1b5f2a9c9f4ac37e4973c7625ed8c520033cc47ddff3cec2e56653b"
+    },
+    {
+      "path": "libarchive/archive_read_support_filter_lz4.c",
+      "file": "archive_read_support_filter_lz4.c",
+      "sha256": "f82a8ff1d330761e2140620c0848848a280c792426653f7ef93ce770719a2bd2"
+    },
+    {
+      "path": "libarchive/archive_read_support_filter_lzop.c",
+      "file": "archive_read_support_filter_lzop.c",
+      "sha256": "aa92c6068b403de1d7af1b99f31a3e5325e909e38a63a3ca67ad1ab9033207ca"
+    },
+    {
+      "path": "libarchive/archive_read_support_filter_none.c",
+      "file": "archive_read_support_filter_none.c",
+      "sha256": "98f12fce080fdf2dbb62e5aa1527260c6aa03bc013e83ba76bd17ba65f98191e"
+    },
+    {
+      "path": "libarchive/archive_read_support_filter_program.c",
+      "file": "archive_read_support_filter_program.c",
+      "sha256": "4de7885919baf17177b12b9e2355a4a822ba11ecc9fbb49437d39d353d36879d"
+    },
+    {
+      "path": "libarchive/archive_read_support_filter_rpm.c",
+      "file": "archive_read_support_filter_rpm.c",
+      "sha256": "65f3303a5a21d6bf3708dfa5ac318aaa0b20e701b2cef16a1bc8508d9b3b0f64"
+    },
+    {
+      "path": "libarchive/archive_read_support_filter_uu.c",
+      "file": "archive_read_support_filter_uu.c",
+      "sha256": "2c4d63da8206efbbe08b10ebee4484961431f8f8350c1ea0f3f248a020d5b6b5"
+    },
+    {
+      "path": "libarchive/archive_read_support_filter_xz.c",
+      "file": "archive_read_support_filter_xz.c",
+      "sha256": "5e99d56b6b58a6aa952c6fb9db2d4a24c2b2b9b589b99f5ab204d58cc3d4a219"
+    },
+    {
+      "path": "libarchive/archive_read_support_filter_zstd.c",
+      "file": "archive_read_support_filter_zstd.c",
+      "sha256": "c6efd38995dbecb85d1e40252d4b57926fd62a632143ff71e10a36dbe9285ae0"
+    },
+    {
+      "path": "libarchive/archive_read_support_format_7zip.c",
+      "file": "archive_read_support_format_7zip.c",
+      "sha256": "3456c0e2d79c3a7fb2b611ca28617b11a146e4ae57d40523f6767fc52412c2e3"
+    },
+    {
+      "path": "libarchive/archive_read_support_format_all.c",
+      "file": "archive_read_support_format_all.c",
+      "sha256": "d4f9194dbae9e9b6f6a8e1d2417baa44fb05670e85d9c16ecfeb1d8c21991658"
+    },
+    {
+      "path": "libarchive/archive_read_support_format_ar.c",
+      "file": "archive_read_support_format_ar.c",
+      "sha256": "9ae00bfc662af702f323490cee2f1d286e6de3019b5f830fad6b0dc852fef82b"
+    },
+    {
+      "path": "libarchive/archive_read_support_format_by_code.c",
+      "file": "archive_read_support_format_by_code.c",
+      "sha256": "6c31918e038465e9874548aedec455a70463436f75e605488b99d46999ab0090"
+    },
+    {
+      "path": "libarchive/archive_read_support_format_cab.c",
+      "file": "archive_read_support_format_cab.c",
+      "sha256": "aa3ca37bdb96011ac438afbd9d8248ff73fa4fd9f68053b5d6fb3d21b4c70d05"
+    },
+    {
+      "path": "libarchive/archive_read_support_format_cpio.c",
+      "file": "archive_read_support_format_cpio.c",
+      "sha256": "c119ad9f4d015d3309d265b97fee419548149b02fa0838916c6cb912b1fb3603"
+    },
+    {
+      "path": "libarchive/archive_read_support_format_empty.c",
+      "file": "archive_read_support_format_empty.c",
+      "sha256": "3359fd71f51b406644c59258da89c8452627b37a6849c2f103b90833b2504e97"
+    },
+    {
+      "path": "libarchive/archive_read_support_format_iso9660.c",
+      "file": "archive_read_support_format_iso9660.c",
+      "sha256": "c8402502d58f205c48e1da5a0a031491e932fd605548e10a710c1b2a7e3002d7"
+    },
+    {
+      "path": "libarchive/archive_read_support_format_lha.c",
+      "file": "archive_read_support_format_lha.c",
+      "sha256": "9e0bc4c644cef5159ad4e07ccc69b973fc370b57fcb647a33cf78611531abfa3"
+    },
+    {
+      "path": "libarchive/archive_read_support_format_mtree.c",
+      "file": "archive_read_support_format_mtree.c",
+      "sha256": "8292142956d282b27d2d725ec9cf5201efb1858cfaf226e813c85bd550836b0f"
+    },
+    {
+      "path": "libarchive/archive_read_support_format_rar.c",
+      "file": "archive_read_support_format_rar.c",
+      "sha256": "c9afc9af8b2f537f1ecaee4ce521208562b3c37aa103f7d87e8e656e2150ab88"
+    },
+    {
+      "path": "libarchive/archive_read_support_format_rar5.c",
+      "file": "archive_read_support_format_rar5.c",
+      "sha256": "0a21cc37ef7ae0f83bbffdac1b08414380787ddf1cddae7b8539985e4b28e3ab"
+    },
+    {
+      "path": "libarchive/archive_read_support_format_raw.c",
+      "file": "archive_read_support_format_raw.c",
+      "sha256": "65a858588cd1ca570e1745130a565f404906bb920fd45a81943226d537a22c17"
+    },
+    {
+      "path": "libarchive/archive_read_support_format_tar.c",
+      "file": "archive_read_support_format_tar.c",
+      "sha256": "30bfbc0916511bdab1d2803bb7ed305a6d3721dd06b08ed8035032a7fd3af773"
+    },
+    {
+      "path": "libarchive/archive_read_support_format_warc.c",
+      "file": "archive_read_support_format_warc.c",
+      "sha256": "b7f64302ce6ade6b40eb902094d3920f5d99257c025f494047668cc28e0c5a60"
+    },
+    {
+      "path": "libarchive/archive_read_support_format_xar.c",
+      "file": "archive_read_support_format_xar.c",
+      "sha256": "fdfcd9280bf21dc9c1798b2b6b1b2f3e166d142198948b21c56e3e2a4d598e50"
+    },
+    {
+      "path": "libarchive/archive_read_support_format_zip.c",
+      "file": "archive_read_support_format_zip.c",
+      "sha256": "e165b2a6b56317aed9b06070813caa444ad6eeca370f4f6aaf51f85edac5886e"
+    }
+  ]
+}

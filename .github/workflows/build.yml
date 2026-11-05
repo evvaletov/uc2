@@ -76,6 +76,39 @@ jobs:
       - name: Test actual bsdtar, pipes and bounded payload RAM
         run: python3 tests/scripts/check_bsdtar.py build/cli/uc2 build-bsdtar/build/bin/bsdtar
 
+  libarchive-review:
+    runs-on: ubuntu-latest
+    name: Optional LGPL reader and libarchive proposal
+    steps:
+      - uses: actions/checkout@v6
+      - name: Fetch pinned libarchive source
+        run: |
+          curl -fsSLO https://github.com/libarchive/libarchive/releases/download/v3.8.11/libarchive-3.8.11.tar.xz
+          echo 'a3dc0872b1b39da34dc18ef1b944f0f11ffd37425d70ae04be679279f1cf43d2  libarchive-3.8.11.tar.xz' | sha256sum -c -
+          tar xf libarchive-3.8.11.tar.xz
+      - name: Build legacy shared reader and fixture generator
+        run: |
+          cmake -S contrib/libuc2read -B build-reader -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$PWD/reader-prefix"
+          cmake --build build-reader -j 4
+          cmake --install build-reader
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DUC2_BUILD_TESTS=OFF
+          cmake --build build -j 4
+      - name: Prepare and apply-check the contribution
+        run: |
+          python3 contrib/libarchive/prepare_upstream.py --source libarchive-3.8.11 --uc2 build/cli/uc2 --output review
+          patch --dry-run -p1 -d libarchive-3.8.11 -i "$PWD/review/libarchive-3.8.11-uc2-review.patch"
+      - name: Build and test enabled proposal
+        run: |
+          cmake -S review/libarchive -B review/build -DCMAKE_BUILD_TYPE=Release -DENABLE_WERROR=OFF -DENABLE_TEST=ON -DENABLE_UC2READ=ON -DCMAKE_PREFIX_PATH="$PWD/reader-prefix"
+          cmake --build review/build --target bsdtar libarchive_test -j 4
+          review/build/bin/libarchive_test -r "$PWD/review/libarchive/libarchive/test" test_read_format_uc2
+          python3 tests/scripts/check_bsdtar.py build/cli/uc2 review/build/bin/bsdtar --legacy-only
+      - name: Verify the default build has no reader dependency
+        run: |
+          cmake -S review/libarchive -B review/build -DENABLE_UC2READ=OFF
+          cmake --build review/build --target libarchive_test -j 4
+          review/build/bin/libarchive_test -r "$PWD/review/libarchive/libarchive/test" test_read_format_uc2
+
   totalcommander:
     runs-on: windows-latest
     name: Total Commander WCX (64-bit)

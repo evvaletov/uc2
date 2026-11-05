@@ -103,7 +103,9 @@ his libarchive adapter and independently written integration glue:
 
 - `contrib/libarchive/archive_read_support_format_uc2.c`
 - `contrib/libarchive/build_bsdtar.py`
-- `contrib/mc/uc2` and `contrib/mc/mc.ext.ini`
+- `contrib/libarchive/prepare_upstream.py`
+- `contrib/mc/uc2`, `contrib/mc/mc.ext.ini`, and `contrib/mc/install.py`
+- `scripts/package_integrations.py` and the mount glue in `python/uc2/`.
 - The new integration CMake recipes in `contrib/`.
 - `python/native.c`, `python/uc2/`, and `python/CMakeLists.txt`, which provide
   the Python reader integration. The Python package bundles the existing core
@@ -122,6 +124,23 @@ The patched bsdtar and WCX distributions still include GPL/LGPL components.
 An upstream libarchive contribution therefore needs agreement on compatible
 dependencies as well as the adapter source license. No upstream approval has
 been obtained.
+
+### Optional legacy shared reader
+
+`contrib/libuc2read` builds `libuc2read` from the existing LGPL decoder and
+original SuperMaster data. `UC2_HUFFMAN_ONLY` removes the rANS include and
+implementation from that target; none of the GPL compressor or rANS objects
+are linked. The target retains LGPL-3.0-only, uses a shared-library interface,
+and installs the LGPL and GPL license texts needed for its distribution.
+Its build recipe has the approved dual-license expression. Existing core file
+licenses are unchanged.
+
+The prepared libarchive patch selects the adapter's BSD option and makes
+`libuc2read` an explicit optional dependency. The default build has no UC2
+dependency. The proposed linked build has LGPL obligations and supports only
+the legacy methods implemented by that reader. It does not make rANS or the
+full UC2 core permissively licensed. Maintainer acceptance of this arrangement
+and the proposed format ID remains pending.
 
 ## Relicensing rationale
 

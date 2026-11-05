@@ -28,6 +28,8 @@ stdout, tab-separated listings, and a quiet mode for scripts.
   [Total Commander](contrib/totalcommander/README.md).
 - A [Python reader API](python/README.md) with entry metadata, stored versions,
   streamed decoding, verification, and extraction limits.
+- A read-only [Linux FUSE mount](docs/mount.md) with separate version views
+  and a bounded cache of verified decoded files.
 - Builds for Linux, macOS, Windows (MSVC), and DOS (DJGPP).
 
 The library also contains a 64-bit Merkle DAG, a shared block store, SimHash,
@@ -37,7 +39,7 @@ module currently fails official test vectors and must not be used for integrity
 claims; it is not used by the current archive read/write path. The repair is
 tracked in [ROADMAP.md](ROADMAP.md).
 
-See the [collection benchmarks](docs/benchmarks/2026-11-05.md) for measured
+See the [updated collection benchmarks](docs/benchmarks/2026-11-05-compression.md) for measured
 size, time, and memory comparisons with 7z and tar+zstd.
 
 ## Install

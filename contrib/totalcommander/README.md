@@ -6,6 +6,12 @@ entry points, version suffixes, cancellation, and content-based recognition.
 Extraction stages each file before replacing its destination. The host controls
 the extraction destination and metadata application. Packing is not supported.
 
+Open `uc2-wcx-<version>.zip` from the
+[release page](https://github.com/evvaletov/uc2/releases) inside Total Commander
+to install it. The archive contains both 32-bit and 64-bit plugins, their
+installation metadata, license notices, and a corresponding-source reference.
+Both plugins link the C runtime statically.
+
 Download the official [WCX SDK](https://github.com/ghisler/WCX-SDK) and point
 `UC2_WCX_SDK_DIR` at the directory containing `wcxhead.h`. The SDK is a build
 dependency and is not vendored or relicensed here.
@@ -53,8 +59,14 @@ The test host `test_wcx` loads the actual DLL and exercises recognition, listing
 skip/test/extract, byte comparisons, and cancellation without replacing an
 existing file. Its arguments are DLL, archive, original-files directory, and
 an existing empty output directory. It can run on Windows or in the isolated
-Wine container described by `tests/wcx/Dockerfile`. Testing that host is separate
-from a manual Total Commander UI check.
+Wine container described by `tests/wcx/Dockerfile`.
+
+The `Integration releases` workflow also runs Total Commander 11.58.1 itself
+on isolated native Windows runners. It checks that the application loads the
+plugin, opens an archive, and extracts selected files with exact byte matches.
+The official trial executable is checked against its pinned SHA-256 digest and
+Ghisler Authenticode signature. The application is used for testing and is not
+included in UC2 downloads.
 
 Archive names use UC2's existing CP850/long-name decoding. Unicode filesystem
 paths to the archive are supported. Windows-unsafe entry components and ambiguous names after version suffixing

@@ -1,0 +1,178 @@
+{
+  "metadata": {
+    "date_utc": "2026-11-05T22:18:39Z",
+    "platform": "Linux-6.12.0-211.73.1.el10_2.x86_64-x86_64-with-glibc2.39",
+    "cpu": "",
+    "uc2_sha256": "ec112978b302afb1ffdf7a3d1e746705d62b24429d8beb036d0505c8582e085e",
+    "seed": 20261105,
+    "size_kib": 512,
+    "repeat": 3,
+    "corpus": "real-libarchive",
+    "rss_scope": "per process peak RSS in KiB; tar materialization excluded equally",
+    "versions": {
+      "7zip": [
+        "",
+        "7-Zip (a) 26.04 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-10-05",
+        " 64-bit locale=C.UTF-8 Threads:128 OPEN_MAX:524288",
+        "",
+        "Usage: 7za <command> [<switches>...] <archive_name> [<file_names>...] [@listfile]"
+      ],
+      "zstd": [
+        "*** Zstandard CLI (64-bit) v1.5.5, by Yann Collet ***"
+      ],
+      "uc2": [
+        "UC2 3.0.0 (UltraCompressor II)",
+        "\"Fast, reliable and superior compression.\"",
+        "",
+        "uc2 [-afpqDT] [-d destination] archive.uc2 [files]...",
+        "uc2 -l [-aqT] archive.uc2 [files]..."
+      ]
+    }
+  },
+  "results": [
+    {
+      "collection": "libarchive-readers",
+      "method": "uc2-files",
+      "trial": 0,
+      "input_bytes": 1607137,
+      "archive_bytes": 1158613,
+      "compress_seconds": 0.080485,
+      "restore_seconds": 0.087865,
+      "compress_peak_kib": 2296,
+      "restore_peak_kib": 1820,
+      "verified": true
+    },
+    {
+      "collection": "libarchive-readers",
+      "method": "tar-uc2",
+      "trial": 0,
+      "input_bytes": 1607137,
+      "archive_bytes": 1103877,
+      "compress_seconds": 0.136331,
+      "restore_seconds": 0.054133,
+      "compress_peak_kib": 2004,
+      "restore_peak_kib": 1780,
+      "verified": true
+    },
+    {
+      "collection": "libarchive-readers",
+      "method": "7z",
+      "trial": 0,
+      "input_bytes": 1607137,
+      "archive_bytes": 271646,
+      "compress_seconds": 1.267321,
+      "restore_seconds": 0.060049,
+      "compress_peak_kib": 23912,
+      "restore_peak_kib": 6628,
+      "verified": true
+    },
+    {
+      "collection": "libarchive-readers",
+      "method": "tar-zstd",
+      "trial": 0,
+      "input_bytes": 1607137,
+      "archive_bytes": 357135,
+      "compress_seconds": 0.061435,
+      "restore_seconds": 0.033319,
+      "compress_peak_kib": 6508,
+      "restore_peak_kib": 4412,
+      "verified": true
+    },
+    {
+      "collection": "libarchive-readers",
+      "method": "uc2-files",
+      "trial": 1,
+      "input_bytes": 1607137,
+      "archive_bytes": 1158613,
+      "compress_seconds": 0.075819,
+      "restore_seconds": 0.055603,
+      "compress_peak_kib": 2348,
+      "restore_peak_kib": 1832,
+      "verified": true
+    },
+    {
+      "collection": "libarchive-readers",
+      "method": "tar-uc2",
+      "trial": 1,
+      "input_bytes": 1607137,
+      "archive_bytes": 1103877,
+      "compress_seconds": 0.075334,
+      "restore_seconds": 0.038342,
+      "compress_peak_kib": 1832,
+      "restore_peak_kib": 1652,
+      "verified": true
+    },
+    {
+      "collection": "libarchive-readers",
+      "method": "7z",
+      "trial": 1,
+      "input_bytes": 1607137,
+      "archive_bytes": 271646,
+      "compress_seconds": 1.237395,
+      "restore_seconds": 0.046657,
+      "compress_peak_kib": 24020,
+      "restore_peak_kib": 6684,
+      "verified": true
+    },
+    {
+      "collection": "libarchive-readers",
+      "method": "tar-zstd",
+      "trial": 1,
+      "input_bytes": 1607137,
+      "archive_bytes": 357135,
+      "compress_seconds": 0.05572,
+      "restore_seconds": 0.014634,
+      "compress_peak_kib": 6976,
+      "restore_peak_kib": 4412,
+      "verified": true
+    },
+    {
+      "collection": "libarchive-readers",
+      "method": "uc2-files",
+      "trial": 2,
+      "input_bytes": 1607137,
+      "archive_bytes": 1158613,
+      "compress_seconds": 0.085269,
+      "restore_seconds": 0.077351,
+      "compress_peak_kib": 2224,
+      "restore_peak_kib": 1776,
+      "verified": true
+    },
+    {
+      "collection": "libarchive-readers",
+      "method": "tar-uc2",
+      "trial": 2,
+      "input_bytes": 1607137,
+      "archive_bytes": 1103877,
+      "compress_seconds": 0.10934,
+      "restore_seconds": 0.093671,
+      "compress_peak_kib": 1904,
+      "restore_peak_kib": 1800,
+      "verified": true
+    },
+    {
+      "collection": "libarchive-readers",
+      "method": "7z",
+      "trial": 2,
+      "input_bytes": 1607137,
+      "archive_bytes": 271646,
+      "compress_seconds": 1.255756,
+      "restore_seconds": 0.053829,
+      "compress_peak_kib": 24124,
+      "restore_peak_kib": 6676,
+      "verified": true
+    },
+    {
+      "collection": "libarchive-readers",
+      "method": "tar-zstd",
+      "trial": 2,
+      "input_bytes": 1607137,
+      "archive_bytes": 357135,
+      "compress_seconds": 0.070548,
+      "restore_seconds": 0.02777,
+      "compress_peak_kib": 9524,
+      "restore_peak_kib": 4364,
+      "verified": true
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+collection,method,trial,input_bytes,archive_bytes,compress_seconds,restore_seconds,compress_peak_kib,restore_peak_kib,verified
+libarchive-readers,uc2-files,0,1607137,1158613,0.080485,0.087865,2296,1820,True
+libarchive-readers,tar-uc2,0,1607137,1103877,0.136331,0.054133,2004,1780,True
+libarchive-readers,7z,0,1607137,271646,1.267321,0.060049,23912,6628,True
+libarchive-readers,tar-zstd,0,1607137,357135,0.061435,0.033319,6508,4412,True
+libarchive-readers,uc2-files,1,1607137,1158613,0.075819,0.055603,2348,1832,True
+libarchive-readers,tar-uc2,1,1607137,1103877,0.075334,0.038342,1832,1652,True
+libarchive-readers,7z,1,1607137,271646,1.237395,0.046657,24020,6684,True
+libarchive-readers,tar-zstd,1,1607137,357135,0.05572,0.014634,6976,4412,True
+libarchive-readers,uc2-files,2,1607137,1158613,0.085269,0.077351,2224,1776,True
+libarchive-readers,tar-uc2,2,1607137,1103877,0.10934,0.093671,1904,1800,True
+libarchive-readers,7z,2,1607137,271646,1.255756,0.053829,24124,6676,True
+libarchive-readers,tar-zstd,2,1607137,357135,0.070548,0.02777,9524,4364,True

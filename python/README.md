@@ -82,6 +82,24 @@ ordinary Python I/O exceptions. Verification uses the archive's legacy
 checksums, which are not cryptographic authentication. A missing entry or
 version raises `KeyError`.
 
+## Read-only Linux mount
+
+```sh
+python -m pip install --pre 'uc2[mount]'
+mkdir archived
+uc2-mount archive.uc2 archived --cache-mib 512
+```
+
+The mount runs in the foreground. Use another terminal to browse `archived/files`
+and `archived/versions/1`, then unmount with `fusermount -u archived`.
+Linux libfuse2 and `/dev/fuse` are required. Files decode on first access into
+a checksum-verified disk cache; an entry larger than its budget fails with
+`EFBIG`. The default cache holds up to 512 MiB and 128 files. Decoder
+allocations are limited to 64 MiB and released after every decode. Python
+metadata is outside that budget and has separate entry and node limits.
+See the [mount documentation](https://github.com/evvaletov/uc2/blob/main/docs/mount.md)
+for options, stored versions, and error behavior.
+
 ## Build from source
 
 Requires Python 3.10+, CMake, and a C99 compiler. The build backend obtains

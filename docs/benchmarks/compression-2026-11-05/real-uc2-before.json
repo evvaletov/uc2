@@ -1,0 +1,178 @@
+{
+  "metadata": {
+    "date_utc": "2026-11-05T22:18:33Z",
+    "platform": "Linux-6.12.0-211.73.1.el10_2.x86_64-x86_64-with-glibc2.39",
+    "cpu": "",
+    "uc2_sha256": "ec112978b302afb1ffdf7a3d1e746705d62b24429d8beb036d0505c8582e085e",
+    "seed": 20261105,
+    "size_kib": 512,
+    "repeat": 3,
+    "corpus": "real-uc2",
+    "rss_scope": "per process peak RSS in KiB; tar materialization excluded equally",
+    "versions": {
+      "7zip": [
+        "",
+        "7-Zip (a) 26.04 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-10-05",
+        " 64-bit locale=C.UTF-8 Threads:128 OPEN_MAX:524288",
+        "",
+        "Usage: 7za <command> [<switches>...] <archive_name> [<file_names>...] [@listfile]"
+      ],
+      "zstd": [
+        "*** Zstandard CLI (64-bit) v1.5.5, by Yann Collet ***"
+      ],
+      "uc2": [
+        "UC2 3.0.0 (UltraCompressor II)",
+        "\"Fast, reliable and superior compression.\"",
+        "",
+        "uc2 [-afpqDT] [-d destination] archive.uc2 [files]...",
+        "uc2 -l [-aqT] archive.uc2 [files]..."
+      ]
+    }
+  },
+  "results": [
+    {
+      "collection": "uc2-sources",
+      "method": "uc2-files",
+      "trial": 0,
+      "input_bytes": 315760,
+      "archive_bytes": 255993,
+      "compress_seconds": 0.041286,
+      "restore_seconds": 0.049933,
+      "compress_peak_kib": 2392,
+      "restore_peak_kib": 1848,
+      "verified": true
+    },
+    {
+      "collection": "uc2-sources",
+      "method": "tar-uc2",
+      "trial": 0,
+      "input_bytes": 315760,
+      "archive_bytes": 231487,
+      "compress_seconds": 0.023729,
+      "restore_seconds": 0.017008,
+      "compress_peak_kib": 2128,
+      "restore_peak_kib": 1684,
+      "verified": true
+    },
+    {
+      "collection": "uc2-sources",
+      "method": "7z",
+      "trial": 0,
+      "input_bytes": 315760,
+      "archive_bytes": 77063,
+      "compress_seconds": 0.245352,
+      "restore_seconds": 0.026014,
+      "compress_peak_kib": 11160,
+      "restore_peak_kib": 5580,
+      "verified": true
+    },
+    {
+      "collection": "uc2-sources",
+      "method": "tar-zstd",
+      "trial": 0,
+      "input_bytes": 315760,
+      "archive_bytes": 94737,
+      "compress_seconds": 0.037705,
+      "restore_seconds": 0.011952,
+      "compress_peak_kib": 4080,
+      "restore_peak_kib": 2852,
+      "verified": true
+    },
+    {
+      "collection": "uc2-sources",
+      "method": "uc2-files",
+      "trial": 1,
+      "input_bytes": 315760,
+      "archive_bytes": 255993,
+      "compress_seconds": 0.047763,
+      "restore_seconds": 0.049681,
+      "compress_peak_kib": 2468,
+      "restore_peak_kib": 1784,
+      "verified": true
+    },
+    {
+      "collection": "uc2-sources",
+      "method": "tar-uc2",
+      "trial": 1,
+      "input_bytes": 315760,
+      "archive_bytes": 231487,
+      "compress_seconds": 0.044915,
+      "restore_seconds": 0.01939,
+      "compress_peak_kib": 2000,
+      "restore_peak_kib": 1684,
+      "verified": true
+    },
+    {
+      "collection": "uc2-sources",
+      "method": "7z",
+      "trial": 1,
+      "input_bytes": 315760,
+      "archive_bytes": 77063,
+      "compress_seconds": 0.229662,
+      "restore_seconds": 0.034594,
+      "compress_peak_kib": 11160,
+      "restore_peak_kib": 5480,
+      "verified": true
+    },
+    {
+      "collection": "uc2-sources",
+      "method": "tar-zstd",
+      "trial": 1,
+      "input_bytes": 315760,
+      "archive_bytes": 94737,
+      "compress_seconds": 0.059486,
+      "restore_seconds": 0.035531,
+      "compress_peak_kib": 3908,
+      "restore_peak_kib": 2872,
+      "verified": true
+    },
+    {
+      "collection": "uc2-sources",
+      "method": "uc2-files",
+      "trial": 2,
+      "input_bytes": 315760,
+      "archive_bytes": 255993,
+      "compress_seconds": 0.065207,
+      "restore_seconds": 0.027948,
+      "compress_peak_kib": 2440,
+      "restore_peak_kib": 1908,
+      "verified": true
+    },
+    {
+      "collection": "uc2-sources",
+      "method": "tar-uc2",
+      "trial": 2,
+      "input_bytes": 315760,
+      "archive_bytes": 231487,
+      "compress_seconds": 0.029604,
+      "restore_seconds": 0.016312,
+      "compress_peak_kib": 1856,
+      "restore_peak_kib": 1760,
+      "verified": true
+    },
+    {
+      "collection": "uc2-sources",
+      "method": "7z",
+      "trial": 2,
+      "input_bytes": 315760,
+      "archive_bytes": 77063,
+      "compress_seconds": 0.368686,
+      "restore_seconds": 0.052069,
+      "compress_peak_kib": 11156,
+      "restore_peak_kib": 5400,
+      "verified": true
+    },
+    {
+      "collection": "uc2-sources",
+      "method": "tar-zstd",
+      "trial": 2,
+      "input_bytes": 315760,
+      "archive_bytes": 94737,
+      "compress_seconds": 0.08143,
+      "restore_seconds": 0.02799,
+      "compress_peak_kib": 5820,
+      "restore_peak_kib": 2952,
+      "verified": true
+    }
+  ]
+}

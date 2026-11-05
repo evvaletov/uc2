@@ -70,6 +70,11 @@ def snapshot():
 def press_trial_prompt():
     # Use the visible trial instruction, without altering registration state.
     for window in windows():
+        if window.class_name() == "TICONLIBCHANGEDLG":
+            for child in window.descendants():
+                if child.window_text() == "Cancel":
+                    child.send_message(0xF5, 0, 0)
+                    return True
         if window.class_name() == "TNASTYNAGSCREEN":
             # TC exposes the large visible choice digit in a separate panel.
             digits = [c.window_text().strip() for c in window.descendants()
@@ -107,12 +112,14 @@ try:
         raise RuntimeError("Total Commander did not finish its visible startup prompt")
     time.sleep(1)
     rows = snapshot()
-    # The application must actually load our plugin before extraction.
+    # Some TC builds unload a WCX after listing. Record module observation,
+    # then require actual application extraction and exact bytes below.
     modules = subprocess.check_output([
         "powershell", "-NoProfile", "-Command",
         f"(Get-Process -Id {process.pid}).Modules | ForEach-Object {{$_.FileName}}"], text=True)
-    if args.plugin.name.lower() not in modules.lower():
-        raise RuntimeError("Total Commander did not load the UC2 plugin")
+    observed_module = args.plugin.name.lower() in modules.lower()
+    if not any("fixture.uc2" in c.window_text().lower() for c in main.descendants()):
+        raise RuntimeError("Total Commander did not enter the UC2 archive")
     (root / "loaded-modules.txt").write_text(modules)
     # TC's documented WM_USER+51 interface; IDs come from TOTALCMD.INC.
     main.send_message(1075, 3301, 0)  # cm_SelectAllBoth
@@ -137,7 +144,8 @@ try:
                     application_sha256=hashlib.sha256(args.app.read_bytes()).hexdigest(),
                     plugin_sha256=hashlib.sha256(args.plugin.read_bytes()).hexdigest(),
                     files={name: hashlib.sha256(data).hexdigest() for name, data in files.items()},
-                    native_application=True, plugin_loaded=True, extracted_bytes_verified=True)
+                    native_application=True, plugin_module_observed=observed_module,
+                    archive_opened=True, extracted_bytes_verified=True)
     (root / "result.json").write_text(json.dumps(evidence, indent=2) + "\n")
     print(json.dumps(evidence))
 finally:

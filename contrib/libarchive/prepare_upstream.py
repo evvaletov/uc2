@@ -71,7 +71,10 @@ archive_read_support_format_uc2(struct archive *a)
 adapter += "\n#endif /* HAVE_LIBUC2READ */\n"
 # The submitted source uses the user's approved BSD option. The repository
 # source keeps its dual SPDX expression; the full notice is retained here.
-adapter = adapter.replace("GPL-3.0-or-later OR BSD-2-Clause", "BSD-2-Clause", 1)
+notice = (repo / "contrib/libarchive/LICENSE.BSD-2-Clause").read_text()
+adapter = ("/* SPDX-License-Identifier: BSD-2-Clause */\n/*\n * " +
+           notice.rstrip().replace("\n", "\n * ") + "\n */\n" +
+           "\n".join(adapter.splitlines()[2:]) + "\n")
 write("libarchive/archive_read_support_format_uc2.c", adapter)
 replace("libarchive/CMakeLists.txt", "  archive_read_support_format_7zip.c",
         "  archive_read_support_format_uc2.c\n  archive_read_support_format_7zip.c")
@@ -82,8 +85,11 @@ replace("CMakeLists.txt", 'SET(ADDITIONAL_LIBS "")', '''SET(ADDITIONAL_LIBS "")
 # UC2 is opt-in: libuc2read is an external LGPL-3.0-only shared reader.
 OPTION(ENABLE_UC2READ "Enable legacy UC2 through the LGPL libuc2read dependency" OFF)
 IF(ENABLE_UC2READ)
-  FIND_PATH(UC2READ_INCLUDE_DIR uc2/libuc2.h REQUIRED)
-  FIND_LIBRARY(UC2READ_LIBRARY NAMES uc2read REQUIRED)
+  FIND_PATH(UC2READ_INCLUDE_DIR uc2/libuc2.h)
+  FIND_LIBRARY(UC2READ_LIBRARY NAMES uc2read)
+  IF(NOT UC2READ_INCLUDE_DIR OR NOT UC2READ_LIBRARY)
+    MESSAGE(FATAL_ERROR "ENABLE_UC2READ requires the external libuc2read shared reader")
+  ENDIF()
   SET(HAVE_LIBUC2READ 1)
   INCLUDE_DIRECTORIES(${UC2READ_INCLUDE_DIR})
   ADD_DEFINITIONS(-DUC2_SHARED -DUC2_HUFFMAN_ONLY)

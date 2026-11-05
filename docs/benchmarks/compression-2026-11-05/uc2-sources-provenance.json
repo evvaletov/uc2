@@ -1,0 +1,270 @@
+{
+  "source": "https://github.com/evvaletov/uc2/tree/bc33446f299e34257b2e029f9b02d5874ad1efaf",
+  "files": [
+    {
+      "path": "cli/src/compat/compat_dos.c",
+      "file": "cli__src__compat__compat_dos.c",
+      "sha256": "73ae33f85802eb7b3af18cdef0e812789e41a872e25471afa0da1c8faa417870"
+    },
+    {
+      "path": "cli/src/compat/compat_win32.c",
+      "file": "cli__src__compat__compat_win32.c",
+      "sha256": "2f8fea513b70582a0130bbaac466a5d6bc127fcd15817411f602cc57cd1ca3e4"
+    },
+    {
+      "path": "cli/src/compat/getopt.c",
+      "file": "cli__src__compat__getopt.c",
+      "sha256": "66b73f63984fb6e593c5dacf7eddaa0d4ad7788fe97bffea3fb2e64a2872e992"
+    },
+    {
+      "path": "cli/src/compat/include/dos/err.h",
+      "file": "cli__src__compat__include__dos__err.h",
+      "sha256": "cb2bd85fc9c05f1fad94ffc14e20de2f1c329a617a83ba444824e3084c0d602f"
+    },
+    {
+      "path": "cli/src/compat/include/dos/fnmatch.h",
+      "file": "cli__src__compat__include__dos__fnmatch.h",
+      "sha256": "597249dd24f4aed8147193cff5decf75a60a48fd0b05b41fbeaedf553effadbe"
+    },
+    {
+      "path": "cli/src/compat/include/err.h",
+      "file": "cli__src__compat__include__err.h",
+      "sha256": "f2eb77e874aa1bbc721e278a328fbd989bb70d6cb60a084bbf7aeaf3ee088ca0"
+    },
+    {
+      "path": "cli/src/compat/include/fnmatch.h",
+      "file": "cli__src__compat__include__fnmatch.h",
+      "sha256": "387812b997374f55fd934b00ff4a7a6161d5172302c92f0bdb68ae967b05cfd7"
+    },
+    {
+      "path": "cli/src/compat/include/msvc/dirent.h",
+      "file": "cli__src__compat__include__msvc__dirent.h",
+      "sha256": "8885659c24b50bcc918d3bffb52fc51ca0d9d3e7c81b819aafeb4a80ec3c461d"
+    },
+    {
+      "path": "cli/src/compat/include/msvc/getopt.h",
+      "file": "cli__src__compat__include__msvc__getopt.h",
+      "sha256": "8acc2726c42e6565037de91c65f1eb4ffa6196f1cf0c68c88597e0d34e88725d"
+    },
+    {
+      "path": "cli/src/compat/include/msvc/unistd.h",
+      "file": "cli__src__compat__include__msvc__unistd.h",
+      "sha256": "01fc2560e64cc5fee99a80b17ea1d35a68283a84f14d6e3383951a086844217f"
+    },
+    {
+      "path": "cli/src/compat/include/msvc/utime.h",
+      "file": "cli__src__compat__include__msvc__utime.h",
+      "sha256": "c692eb81e986a646107d123fa8711d73f89784ad108a321c888120e4b8de00f0"
+    },
+    {
+      "path": "cli/src/compat/include/posix/sys/stat.h",
+      "file": "cli__src__compat__include__posix__sys__stat.h",
+      "sha256": "766dda5bb291ff400815b8b495641c28d4c53d71309a865389ef89b55c5a13a6"
+    },
+    {
+      "path": "cli/src/compat/include/posix/sys/utime.h",
+      "file": "cli__src__compat__include__posix__sys__utime.h",
+      "sha256": "f41aedddf2c2d312a65782c29e711c31ed9b9400c9d66f035f5e128309efcd62"
+    },
+    {
+      "path": "cli/src/compat/include/posix/unistd.h",
+      "file": "cli__src__compat__include__posix__unistd.h",
+      "sha256": "ef15b7eecad6b2ecbf5e3a367ddaad0f97255eb2dffb13d5492053e83d99ac77"
+    },
+    {
+      "path": "cli/src/main.c",
+      "file": "cli__src__main.c",
+      "sha256": "4086e107b6054b7a537fee6d3702cb5f58ff5015c868db13e3c2718332bb421a"
+    },
+    {
+      "path": "lib/include/uc2/libuc2.h",
+      "file": "lib__include__uc2__libuc2.h",
+      "sha256": "d1f70f2060eb06af77c6c63ede603f773bc681236ad2be35d084c4ba431fd422"
+    },
+    {
+      "path": "lib/include/uc2/uc2_blake3.h",
+      "file": "lib__include__uc2__uc2_blake3.h",
+      "sha256": "f857acba283b8fa9dea0552d64d6abdbe0e74a25d79088c50b84db048eed8e0b"
+    },
+    {
+      "path": "lib/include/uc2/uc2_blockstore.h",
+      "file": "lib__include__uc2__uc2_blockstore.h",
+      "sha256": "67060a292c243e242b164f2ae5b9dba3db1dfbff4b2e4c01e6c60cba499a3e3c"
+    },
+    {
+      "path": "lib/include/uc2/uc2_cdc.h",
+      "file": "lib__include__uc2__uc2_cdc.h",
+      "sha256": "544704a72fb88d70a7987e1b27147289a0644fa22b728b2b1cfbd0b9d713e6dc"
+    },
+    {
+      "path": "lib/include/uc2/uc2_delta.h",
+      "file": "lib__include__uc2__uc2_delta.h",
+      "sha256": "ba9302212c1299436401e882be0473f897d620c797e131503c63d3c35f4834da"
+    },
+    {
+      "path": "lib/include/uc2/uc2_dict.h",
+      "file": "lib__include__uc2__uc2_dict.h",
+      "sha256": "27005e56292af22ac2aaa6f4fb7cae11bec47a3d38d96988fa108c6f0623df5c"
+    },
+    {
+      "path": "lib/include/uc2/uc2_ingest.h",
+      "file": "lib__include__uc2__uc2_ingest.h",
+      "sha256": "be3062468d97f34f6322759eded53d6223a75eea8e43ab81e9621ab8f4835ded"
+    },
+    {
+      "path": "lib/include/uc2/uc2_lz4.h",
+      "file": "lib__include__uc2__uc2_lz4.h",
+      "sha256": "4e6d83a1045b7f195b2d9d81614647cc245ba10daf97fac5288eb6a60bef20bd"
+    },
+    {
+      "path": "lib/include/uc2/uc2_merkle.h",
+      "file": "lib__include__uc2__uc2_merkle.h",
+      "sha256": "b850bfd3ffad881e024ff12fb55ea926d5982c94c47ee7596fcb204b1950ef2b"
+    },
+    {
+      "path": "lib/include/uc2/uc2_ots.h",
+      "file": "lib__include__uc2__uc2_ots.h",
+      "sha256": "61bcde0c42c0bb949f556b1737542d8f28df9a3343974e7db86fb182b7d8296f"
+    },
+    {
+      "path": "lib/include/uc2/uc2_preprocess.h",
+      "file": "lib__include__uc2__uc2_preprocess.h",
+      "sha256": "cfe9b1338c122deab4cdb53a113be6b9ec25a9e58c2dc9fa134233b6c7e09e89"
+    },
+    {
+      "path": "lib/include/uc2/uc2_rans.h",
+      "file": "lib__include__uc2__uc2_rans.h",
+      "sha256": "69c4ba223a390d6426aa1f44ed41f7d25a532fb5b275e40de8aa2b0f0700415e"
+    },
+    {
+      "path": "lib/include/uc2/uc2_sha256.h",
+      "file": "lib__include__uc2__uc2_sha256.h",
+      "sha256": "b5fb1cd2c103fad77e49d008f30e215448c4db825b4ad1129cd5a245d0ed1ea9"
+    },
+    {
+      "path": "lib/include/uc2/uc2_simhash.h",
+      "file": "lib__include__uc2__uc2_simhash.h",
+      "sha256": "b10a9b9afee7fe792268e15c151cbc27c6578333a39ea52b6afea8277d7e866d"
+    },
+    {
+      "path": "lib/src/compress.c",
+      "file": "lib__src__compress.c",
+      "sha256": "7d5fe0e722b1cd21ae699b12a86b2b3a8123dbf5ce8084de7f7a86714f298c83"
+    },
+    {
+      "path": "lib/src/decompress.c",
+      "file": "lib__src__decompress.c",
+      "sha256": "f7cc6ac5ebfae004797c2af3a5a81d3d1a891db7b468ce234d419ae5f34f5652"
+    },
+    {
+      "path": "lib/src/list.h",
+      "file": "lib__src__list.h",
+      "sha256": "6a66f1359db526cfb9a8b00785747fdb9df19c19bc41c967479ffb1757b9b498"
+    },
+    {
+      "path": "lib/src/uc2_blake3.c",
+      "file": "lib__src__uc2_blake3.c",
+      "sha256": "d40cb1e14ddf6a5ac615108f79b14b69a78ec9d496826c8a622a3287c83f5405"
+    },
+    {
+      "path": "lib/src/uc2_blockstore.c",
+      "file": "lib__src__uc2_blockstore.c",
+      "sha256": "7d54a04a26d741c1464317c325e69592108230fc47090559326d6fa717a4248c"
+    },
+    {
+      "path": "lib/src/uc2_cdc.c",
+      "file": "lib__src__uc2_cdc.c",
+      "sha256": "4a7503cbd737a95ddc2d5e7d27727d3e932cdc34b00062704f6b08da4e265b81"
+    },
+    {
+      "path": "lib/src/uc2_delta.c",
+      "file": "lib__src__uc2_delta.c",
+      "sha256": "64ae56bfc7a7141fd4f7b71281804693ffdd89c3f549197b3c9a7968e0353181"
+    },
+    {
+      "path": "lib/src/uc2_dict.c",
+      "file": "lib__src__uc2_dict.c",
+      "sha256": "2c94f7b80e68e1a02d5f161f608475392d3da44cdbe2c5d6ffde4c96446991e4"
+    },
+    {
+      "path": "lib/src/uc2_ingest.c",
+      "file": "lib__src__uc2_ingest.c",
+      "sha256": "9de7d9371400552117e8fe8d4b123b9d71f3cd5629dfae5916f4de09234d9af2"
+    },
+    {
+      "path": "lib/src/uc2_internal.h",
+      "file": "lib__src__uc2_internal.h",
+      "sha256": "f01eff0cbe177ab6bd3a2b25cf1f5f5b1c3427bbf304192b4d0a7bc7d7d7f84d"
+    },
+    {
+      "path": "lib/src/uc2_lz4.c",
+      "file": "lib__src__uc2_lz4.c",
+      "sha256": "f16d27b78865c9a97345aade47529ddc126787b7e14e179fa7157da7e7a05863"
+    },
+    {
+      "path": "lib/src/uc2_merkle.c",
+      "file": "lib__src__uc2_merkle.c",
+      "sha256": "b8515422e58e78a4e2590ea263bf680777f1b70652fb2b16bc984ffa8d6de753"
+    },
+    {
+      "path": "lib/src/uc2_ots.c",
+      "file": "lib__src__uc2_ots.c",
+      "sha256": "e653e1af6f3179503ce7ddc8e2b8b4f653ca89fd1ab8a17792a07f3b5523da50"
+    },
+    {
+      "path": "lib/src/uc2_preprocess.c",
+      "file": "lib__src__uc2_preprocess.c",
+      "sha256": "77ac15e13922a395339e57b48f47cb4ed75bebec1c5eb3eeb9a582b8ac717cb9"
+    },
+    {
+      "path": "lib/src/uc2_rans.c",
+      "file": "lib__src__uc2_rans.c",
+      "sha256": "3724742e281a853127b92b73c08dd0d7de73fa970f432a18bf5e6252bfc2b902"
+    },
+    {
+      "path": "lib/src/uc2_sha256.c",
+      "file": "lib__src__uc2_sha256.c",
+      "sha256": "7efb56c6e73e7d1e4b890114a49030e9c89a0c23a8a9bef421cbb791394a1731"
+    },
+    {
+      "path": "lib/src/uc2_simhash.c",
+      "file": "lib__src__uc2_simhash.c",
+      "sha256": "ba480893caa1a6e056c0ac86c12c065855ab549a7eb839d82df5f197e9294383"
+    },
+    {
+      "path": "lib/src/uc2_tables.c",
+      "file": "lib__src__uc2_tables.c",
+      "sha256": "1eb19a3824398b55ce20190edd5e6f5cd20e1eb4de7992c12b40c72ca5ff8abd"
+    },
+    {
+      "path": "python/native.c",
+      "file": "python__native.c",
+      "sha256": "62f67c3b7ca6180e8175fbfe3cb479a098627b4cf3a75dde8e7ee7cec6c4e311"
+    },
+    {
+      "path": "python/tests/test_uc2.py",
+      "file": "python__tests__test_uc2.py",
+      "sha256": "3356d2f5a6604997ede9ed0732b961688b78a7fb8ce5645c3da34aa306c4a6cb"
+    },
+    {
+      "path": "python/uc2/__init__.py",
+      "file": "python__uc2____init__.py",
+      "sha256": "be6406cbdc13ecc169307902a81cbb7368ce0b231cffd90554f9f7d72c1ad5f2"
+    },
+    {
+      "path": "python/uc2/__main__.py",
+      "file": "python__uc2____main__.py",
+      "sha256": "83eab770910fdafbfa3e9a2fdd2f981e9dec26c186647e2fde062fbf07453b18"
+    },
+    {
+      "path": "python/uc2/_cli.py",
+      "file": "python__uc2___cli.py",
+      "sha256": "8f3e22ba87019f22fd83329d4d15f901ef56ae68e732a6ecfa8d77429688ecf2"
+    },
+    {
+      "path": "python/uc2/_extract.py",
+      "file": "python__uc2___extract.py",
+      "sha256": "84cd6dfb5b055a9ee32731a9cf60cea17cc1ba4b8b985347743052e5503b65c7"
+    }
+  ]
+}

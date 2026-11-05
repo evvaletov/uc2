@@ -7,6 +7,18 @@ literal extraction. Archive modification is not supported.
 Requirements: Python 3 and the current UC2 CLI on `PATH`. Set `UC2` to an
 absolute executable path when testing another build.
 
+Download `uc2-mc-<version>.tar.gz` from the
+[release page](https://github.com/evvaletov/uc2/releases), unpack it, and run:
+
+```sh
+python3 install.py --uc2 /absolute/path/to/uc2
+```
+
+From a source checkout, run `python3 contrib/mc/install.py` instead. The
+installer preserves the existing MC extension definitions, saves a backup
+before changing the configuration, and supports the XDG data/config paths.
+Running it again does not duplicate the UC2 section. Restart MC after installing.
+
 For a user installation:
 
 ```sh
@@ -32,5 +44,5 @@ spaces, wildcard characters, and semicolon/digit suffixes are covered by the
 integration test.
 
 This independently written helper is dual-licensed under
-`GPL-3.0-or-later OR BSD-2-Clause`. The BSD text is in
-`../libarchive/LICENSE.BSD-2-Clause`; UC2 itself keeps its existing licenses.
+`GPL-3.0-or-later OR BSD-2-Clause`. The release archive includes the BSD text
+under `LICENSES/`; UC2 itself keeps its existing licenses.

@@ -1,0 +1,13 @@
+collection,method,trial,input_bytes,archive_bytes,compress_seconds,restore_seconds,compress_peak_kib,restore_peak_kib,verified
+uc2-sources,uc2-files,0,315760,95817,0.210173,0.064983,2660,1832,True
+uc2-sources,tar-uc2,0,315760,106683,0.063156,0.013018,2424,1768,True
+uc2-sources,7z,0,315760,77063,0.328567,0.054519,11144,5652,True
+uc2-sources,tar-zstd,0,315760,94737,0.03643,0.0239,4024,2876,True
+uc2-sources,uc2-files,1,315760,95817,0.220963,0.049311,2652,1732,True
+uc2-sources,tar-uc2,1,315760,106683,0.063238,0.028077,2428,1772,True
+uc2-sources,7z,1,315760,77063,0.259595,0.050448,11280,5672,True
+uc2-sources,tar-zstd,1,315760,94737,0.052957,0.019513,6128,2756,True
+uc2-sources,uc2-files,2,315760,95817,0.136129,0.016446,2636,1816,True
+uc2-sources,tar-uc2,2,315760,106683,0.06519,0.014552,2340,1768,True
+uc2-sources,7z,2,315760,77063,0.293768,0.035211,11156,5688,True
+uc2-sources,tar-zstd,2,315760,94737,0.035306,0.015844,5768,2748,True
