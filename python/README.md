@@ -1,14 +1,13 @@
 # UC2 for Python
 
-Read UltraCompressor II archives using the native UC2 decoder. The package also
+Read and create UltraCompressor II archives using the native UC2 library. The package also
 includes the UC2 command-line program for listing, extraction, archive creation,
 and stream ingestion. Wheels contain the native code; no separate UC2 install
 or compiler is needed when a wheel is available.
 
 This is an alpha release. It supports the implemented legacy Huffman methods,
 master dictionaries, directories, stored versions, and UC2 v3 rANS entries.
-Turbo/method 80 and multi-volume archives remain unsupported. The Python API
-is read-only; use the bundled CLI to create archives.
+Turbo/method 80 and multi-volume archives remain unsupported. Use `UC2File` for reading and `UC2Writer` for creation.
 
 ## Install and read
 
@@ -81,6 +80,70 @@ Errors include `BadArchiveError`, `ResourceLimitError`, `UnsafePathError`, and
 ordinary Python I/O exceptions. Verification uses the archive's legacy
 checksums, which are not cryptographic authentication. A missing entry or
 version raises `KeyError`.
+
+## Create archives
+
+```python
+from io import BytesIO
+from uc2 import UC2Writer
+
+with UC2Writer("backup.uc2", level=4) as archive:
+    archive.write("project", arcname="source")  # recursive directory tree
+    archive.mkdir("empty-directory")
+    archive.writestr("notes.txt", "Saved from Python\n".encode("utf-8"))
+    archive.write_stream("data.bin", BytesIO(b"streamed bytes"))
+```
+
+The destination is a filesystem path. A successful `close()` replaces it using
+an exclusively created sibling temporary file and `os.replace`. An exception,
+`abort()`, or a failed add/close leaves an existing destination intact. Any
+failed add aborts the writer; start a new one to retry. Destruction discards
+uncommitted work. The containing directory must exist and remain under the
+caller's control. Atomic replacement is not a guarantee of survival after a
+power failure. Replacement creates a new file with temporary-file permissions
+(normally 0600 on POSIX), without preserving destination permissions.
+
+`write(path, arcname=None)` adds a regular file or recursively adds a directory.
+The default archive name is the input's basename. Symlinks, reparse points,
+and special files are rejected. Keep the source tree unchanged while reading.
+`mkdir(name)` creates missing parents; repeated directories retain their first
+metadata. `writestr(name, data)` accepts bytes, bytearray, or memoryview; encode
+text explicitly. `write_stream(name, source, size=None)` consumes `read(n)`
+through EOF without seeking and leaves the input open. A supplied size must
+match exactly; detecting excess input can consume one extra byte.
+
+Inputs spool to anonymous temporary files as they are added. Compression runs
+at close, using CDC-selected custom master dictionaries. Payload buffers have
+fixed sizes; metadata grows with entries and chunks. Temporary disk space
+covers the uncompressed inputs and completed archive, plus the destination's
+sibling temporary file during the final copy. Duplicate file paths store
+versions: the last added version is newest. Directories cannot conflict with
+files. Independent writer objects may run separately; one object rejects
+concurrent or reentrant use.
+
+Writer limits and metadata:
+
+- `level=4` by default; 2-5 use legacy Huffman and 6-9 use v3 rANS.
+- `max_entries=100_000`, configurable from 1 through 1,000,000, includes automatic
+  parent directories. `max_total_size=0xFFFFFFFF` bounds all input bytes combined
+  and may be reduced. Each file and the completed archive also fit 32 bits.
+- The central directory is limited to 64 MiB and the CDC index to 1,048,576 chunks.
+  Directories may nest 64 levels deep. These are format/API limits, not CPU limits.
+- Archive paths use `/`. Components must be representable in CP850, fit 255 CP850
+  bytes and 299 UTF-8 bytes, and contain no traversal, separators, colon, or
+  control characters. Unsupported Unicode raises an error; names are never
+  shortened. Some legal archive names still require renaming to extract on
+  Windows; the reader's extraction checks apply unchanged.
+- `mkdir`, `writestr`, and `write_stream` accept `date_time` (a naive `datetime`
+  in 1980-2107, or `None`) and DOS `attributes` (R/H/S/A bits). Timestamps have
+  two-second resolution. `write` takes filesystem modification times; values
+  outside that range become unspecified. It stores ordinary file/directory
+  attributes, not Unix permissions.
+
+After successful close, `writer.stats` reports file, directory and master counts
+and archive size. The C interface is documented in
+[`uc2_writer.h`](https://github.com/evvaletov/uc2/blob/main/lib/include/uc2/uc2_writer.h)
+and the [library guide](https://github.com/evvaletov/uc2/blob/main/docs/library.rst).
 
 ## Read-only Linux mount
 

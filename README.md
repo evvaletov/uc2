@@ -5,7 +5,7 @@ Nico de Vries (1992-1996). UC2 used shared compression dictionaries
 ("master blocks") and file versioning.
 
 UC2 v3 is under development in portable C99. The current alpha is
-[3.0.0a5](https://pypi.org/project/uc2/3.0.0a5/).
+[3.0.0a6](https://pypi.org/project/uc2/3.0.0a6/).
 Compression levels 2-5 use the original Huffman format; levels 6-9 require the
 new rANS reader. Original-format compatibility is
 covered by DOSBox-X fixtures, but some legacy methods, including Turbo/method
@@ -26,8 +26,8 @@ stdout, tab-separated listings, and a quiet mode for scripts.
 - Readers for [libarchive/bsdtar](contrib/libarchive/README.md),
   [Midnight Commander](contrib/mc/README.md), and
   [Total Commander](contrib/totalcommander/README.md).
-- A [Python reader API](python/README.md) with entry metadata, stored versions,
-  streamed decoding, verification, and extraction limits.
+- A [Python API](python/README.md) with entry metadata, stored versions,
+  streamed decoding, verification, extraction limits, and `UC2Writer` creation.
 - A read-only [Linux FUSE mount](docs/mount.md) with separate version views
   and a bounded cache of verified decoded files.
 - Builds for Linux, macOS, Windows (MSVC), and DOS (DJGPP).
@@ -54,7 +54,10 @@ on Linux x86-64, Windows x86-64, and Intel/Apple Silicon macOS.
 do not require Python. These are alpha releases.
 
 ```python
-from uc2 import UC2File
+from uc2 import UC2File, UC2Writer
+
+with UC2Writer("backup.uc2") as archive:
+    archive.write("project", arcname="source")
 
 with UC2File("archive.uc2") as archive:
     print(archive.namelist())
@@ -146,7 +149,7 @@ UC2/
     include/uc2/    public headers (libuc2, uc2_cdc, uc2_merkle, uc2_rans, ...)
     src/            library implementation
   cli/              uc2 command-line tool
-  python/           Python reader API and native extension
+  python/           Python reader/writer API and native extension
   tests/            unit tests and test corpus
   original/         preserved original UC2 Pro sources (reference only)
   contrib/          libarchive and file-manager integrations

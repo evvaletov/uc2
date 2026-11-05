@@ -173,3 +173,56 @@ Error Codes
      - Feature not yet implemented
    * - ``UC2_InternalError`` (-7)
      - Internal logic error
+
+Archive Writing
+---------------
+
+Header: ``<uc2/uc2_writer.h>``. This GPL-3.0-or-later module uses hosted C99
+``malloc`` and ``tmpfile``. It is separate from the optional LGPL legacy reader.
+A writer owns its input spool and metadata; callbacks are used only during the
+call that receives them. Free it with ``uc2_writer_free`` on every exit path.
+
+.. code-block:: c
+
+   struct uc2_writer_options options = UC2_WRITER_OPTIONS_INIT;
+   options.level = 4;
+   uc2_writer *writer = uc2_writer_create(&options);
+   if (!writer) return -1;
+   unsigned directory;
+   int rc = uc2_writer_add_directory(writer, 0, "docs", 0, 0, &directory);
+   if (rc == 0)
+       rc = uc2_writer_add_file(writer, directory, "notes.txt", 0, 0x20,
+                                UC2_WRITER_UNKNOWN_SIZE, read_input, input_ctx);
+   if (rc == 0)
+       rc = uc2_writer_finish(writer, write_output, output_ctx);
+   /* Copy uc2_writer_error(writer) here if rc < 0. */
+   uc2_writer_free(writer);
+   return rc;
+
+``read_input(ctx, buffer, length)`` returns the number of bytes supplied,
+zero at EOF, or a negative error. Short reads are allowed. A supplied file size
+must match exactly; ``UC2_WRITER_UNKNOWN_SIZE`` reads to EOF. A limit violation
+can consume one extra byte. ``write_output(ctx, data, length)`` must accept the
+entire buffer and return a nonnegative value, or return a negative error.
+
+The completed archive is assembled before the first output callback. Output
+callback failure can leave partial output. For atomic destination replacement,
+write to an exclusively created sibling temporary file, check flush and close,
+then rename it. The CLI and Python ``UC2Writer`` implement this sequence.
+An error poisons the writer: free it and start a new object. Successful finish
+is one-shot. Objects must be used serially and callbacks must not reenter them.
+
+Directory IDs come from ``uc2_writer_add_directory``; parent zero is the root.
+Files with the same name and parent become stored versions in insertion order.
+Directory conflicts are rejected. Empty archives and directories are supported.
+Names are single UTF-8 components representable in CP850, limited to 255 CP850
+bytes and 299 UTF-8 bytes. Slash, backslash, colon, control characters, empty,
+dot and dot-dot components are rejected. No silent truncation occurs.
+
+Options default to level 4, 100,000 entries and UINT32_MAX total input bytes.
+The maximum configurable entry count is 1,000,000. Input and archive size
+limits are 32-bit; the raw central directory is capped at 64 MiB, directory
+nesting at 64, and the CDC index at 1,048,576 chunks. Metadata grows with the
+collection while payload buffers remain fixed. Source and archive temporary
+files require disk space. The public header defines return values, metadata
+fields, limits, and ``uc2_writer_get_stats``.

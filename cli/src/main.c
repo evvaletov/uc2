@@ -50,6 +50,7 @@ void setprogname(const char *argv0);
 #endif
 
 #include <uc2/libuc2.h>
+#include <uc2/uc2_writer.h>
 #include <uc2/uc2_cdc.h>
 #include <uc2/uc2_ingest.h>
 #include <uc2/uc2_merkle.h>
@@ -969,23 +970,13 @@ static unsigned short fletcher_csum(const unsigned char *data, unsigned len)
 static unsigned to_dos_time(time_t t)
 {
 	struct tm *tm = localtime(&t);
-	if (!tm || tm->tm_year < 80) return 0;
+	if (!tm || tm->tm_year < 80 || tm->tm_year > 207) return 0;
 	return ((unsigned)(tm->tm_year - 80) << 25) |
 	       ((unsigned)(tm->tm_mon + 1) << 21) |
 	       ((unsigned)tm->tm_mday << 16) |
 	       ((unsigned)tm->tm_hour << 11) |
 	       ((unsigned)tm->tm_min << 5) |
 	       ((unsigned)(tm->tm_sec / 2));
-}
-
-static unsigned fnv1a(const unsigned char *data, unsigned len)
-{
-	unsigned h = 2166136261u;
-	for (unsigned i = 0; i < len; i++) {
-		h ^= data[i];
-		h *= 16777619u;
-	}
-	return h;
 }
 
 static void make_dos_name(unsigned char dos_name[11], const char *filename)
@@ -1024,7 +1015,9 @@ static int mem_read_cb(void *ctx, void *buf, unsigned len)
 
 static int fread_cb(void *ctx, void *buf, unsigned len)
 {
-	return (int)fread(buf, 1, len, (FILE *)ctx);
+	FILE *f = ctx;
+	size_t n = fread(buf, 1, len, f);
+	return ferror(f) ? -1 : (int)n;
 }
 
 static int fwrite_cb(void *ctx, const void *ptr, unsigned len)
@@ -1032,519 +1025,118 @@ static int fwrite_cb(void *ctx, const void *ptr, unsigned len)
 	return fwrite(ptr, 1, len, (FILE *)ctx) == len ? 0 : -1;
 }
 
-struct dir_rec {
-	char path[PATH_MAX];
-	char name[300];
-	unsigned char dos_name[11];
-	unsigned id;       /* unique dir ID (starts from 1) */
-	unsigned parent_id; /* 0 = root */
-	unsigned dos_time;
-};
+static FILE *stage_output(const char *path);
+static void commit_staged_output(const char *path);
 
-struct file_rec {
-	char path[PATH_MAX];
-	char name[300];
-	unsigned char dos_name[11];
-	unsigned size;
-	unsigned csize;
-	unsigned short csum;
-	unsigned offset;
-	unsigned dos_time;
-	unsigned parent_id; /* 0 = root, or dir_rec.id */
-	int master_idx;     /* 0=SuperMaster, >=2=custom master */
-};
-
-struct master_rec {
-	unsigned idx;
-	unsigned char *data;
-	unsigned size;
-	unsigned csize;
-	unsigned short csum;
-	unsigned offset;
-	unsigned key;
-	unsigned ref_len;
-	unsigned ref_ctr;
-};
-
-/* Growable arrays for scanning input paths */
-static struct dir_rec *g_dirs;
-static int g_ndirs, g_dir_cap;
-static struct file_rec *g_files;
-static int g_nfiles, g_file_cap;
-static unsigned g_next_dirid = 1;
-
-static void scan_path(const char *path, unsigned parent_id);
-
-static void add_dir(const char *path, const char *name, unsigned parent_id, unsigned dos_time)
+static void writer_check(uc2_writer *writer, int result, const char *path)
 {
-	if (g_ndirs >= g_dir_cap) {
-		g_dir_cap = g_dir_cap ? g_dir_cap * 2 : 32;
-		g_dirs = realloc(g_dirs, (unsigned)g_dir_cap * sizeof *g_dirs);
-		if (!g_dirs) err(EXIT_FAILURE, "realloc");
-	}
-	struct dir_rec *d = &g_dirs[g_ndirs++];
-	memset(d, 0, sizeof *d);
-	snprintf(d->path, sizeof d->path, "%s", path);
-	snprintf(d->name, sizeof d->name, "%s", name);
-	make_dos_name(d->dos_name, name);
-	d->id = g_next_dirid++;
-	d->parent_id = parent_id;
-	d->dos_time = dos_time;
+    if (result < 0) errx(EXIT_FAILURE, "%s: %s (%d)", path, uc2_writer_error(writer), result);
 }
 
-static void add_file(const char *path, const char *name, unsigned parent_id,
-                     unsigned size, unsigned dos_time)
+static void writer_scan(uc2_writer *writer, const char *path, const char *name,
+                        unsigned parent, unsigned depth)
 {
-	if (g_nfiles >= g_file_cap) {
-		g_file_cap = g_file_cap ? g_file_cap * 2 : 64;
-		g_files = realloc(g_files, (unsigned)g_file_cap * sizeof *g_files);
-		if (!g_files) err(EXIT_FAILURE, "realloc");
-	}
-	struct file_rec *f = &g_files[g_nfiles++];
-	memset(f, 0, sizeof *f);
-	snprintf(f->path, sizeof f->path, "%s", path);
-	snprintf(f->name, sizeof f->name, "%s", name);
-	make_dos_name(f->dos_name, name);
-	f->size = size;
-	f->dos_time = dos_time;
-	f->parent_id = parent_id;
-}
-
-static void scan_dir(const char *dirpath, unsigned dirid)
-{
-	DIR *d = opendir(dirpath);
-	if (!d) err(EXIT_FAILURE, "%s", dirpath);
-	struct dirent *de;
-	while ((de = readdir(d))) {
-		if (de->d_name[0] == '.' &&
-		    (de->d_name[1] == '\0' ||
-		     (de->d_name[1] == '.' && de->d_name[2] == '\0')))
-			continue;
-		char child[PATH_MAX];
-		snprintf(child, sizeof child, "%s/%s", dirpath, de->d_name);
-		scan_path(child, dirid);
-	}
-	closedir(d);
-}
-
-static void scan_path(const char *path, unsigned parent_id)
-{
-	struct stat st;
-	if (stat(path, &st) < 0)
-		err(EXIT_FAILURE, "%s", path);
-
-	const char *base = strrchr(path, '/');
-	base = base ? base + 1 : path;
-
-	if (S_ISDIR(st.st_mode)) {
-		add_dir(path, base, parent_id, to_dos_time(st.st_mtime));
-		unsigned dirid = g_dirs[g_ndirs - 1].id;
-		scan_dir(path, dirid);
-	} else if (S_ISREG(st.st_mode)) {
-		add_file(path, base, parent_id, (unsigned)st.st_size,
-		         to_dos_time(st.st_mtime));
-	} else {
-		warnx("%s: skipping (not a regular file or directory)", path);
-	}
+    if (depth > 64) errx(EXIT_FAILURE, "%s: directory nesting exceeds 64", path);
+    struct stat st;
+#ifdef _WIN32
+    wchar_t wide[32768];
+    if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path, -1, wide, sizeof wide / sizeof *wide))
+        errx(EXIT_FAILURE, "%s: invalid UTF-8 path", path);
+    DWORD flags = GetFileAttributesW(wide);
+    if (flags == INVALID_FILE_ATTRIBUTES || (flags & FILE_ATTRIBUTE_REPARSE_POINT))
+        errx(EXIT_FAILURE, "%s: missing input or unsupported reparse point", path);
+    if (stat(path, &st) < 0) err(EXIT_FAILURE, "%s", path);
+#elif defined(__DJGPP__)
+    if (stat(path, &st) < 0) err(EXIT_FAILURE, "%s", path);
+#else
+    if (lstat(path, &st) < 0) err(EXIT_FAILURE, "%s", path);
+#endif
+    if (S_ISDIR(st.st_mode)) {
+        unsigned id;
+        writer_check(writer, uc2_writer_add_directory(writer, parent, name,
+                     to_dos_time(st.st_mtime), 0, &id), path);
+        DIR *dir = opendir(path);
+        if (!dir) err(EXIT_FAILURE, "%s", path);
+        for (;;) {
+            errno = 0;
+            struct dirent *de = readdir(dir);
+            if (!de) {
+                if (errno) err(EXIT_FAILURE, "%s", path);
+                break;
+            }
+            if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, "..")) continue;
+            char child[PATH_MAX];
+            int n = snprintf(child, sizeof child, "%s/%s", path, de->d_name);
+            if (n < 0 || (size_t)n >= sizeof child) errx(EXIT_FAILURE, "input path too long: %s", path);
+            writer_scan(writer, child, de->d_name, id, depth + 1);
+        }
+        if (closedir(dir) != 0) err(EXIT_FAILURE, "%s", path);
+    } else if (S_ISREG(st.st_mode)) {
+#if !defined(_WIN32) && !defined(__DJGPP__)
+        int fd = open(path, O_RDONLY | O_NOFOLLOW | O_NONBLOCK);
+        if (fd < 0) err(EXIT_FAILURE, "%s", path);
+        if (fstat(fd, &st) < 0 || !S_ISREG(st.st_mode)) errx(EXIT_FAILURE, "%s: input is no longer a regular file", path);
+        FILE *f = fdopen(fd, "rb");
+        if (!f) { close(fd); err(EXIT_FAILURE, "%s", path); }
+#else
+        FILE *f = fopen(path, "rb");
+        if (!f) err(EXIT_FAILURE, "%s", path);
+#endif
+        if (st.st_size < 0 || (uint64_t)st.st_size > UINT32_MAX)
+            errx(EXIT_FAILURE, "%s: input exceeds the 32-bit size limit", path);
+        int result = uc2_writer_add_file(writer, parent, name, to_dos_time(st.st_mtime),
+                                         0x20, (uint64_t)st.st_size, fread_cb, f);
+        int closed = fclose(f);
+        writer_check(writer, result, path);
+        if (closed != 0) err(EXIT_FAILURE, "%s", path);
+    } else errx(EXIT_FAILURE, "%s: only regular files and directories are supported", path);
 }
 
 static int create_archive(int nargs, char **args)
 {
-	uc2_say(stderr, "UC2 compression level: %s\n", level_name(opt.level));
-
-	/* Phase 0: Scan inputs (files and directories) */
-	g_dirs = NULL; g_ndirs = 0; g_dir_cap = 0;
-	g_files = NULL; g_nfiles = 0; g_file_cap = 0;
-	g_next_dirid = 1;
-
-	for (int i = 0; i < nargs; i++)
-		scan_path(args[i], 0);
-
-	int nfiles = g_nfiles, ndirs = g_ndirs;
-	struct file_rec *recs = g_files;
-	struct dir_rec *dirs = g_dirs;
-	g_files = NULL; g_dirs = NULL;
-
-	if (nfiles == 0)
-		errx(EXIT_FAILURE, "No files to compress");
-
-	/* Load the SuperMaster (49152-byte built-in dictionary) */
-	unsigned char *supermaster = malloc(49152);
-	if (!supermaster)
-		err(EXIT_FAILURE, "malloc");
-	int sm_ret = uc2_get_supermaster(supermaster, 49152);
-	if (sm_ret < 0)
-		errx(EXIT_FAILURE, "Failed to load SuperMaster (%d)", sm_ret);
-
-	/* Phase 1: Content-defined chunking for master-block grouping.
-	   Split each file into CDC chunks (Gear hash, avg 8KB), hash each
-	   chunk, and group files that share chunks.  This detects similar
-	   content at ANY position, not just identical file prefixes. */
-	enum { MinMasterFile = 1024, MaxMasterSize = 64000 };
-
-	/* Collect chunk hashes per file */
-	struct { uint32_t hash; int file_idx; } *chunk_map = NULL;
-	int chunk_map_len = 0, chunk_map_cap = 0;
-
-	for (int i = 0; i < nfiles; i++) {
-		if (recs[i].size < MinMasterFile)
-			continue;
-		FILE *f = fopen(recs[i].path, "rb");
-		if (!f) err(EXIT_FAILURE, "%s", recs[i].path);
-		unsigned char *buf = malloc(recs[i].size);
-		if (!buf) err(EXIT_FAILURE, "malloc");
-		size_t n = fread(buf, 1, recs[i].size, f);
-		fclose(f);
-
-		struct uc2_chunker chunker;
-		uc2_chunker_init(&chunker, 12, 0, 0);  /* avg 4KB chunks */
-		size_t off, len;
-		while (uc2_chunker_next(&chunker, buf, n, &off, &len)) {
-			if (chunk_map_len >= chunk_map_cap) {
-				chunk_map_cap = chunk_map_cap ? chunk_map_cap * 2 : 256;
-				chunk_map = realloc(chunk_map, (unsigned)chunk_map_cap * sizeof *chunk_map);
-				if (!chunk_map) err(EXIT_FAILURE, "realloc");
-			}
-			chunk_map[chunk_map_len].hash = uc2_fnv1a(buf + off, len);
-			chunk_map[chunk_map_len].file_idx = i;
-			chunk_map_len++;
-		}
-		/* Final chunk */
-		if (len > 0) {
-			if (chunk_map_len >= chunk_map_cap) {
-				chunk_map_cap = chunk_map_cap ? chunk_map_cap * 2 : 256;
-				chunk_map = realloc(chunk_map, (unsigned)chunk_map_cap * sizeof *chunk_map);
-				if (!chunk_map) err(EXIT_FAILURE, "realloc");
-			}
-			chunk_map[chunk_map_len].hash = uc2_fnv1a(buf + off, len);
-			chunk_map[chunk_map_len].file_idx = i;
-			chunk_map_len++;
-		}
-		free(buf);
-	}
-
-	/* Find chunk hashes shared by 2+ files and group those files */
-	bool *grouped = calloc(nfiles, sizeof *grouped);
-	if (!grouped) err(EXIT_FAILURE, "malloc");
-
-	int nmasters = 0, master_cap = 16;
-	struct master_rec *masters = calloc(master_cap, sizeof *masters);
-	if (!masters) err(EXIT_FAILURE, "malloc");
-
-	for (int i = 0; i < chunk_map_len; i++) {
-		uint32_t ch = chunk_map[i].hash;
-		/* Count distinct files sharing this chunk */
-		int file_ids[256];
-		int nf = 0;
-		for (int j = i; j < chunk_map_len && nf < 256; j++) {
-			if (chunk_map[j].hash != ch) continue;
-			int fj = chunk_map[j].file_idx;
-			if (grouped[fj] || recs[fj].size < MinMasterFile) continue;
-			int dup = 0;
-			for (int k = 0; k < nf; k++)
-				if (file_ids[k] == fj) { dup = 1; break; }
-			if (!dup) file_ids[nf++] = fj;
-		}
-		if (nf < 2) continue;
-
-		/* Group these files: master from the largest */
-		int largest = file_ids[0];
-		for (int k = 1; k < nf; k++)
-			if (recs[file_ids[k]].size > recs[largest].size)
-				largest = file_ids[k];
-
-		unsigned midx = 2 + (unsigned)nmasters;
-		unsigned msz = recs[largest].size;
-		if (msz > MaxMasterSize) msz = MaxMasterSize;
-		unsigned char *mdata = malloc(msz);
-		if (!mdata) err(EXIT_FAILURE, "malloc");
-		FILE *mf = fopen(recs[largest].path, "rb");
-		if (!mf) err(EXIT_FAILURE, "%s", recs[largest].path);
-		msz = (unsigned)fread(mdata, 1, msz, mf);
-		fclose(mf);
-
-		unsigned ref_len = 0, ref_ctr = 0;
-		for (int k = 0; k < nf; k++) {
-			recs[file_ids[k]].master_idx = (int)midx;
-			grouped[file_ids[k]] = true;
-			ref_len += recs[file_ids[k]].size;
-			ref_ctr++;
-		}
-
-		if (nmasters >= master_cap) {
-			master_cap *= 2;
-			masters = realloc(masters, (unsigned)master_cap * sizeof *masters);
-			if (!masters) err(EXIT_FAILURE, "realloc");
-		}
-		masters[nmasters] = (struct master_rec){
-			.idx = midx, .data = mdata, .size = msz,
-			.key = fnv1a(mdata, msz),
-			.ref_len = ref_len, .ref_ctr = ref_ctr
-		};
-		nmasters++;
-	}
-	free(chunk_map);
-	free(grouped);
-
-	/* Assign a default custom master to all ungrouped files.
-	   The original UC2 Pro never uses SuperMaster (index 0) in file
-	   COMPRESS records — it always assigns custom master indices (>= 2).
-	   Using SuperMaster triggers a hang in the original's extraction
-	   code path (ToToWalk with SUPERMASTER).  We build a custom master
-	   from the largest ungrouped file's content. */
-	{
-		int largest_ungrouped = -1;
-		for (int i = 0; i < nfiles; i++) {
-			if (recs[i].master_idx == 0) {
-				if (largest_ungrouped < 0 ||
-				    recs[i].size > recs[largest_ungrouped].size)
-					largest_ungrouped = i;
-			}
-		}
-		if (largest_ungrouped >= 0) {
-			unsigned midx = 2 + (unsigned)nmasters;
-			unsigned msz = recs[largest_ungrouped].size;
-			if (msz > MaxMasterSize) msz = MaxMasterSize;
-			if (msz < 1) msz = 1;
-			unsigned char *mdata = calloc(msz, 1);
-			if (!mdata) err(EXIT_FAILURE, "malloc");
-			if (recs[largest_ungrouped].size > 0) {
-				FILE *mf = fopen(recs[largest_ungrouped].path, "rb");
-				if (!mf) err(EXIT_FAILURE, "%s", recs[largest_ungrouped].path);
-				msz = (unsigned)fread(mdata, 1, msz, mf);
-				fclose(mf);
-			}
-
-			unsigned ref_len = 0, ref_ctr = 0;
-			for (int i = 0; i < nfiles; i++) {
-				if (recs[i].master_idx == 0) {
-					recs[i].master_idx = (int)midx;
-					ref_len += recs[i].size;
-					ref_ctr++;
-				}
-			}
-
-			if (nmasters >= master_cap) {
-				master_cap *= 2;
-				masters = realloc(masters, (unsigned)master_cap * sizeof *masters);
-				if (!masters) err(EXIT_FAILURE, "realloc");
-			}
-			masters[nmasters] = (struct master_rec){
-				.idx = midx, .data = mdata, .size = msz,
-				.key = fnv1a(mdata, msz),
-				.ref_len = ref_len, .ref_ctr = ref_ctr
-			};
-			nmasters++;
-		}
-	}
-
-	FILE *out = fopen(opt.archive, "wb");
-	if (!out)
-		err(EXIT_FAILURE, "%s", opt.archive);
-
-	/* Placeholder FHEAD + XHEAD (29 bytes) */
-	unsigned char header[29];
-	memset(header, 0, sizeof header);
-	fwrite(header, 1, 29, out);
-
-	/* Write master blocks (compressed with SuperMaster) */
-	for (int i = 0; i < nmasters; i++) {
-		masters[i].offset = tell32(out);
-		struct mem_reader mr = {.data = masters[i].data, .pos = 0, .len = masters[i].size};
-		unsigned csize = 0;
-		unsigned short csum = 0;
-		int ret = uc2_compress_ex(opt.level, supermaster, 49152,
-		                          mem_read_cb, &mr, fwrite_cb, out,
-		                          masters[i].size, &csum, &csize);
-		if (ret < 0)
-			errx(EXIT_FAILURE, "master %u: compression error %d", masters[i].idx, ret);
-		masters[i].csize = csize;
-		masters[i].csum = csum;
-		fprintf(stderr, "  master[%u]: %u -> %u (%u files)\n",
-		        masters[i].idx, masters[i].size, csize, masters[i].ref_ctr);
-	}
-
-	/* Phase 2: Compress each file */
-	for (int i = 0; i < nfiles; i++) {
-		recs[i].offset = tell32(out);
-
-		FILE *inf = fopen(recs[i].path, "rb");
-		if (!inf)
-			err(EXIT_FAILURE, "%s", recs[i].path);
-
-		const unsigned char *mdata = supermaster;
-		unsigned msz = 49152;
-		if (recs[i].master_idx >= 2) {
-			for (int m = 0; m < nmasters; m++) {
-				if (masters[m].idx == (unsigned)recs[i].master_idx) {
-					mdata = masters[m].data;
-					msz = masters[m].size;
-					break;
-				}
-			}
-		}
-
-		unsigned csize = 0;
-		unsigned short csum = 0;
-		int ret = uc2_compress_ex(opt.level, mdata, msz,
-		                          fread_cb, inf, fwrite_cb, out,
-		                          recs[i].size, &csum, &csize);
-		fclose(inf);
-		if (ret < 0)
-			errx(EXIT_FAILURE, "%s: compression error %d", recs[i].path, ret);
-
-		recs[i].csize = csize;
-		recs[i].csum = csum;
-		fprintf(stderr, "  %s: %u -> %u%s\n", recs[i].name, recs[i].size, csize,
-		        recs[i].master_idx >= 2 ? " (custom master)" : "");
-	}
-
-	/* Phase 3: Build raw central directory.
-	   Order: masters, then dirs (parent before child), then files.
-	   The scanner guarantees dirs are ordered parent-first. */
-	unsigned cdir_cap = 22; /* EndOfCdir + XTAIL + aserial */
-	for (int i = 0; i < nmasters; i++)
-		cdir_cap += 39;
-	for (int i = 0; i < ndirs; i++)
-		cdir_cap += 27 + 21 + (unsigned)strlen(dirs[i].name) + 1;
-	for (int i = 0; i < nfiles; i++)
-		cdir_cap += 47 + 21 + (unsigned)strlen(recs[i].name) + 1;
-
-	unsigned char *raw_cdir = malloc(cdir_cap);
-	if (!raw_cdir)
-		err(EXIT_FAILURE, "malloc");
-
-	unsigned char *p = raw_cdir;
-
-	/* Master entries */
-	for (int i = 0; i < nmasters; i++) {
-		*p++ = 3; /* MasterEntry */
-		w32(p, masters[i].idx); p += 4;
-		w32(p, masters[i].key); p += 4;
-		w32(p, masters[i].ref_len); p += 4;
-		w32(p, masters[i].ref_ctr); p += 4;
-		w16(p, masters[i].size); p += 2;
-		w16(p, masters[i].csum); p += 2;
-		w32(p, masters[i].csize); p += 4;
-		/* Masters are compressed with uc2_compress_ex(opt.level), so the
-		   recorded method must match: 10 (rANS) at levels 6-9.  Levels <= 5
-		   keep method 1 for compatibility with the original UC2 Pro reader
-		   (methods 1-9 share the Huffman bitstream). */
-		w16(p, opt.level >= 6 ? 10 : 1); p += 2;
-		w32(p, 0); p += 4; /* masterPrefix = SuperMaster */
-		w32(p, 1); p += 4;
-		w32(p, masters[i].offset); p += 4;
-	}
-
-	/* Directory entries: OHEAD(1) + OSMETA(22) + DIRMETA(4) + EXTMETA */
-	for (int i = 0; i < ndirs; i++) {
-		unsigned namelen = (unsigned)strlen(dirs[i].name);
-		*p++ = 1; /* DirEntry */
-		/* OSMETA (22 bytes) */
-		w32(p, dirs[i].parent_id); p += 4;
-		*p++ = 0x10; /* UC2_Attr_D = directory */
-		w32(p, dirs[i].dos_time); p += 4;
-		memcpy(p, dirs[i].dos_name, 11); p += 11;
-		*p++ = 0; /* hidden */
-		*p++ = 1; /* has tags */
-		/* DIRMETA (4 bytes) */
-		w32(p, dirs[i].id); p += 4;
-		/* EXTMETA: long name tag */
-		memcpy(p, "AIP:Win95 LongN", 16); p += 16;
-		w32(p, namelen + 1); p += 4;
-		*p++ = 0;
-		memcpy(p, dirs[i].name, namelen + 1); p += namelen + 1;
-	}
-
-	/* File entries */
-	for (int i = 0; i < nfiles; i++) {
-		unsigned namelen = (unsigned)strlen(recs[i].name);
-		*p++ = 2; /* FileEntry */
-		/* OSMETA (22 bytes) */
-		w32(p, recs[i].parent_id); p += 4;
-		*p++ = 0x20;
-		w32(p, recs[i].dos_time); p += 4;
-		memcpy(p, recs[i].dos_name, 11); p += 11;
-		*p++ = 0;  /* hidden */
-		*p++ = 1;  /* has tags */
-		/* FILEMETA (6 bytes) */
-		w32(p, recs[i].size); p += 4;
-		w16(p, recs[i].csum); p += 2;
-		/* COMPRESS (10 bytes) */
-		w32(p, recs[i].csize); p += 4;
-		w16(p, opt.level >= 6 ? 10 : (opt.level <= 1 ? 1 : opt.level)); p += 2;
-		w32(p, (unsigned)recs[i].master_idx); p += 4;
-		/* LOCATION (8 bytes) */
-		w32(p, 1); p += 4;
-		w32(p, recs[i].offset); p += 4;
-		/* EXTMETA: long name tag */
-		memcpy(p, "AIP:Win95 LongN", 16); p += 16;
-		w32(p, namelen + 1); p += 4;
-		*p++ = 0;
-		memcpy(p, recs[i].name, namelen + 1); p += namelen + 1;
-	}
-
-	/* EndOfCdir */
-	*p++ = 4;
-	*p++ = 0;
-	*p++ = 0;
-	w32(p, 0); p += 4;
-	memset(p, ' ', 11); p += 11;
-	w32(p, 0); p += 4;
-
-	unsigned cdir_size = (unsigned)(p - raw_cdir);
-	unsigned short cdir_csum = fletcher_csum(raw_cdir, cdir_size);
-
-	unsigned cdir_offset = tell32(out);
-	unsigned char crec[10];
-	memset(crec, 0, 10);
-	fwrite(crec, 1, 10, out);
-
-	struct mem_reader mr = {.data = raw_cdir, .pos = 0, .len = cdir_size};
-	unsigned cdir_csize = 0;
-	unsigned short cdir_comp_csum = 0;
-	int ret = uc2_compress(opt.level, mem_read_cb, &mr, fwrite_cb, out,
-	                       cdir_size, &cdir_comp_csum, &cdir_csize);
-	free(raw_cdir);
-	if (ret < 0)
-		errx(EXIT_FAILURE, "cdir compression error %d", ret);
-
-	unsigned total = tell32(out);
-
-	fseek(out, cdir_offset, SEEK_SET);
-	w32(crec + 0, 0);                 /* csize=0 matches original UC2 Pro */
-	w16(crec + 4, opt.level >= 6 ? 10 : (opt.level <= 1 ? 1 : opt.level));
-	w32(crec + 6, 1);                 /* masterPrefix = NoMaster */
-	fwrite(crec, 1, 10, out);
-
-	fseek(out, 0, SEEK_SET);
-	unsigned complen = total - 13;
-	w32(header + 0, 0x1A324355);
-	w32(header + 4, complen);
-	w32(header + 8, complen + 0x01B2C3D4);
-	header[12] = 0;
-	w32(header + 13, 1);
-	w32(header + 17, cdir_offset);
-	w16(header + 21, cdir_csum);
-	header[23] = 0;
-	w16(header + 24, 203);  /* match original UC2 Pro revision */
-	w16(header + 26, 200);
-	header[28] = 0;
-	fwrite(header, 1, 29, out);
-
-	fclose(out);
-	for (int i = 0; i < nmasters; i++)
-		free(masters[i].data);
-	free(masters);
-	free(supermaster);
-	free(dirs);
-	free(recs);
-	uc2_say(stderr, "Created %s (%d file%s, %d dir%s, %d master%s, %u bytes)\n",
-	        opt.archive, nfiles, nfiles == 1 ? "" : "s",
-	        ndirs, ndirs == 1 ? "" : "s",
-	        nmasters, nmasters == 1 ? "" : "s", total);
-	uc2_say(stderr, "Everything went OK\n");
-	return EXIT_SUCCESS;
+    struct uc2_writer_options options = UC2_WRITER_OPTIONS_INIT;
+    options.level = opt.level;
+    uc2_writer *writer = uc2_writer_create(&options);
+    if (!writer) errx(EXIT_FAILURE, "cannot initialize archive writer");
+    uc2_say(stderr, "UC2 compression level: %s\n", level_name(opt.level));
+    for (int i = 0; i < nargs; ++i) {
+        char path[PATH_MAX];
+        int n = snprintf(path, sizeof path, "%s", args[i]);
+        if (n <= 0 || (size_t)n >= sizeof path) errx(EXIT_FAILURE, "input path too long or empty");
+        while (n > 1 && (path[n-1] == '/' || path[n-1] == '\\')) path[--n] = 0;
+        char *name = strrchr(path, '/');
+#ifdef _WIN32
+        char *back = strrchr(path, '\\');
+        if (back && (!name || back > name)) name = back;
+#endif
+        name = name ? name + 1 : path;
+        char current[PATH_MAX];
+        if (!strcmp(path, ".") || !strcmp(path, "./.")) {
+            if (!getcwd(current, sizeof current)) err(EXIT_FAILURE, "getcwd");
+            name = strrchr(current, '/');
+#ifdef _WIN32
+            char *back = strrchr(current, '\\');
+            if (back && (!name || back > name)) name = back;
+#endif
+            name = name ? name + 1 : current;
+        }
+        writer_scan(writer, path, name, 0, 0);
+    }
+    FILE *out = stage_output(opt.archive);
+    int result = uc2_writer_finish(writer, fwrite_cb, out);
+    int closed = fclose(out);
+    writer_check(writer, result, opt.archive);
+    if (closed != 0) err(EXIT_FAILURE, "%s: output close failed", opt.archive);
+    commit_staged_output(opt.archive);
+    struct uc2_writer_stats stats;
+    uc2_writer_get_stats(writer, &stats);
+    uc2_writer_free(writer);
+    if (stats.masters)
+        uc2_say(stderr, "  master[2]: custom master dictionaries: %u\n", stats.masters);
+    uc2_say(stderr, "Created %s (%u files, %u dirs, %u masters, %u bytes)\n",
+            opt.archive, stats.files, stats.directories, stats.masters, stats.archive_size);
+    uc2_say(stderr, "Everything went OK\n");
+    return EXIT_SUCCESS;
 }
 
 /* Memory read/write callbacks for benchmark */

@@ -71,6 +71,7 @@ the UC2 v3 revival project, released under GPL-3.0-or-later:
 
 | File                                  | Function                                           |
 |---------------------------------------|----------------------------------------------------|
+| `lib/src/uc2_writer.c`, `lib/include/uc2/uc2_writer.h` | Archive writer moved from the GPL CLI |
 | `lib/src/compress.c`                  | LZ77+Huffman compressor (inverse of decompress.c)  |
 | `lib/src/uc2_tables.c`                | Huffman delta-coding lookup tables                 |
 | `lib/src/uc2_internal.h`              | Shared compressor/decompressor types and constants |
@@ -205,3 +206,8 @@ authors shipped them with.
 - LGPL-3.0 sec. 3 (allowing one-way upgrade to GPL):
   <https://www.gnu.org/licenses/lgpl-3.0.html#section3>
 - LGPL-3.0 sec. 4 (Combined Works): same document, sec. 4
+
+The alpha6 BLAKE3 test-vector prefixes come from BLAKE3-team/BLAKE3 at the
+commit recorded in `tests/data/blake3-vectors.h`. Upstream's CC0 dedication is
+included as `tests/data/BLAKE3-CC0.txt`. The core writer retains GPL-3.0-or-later;
+new independent Python glue follows the approved GPL/BSD choice.

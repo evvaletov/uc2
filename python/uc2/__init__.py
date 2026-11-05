@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later OR BSD-2-Clause
-"""Read UltraCompressor II archives with the bundled native decoder."""
+"""Read and create UltraCompressor II archives with the native library."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -10,12 +10,13 @@ from pathlib import Path
 from typing import BinaryIO
 
 from . import _native
+from ._writer import UC2Writer
 from ._extract import UnsafePathError, extract_entry, validate_members
 
 __version__ = _package_version("uc2")
 BadArchiveError = _native.BadArchiveError
 ResourceLimitError = _native.ResourceLimitError
-__all__ = ["UC2File", "UC2Info", "BadArchiveError", "ResourceLimitError", "UnsafePathError"]
+__all__ = ["UC2Writer", "UC2File", "UC2Info", "BadArchiveError", "ResourceLimitError", "UnsafePathError"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,7 +66,7 @@ class UC2File:
                  max_extract_size: int = 1024**3,
                  max_total_size: int = 1024**3):
         if mode != "r":
-            raise ValueError("UC2File supports read mode only; use the bundled CLI to create archives")
+            raise ValueError("UC2File supports read mode only; use UC2Writer to create archives")
         self._reader = None
         self._source = None
         self._owned = False

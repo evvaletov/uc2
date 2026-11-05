@@ -4,7 +4,7 @@
   "format_id": "0x110000 (proposed, not allocated)",
   "decoder": "optional shared libuc2read; existing LGPL-3.0-only sources",
   "adapter_license": "BSD-2-Clause option",
-  "patch_sha256": "2587c893a68fc02168ab499ef48d0f15d4524d07cc4058261f197ad408ee2011",
+  "patch_sha256": "dbe7a5f39cef59e3e6fdbd2772f9ad375d19ff80184502b8c17874d6673ff020",
   "files": [
     "CMakeLists.txt",
     "Makefile.am",

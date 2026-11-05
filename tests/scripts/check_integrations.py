@@ -111,6 +111,13 @@ with tempfile.TemporaryDirectory(prefix='uc2-integrations-') as temporary:
         with (root/'restored.bin').open('rb') as f:
             if hashlib.file_digest(f, 'sha256').digest() != expected.digest():
                 raise AssertionError('large stream restore mismatch')
+        run([uc2, '-qw', root/'large-files.uc2', datafile], preexec_fn=limit)
+        with (root/'restored-file.bin').open('wb') as f:
+            subprocess.run([uc2, '-qp', str(root/'large-files.uc2'), 'large.bin'],
+                           stdout=f, check=True)
+        with (root/'restored-file.bin').open('rb') as f:
+            if hashlib.file_digest(f, 'sha256').digest() != expected.digest():
+                raise AssertionError('memory-limited writer restore mismatch')
 
     if os.name == 'posix':
         protected = root/'protected.uc2'

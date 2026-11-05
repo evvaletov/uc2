@@ -2,7 +2,7 @@
 
 ## Recommended next priorities (2026-11-05)
 
-The Python reader, native CLI, mount, and integration packages are delivered.
+The Python reader/writer, native CLI, mount, and integration packages are implemented.
 These are the next five priorities. The phases below remain the longer-term feature inventory;
 the additional project-wide task-qa + task-at audit remains open.
 
@@ -28,26 +28,44 @@ the additional project-wide task-qa + task-at audit remains open.
    file. The product hypothesis is that rescuing old collections is a clearer
    reason to adopt UC2 than general compression claims.
 
-3. [ ] **Expose archive creation through the C and Python APIs.**
-   Move the CLI's archive assembly behind a supported writer interface, then
-   offer `UC2Writer` with file, directory, and streaming inputs. Preserve atomic
-   destination replacement and make size, filename, and method limits explicit.
-   This would let backup tools and notebooks use UC2 without shelling out.
-
-4. [ ] **Turn stream deduplication into incremental collection snapshots.**
+3. [ ] **Turn stream deduplication into incremental collection snapshots.**
    Start with two snapshots of a source tree and a portable manifest that maps
    files and versions to shared chunks. Measure the second snapshot's added
    bytes, restore cost, metadata overhead, and corruption recovery against the
    current tar-ingest baseline. Connect the existing CDC and block-store modules
    only where those measurements support the design. Tracking: 0013121, bd13adb.
 
-5. [ ] **Advance the prepared libarchive reader toward upstream acceptance.**
+4. [ ] **Advance the prepared libarchive reader toward upstream acceptance.**
    The [review patch](contrib/libarchive/upstream/REVIEW.md) now has an optional
    external LGPL reader, BSD adapter, CMake/Autotools wiring, and fixtures.
    Bound metadata and dictionary growth, then seek maintainer agreement on the
    dependency and format ID. Submission is a separate step; none has been made.
    The proposed reader supports legacy Huffman methods; the full UC2 package
    also supports rANS. Tracking: 7bbb6b6.
+
+5. [ ] **Broaden compatibility with historical archives and desktop readers.**
+   Assemble redistributable examples of Turbo/method 80, implement its decoder,
+   and verify against the original executable. Resolve Total Commander 32-bit
+   native `.uc2` extraction routing so users can retire the `.u2r` copy workaround.
+   Keep exact fixture hashes and application-version evidence. Tracking:
+   b3e413f, 81c0c8a.
+
+### Implemented for 3.0.0a6: writer APIs and audit repairs
+
+- [x] Moved CLI archive assembly into the supported C `uc2_writer` API. Added
+  Python `UC2Writer` for recursive directories, files, bytes, and streams.
+  Spooling bounds payload RAM; names and format sizes are checked explicitly.
+  CLI/Python destinations are replaced after successful assembly and close.
+- [x] Repaired BLAKE3 with 35 official vectors, corrected LZ4 block endings
+  against the reference library, rejected incomplete delta streams, and fixed
+  CDC boundary/documentation issues. Audited maintained documentation claims
+  and removed repeated dash clauses while preserving command flags.
+- [x] Local C/Python tests and sanitizer checks, plus real DOS application
+  round trips. The DOSBox harness now uses a supported headless SDL setup.
+- [ ] Complete the independent three-reviewer audit panel. Subscription/access
+  and credit failures prevented completed reviews in this attempt. Local fixes
+  are complete; this item remains open. Details and release validation are in
+  [the alpha6 audit notes](docs/releases/3.0.0a6-qa.md).
 
 ### Delivered: previous priorities 3-5 (3.0.0a5)
 
@@ -114,9 +132,10 @@ the additional project-wide task-qa + task-at audit remains open.
 
 - [ ] Complete the project-wide **task-qa + task-at** audit. Tracked in
   git-bug **c9edf0b**. This is an additional task alongside the five priorities.
-  The Python alpha received release-scoped checks and one completed Gemini
-  review; Claude access failed, Grok timed out, and API fallbacks were
-  unavailable. This does not complete the three-reviewer or whole-project audit.
+  Alpha6 completed the local project audit and repairs, including maintained
+  prose and auxiliary codecs. Independent review remains incomplete: Claude
+  subscription access is disabled, Gemini ran out of quota, Grok timed out,
+  and paid fallbacks have no credit. Misses are not counted as approval.
   The shared workflows are at
   `/home/evaletov/.claude-skills-shared/task-qa/SKILL.md` and
   `/home/evaletov/.claude-skills-shared/task-at/SKILL.md`.
@@ -131,7 +150,7 @@ the additional project-wide task-qa + task-at audit remains open.
   command options. Correct alpha-release status, compatibility scope, module
   versus CLI features, BLAKE3 claims, test instructions, and attribution. Remove
   invalid cp/rsync pipes and the unsupported ingest novelty claim below.
-  The whole-project task-at workflow remains pending.
+  The whole-project prose pass is done; its independent panel remains pending.
 - [x] Reconcile the release state. The previously unpublished decoder fixes
   and ingest v3 are now included in GitHub `main` and `v3.0.0-alpha.4`.
 

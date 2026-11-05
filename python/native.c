@@ -278,6 +278,7 @@ static int module_clear(PyObject *module)
     struct module_state *state = PyModule_GetState(module);
     Py_CLEAR(state->bad_archive); Py_CLEAR(state->resource_limit); return 0;
 }
+int uc2_python_writer_init(PyObject *module);
 static int module_exec(PyObject *module)
 {
     struct module_state *state = PyModule_GetState(module);
@@ -290,7 +291,7 @@ static int module_exec(PyObject *module)
     if (!type) return -1;
     int result = PyModule_AddObject(module, "Reader", type);
     if (result < 0) Py_DECREF(type);
-    return result;
+    return result < 0 ? result : uc2_python_writer_init(module);
 }
 static PyModuleDef_Slot module_slots[] = { {Py_mod_exec, module_exec}, {0, NULL} };
 static struct PyModuleDef module_def = {

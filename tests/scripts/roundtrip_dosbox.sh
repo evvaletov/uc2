@@ -35,7 +35,7 @@ cp "$UC2PRO" "$WORK/uc2pro.exe"
 echo "=== Session 1: Extracting UC2 Pro tools from SFX ==="
 cat > "$WORK/dosbox.conf" <<DOSBOXCFG
 [sdl]
-output=none
+output=surface
 fullscreen=false
 [dosbox]
 memsize=16
@@ -50,7 +50,7 @@ exit
 DOSBOXCFG
 
 # SFX decompression takes 3-8 minutes depending on host CPU speed
-timeout 600 flatpak run com.dosbox_x.DOSBox-X \
+timeout 600 flatpak run --env=SDL_VIDEODRIVER=dummy --env=SDL_AUDIODRIVER=dummy com.dosbox_x.DOSBox-X \
     -conf "$WORK/dosbox.conf" -nopromptfolder 2>/dev/null || true
 
 UC2DIST_COUNT=$(ls "$WORK/UC2DIST/" 2>/dev/null | wc -l)
@@ -69,7 +69,7 @@ DIR1_FILES=(hello.txt textfile.txt allbytes.bin random.bin)
 mkdir -p "$WORK/dir1_out"
 cat > "$WORK/dosbox.conf" <<DOSBOXCFG
 [sdl]
-output=none
+output=surface
 fullscreen=false
 [dosbox]
 memsize=16
@@ -85,14 +85,14 @@ echo DIR1 > C:\\DIR1.TXT
 exit
 DOSBOXCFG
 
-timeout 120 flatpak run com.dosbox_x.DOSBox-X \
+timeout 120 flatpak run --env=SDL_VIDEODRIVER=dummy --env=SDL_AUDIODRIVER=dummy com.dosbox_x.DOSBox-X \
     -conf "$WORK/dosbox.conf" -nopromptfolder 2>/dev/null || true
 
 # --- Session 2: original creates archive ---
 echo "=== Session 2 (Direction 2): UC2 Pro creates archive ==="
 cat > "$WORK/dosbox.conf" <<DOSBOXCFG
 [sdl]
-output=none
+output=surface
 fullscreen=false
 [dosbox]
 memsize=16
@@ -108,7 +108,7 @@ echo DONE > C:\\MARKER.TXT
 exit
 DOSBOXCFG
 
-timeout 300 flatpak run com.dosbox_x.DOSBox-X \
+timeout 300 flatpak run --env=SDL_VIDEODRIVER=dummy --env=SDL_AUDIODRIVER=dummy com.dosbox_x.DOSBox-X \
     -conf "$WORK/dosbox.conf" -nopromptfolder 2>/dev/null || true
 
 if [ ! -f "$WORK/MARKER.TXT" ]; then

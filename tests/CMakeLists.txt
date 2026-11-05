@@ -221,3 +221,8 @@ file(GLOB FUZZ_ARTIFACTS
     "${CMAKE_CURRENT_SOURCE_DIR}/fuzz/seeds/*")
 add_test(NAME fuzz_regression COMMAND fuzz_replay ${FUZZ_ARTIFACTS})
 set_tests_properties(fuzz_regression PROPERTIES TIMEOUT 30)
+
+add_executable(test_writer src/test_writer.c)
+target_link_libraries(test_writer PRIVATE uc2)
+target_compile_features(test_writer PRIVATE c_std_99)
+add_test(NAME writer COMMAND test_writer)

@@ -36,6 +36,13 @@ Modes
    bytes. Ungrouped files receive a fallback custom master, because direct
    use of SuperMaster in file records hangs the original UC2 Pro reader.
 
+   The destination is replaced after successful archive assembly and output
+   close. Inputs spool to temporary files first; keep them unchanged during
+   creation. Symlinks and special files are rejected. Names must be UTF-8 and
+   representable in CP850, within 255 CP850 / 299 UTF-8 bytes per component.
+   Total input and output are each limited to UINT32_MAX bytes. The writer
+   accepts empty directories and uses the same C API as Python UC2Writer.
+
 Options
 -------
 
