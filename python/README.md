@@ -7,8 +7,8 @@ or compiler is needed when a wheel is available.
 
 This is an alpha release. It supports the implemented legacy Huffman methods,
 master dictionaries, directories, stored versions, and UC2 v3 rANS entries.
-Turbo/method 80 and multi-volume archives remain unsupported. Python archive
-creation is not yet an API; the bundled CLI provides that operation.
+Turbo/method 80 and multi-volume archives remain unsupported. The Python API
+is read-only; use the bundled CLI to create archives.
 
 ## Install and read
 
@@ -17,6 +17,9 @@ python -m pip install --pre uc2
 uc2 -l archive.uc2
 python -m uc2 -t archive.uc2
 ```
+
+Wheels support CPython 3.10-3.14 on Linux x86-64 (glibc), Windows x86-64,
+and Intel/Apple Silicon macOS.
 
 ```python
 from uc2 import UC2File
@@ -70,20 +73,19 @@ characters, ambiguous case-folded names, and links below the destination. It
 uses file-descriptor-relative operations without following links on POSIX.
 Windows checks links and reparse points; use a destination that other processes
 cannot modify during extraction. The explicitly chosen destination itself may
-be a symlink. Files and directories receive ordinary new-file permissions;
-archived permissions and timestamps are exposed as metadata but not applied.
+be a symlink. POSIX files use mode 0600 and directories use 0755, both masked
+by the process umask. Archived permissions and timestamps are exposed as
+metadata but not applied.
 
 Errors include `BadArchiveError`, `ResourceLimitError`, `UnsafePathError`, and
 ordinary Python I/O exceptions. Verification uses the archive's legacy
-checksums, which are not cryptographic authentication. The known unfinished
-BLAKE3 module in the larger project is not exposed by this API or used by the
-archive reader.
+checksums, which are not cryptographic authentication. A missing entry or
+version raises `KeyError`.
 
 ## Build from source
 
 Requires Python 3.10+, CMake, and a C99 compiler. The build backend obtains
-CMake when necessary. Building a source distribution requires a compiler;
-install a matching wheel to avoid that requirement.
+CMake when necessary.
 
 ```sh
 python -m pip install .

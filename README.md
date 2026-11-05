@@ -4,7 +4,8 @@ A cross-platform revival of UltraCompressor II, the DOS-era archiver by
 Nico de Vries (1992-1996). UC2 used shared compression dictionaries
 ("master blocks") and file versioning.
 
-UC2 v3 is under development in portable C99. Compression levels 2-5 use the original Huffman format;
+UC2 v3 is under development in portable C99. Compression levels 2-5 use the
+original Huffman format;
 levels 6-9 require the new rANS reader. Original-format compatibility is
 covered by DOSBox-X fixtures, but some legacy methods, including Turbo/method
 80, remain unsupported.
@@ -72,7 +73,8 @@ cmake --build build
 ctest --test-dir build --output-on-failure -E roundtrip_dosbox
 ```
 
-Python 3.11 or newer enables the Python integration tests. The separate
+The CMake CLI integration tests require Python 3.11 or newer. The Python
+package itself supports Python 3.10 or newer. The separate
 `roundtrip_dosbox` test requires the DOSBox-X environment described in
 `tests/scripts/roundtrip_dosbox.sh`.
 

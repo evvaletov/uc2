@@ -4,6 +4,7 @@ from pathlib import Path
 import random
 import subprocess
 import sys
+import weakref
 
 import pytest
 import uc2
@@ -222,3 +223,47 @@ def test_file_read_errors_are_preserved(archive):
             raise OSError("simulated source read failure")
     with pytest.raises(OSError, match="simulated source read failure"):
         uc2.UC2File(BrokenFile(path.read_bytes()))
+
+
+def test_negative_limits_cannot_disable_bounds(archive):
+    path, _ = archive
+    with uc2.UC2File(path) as reader:
+        reader.max_read_size = -1
+        with pytest.raises(ValueError, match="positive"):
+            reader.read("notes.txt")
+        reader.max_extract_size = -1
+        with pytest.raises(ValueError, match="positive"):
+            reader.copy_to("notes.txt", io.BytesIO())
+    with pytest.raises(ValueError, match="positive"):
+        uc2._native.Reader(io.BytesIO(path.read_bytes()), max_decoder_memory=-1)
+
+
+def test_ambiguous_directory_records_are_rejected():
+    # Rows are the decoder's metadata boundary: parent, id, directory, name,
+    # size, compressed size, date, attributes, method.
+    def row(name, *, parent=0, identifier=0, directory=False):
+        return (parent, identifier, directory, name, 0, 0, 0, 0, 0)
+    malformed = [[row(name)] for name in ("", "a/b", "a\\b")]
+    malformed += [[row("a", identifier=1, directory=True), row("a")],
+                  [row("a", identifier=1, directory=True),
+                   row("a", identifier=2, directory=True)]]
+    for rows in malformed:
+        reader = uc2.UC2File.__new__(uc2.UC2File)
+        with pytest.raises(uc2.BadArchiveError):
+            reader._build_index(rows)
+
+
+def test_gc_during_callbacks_and_unreachable_cycle(archive):
+    path, files = archive
+    class CollectingFile(io.BytesIO):
+        def read(self, size=-1):
+            gc.collect()
+            return super().read(size)
+    source = CollectingFile(path.read_bytes())
+    reader = uc2.UC2File(source)
+    source.owner = reader
+    assert reader.read("notes.txt") == files["notes.txt"]
+    reference = weakref.ref(source)
+    del source, reader
+    gc.collect()
+    assert reference() is None

@@ -98,14 +98,14 @@ static int reader_init(Reader *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *source;
     Py_ssize_t maximum = 100000;
-    unsigned long long memory = 64 * 1024 * 1024;
+    long long memory = 64 * 1024 * 1024;
     static char *names[] = {"source", "max_entries", "max_decoder_memory", NULL};
     if (self->initialized) {
         PyErr_SetString(PyExc_RuntimeError, "reader cannot be initialized twice"); return -1;
     }
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|nK", names, &source, &maximum, &memory))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|nL", names, &source, &maximum, &memory))
         return -1;
-    if (maximum < 1 || memory < 1 || memory > SIZE_MAX) {
+    if (maximum < 1 || memory < 1 || (unsigned long long)memory > SIZE_MAX) {
         PyErr_SetString(PyExc_ValueError, "reader limits must be positive and fit this platform"); return -1;
     }
     self->initialized = 1; self->max_entries = maximum;
@@ -173,13 +173,14 @@ static PyObject *reader_entries(Reader *self, PyObject *unused)
     }
     return list;
 }
-struct output { PyObject *writer; char *buffer; size_t size, written; };
+struct output { PyObject *writer; char *buffer; size_t size, written; Reader *reader; };
 static int write_data(void *ctx, const void *data, unsigned len)
 {
     struct output *out = ctx;
     if (PyErr_Occurred() || PyErr_CheckSignals() < 0) return -1;
     if (len > out->size - out->written) {
-        PyErr_SetString(PyExc_OSError, "decoder exceeded the declared size"); return -1;
+        struct module_state *state = PyType_GetModuleState(Py_TYPE(out->reader));
+        PyErr_SetString(state->bad_archive, "decoder exceeded the declared size"); return -1;
     }
     if (out->buffer) memcpy(out->buffer + out->written, data, len);
     if (out->writer && out->writer != Py_None) {
@@ -224,8 +225,9 @@ static int extract(Reader *self, struct uc2_entry *entry, struct output *out)
 static PyObject *reader_read(Reader *self, PyObject *args)
 {
     Py_ssize_t index;
-    unsigned long long limit;
-    if (!PyArg_ParseTuple(args, "nK", &index, &limit)) return NULL;
+    long long limit;
+    if (!PyArg_ParseTuple(args, "nL", &index, &limit)) return NULL;
+    if (limit < 1) { PyErr_SetString(PyExc_ValueError, "read limit must be positive"); return NULL; }
     struct uc2_entry *entry = get_entry(self, index, limit);
     if (!entry) return NULL;
 #if SIZE_MAX <= UINT_MAX
@@ -233,7 +235,7 @@ static PyObject *reader_read(Reader *self, PyObject *args)
 #endif
     PyObject *bytes = PyBytes_FromStringAndSize(NULL, (Py_ssize_t)entry->size);
     if (!bytes) return NULL;
-    struct output out = { NULL, PyBytes_AS_STRING(bytes), entry->size, 0 };
+    struct output out = { NULL, PyBytes_AS_STRING(bytes), entry->size, 0, self };
     if (extract(self, entry, &out) < 0) { Py_DECREF(bytes); return NULL; }
     return bytes;
 }
@@ -241,14 +243,15 @@ static PyObject *reader_copy(Reader *self, PyObject *args)
 {
     Py_ssize_t index;
     PyObject *writer;
-    unsigned long long limit;
-    if (!PyArg_ParseTuple(args, "nOK", &index, &writer, &limit)) return NULL;
+    long long limit;
+    if (!PyArg_ParseTuple(args, "nOL", &index, &writer, &limit)) return NULL;
+    if (limit < 1) { PyErr_SetString(PyExc_ValueError, "stream limit must be positive"); return NULL; }
     if (writer != Py_None && !PyCallable_Check(writer)) {
         PyErr_SetString(PyExc_TypeError, "writer must be callable or None"); return NULL;
     }
     struct uc2_entry *entry = get_entry(self, index, limit);
     if (!entry) return NULL;
-    struct output out = { writer, NULL, entry->size, 0 };
+    struct output out = { writer, NULL, entry->size, 0, self };
     if (extract(self, entry, &out) < 0) return NULL;
     return PyLong_FromSize_t(out.written);
 }

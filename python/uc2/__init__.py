@@ -97,6 +97,8 @@ class UC2File:
     def _build_index(self, rows):
         directories = {}
         for parent, identifier, directory, name, *_ in rows:
+            if not name or "/" in name or "\\" in name:
+                raise BadArchiveError("invalid archive name component")
             if directory:
                 if identifier == 0 or identifier in directories:
                     raise BadArchiveError("duplicate or invalid directory identifier")
@@ -117,6 +119,11 @@ class UC2File:
             return list(reversed(parts))
 
         paths = ["/".join([*parent_names(row[0]), row[3]]) for row in rows]
+        kinds = {}
+        for row, path in zip(rows, paths):
+            if path in kinds and (row[2] or kinds[path]):
+                raise BadArchiveError("conflicting archive directory paths")
+            kinds[path] = bool(row[2])
         versions = {}
         infos = [None] * len(rows)
         for index in reversed(range(len(rows))):
