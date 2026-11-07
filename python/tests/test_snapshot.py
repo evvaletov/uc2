@@ -88,7 +88,7 @@ def test_empty_limits_lock_and_cli(tmp_path):
         s.restore(repo, result['snapshot'], src)
 
 
-@pytest.mark.parametrize('name', ['../escape', '/absolute', 'C:drive', 'con', 'a.', 'a\\b', 'a//b'])
+@pytest.mark.parametrize('name', ['../escape', '/absolute', 'C:drive', 'con', 'a.', 'a\\b', 'a//b', 'CONIN$', 'ConOut$.log', 'CON .txt', 'aux  .foo'])
 def test_unsafe_manifest_paths(tmp_path, name):
     src, repo = tmp_path/'src', tmp_path/'repo'
     src.mkdir(); (src/'a').write_bytes(b'payload')

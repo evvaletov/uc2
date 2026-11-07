@@ -30,7 +30,7 @@ MAX_MANIFEST = 64 * 1024 * 1024
 MAX_ENTRIES = 100_000
 MAX_REFS = 500_000
 DIGEST = re.compile(r"[0-9a-f]{64}\Z")
-RESERVED = re.compile(r"(?:con|prn|aux|nul|com[1-9¹²³]|lpt[1-9¹²³])(?:\.|$)", re.I)
+RESERVED = re.compile(r"(?:con|conin\$|conout\$|prn|aux|nul|com[1-9¹²³]|lpt[1-9¹²³])\Z", re.I)
 
 
 def _json(value):
@@ -169,7 +169,7 @@ def _path(value):
         raise ValueError("snapshot path exceeds 64 components")
     for part in parts:
         if (part in ("", ".", "..") or part[-1:] in (".", " ") or
-                RESERVED.match(part) or len(part.encode("utf-8")) > 240 or
+                RESERVED.fullmatch(part.partition(".")[0].rstrip(" ")) or len(part.encode("utf-8")) > 240 or
                 any(ord(c) < 32 or ord(c) == 127 or c in '\\:< >"|?*'.replace(" ", "") for c in part)):
             raise ValueError(f"path cannot be restored portably: {value!r}")
     return tuple(parts)
