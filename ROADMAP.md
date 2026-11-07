@@ -2,7 +2,7 @@
 
 ## Recommended next priorities (2026-11-07)
 
-The alpha8 candidate implements the previous top three: incremental directory
+Published alpha8 implements the previous top three: incremental directory
 snapshots, Turbo reads with a broader corpus, and bounded libarchive review
 preparation. The separate project-wide task-qa + task-at audit remains open
 (c9edf0b). The next five priorities are below.
@@ -61,6 +61,8 @@ preparation. The separate project-wide task-qa + task-at audit remains open
   the full package. CMake dependency checks and Autotools link checks are in
   the prepared patch. No upstream submission has been made.
 
+- Release and scoped review evidence: [alpha8 verification](docs/releases/3.0.0a8-qa.md).
+
 ### Delivered in 3.0.0a7: browser reader and preservation toolkit
 
 - [x] Local-only [browser reader](https://evvaletov.github.io/uc2/reader/):
@@ -79,8 +81,8 @@ preparation. The separate project-wide task-qa + task-at audit remains open
   passes and all 88 decoded hashes/sizes agree with an independent Go decoder.
   Third-party archive bytes are fetched separately; only URLs, hashes and
   metadata are redistributed. [Corpus provenance](tests/archives/README.md).
-- [ ] Turbo/method 80 and multi-volume decoding remain compatibility work;
-  neither is implied by this release. Chromium is the browser tested so far.
+At alpha7, Turbo and multi-volume decoding were unsupported. Alpha8 adds
+Turbo; direct multi-volume input remains open. Chromium is the tested browser.
 - Release and scoped review evidence: [alpha7 verification](docs/releases/3.0.0a7-qa.md).
 
 ### Delivered in 3.0.0a6: writer APIs and audit repairs
@@ -490,6 +492,14 @@ Bobrowski already shipped prototypes; update for UC2 v3.
 - Phase 9: ZK proof soundness and completeness
 
 ## Maintenance Log
+
+- 2026-11-07: Published alpha8 from `0597a35`: incremental directory snapshots,
+  Turbo/method 80, the 39-archive/684-entry interoperability corpus, and bounded
+  libarchive review preparation. Verified public package/release hashes, live
+  Turbo downloads and the installed commands. Snapshots and Turbo are closed;
+  retention/recovery, direct multi-volume input and upstream review remain open.
+  The next five priorities are listed at the top of this file. Evidence:
+  `docs/releases/3.0.0a8-qa.md`; the full-project audit remains open.
 
 - 2026-11-07: Published alpha7 from `3d2e3de`: local-only browser reader,
   verified collection inventory/ZIP/tar migration, original-encoder corpus
