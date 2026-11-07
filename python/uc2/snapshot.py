@@ -453,7 +453,12 @@ def verify(repository, address, *, max_total_size=1 << 40):
 
 
 def restore(repository, address, destination, *, max_total_size=1 << 40):
-    """Verify and restore into a NEW directory; failures publish no destination."""
+    """Verify and restore into a NEW directory before publishing it.
+
+    A pre-publication failure leaves no partial destination. A final directory
+    sync error may be reported after the complete destination is published.
+    Cleanup errors propagate; an unavailable filesystem may retain staging.
+    """
     _integer(max_total_size, 0, (1 << 63) - 1)
     root = _repository(repository)
     manifest = _manifest(root, address, max_total_size)

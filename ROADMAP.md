@@ -21,7 +21,8 @@ preparation. The separate project-wide task-qa + task-at audit remains open
    Add explicit retention/pruning with reachability checks, safer recovery
    tooling and larger-collection measurements. Reduce per-chunk archive and
    full-manifest overhead. The initial SHA-256 store has no automatic pruning
-   or redundancy and caps entries/references. [Current contract](docs/snapshots.md).
+   or redundancy and caps entries/references. Tracking: ecb9dc7.
+   [Current contract](docs/snapshots.md).
 
 4. [ ] **Read SAS/UC2SEA multi-volume collections directly.**
    The corpus now includes original SAS 2.3 split parts and verified original
@@ -48,7 +49,8 @@ preparation. The separate project-wide task-qa + task-at audit remains open
   an intact copy verified. [Measurements and limits](docs/benchmarks/2026-11-07-snapshots.md).
 - [x] Turbo/method 80 decoder, with SuperMaster/NoMaster fixtures verified by
   the original DOS executable and an independent Go decoder. Eighteen
-  length/master cases and malformed-stream tests exercise the new code.
+  length/master cases, chained dictionaries, malformed streams and
+  allocation-failure retries exercise the new code.
 - [x] Optional corpus expanded to 39 archives and 684 entries: 13 historical
   collections, four unarc-rs fixtures and 22 original-encoder oracle archives.
   Every file size/hash agrees with Go; ZIP and tar migrations pass. Three SAS
@@ -312,7 +314,7 @@ No mainstream archiver offers post-quantum encryption.
       and `uc2 -l <archive>` under DOSBox-X via the flatpak; verifies
       the cross-compiled binary actually loads under a real DPMI host.
       Real vintage hardware test still pending.
-- [ ] Method 80 (Turbo) support
+- [x] Method 80 (Turbo) reading, including master dictionaries (alpha8).
 - [ ] Multi-volume archive spanning across physical media (floppies)
 - [ ] Self-extracting archives per platform (DOS COM/EXE, Linux ELF, Windows PE)
 - [ ] ANSI art progress display, CP850 codepage handling
@@ -438,8 +440,9 @@ uc2 --ingest-restore backup.uc2 > restored.tar
       follow-up.
 - [ ] Tar-entry preservation: parse tar boundaries inside --ingest
       so individual files are recoverable as archive entries (bd13adb)
-- [ ] Incremental snapshots: `uc2 snapshot /path repo.uc2`
-      (borg/restic-style deduplicating backups without filesystem support)
+- [x] Incremental directory snapshots: `uc2 snapshot create /path repository`
+      through the Python CLI; shared verified chunks and independent restores.
+      Retention, pruning and larger-collection work remain open (ecb9dc7).
 
 ### Foreign archive format support
 

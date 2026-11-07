@@ -11,11 +11,11 @@ module. No existing UC2 or third-party source license changes. Enable it
 explicitly with CMake `-DENABLE_UC2READ=ON` or Autotools `--with-uc2read`.
 The default build does not acquire the dependency and reports UC2 unavailable.
 
-The adapter reads historical supported Huffman/delta entries and custom
-dictionaries. rANS, encrypted and multi-volume archives are outside
+The adapter reads historical supported Huffman/delta and Turbo entries,
+including custom dictionaries. rANS, encrypted and multi-volume archives are outside
 this proposed dependency's scope. The regular UC2 release retains rANS.
 The patch includes registration by code, public declarations, CMake/Autotools
-wiring, and generated fixtures for a successful legacy read and rANS rejection.
+wiring, and fixtures for legacy/Turbo reads, quota failures and rANS rejection.
 
 Input and decoded payloads spool to temporary files. Decoder allocations,
 including cached dictionaries, and adapter metadata/paths share a **64 MiB**
