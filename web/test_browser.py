@@ -368,9 +368,12 @@ def main():
             expect(page.locator('#workspace')).to_be_visible(timeout=30000)
             server.overrides = {}
             assert not errors, errors
-            assert all(method == 'GET' and target.startswith(url) for method, target in requests), requests
+            # WebKit exposes local Blob reads as GET requests as well.
+            unexpected = [(method, target) for method, target in requests
+                          if method != 'GET' or not target.startswith((url, 'blob:' + url))]
+            assert not unexpected, unexpected
             browser.close()
-            print(f'{args.engine} checks passed: original fixtures, rANS, versions, verified ZIP/CRC/hash/paths, selection, limits, corruption, cancellation, timeout recovery, offline use/repair/update/integrity, mobile layout, and no uploads.')
+            print(f'{args.engine} {browser.version} checks passed: original fixtures, rANS, versions, verified ZIP/CRC/hash/paths, selection, limits, corruption, cancellation, timeout recovery, offline use/repair/update/integrity, mobile layout, and no uploads.')
     finally:
         server.shutdown()
         server.server_close()

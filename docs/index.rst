@@ -10,7 +10,8 @@ UC2 v3 brings it back as a modern, portable C99 tool with both
 decompression and compression, targeting Linux, macOS, Windows, and DOS.
 
 `Open an archive in your browser <reader/>`_ to inspect stored versions,
-verify checksums and download files. Archive data stays on your device.
+verify checksums and download selected file versions as a ZIP. Save the reader
+for offline use while connected. Archive data stays on your device.
 For collections, ``uc2-preserve`` inventories and migrates UC2 archives to
 verified ZIP/tar exports. See the `preservation guide
 <https://github.com/evvaletov/uc2/blob/main/docs/preservation.md>`_.

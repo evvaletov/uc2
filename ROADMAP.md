@@ -43,7 +43,7 @@ The next five priorities are below.
   portable paths, metadata and SHA-256 inventory; explicit count/output limits
   and no partial download on failure or cancellation.
 - [x] Optional offline reader with digest-checked static assets, cache repair
-  and updates that wait for existing tabs to close. Archives are never cached.
+  and updates that wait for existing tabs to close. User archives are never cached.
   Install metadata supports browsers that offer a standalone shortcut.
 - [x] Chromium, Firefox and WebKit automation covers ZIP bytes/CRCs, historical
   codecs, stored versions, offline export, cache eviction/repair and update
