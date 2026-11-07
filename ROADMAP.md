@@ -1,10 +1,12 @@
 # UC2 Roadmap
 
-## Recommended next priorities (2026-11-05)
+## Recommended next priorities (2026-11-07)
 
 The Python reader/writer, native CLI, mount, and integration packages are implemented.
 These are the next five priorities. The phases below remain the longer-term feature inventory;
 the additional project-wide task-qa + task-at audit remains open.
+The order was checked against alpha6, GitHub main, and the open tracker on
+November 7. All five items still need work.
 
 1. [ ] **Build a browser-only UC2 reader and inspector.**
    Let someone drop an old archive onto a page, inspect entries and versions,
@@ -453,6 +455,14 @@ Bobrowski already shipped prototypes; update for UC2 v3.
 - Phase 9: ZK proof soundness and completeness
 
 ## Maintenance Log
+
+- 2026-11-07: Updated the GitHub repository description to "UltraCompressor II
+  for Linux, macOS, Windows and DOS" and verified it through the GitHub API.
+  Gemini, Grok, and Kimi reviewed the original and replacement. The final
+  eight-word description passes the prose scan. Optional suggestions to add
+  "archiver", a serial comma, or "(DJGPP)" were left out to keep the description
+  short; build and packaging details remain in the README. This review covers
+  the description only. The project-wide independent audit (c9edf0b) remains open.
 
 - 2026-11-05: Completed the compression, integration packaging, and FUSE work
   for alpha5. The measured source-collection improvements and CPU tradeoffs
