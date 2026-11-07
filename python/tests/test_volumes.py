@@ -92,3 +92,28 @@ def test_short_final_sea_part(tmp_path):
     wrong=tmp_path/'MORE.000';wrong.write_bytes(part.read_bytes())
     with pytest.raises(BadArchiveError, match='start at .001'):
         UC2File(wrong)
+
+
+
+def test_native_path_preserves_python_file_handles(tmp_path):
+    import subprocess
+    import sys
+    code = r"""
+import tempfile
+from pathlib import Path
+from uc2 import UC2File
+import sys
+handles=[tempfile.TemporaryFile() for _ in range(12)]
+for i,h in enumerate(handles):
+    h.write(bytes([i])*100);h.flush()
+for _ in range(8):
+    with UC2File(sys.argv[1]) as archive:
+        assert archive.read('SUB/NOTE.TXT') == b'UC2SEA nested file\r\n'*17
+for i,h in enumerate(handles):
+    h.seek(0);assert h.read()==bytes([i])*100;h.close()
+print('handles preserved')
+"""
+    result=subprocess.run([sys.executable,'-c',code,str(FIXTURES/'sea'/'MORE.EXE')],
+                          cwd=tmp_path,capture_output=True,text=True)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == 'handles preserved'

@@ -3,6 +3,7 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <limits.h>
+#include <errno.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,9 +11,8 @@
 #include <uc2/uc2_path.h>
 #ifdef _WIN32
 #include <io.h>
-#define dup _dup
-#define close _close
-#define fileno _fileno
+#include <fcntl.h>
+#include <windows.h>
 #else
 #include <unistd.h>
 #endif
@@ -317,11 +317,42 @@ static PyObject *open_path(PyObject *module, PyObject *args)
         PyErr_SetString(state->bad_archive,error);
         return NULL;
     }
-    int fd=dup(fileno(stream));
+#ifdef _WIN32
+    /* The wheel uses a static CRT, whose descriptor table differs from
+       CPython's CRT. Transfer a duplicated OS handle through Python's msvcrt. */
+    PyObject *crt=PyImport_ImportModule("msvcrt");
+    PyObject *os=crt ? PyImport_ImportModule("os") : NULL;
+    if (!os) { Py_XDECREF(crt);fclose(stream);return NULL; }
+    HANDLE duplicate=NULL;
+    BOOL copied=DuplicateHandle(GetCurrentProcess(),(HANDLE)_get_osfhandle(_fileno(stream)),
+                                GetCurrentProcess(),&duplicate,0,FALSE,DUPLICATE_SAME_ACCESS);
+    DWORD error_code=copied ? 0 : GetLastError();
     fclose(stream);
-    if (fd<0) return PyErr_SetFromErrno(PyExc_OSError);
+    if (!copied) { Py_DECREF(crt);Py_DECREF(os);return PyErr_SetFromWindowsErr(error_code); }
+    PyObject *handle=PyLong_FromVoidPtr(duplicate);
+    PyObject *descriptor=handle ? PyObject_CallMethod(crt,"open_osfhandle","Oi",handle,
+                                      _O_RDONLY|_O_BINARY|_O_NOINHERIT) : NULL;
+    Py_XDECREF(handle);Py_DECREF(crt);
+    if (!descriptor) { CloseHandle(duplicate);Py_DECREF(os);return NULL; }
+    int fd=(int)PyLong_AsLong(descriptor);
+    Py_DECREF(descriptor);
+    PyObject *result=PyFile_FromFd(fd,path,"rb",-1,NULL,NULL,NULL,1);
+    if (!result) {
+        PyObject *kind,*value,*traceback;
+        PyErr_Fetch(&kind,&value,&traceback);
+        PyObject *closed=PyObject_CallMethod(os,"close","i",fd);
+        Py_XDECREF(closed);
+        PyErr_Restore(kind,value,traceback);
+    }
+    Py_DECREF(os);
+#else
+    int fd=dup(fileno(stream));
+    int saved_errno=errno;
+    fclose(stream);
+    if (fd<0) { errno=saved_errno;return PyErr_SetFromErrno(PyExc_OSError); }
     PyObject *result=PyFile_FromFd(fd,path,"rb",-1,NULL,NULL,NULL,1);
     if (!result) close(fd);
+#endif
     return result;
 }
 static PyMethodDef module_methods[] = {
