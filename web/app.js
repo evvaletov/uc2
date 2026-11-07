@@ -5,6 +5,7 @@ let worker = null, pending = null, serial = 0, epoch = 0;
 let entries = [], selected = null, currentFile = null, busy = false;
 const checks = new Map();
 const hashes = new Map();
+const included = new Set();
 
 function status(text, error = false) {
   $('status').textContent = text;
@@ -19,10 +20,12 @@ function size(value) {
 }
 function setBusy(value) {
   busy = value;
-  for (const id of ['archive', 'sample', 'verify', 'inventory']) $(id).disabled = value;
+  for (const id of ['archive', 'sample', 'verify', 'inventory', 'include-matching', 'clear-selection']) $(id).disabled = value;
   $('verify').disabled = value || !worker || !currentFile;
   $('cancel').hidden = !value;
   $('download').disabled = value || !worker || !selected || selected.directory || selected.size > 64 * 1024 * 1024;
+  $('download-zip').disabled = value || !worker || !currentFile || !included.size;
+  for (const box of $('entries').querySelectorAll('input')) box.disabled = value;
 }
 function resetWorker() {
   if (worker) worker.terminate();
@@ -43,7 +46,8 @@ function request(action, data = {}) {
       if (reply.progress !== undefined) {
         pending.resetTimer();
         if (reply.result) checks.set(reply.result.index, reply.result);
-        status(`Checking ${reply.progress} of ${reply.total} stored files…`);
+        if (reply.result?.sha256) hashes.set(reply.result.index, reply.result.sha256);
+        status(`${pending.action === 'zip' ? 'Preparing ZIP:' : 'Checking'} ${reply.progress} of ${reply.total} stored files…`);
         return;
       }
       const job = pending;
@@ -65,7 +69,7 @@ function request(action, data = {}) {
   return new Promise((resolve, reject) => {
     const id = ++serial;
     const deadline = performance.now() + 300000;
-    const job = {id, resolve, reject, timer: null, resetTimer() {
+    const job = {id, action, resolve, reject, timer: null, resetTimer() {
       clearTimeout(job.timer);
       job.timer = setTimeout(() => {
         if (worker) worker.terminate();
@@ -104,13 +108,29 @@ function select(row) {
   setBusy(busy);
   for (const tr of $('entries').children) tr.classList.toggle('selected', Number(tr.dataset.index) === row.index);
 }
-function render() {
+function matchingRows() {
   const query = $('search').value.toLocaleLowerCase();
-  const rows = entries.filter(row => ($('versions').checked || row.version === 0) && row.path.toLocaleLowerCase().includes(query));
+  return entries.filter(row => ($('versions').checked || row.version === 0) && row.path.toLocaleLowerCase().includes(query));
+}
+function selectionStatus() {
+  const total = entries.reduce((sum, row) => sum + (included.has(row.index) ? row.size : 0), 0);
+  $('selection-count').textContent = `${included.size} file versions selected · ${size(total)}`;
+  setBusy(busy);
+}
+function render() {
+  const rows = matchingRows();
   const fragment = document.createDocumentFragment();
   for (const row of rows.slice(0, 1000)) {
     const tr = document.createElement('tr'); tr.dataset.index = row.index;
     tr.classList.toggle('selected', selected?.index === row.index);
+    const choice = document.createElement('td');
+    if (!row.directory) {
+      const box = document.createElement('input'); box.type = 'checkbox'; box.checked = included.has(row.index);
+      box.disabled = busy; box.setAttribute('aria-label', `Include ${row.path} (version ${row.version})`);
+      box.addEventListener('change', () => { box.checked ? included.add(row.index) : included.delete(row.index); selectionStatus(); });
+      choice.append(box);
+    }
+    tr.append(choice);
     const path = document.createElement('td'), button = document.createElement('button');
     button.textContent = row.path + (row.directory ? '/' : '');
     button.addEventListener('click', () => select(row)); path.append(button); tr.append(path);
@@ -120,16 +140,17 @@ function render() {
     const td = document.createElement('td'), mark = document.createElement('span');
     const check = checks.get(row.index);
     mark.className = 'badge' + (check ? check.verified ? ' verified' : ' failed' : '');
-    mark.textContent = row.directory ? '—' : check?.verified ? 'Verified' : row.method === 80 ? 'Unsupported' : check ? row.size > 64 * 1024 * 1024 ? 'Limit' : 'Failed' : 'Unchecked';
+    mark.textContent = row.directory ? '—' : check?.verified ? 'Verified' : check ? row.size > 64 * 1024 * 1024 ? 'Limit' : 'Failed' : 'Unchecked';
     td.append(mark); tr.append(td); fragment.append(tr);
   }
   $('entries').replaceChildren(fragment);
   $('shown').textContent = rows.length > 1000 ? `Showing 1,000 of ${rows.length} entries. Narrow the search to see the rest.` : `${rows.length} entries shown`;
+  selectionStatus();
 }
 async function openArchive(file) {
   if (!file) return;
   const token = ++epoch;
-  resetWorker(); entries = []; selected = null; currentFile = null; checks.clear(); hashes.clear();
+  resetWorker(); entries = []; selected = null; currentFile = null; checks.clear(); hashes.clear(); included.clear();
   $('workspace').hidden = true; document.body.classList.remove('has-archive'); setBusy(true); status('Reading archive directory…');
   try {
     const reply = await request('open', {file});
@@ -161,7 +182,7 @@ $('drop').addEventListener('dragover', event => {event.preventDefault(); $('drop
 $('drop').addEventListener('dragleave', () => $('drop').classList.remove('drag'));
 $('drop').addEventListener('drop', event => {event.preventDefault(); $('drop').classList.remove('drag'); if (!busy) openArchive(event.dataTransfer.files[0]);});
 $('cancel').addEventListener('click', () => {
-  ++epoch; resetWorker(); entries = []; selected = null; currentFile = null;
+  ++epoch; resetWorker(); entries = []; selected = null; currentFile = null; included.clear();
   document.body.classList.remove('has-archive');
   $('workspace').hidden = true; $('archive').value = ''; setBusy(false); status('Cancelled. Choose an archive to start again.');
 });
@@ -205,7 +226,22 @@ $('download').addEventListener('click', async () => {
 $('inventory').addEventListener('click', () => {
   if (!currentFile) return;
   const report = {schema: 'uc2-browser-inventory-1', source: {name: currentFile.name, size: currentFile.size},
-    note: 'Checks describe UC2 checksum verification. SHA-256 is included only for files downloaded in this session. Keep the original archive.',
+    note: 'Checks describe UC2 checksum verification. SHA-256 is included for files decoded for individual or ZIP export in this session. Keep the original archive.',
     entries: entries.map(row => ({...row, check: checks.get(row.index) || null, sha256: hashes.get(row.index) || null}))};
   save(JSON.stringify(report, null, 2) + '\n', 'uc2-inventory.json', 'application/json');
+});
+$('include-matching').addEventListener('click', () => {
+  for (const row of matchingRows()) if (!row.directory) included.add(row.index);
+  render();
+});
+$('clear-selection').addEventListener('click', () => { included.clear(); render(); });
+$('download-zip').addEventListener('click', async () => {
+  const token = epoch; setBusy(true); status('Preparing verified ZIP…');
+  try {
+    const {blob, count} = await request('zip', {indices: [...included]});
+    if (token !== epoch) return;
+    save(blob, 'uc2-export.zip', 'application/zip');
+    status(`Saved ${count} verified file versions and their inventory in uc2-export.zip.`);
+  } catch (error) { if (token === epoch) status(error.message, true); }
+  finally { if (token === epoch) { setBusy(false); render(); if (selected) select(selected); } }
 });

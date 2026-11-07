@@ -149,7 +149,9 @@ and the proposed format ID remains pending.
 ### Browser reader and preservation tool
 
 The browser bridge, UI, build script and browser tests in `web/` use the
-repository's GPL-3.0-or-later license. The WebAssembly build links the existing
+repository's GPL-3.0-or-later license. The independently written ZIP STORE
+helper `web/zip.js` uses the approved GPL-3.0-or-later OR BSD-2-Clause choice
+for integration glue. The WebAssembly build links the existing
 LGPL decoder and GPL lookup tables/rANS implementation; their source licenses
 are unchanged. The static distribution includes license texts and credits,
 plus an exact corresponding-source archive URL in `BUILD-INFO.json`.

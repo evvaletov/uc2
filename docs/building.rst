@@ -74,9 +74,11 @@ its per-user installation. It requires the UC2 CLI on PATH or in ``UC2``.
 
 ``contrib/totalcommander/README.md`` describes the Windows WCX plugin. Enable
 ``UC2_BUILD_WCX`` and provide ``UC2_WCX_SDK_DIR`` containing the official SDK's
-``wcxhead.h``. The alpha5 packages include 32- and 64-bit DLLs tested in native
-Total Commander 11.58.1. The 32-bit host needs the documented ``.u2r`` copy
-workaround for its built-in legacy ``.uc2`` extraction routing.
+``wcxhead.h``. Release packages include 32- and 64-bit DLLs tested in native
+Total Commander 11.58.1. Both architectures use normal ``.uc2`` registration.
+Users of the old workaround should remove their ``*.uc2`` / ``**u2r`` internal
+association as described in the plugin README.
+
 
 Build Options
 -------------

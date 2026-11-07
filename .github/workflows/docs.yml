@@ -42,8 +42,10 @@ jobs:
 
       - name: Test browser reader
         run: |
-          python -m playwright install --with-deps chromium
-          python web/test_browser.py --dist docs/_build/html/reader
+          python -m playwright install --with-deps chromium firefox webkit
+          for engine in chromium firefox webkit; do
+            python web/test_browser.py --dist docs/_build/html/reader --engine "$engine"
+          done
 
       - uses: actions/upload-artifact@v4
         with:

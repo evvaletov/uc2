@@ -7,8 +7,11 @@ import hashlib
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import json
 from pathlib import Path
+import re
 import tempfile
 from threading import Thread
+from urllib.parse import urlsplit
+import zipfile
 
 from playwright.sync_api import sync_playwright, expect
 from uc2 import UC2File, UC2Writer
@@ -20,11 +23,46 @@ class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
         pass
 
+    def do_GET(self):
+        override = getattr(self.server, 'overrides', {}).get(urlsplit(self.path).path)
+        if override is not None:
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/javascript' if self.path.endswith('.js') else 'text/html')
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+            self.wfile.write(override)
+        else:
+            super().do_GET()
+
+
+def check_zip(path, archive, wanted=None):
+    """Check ZIP CRCs, portable unique names, metadata and decoded bytes independently."""
+    with zipfile.ZipFile(path) as exported, UC2File(archive) as reference:
+        assert exported.testzip() is None
+        report = json.loads(exported.read('inventory.json'))
+        assert report['schema'] == 'uc2-browser-export-1'
+        files = report['files']
+        expected = [info for info in reference.infolist(all_versions=True) if not info.is_dir()]
+        if wanted is not None:
+            expected = [info for info in expected if (info.filename, info.version) in wanted]
+        assert len(files) == len(expected), (files, expected)
+        assert len(exported.namelist()) == len(files) + 1
+        assert len(set(name.lower() for name in exported.namelist())) == len(files) + 1
+        for row, info in zip(files, expected):
+            assert (row['path'], row['version']) == (info.filename, info.version)
+            assert re.fullmatch(r'files/\d+-v\d+-[A-Za-z0-9._-]+', row['output'])
+            data = exported.read(row['output'])
+            assert data == reference.read(info), row['path']
+            assert row['size'] == len(data) and row['verified'] is True
+            assert row['sha256'] == hashlib.sha256(data).hexdigest()
+            assert exported.getinfo(row['output']).compress_type == zipfile.ZIP_STORED
+
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dist', type=Path, default=ROOT / 'web/dist')
     parser.add_argument('--browser')
+    parser.add_argument('--engine', choices=('chromium', 'firefox', 'webkit'), default='chromium')
     parser.add_argument('--screenshot', type=Path)
     args = parser.parse_args()
     server = ThreadingHTTPServer(('127.0.0.1', 0), partial(QuietHandler, directory=str(args.dist)))
@@ -34,12 +72,13 @@ def main():
     try:
         with tempfile.TemporaryDirectory(prefix='uc2-browser-test-') as temporary, sync_playwright() as pw:
             scratch = Path(temporary)
-            browser = pw.chromium.launch(headless=True, executable_path=args.browser)
+            browser = getattr(pw, args.engine).launch(headless=True, executable_path=args.browser)
             context = browser.new_context(accept_downloads=True)
             page = context.new_page()
-            errors, requests = [], []
+            errors, requests, downloads = [], [], []
             page.on('pageerror', lambda error: errors.append(str(error)))
             context.on('request', lambda request: requests.append((request.method, request.url)))
+            page.on('download', lambda download: downloads.append(download))
             page.goto(url)
             page.get_by_role('button', name='Try the sample archive').click()
             expect(page.locator('#workspace')).to_be_visible(timeout=30000)
@@ -93,6 +132,26 @@ def main():
             with page.expect_download() as downloaded:
                 page.get_by_role('button', name='Save verified file').click()
             assert downloaded.value.suggested_filename == 'entry-CON.txt'
+            # Selection survives filtering. Older versions have separate ZIP
+            # paths, and the exported inventory maps those paths back exactly.
+            page.get_by_role('button', name='Select matching files').click()
+            expect(page.locator('#selection-count')).to_contain_text('5 file versions')
+            page.locator('#versions').uncheck()
+            page.locator('#search').fill('café')
+            expect(page.locator('#entries tr')).to_have_count(1)
+            expect(page.locator('#selection-count')).to_contain_text('5 file versions')
+            with page.expect_download() as downloaded:
+                page.get_by_role('button', name='Save selected ZIP').click()
+            downloaded.value.save_as(scratch / 'all.zip')
+            check_zip(scratch / 'all.zip', modern)
+            page.get_by_role('button', name='Clear selection').click()
+            expect(page.locator('#download-zip')).to_be_disabled()
+            page.get_by_role('button', name='Select matching files').click()
+            with page.expect_download() as downloaded:
+                page.get_by_role('button', name='Save selected ZIP').click()
+            downloaded.value.save_as(scratch / 'latest.zip')
+            check_zip(scratch / 'latest.zip', modern, {('folder/café.txt', 0)})
+            page.locator('#versions').check()
             page.locator('#search').fill('café')
             expect(page.locator('#entries tr')).to_have_count(2)
             for font in ('system-ui', 'Arial', 'monospace'):
@@ -120,6 +179,33 @@ def main():
             page.locator('#archive').set_input_files(modern)
             expect(page.locator('#verify')).to_be_enabled(timeout=30000)
 
+            # A bad checksum never produces a partial ZIP or a false success.
+            page.locator('#archive').set_input_files(ROOT / 'tests/fuzz/regressions/turbo-empty-checksum.uc2')
+            expect(page.locator('#workspace')).to_be_visible(timeout=30000)
+            page.get_by_role('button', name='Select matching files').click()
+            before = len(downloads)
+            page.get_by_role('button', name='Save selected ZIP').click()
+            expect(page.locator('#status')).to_contain_text('No ZIP was saved', timeout=30000)
+            assert len(downloads) == before
+            page.locator('#archive').set_input_files(modern)
+            expect(page.locator('#archive-name')).to_have_text(modern.name, timeout=30000)
+            page.get_by_role('button', name='Select matching files').click()
+            # Terminate in the same event-loop turn, before any reply can save.
+            page.evaluate("document.querySelector('#download-zip').click(); document.querySelector('#cancel').click()")
+            expect(page.locator('#status')).to_contain_text('Cancelled')
+            assert len(downloads) == before
+
+            many = scratch / 'many.uc2'
+            with UC2Writer(many, level=8) as writer:
+                for i in range(1001):
+                    writer.writestr(f'file-{i:04d}', b'')
+            page.locator('#archive').set_input_files(many)
+            expect(page.locator('#archive-name')).to_have_text(many.name, timeout=30000)
+            page.get_by_role('button', name='Select matching files').click()
+            page.get_by_role('button', name='Save selected ZIP').click()
+            expect(page.locator('#status')).to_contain_text('between 1 and 1,000')
+            assert len(downloads) == before
+
             broken = scratch / 'broken.uc2'
             broken.write_bytes(b'not an archive')
             page.locator('#archive').set_input_files(broken)
@@ -135,10 +221,87 @@ def main():
             expect(page.locator('#status')).to_contain_text('Cancelled')
             page.locator('#archive').set_input_files(ROOT / 'tests/archives/single.uc2')
             expect(page.locator('#workspace')).to_be_visible(timeout=30000)
+
+            # Explicit offline installation and cache repair; archive contents
+            # never enter CacheStorage. Navigate offline to acquire control.
+            page.get_by_role('button', name='Save reader offline').click()
+            expect(page.locator('#offline-status')).to_contain_text('Reader saved for offline use', timeout=120000)
+            context.set_offline(True)
+            page.reload()
+            expect(page.locator('#offline-status')).to_contain_text('Reader saved for offline use', timeout=30000)
+            page.get_by_role('button', name='Try the sample archive').click()
+            expect(page.locator('#workspace')).to_be_visible(timeout=30000)
+            for fixture in (modern, ROOT / 'tests/archives/turbo0.uc2', ROOT / 'tests/archives/turbo1.uc2'):
+                page.locator('#archive').set_input_files(fixture)
+                expect(page.locator('#archive-name')).to_have_text(fixture.name, timeout=30000)
+                page.locator('#versions').check()
+                page.get_by_role('button', name='Select matching files').click()
+                with page.expect_download() as downloaded:
+                    page.get_by_role('button', name='Save selected ZIP').click()
+                downloaded.value.save_as(scratch / 'offline.zip')
+                check_zip(scratch / 'offline.zip', fixture)
+            cached = page.evaluate('''async () => {
+                const names = await caches.keys();
+                return await Promise.all(names.map(async name => ({name, urls: (await (await caches.open(name)).keys()).map(r => r.url)})));
+            }''')
+            assert len(cached) == 1
+            sw = (args.dist / 'sw.js').read_text()
+            assets = json.loads(re.search(r'const ASSETS = (.*);', sw)[1])
+            assert set(cached[0]['urls']) == {url + name for name in assets}
+            assert not any(fixture.name in target for target in cached[0]['urls'])
+            context.set_offline(False)
+            page.evaluate("async () => { const c = await caches.open((await caches.keys())[0]); await c.delete(new URL('icon-192.png', location.href).href); }")
+            server.overrides = {'/icon-192.png': b'wrong build'}
+            assert page.evaluate("fetch('icon-192.png').then(() => false, () => true)")
+            server.overrides = {}
+            page.reload()
+            expect(page.locator('#offline-status')).to_contain_text('incomplete')
+            page.get_by_role('button', name='Save reader offline').click()
+            expect(page.locator('#offline-status')).to_contain_text('Reader saved for offline use', timeout=120000)
+
+            # A partial/inconsistent deployment fails integrity checking and
+            # leaves the working offline version intact. A complete update
+            # waits for old tabs to close; no mixed decoder/app version.
+            old_version = page.locator('meta[name="uc2-build"]').get_attribute('content')
+            new_version = 'test-' + old_version
+            index = (args.dist / 'index.html').read_text()
+            next_index = index.replace(old_version, new_version).encode()
+            next_sw = sw.replace(old_version, new_version).replace(assets['index.html'], hashlib.sha256(next_index).hexdigest())
+            server.overrides = {'/sw.js': next_sw.encode()}
+            result = page.evaluate('''async () => {
+                const r = await navigator.serviceWorker.getRegistration();
+                const failed = new Promise(resolve => r.addEventListener('updatefound', () => {
+                    const w = r.installing;
+                    w.addEventListener('statechange', () => { if (w.state === 'redundant') resolve(true); });
+                }, {once:true}));
+                await r.update(); return await Promise.race([failed, new Promise((_, reject) => setTimeout(() => reject(new Error('Update did not fail integrity checking')), 30000))]);
+            }''')
+            assert result is True
+            assert page.evaluate('navigator.serviceWorker.controller !== null')
+            assert page.evaluate('caches.keys()') == [cached[0]['name']]
+            server.overrides['/'] = server.overrides['/index.html'] = next_index
+            page.get_by_role('button', name='Save reader offline').click()
+            expect(page.locator('#offline-status')).to_contain_text('Offline update saved', timeout=120000)
+            assert page.locator('meta[name="uc2-build"]').get_attribute('content') == old_version
+            page.close()
+            page = context.new_page()
+            # Waiting-worker activation may finish just after the old tab closes.
+            page.goto(url)
+            page.wait_for_function('''async version => {
+                const r = await navigator.serviceWorker.getRegistration();
+                return r.active && !r.waiting && (await caches.keys()).every(k => k.endsWith(version));
+            }''', arg=new_version)
+            context.set_offline(True)
+            page.reload()
+            expect(page.locator('meta[name="uc2-build"]')).to_have_attribute('content', new_version)
+            expect(page.locator('#offline-status')).to_contain_text('Reader saved for offline use')
+            page.get_by_role('button', name='Try the sample archive').click()
+            expect(page.locator('#workspace')).to_be_visible(timeout=30000)
+            server.overrides = {}
             assert not errors, errors
             assert all(method == 'GET' and target.startswith(url) for method, target in requests), requests
             browser.close()
-            print('Browser checks passed: original fixtures, rANS, versions, downloads, inventory, unsafe names, corruption, cancellation, timeout recovery, mobile layout, and no uploads.')
+            print(f'{args.engine} checks passed: original fixtures, rANS, versions, verified ZIP/CRC/hash/paths, selection, limits, corruption, cancellation, timeout recovery, offline use/repair/update/integrity, mobile layout, and no uploads.')
     finally:
         server.shutdown()
         server.server_close()

@@ -1,12 +1,25 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 'use strict';
-importScripts('uc2-core.js');
+importScripts('uc2-core.js', 'zip.js');
 let core;
 let entries = [];
 let mounted = false;
 let opened = false;
+let sourceInfo;
 const MAX_INPUT = 256 * 1024 * 1024;
 const MAX_VERIFY = 1024 * 1024 * 1024;
+
+async function decoded(row) {
+  check(core._uc2_web_extract(row.index, 1));
+  let bytes;
+  try {
+    const start = core._uc2_web_output();
+    bytes = core.HEAPU8.slice(start, start + row.size);
+  } finally { core._uc2_web_free_output(); }
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  const sha256 = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
+  return {bytes, sha256};
+}
 
 function check(result) {
   if (result < 0) throw new Error(core.UTF8ToString(core._uc2_web_error()));
@@ -68,19 +81,48 @@ self.onmessage = async ({data}) => {
       core.FS.mount(core.WORKERFS, {blobs: [{name: 'archive.uc2', data: file}]}, '/input');
       mounted = true;
       entries = readIndex(check(core._uc2_web_open()));
+      sourceInfo = {name: String(file.name || 'archive.uc2').slice(0, 1024), size: file.size};
       opened = true;
       self.postMessage({id, entries});
     } else if (action === 'read') {
       if (!opened) throw new Error('Open an archive first');
       const row = entries[data.index];
       if (!row || row.directory) throw new Error('Select a file');
-      check(core._uc2_web_extract(row.index, 1));
-      const start = core._uc2_web_output();
-      const bytes = core.HEAPU8.slice(start, start + row.size);
-      core._uc2_web_free_output();
-      const digest = await crypto.subtle.digest('SHA-256', bytes);
-      const sha256 = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
+      const {bytes, sha256} = await decoded(row);
       self.postMessage({id, bytes, sha256}, [bytes.buffer]);
+    } else if (action === 'zip') {
+      if (!opened) throw new Error('Open an archive first');
+      const ids = data.indices;
+      if (!Array.isArray(ids) || !ids.length || ids.length > ZIP_FILES ||
+          new Set(ids).size !== ids.length || ids.some(index => !Number.isInteger(index) || !entries[index] || entries[index].directory))
+        throw new Error('Select between 1 and 1,000 distinct file versions');
+      const files = ids.map(index => entries[index]).sort((a, b) => a.index - b.index);
+      if (files.some(row => row.size > 64 * 1024 * 1024)) throw new Error('A selected file exceeds the 64 MiB limit');
+      const report = {schema: 'uc2-browser-export-1', source: sourceInfo,
+        note: 'Each selected file passed its UC2 checksum. ZIP paths are portable numbered names; original paths and versions are preserved here. Keep the original archive.',
+        files: files.map(row => ({...row, output: zipPath(row), sha256: '0'.repeat(64), verified: true}))};
+      const encodeReport = () => new TextEncoder().encode(JSON.stringify(report, null, 2) + '\n');
+      const manifestSize = encodeReport().length;
+      const overhead = files.reduce((sum, row) => sum + 76 + 2 * zipPath(row).length, 22 + 76 + 2 * 'inventory.json'.length);
+      if (manifestSize > 16 * 1024 * 1024 || files.reduce((sum, row) => sum + row.size, manifestSize + overhead) > ZIP_LIMIT)
+        throw new Error('ZIP exceeds the 128 MiB download limit (including its inventory)');
+      const zip = new UC2Zip();
+      for (let i = 0; i < files.length; i++) {
+        const row = files[i];
+        let result;
+        try { result = await decoded(row); }
+        catch (error) {
+          self.postMessage({id, progress: i + 1, total: files.length,
+            result: {index: row.index, verified: false, error: error.message}});
+          throw new Error(`ZIP stopped at ${row.path}: ${error.message}. No ZIP was saved.`);
+        }
+        zip.add(report.files[i].output, result.bytes, row.dosTime);
+        report.files[i].sha256 = result.sha256;
+        self.postMessage({id, progress: i + 1, total: files.length,
+          result: {index: row.index, verified: true, sha256: result.sha256}});
+      }
+      zip.add('inventory.json', encodeReport());
+      self.postMessage({id, blob: zip.finish(), count: files.length});
     } else if (action === 'verify') {
       if (!opened) throw new Error('Open an archive first');
       const files = entries.filter(row => !row.directory);

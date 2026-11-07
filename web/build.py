@@ -3,6 +3,7 @@
 """Build the static browser reader with Emscripten 4.0.15 or newer."""
 from pathlib import Path
 import argparse
+import hashlib
 import json
 import os
 import shutil
@@ -41,7 +42,9 @@ def main():
         for name in ('CPATH', 'C_INCLUDE_PATH', 'CPLUS_INCLUDE_PATH', 'OBJC_INCLUDE_PATH', 'LIBRARY_PATH'):
             env.pop(name, None)
         subprocess.run(command, check=True, env=env)
-    for name in ('index.html', 'app.js', 'worker.js', 'style.css'):
+    shell = ('index.html', 'app.js', 'worker.js', 'style.css', 'zip.js',
+             'offline.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png')
+    for name in shell:
         shutil.copyfile(ROOT / 'web' / name, out / name)
     for name in ('LICENSE', 'CREDITS.md'):
         shutil.copyfile(ROOT / name, out / name)
@@ -56,6 +59,20 @@ def main():
         'source_archive': f'https://github.com/evvaletov/uc2/archive/{commit}.tar.gz',
         'compiler': subprocess.check_output([args.emcc, '--version'], text=True).splitlines()[0],
     }, indent=2) + '\n')
+    names = [*shell, 'uc2-core.js', 'uc2-core.wasm', 'LICENSE', 'CREDITS.md',
+             'license-audit.md', 'examples/basic.uc2', 'BUILD-INFO.json']
+    names.extend(p.relative_to(ROOT).as_posix() for p in (ROOT / 'LICENSES').rglob('*') if p.is_file())
+    assets = [out / name for name in sorted(names)]
+    version = hashlib.sha256(b''.join(p.relative_to(out).as_posix().encode() +
+                                     hashlib.sha256(p.read_bytes()).digest()
+                                     for p in assets)).hexdigest()
+    index = out / 'index.html'
+    index.write_text(index.read_text().replace('__UC2_BUILD__', version))
+    digests = {p.relative_to(out).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+               for p in assets}
+    (out / 'sw.js').write_text((ROOT / 'web/sw.js').read_text()
+                              .replace('__UC2_VERSION__', version)
+                              .replace('__UC2_ASSETS__', json.dumps(digests, sort_keys=True)))
     print(out)
 
 

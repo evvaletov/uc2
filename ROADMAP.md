@@ -2,40 +2,53 @@
 
 ## Recommended next priorities (2026-11-07)
 
-Published alpha8 implements the previous top three: incremental directory
-snapshots, Turbo reads with a broader corpus, and bounded libarchive review
-preparation. The separate project-wide task-qa + task-at audit remains open
-(c9edf0b). The next five priorities are below.
+Alpha9 implements the previous top two: direct `.uc2` routing in 32-bit
+Total Commander, and browser ZIP export/offline use with three-engine tests.
+The next five priorities are below.
 
-1. [ ] **Fix Total Commander 32-bit native `.uc2` routing.**
-   Replace the `.u2r` copy workaround with a tested native `.uc2` path. Check
-   the host's external-archiver interface and WCX dispatch with exact version
-   and fixture evidence. Tracking: 81c0c8a.
+1. [ ] **Scale and maintain snapshot repositories.**
+   Add explicit retention/pruning with reachability checks, recovery tooling
+   and larger-collection measurements. Reduce per-chunk archive and full-manifest
+   overhead. The initial SHA-256 store has no automatic pruning or redundancy.
+   Tracking: ecb9dc7. [Current contract](docs/snapshots.md).
 
-2. [ ] **Browser bulk export and offline use.**
-   Add verified ZIP download for selected files/versions and offline use.
-   Preserve worker cancellation and resource limits; test Firefox and WebKit
-   alongside Chromium. Tracking: 5332dc5.
+2. [ ] **Read SAS/UC2SEA multi-volume collections directly.**
+   Add automatic reassembly, missing/mixed-part diagnostics and UC2SEA coverage.
+   The corpus includes original SAS 2.3 split parts and verified original
+   reassembly. Tracking: 2b65f0a.
 
-3. [ ] **Scale and maintain snapshot repositories.**
-   Add explicit retention/pruning with reachability checks, safer recovery
-   tooling and larger-collection measurements. Reduce per-chunk archive and
-   full-manifest overhead. The initial SHA-256 store has no automatic pruning
-   or redundancy and caps entries/references. Tracking: ecb9dc7.
-   [Current contract](docs/snapshots.md).
-
-4. [ ] **Read SAS/UC2SEA multi-volume collections directly.**
-   The corpus now includes original SAS 2.3 split parts and verified original
-   reassembly. Automatic reassembly, missing/mixed-part diagnostics and UC2SEA
-   coverage remain open. True multi-volume support is not implied by Turbo
-   support. Tracking: 2b65f0a. Tar-entry ingestion also remains open (bd13adb).
-
-5. [ ] **Take the bounded libarchive patch through upstream review.**
-   The [review patch](contrib/libarchive/upstream/REVIEW.md) now covers metadata,
+3. [ ] **Take the bounded libarchive patch through upstream review.**
+   The [review patch](contrib/libarchive/upstream/REVIEW.md) covers metadata,
    dictionaries, spool and decoded-output limits, plus Turbo. Obtain maintainer
-   agreement on the optional LGPL dependency, resource defaults and proposed
-   format ID. External contact/submission requires authorization; none has been
-   made. Tracking: 7bbb6b6.
+   agreement on the optional LGPL dependency, resource defaults and format ID.
+   External contact/submission requires authorization; none has been made.
+   Tracking: 7bbb6b6.
+
+4. [ ] **Preserve tar entries during stream ingestion.**
+   Parse tar boundaries so individual files remain recoverable as archive
+   entries while retaining chunk deduplication. Current tar ingestion restores
+   the complete opaque stream. Tracking: bd13adb.
+
+5. [ ] **Complete the project-wide task-qa + task-at audit.**
+   Review the remaining core and maintained documentation with independent
+   reviewers. Recent release panels cover their changed code only; they do
+   not close this broader task. Tracking: c9edf0b.
+
+### Implemented for 3.0.0a9
+
+- [x] Native 32-/64-bit Total Commander 11.58.1 opens and extracts `.uc2`
+  directly with normal WCX registration. Removed the `.u2r` workaround and
+  documented migration from the forced internal association that caused it.
+- [x] Browser selection of files/versions, verified ZIP STORE exports with
+  portable paths, metadata and SHA-256 inventory; explicit count/output limits
+  and no partial download on failure or cancellation.
+- [x] Optional offline reader with digest-checked static assets, cache repair
+  and updates that wait for existing tabs to close. Archives are never cached.
+  Install metadata supports browsers that offer a standalone shortcut.
+- [x] Chromium, Firefox and WebKit automation covers ZIP bytes/CRCs, historical
+  codecs, stored versions, offline export, cache eviction/repair and update
+  integrity. OS-specific installation prompts are not covered.
+- Evidence: [alpha9 verification](docs/releases/3.0.0a9-qa.md).
 
 ### Implemented for 3.0.0a8
 
@@ -82,7 +95,8 @@ preparation. The separate project-wide task-qa + task-at audit remains open
   Third-party archive bytes are fetched separately; only URLs, hashes and
   metadata are redistributed. [Corpus provenance](tests/archives/README.md).
 At alpha7, Turbo and multi-volume decoding were unsupported. Alpha8 adds
-Turbo; direct multi-volume input remains open. Chromium is the tested browser.
+Turbo; direct multi-volume input remains open. Alpha9 adds Firefox and WebKit
+coverage alongside Chromium.
 - Release and scoped review evidence: [alpha7 verification](docs/releases/3.0.0a7-qa.md).
 
 ### Delivered in 3.0.0a6: writer APIs and audit repairs

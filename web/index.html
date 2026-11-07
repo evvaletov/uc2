@@ -3,11 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="uc2-build" content="__UC2_BUILD__">
   <meta name="description" content="Open, inspect, verify and extract UltraCompressor II archives in your browser. Archive data stays on your device.">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; connect-src 'self'; worker-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
   <title>UC2 Archive Reader</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#265c45">
   <script src="app.js" defer></script>
+  <script src="offline.js" defer></script>
 </head>
 <body>
   <header><a class="brand" href="./" aria-label="UC2 Archive Reader home"><span class="mark">UC2</span><span>ARCHIVE READER</span></a><a href="https://github.com/evvaletov/uc2">Source &amp; downloads ↗</a></header>
@@ -19,12 +23,15 @@
       <button id="sample" class="text-button">Try the sample archive</button>
     </section>
     <div class="status-line"><p id="status" role="status" aria-live="polite">Ready. Files are processed locally.</p><button id="cancel" hidden>Cancel operation</button></div>
+    <div class="offline-controls"><button id="offline-save">Save reader offline</button><button id="install-reader" hidden>Install reader</button><span id="offline-status" role="status">Save the reader to reopen it without a connection.</span></div>
     <section id="workspace" hidden aria-label="Archive contents">
       <div class="archive-heading"><div><p class="eyebrow">OPEN ARCHIVE</p><h2 id="archive-name"></h2></div><div class="actions"><button id="inventory">Save inventory</button><button id="verify" class="primary">Verify all versions</button></div></div>
       <div class="stats"><div><span id="file-count">0</span> current files</div><div><span id="version-count">0</span> stored file versions</div><div><span id="total-size">0 B</span> unpacked</div></div>
       <div class="browser-layout"><div class="listing">
         <div class="filters"><label class="search-label">Find a file<input id="search" type="search" placeholder="Search paths…"></label><label class="checkbox"><input id="versions" type="checkbox"> Show older versions</label></div>
-        <div class="table-scroll"><table><thead><tr><th scope="col">Path</th><th scope="col">Version</th><th scope="col">Size</th><th scope="col">Check</th></tr></thead><tbody id="entries"></tbody></table></div><p id="shown" class="muted"></p>
+        <div class="bulk-actions"><button id="include-matching">Select matching files</button><button id="clear-selection">Clear selection</button><button id="download-zip" class="primary" disabled>Save selected ZIP</button><span id="selection-count">0 file versions selected</span></div>
+        <p class="muted">ZIP includes a path/version inventory. Up to 1,000 files and 128 MiB including the inventory. Selections remain checked when filtered.</p>
+        <div class="table-scroll"><table><thead><tr><th scope="col">Include</th><th scope="col">Path</th><th scope="col">Version</th><th scope="col">Size</th><th scope="col">Check</th></tr></thead><tbody id="entries"></tbody></table></div><p id="shown" class="muted"></p>
       </div><aside id="details" aria-label="Selected entry"><p class="eyebrow">FILE DETAILS</p><h3 id="selected-name">Select a file</h3><dl id="metadata"></dl><button id="download" class="primary" disabled>Save verified file</button><p class="muted">Each file is decoded and its UC2 checksum checked before download.</p></aside></div>
     </section>
     <section class="notes"><div><h2>Keep the original</h2><p>Stored versions remain separate. Verification checks UC2 checksums; it does not establish who created an archive.</p></div><div><h2>Working with a collection?</h2><p>Use <code>uc2-preserve</code> for batch inventory and verified ZIP/tar migration, including original paths and metadata.</p></div><div><h2>Compatibility</h2><p>Legacy Huffman, Turbo/method 80 and UC2 v3 rANS are supported. Individual files are limited to 64 MiB here.</p></div></section>

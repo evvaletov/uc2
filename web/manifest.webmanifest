@@ -1,0 +1,15 @@
+{
+  "id": "./",
+  "name": "UC2 Archive Reader",
+  "short_name": "UC2 Reader",
+  "description": "Open, verify and export UC2 archives on your device.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f5ef",
+  "theme_color": "#265c45",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"}
+  ]
+}

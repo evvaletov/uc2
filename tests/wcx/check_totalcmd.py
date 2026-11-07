@@ -38,7 +38,8 @@ subprocess.run([str(args.uc2.resolve()), "-qw", str(archive), "hello.txt", "nest
 ini = root / "wincmd.ini"
 ini.write_text("[Configuration]\nUseIniInProgramDir=0\nFirstTime=0\nUseNewDefFont=1\n"
                "DirBrackets=0\nStartupScreen=0\n[PackerPlugins]\n"
-               f"uc2=196,{args.plugin.resolve()}\nu2r=196,{args.plugin.resolve()}\n" +
+               f"uc2=196,{args.plugin.resolve()}\n" +
+               (f"u2r=196,{args.plugin.resolve()}\n" if args.extension == "u2r" or args.association == "u2r" else "") +
                ("" if args.association == "none" else
                 f"[Associations]\nFilter1=*.uc2\nFilter1_open=**{args.association}\n"), encoding="utf-8")
 command = [str(args.app.resolve()), "/N", f"/I={ini}", f"/F={root / 'wcx_ftp.ini'}",
