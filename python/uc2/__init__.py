@@ -31,6 +31,7 @@ class UC2Info:
     version: int
     _directory: bool = field(repr=False)
     _index: int = field(repr=False)
+    dos_time: int = 0
 
     def is_dir(self) -> bool:
         return self._directory
@@ -133,7 +134,7 @@ class UC2File:
             version = versions.get(filename, 0)
             versions[filename] = version + 1
             infos[index] = UC2Info(filename, size, packed, _date(date), attr, method,
-                                   version, bool(directory), index)
+                                   version, bool(directory), index, date)
         self._infos = tuple(infos)
         self._lookup = {(info.filename, info.version): info for info in infos}
 

@@ -1,0 +1,79 @@
+{
+  "schema": "uc2-compatibility-corpus-1",
+  "license": "GPL-3.0-or-later",
+  "provenance": "These fixtures were generated from repository-owned payloads using the original UC2 Pro 2.3 executable in DOSBox-X. They are original-encoder fixtures, not archives collected in the 1990s.",
+  "generator": "tests/scripts/create_archives.sh",
+  "generator_distribution_sha256": "db5fd20ff3895bd6fea91869e8769e24549fe921a696dc5afcc205227622145b",
+  "coverage": [
+    "original Huffman",
+    "SuperMaster and shared master blocks",
+    "empty file",
+    "text",
+    "binary",
+    "repeated zeros"
+  ],
+  "gaps": [
+    "Turbo/method 80",
+    "multi-volume",
+    "independently sourced historical collections"
+  ],
+  "archives": [
+    {
+      "path": "basic.uc2",
+      "sha256": "ea16565545abde72798e9cc9423c23149a050bfb4d769b6281f98593e3ee721b",
+      "size": 2532
+    },
+    {
+      "path": "empty.uc2",
+      "sha256": "b7cb4dd67f07de0bdff34e3109a15e92557dbf26b5708a9b224f06be4e504c7c",
+      "size": 126
+    },
+    {
+      "path": "random.uc2",
+      "sha256": "3ea6f80d7afdd693f60d3f72d219d872fa481cd6d95ea3ffaf7537886e34fcd4",
+      "size": 1248
+    },
+    {
+      "path": "single.uc2",
+      "sha256": "4e88b65dd94bd32bb11e491dffd85cc7f4965a822d5cd07766c45c172372483a",
+      "size": 146
+    },
+    {
+      "path": "zeros.uc2",
+      "sha256": "041a46cef42c295d85498abbf45ed1e9fa293a9e3442817fa1c97578b73fbccd",
+      "size": 146
+    }
+  ],
+  "payloads": [
+    {
+      "path": "allbytes.bin",
+      "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880",
+      "size": 256
+    },
+    {
+      "path": "empty.dat",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    {
+      "path": "hello.txt",
+      "sha256": "92b772380a3f8e27a93e57e6deeca6c01da07f5aadce78bb2fbb20de10a66925",
+      "size": 15
+    },
+    {
+      "path": "random.bin",
+      "sha256": "08ea14e3e8af9213faf060af321922b6ffaf5d751b0319039c77016b3c6b991c",
+      "size": 1024
+    },
+    {
+      "path": "textfile.txt",
+      "sha256": "c546088b61d38c41d008d2a97c9cb5597b9b7597f2650b49730e0a475a4e05ed",
+      "size": 1719
+    },
+    {
+      "path": "zeros.bin",
+      "sha256": "de2f256064a0af797747c2b97505dc0b9f3df0de4f489eac731c23ae9ca9cc31",
+      "size": 65536
+    }
+  ]
+}

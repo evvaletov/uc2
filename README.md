@@ -5,7 +5,7 @@ Nico de Vries (1992-1996). UC2 used shared compression dictionaries
 ("master blocks") and file versioning.
 
 UC2 v3 is under development in portable C99. The current alpha is
-[3.0.0a6](https://pypi.org/project/uc2/3.0.0a6/).
+[3.0.0a7](https://pypi.org/project/uc2/3.0.0a7/).
 Compression levels 2-5 use the original Huffman format; levels 6-9 require the
 new rANS reader. Original-format compatibility is
 covered by DOSBox-X fixtures, but some legacy methods, including Turbo/method
@@ -31,6 +31,10 @@ stdout, tab-separated listings, and a quiet mode for scripts.
 - A read-only [Linux FUSE mount](docs/mount.md) with separate version views
   and a bounded cache of verified decoded files.
 - Builds for Linux, macOS, Windows (MSVC), and DOS (DJGPP).
+- A [browser reader](https://evvaletov.github.io/uc2/reader/) for local archive
+  inspection, stored versions, checksum verification, and file downloads.
+- A [preservation toolkit](docs/preservation.md) for batch inventory and
+  verified ZIP/tar exports, retaining original paths and metadata in manifests.
 
 The library also contains a 64-bit Merkle DAG, a shared block store, SimHash,
 binary delta coding, dictionary metadata, and BCJ/BWT/delta preprocessing.
@@ -46,6 +50,7 @@ size, time, and memory comparisons with 7z and tar+zstd.
 ```sh
 python -m pip install --pre uc2
 uc2 -l archive.uc2
+uc2-preserve old-archives -o migrated --format zip
 ```
 
 The Python package includes the native CLI. Wheels support CPython 3.10-3.14

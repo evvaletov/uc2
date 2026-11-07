@@ -1,6 +1,6 @@
 # UC2 License Audit
 
-Status: 2026-11-05. Maintained by Eremey Valetov.
+Status: 2026-11-07. Maintained by Eremey Valetov.
 
 UC2 v3 builds on three layers of prior work, each released under its
 own free-software licence.  This document records per-file provenance,
@@ -142,6 +142,16 @@ dependency. The proposed linked build has LGPL obligations and supports only
 the legacy methods implemented by that reader. It does not make rANS or the
 full UC2 core permissively licensed. Maintainer acceptance of this arrangement
 and the proposed format ID remains pending.
+
+### Browser reader and preservation tool
+
+The browser bridge, UI, build script and browser tests in `web/` use the
+repository's GPL-3.0-or-later license. The WebAssembly build links the existing
+LGPL decoder and GPL lookup tables/rANS implementation; their source licenses
+are unchanged. The static distribution includes license texts and credits,
+plus an exact corresponding-source archive URL in `BUILD-INFO.json`.
+`python/uc2/preserve.py` uses the approved dual license for Python integration
+glue; its installed package still bundles the existing GPL/LGPL core.
 
 ## Relicensing rationale
 

@@ -2,7 +2,7 @@ name: Docs
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'work/compression-integrations-*']
   workflow_dispatch:
 
 permissions:
@@ -25,16 +25,38 @@ jobs:
           python-version: "3.12"
 
       - name: Install Sphinx
-        run: pip install -r docs/requirements.txt
+        run: pip install -r docs/requirements.txt . playwright==1.64.1
 
       - name: Build docs
         run: sphinx-build -b html docs docs/_build/html
+
+      - name: Install pinned WebAssembly toolchain
+        run: |
+          git clone --depth 1 --branch 4.0.15 https://github.com/emscripten-core/emsdk.git emsdk
+          test "$(git -C emsdk rev-parse HEAD)" = 389a68bc35dcff7ebae4614e1615099dafda00d1
+          python emsdk/emsdk.py install 4.0.15
+          python emsdk/emsdk.py activate 4.0.15
+
+      - name: Build browser reader
+        run: python web/build.py --emcc "$PWD/emsdk/upstream/emscripten/emcc" --output docs/_build/html/reader
+
+      - name: Test browser reader
+        run: |
+          python -m playwright install --with-deps chromium
+          python web/test_browser.py --dist docs/_build/html/reader
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: browser-reader
+          path: docs/_build/html/reader
+          if-no-files-found: error
 
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs/_build/html
 
   deploy:
+    if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     environment:

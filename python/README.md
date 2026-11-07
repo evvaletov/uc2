@@ -48,8 +48,31 @@ with UC2File("archive.uc2") as archive:
 
 `UC2Info` records the name, uncompressed and compressed sizes, DOS timestamp
 (a naive `datetime`, or `None` if invalid), attributes, method, version, and
-`is_dir()`. Metadata objects can be passed directly to `read`, `extract`, and
+`is_dir()`. The `dos_time` field retains the original 32-bit timestamp, including
+invalid date encodings. Metadata objects can be passed directly to `read`, `extract`, and
 `copy_to`. They belong to the archive that produced them.
+
+## Preserve a collection
+
+```sh
+uc2-preserve old-archives -o inventory
+uc2-preserve old-archives -o migrated --format zip
+uc2-preserve old-archives -o migrated-tar --format tar
+```
+
+Each command requires a new output directory. Inputs can be individual archives
+or directories. Every stored version is decoded and checked, and manifests
+record original paths, raw timestamps, attributes and SHA-256 hashes. Exports
+use separate numbered paths for each entry, so old versions and case variants
+cannot overwrite each other. Generated ZIP/tar files are reopened and their
+contents verified. Failed entries are recorded and omitted from exports; a
+partial batch returns exit status 1. Sources are read-only.
+
+The Python API is `uc2.preserve.preserve(inputs, output, format="zip")`.
+See the [preservation guide](https://github.com/evvaletov/uc2/blob/main/docs/preservation.md)
+for limits, manifest fields and metadata conversion details. The
+[browser reader](https://evvaletov.github.io/uc2/reader/) handles individual
+archives without a Python installation.
 
 ## Limits and extraction
 

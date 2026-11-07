@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Open, inspect, verify and extract UltraCompressor II archives in your browser. Archive data stays on your device.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; connect-src 'self'; worker-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>UC2 Archive Reader</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header><a class="brand" href="./" aria-label="UC2 Archive Reader home"><span class="mark">UC2</span><span>ARCHIVE READER</span></a><a href="https://github.com/evvaletov/uc2">Source &amp; downloads ↗</a></header>
+  <main>
+    <section class="intro"><p class="eyebrow">ULTRACOMPRESSOR II</p><h1>Open an old archive.<br>Find what you kept.</h1><p>Browse files and their stored versions, check archive checksums, and save what you need. Your archive stays on this device.</p></section>
+    <section id="drop" class="drop" aria-label="Open an archive">
+      <div class="file-icon" aria-hidden="true">▤</div><div><h2>Drop a .uc2 archive here</h2><p>Or choose a file. Up to 256 MiB.</p></div>
+      <label class="button primary" for="archive">Choose archive<input id="archive" type="file" accept=".uc2,.UC2" aria-label="Choose UC2 archive"></label>
+      <button id="sample" class="text-button">Try the sample archive</button>
+    </section>
+    <div class="status-line"><p id="status" role="status" aria-live="polite">Ready. Files are processed locally.</p><button id="cancel" hidden>Cancel operation</button></div>
+    <section id="workspace" hidden aria-label="Archive contents">
+      <div class="archive-heading"><div><p class="eyebrow">OPEN ARCHIVE</p><h2 id="archive-name"></h2></div><div class="actions"><button id="inventory">Save inventory</button><button id="verify" class="primary">Verify all versions</button></div></div>
+      <div class="stats"><div><span id="file-count">0</span> current files</div><div><span id="version-count">0</span> stored file versions</div><div><span id="total-size">0 B</span> unpacked</div></div>
+      <div class="browser-layout"><div class="listing">
+        <div class="filters"><label class="search-label">Find a file<input id="search" type="search" placeholder="Search paths…"></label><label class="checkbox"><input id="versions" type="checkbox"> Show older versions</label></div>
+        <div class="table-scroll"><table><thead><tr><th scope="col">Path</th><th scope="col">Version</th><th scope="col">Size</th><th scope="col">Check</th></tr></thead><tbody id="entries"></tbody></table></div><p id="shown" class="muted"></p>
+      </div><aside id="details" aria-label="Selected entry"><p class="eyebrow">FILE DETAILS</p><h3 id="selected-name">Select a file</h3><dl id="metadata"></dl><button id="download" class="primary" disabled>Save verified file</button><p class="muted">Each file is decoded and its UC2 checksum checked before download.</p></aside></div>
+    </section>
+    <section class="notes"><div><h2>Keep the original</h2><p>Stored versions remain separate. Verification checks UC2 checksums; it does not establish who created an archive.</p></div><div><h2>Working with a collection?</h2><p>Use <code>uc2-preserve</code> for batch inventory and verified ZIP/tar migration, including original paths and metadata.</p></div><div><h2>Compatibility</h2><p>Legacy Huffman and UC2 v3 rANS are supported. Turbo/method 80 is not supported. Individual files are limited to 64 MiB here.</p></div></section>
+  </main>
+  <footer><span>UltraCompressor II · Browser reader</span><span><a href="../">Documentation</a><a href="CREDITS.md">Credits</a><a href="LICENSE">License</a></span></footer>
+</body>
+</html>
