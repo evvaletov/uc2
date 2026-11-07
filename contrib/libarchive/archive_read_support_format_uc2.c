@@ -28,6 +28,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#if defined(_WIN32) && !defined(__CYGWIN__)
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
 
 #include <uc2/libuc2.h>
 
@@ -80,6 +85,24 @@ seek_file(FILE *f, uint64_t pos)
 #else
 	return fseeko(f, (off_t)pos, SEEK_SET);
 #endif
+}
+
+static FILE *
+spool_file(void)
+{
+    /* libarchive's helper honors the temporary directory and creates an
+       anonymous file. MSVC tmpfile() instead requires drive-root access. */
+    int fd = __archive_mktemp(NULL);
+    FILE *file;
+    if (fd < 0) return NULL;
+#if defined(_WIN32) && !defined(__CYGWIN__)
+    file = _fdopen(fd, "w+b");
+    if (!file) { int saved = errno; _close(fd); errno = saved; }
+#else
+    file = fdopen(fd, "w+b");
+    if (!file) { int saved = errno; close(fd); errno = saved; }
+#endif
+    return file;
 }
 
 /* libuc2 requires random access, including on non-seekable input. */
@@ -290,7 +313,7 @@ uc2_la_bid(struct archive_read *a, int best_bid)
 static int
 slurp_archive(struct archive_read *a, struct uc2_la_state *st)
 {
-	st->input = tmpfile();
+	st->input = spool_file();
 	if (!st->input) {
 		archive_set_error(&a->archive, errno, "UC2: cannot create input spool");
 		return ARCHIVE_FATAL;
@@ -573,7 +596,7 @@ uc2_la_read_data(struct archive_read *a,
             return ARCHIVE_FATAL;
         }
         st->total_decoded += e->size;
-		st->entry_file = tmpfile();
+		st->entry_file = spool_file();
 		if (!st->entry_file) {
 			archive_set_error(&a->archive, errno, "UC2: cannot create entry spool");
 			return ARCHIVE_FATAL;

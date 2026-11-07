@@ -25,7 +25,10 @@ entry to 1 GiB, and cumulative decoded output to 8 GiB. Limits fail explicitly;
 they never silently truncate output. Listing and skipping do not decode files.
 The fixed adapter state (about 65 KiB), stdio and libarchive's own allocations
 are outside the shared memory budget. The input and current decoded entry use
-disk space; the decoded entry spool is released between files.
+disk space; the decoded entry spool is released between files. Spools use
+libarchive's anonymous temporary-file helper, including its Windows temp-directory
+handling. These libarchive build/runtime checks were performed on Linux; native
+Windows execution of the optional adapter has not been validated.
 
 Override limits before reading with libarchive format options, for example
 `bsdtar --options uc2:memory-limit=134217728,uc2:entry-limit=2147483648 -xf data.uc2`.
@@ -52,7 +55,7 @@ cmake -S contrib/libuc2read -B /tmp/uc2-reader \
 cmake --build /tmp/uc2-reader
 cmake --install /tmp/uc2-reader
 python3 contrib/libarchive/prepare_upstream.py \
-  --source /path/to/libarchive-3.8.11 --uc2 /path/to/uc2 \
+  --source /path/to/libarchive-3.8.11 --uc2 /path/to/uc2/build/cli/uc2 \
   --output /tmp/uc2-review
 cmake -S /tmp/uc2-review/libarchive -B /tmp/uc2-review/build \
   -DCMAKE_PREFIX_PATH=/tmp/uc2-reader-prefix -DENABLE_UC2READ=ON \
