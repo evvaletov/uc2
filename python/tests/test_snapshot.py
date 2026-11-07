@@ -131,6 +131,24 @@ def test_source_change_and_failed_commit(tmp_path, monkeypatch):
     assert not (repo/'.writer-lock').exists()
 
 
+def test_path_and_handle_ctime_can_differ(tmp_path, monkeypatch):
+    # CPython on Windows can report creation time from lstat, but change
+    # time from fstat. Reproduce the discrepancy independently of the OS.
+    original = os.fstat
+    class HandleStat:
+        def __init__(self, fd):
+            self.value = original(fd)
+            self.st_ctime_ns = self.value.st_ctime_ns + 10**9
+        def __getattr__(self, name):
+            return getattr(self.value, name)
+    monkeypatch.setattr(s.os, 'fstat', HandleStat)
+    source, repo = tmp_path/'source', tmp_path/'repo'
+    source.mkdir(); (source/'data').write_bytes(b'updated file')
+    result = s.create(source, repo)
+    s.restore(repo, result['snapshot'], tmp_path/'restored')
+    assert tree(tmp_path/'restored') == tree(source)
+
+
 @pytest.mark.skipif(os.name == 'nt', reason='requires POSIX symlink/FIFO privileges')
 def test_symlinks_special_files_and_collisions(tmp_path):
     src, repo = tmp_path/'src', tmp_path/'repo'

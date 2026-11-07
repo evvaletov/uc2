@@ -125,9 +125,11 @@ static int compress_data(const unsigned char *data, unsigned len, int level,
 	return ret;
 }
 
-static int build_archive(const unsigned char *file_compressed, unsigned file_csize,
+static int build_archive_parts(const unsigned char *file_compressed, unsigned file_csize,
                          unsigned file_orig_size, unsigned short file_csum,
-                         unsigned master_id, int level, struct membuf *archive)
+                         unsigned master_id, int level, struct membuf *archive,
+                         const unsigned char *master_records, unsigned records_size,
+                         const unsigned char *master_data, unsigned masters_size)
 {
 	/*
 	 * Archive layout:
@@ -192,21 +194,26 @@ static int build_archive(const unsigned char *file_compressed, unsigned file_csi
 	put_u32le(p, 0); p += 4;
 
 	unsigned raw_cdir_len = (unsigned)(p - raw_cdir);
+	struct membuf directory;
+	membuf_init(&directory);
+	if (records_size) membuf_append(&directory, master_records, records_size);
+	membuf_append(&directory, raw_cdir, raw_cdir_len);
 
 	/* Compute Fletcher checksum of raw cdir */
-	unsigned short cdir_csum = fletcher_checksum(raw_cdir, raw_cdir_len);
+	unsigned short cdir_csum = fletcher_checksum(directory.data, directory.len);
 
 	/* Compress the cdir */
 	struct membuf cdir_compressed;
 	unsigned short cdir_compress_csum = 0;
-	int ret = compress_data(raw_cdir, raw_cdir_len, level == 80 ? 4 : level, NULL, 0,
+	int ret = compress_data(directory.data, directory.len, level == 80 ? 4 : level, NULL, 0,
 	                        &cdir_compressed, &cdir_compress_csum);
+	membuf_free(&directory);
 	if (ret < 0) {
 		membuf_free(&cdir_compressed);
 		return ret;
 	}
 
-	unsigned cdir_compress_offset = 29 + file_csize;
+	unsigned cdir_compress_offset = 29 + file_csize + masters_size;
 	unsigned total_size = cdir_compress_offset + 10 + cdir_compressed.len;
 
 	/* Assemble archive */
@@ -233,6 +240,7 @@ static int build_archive(const unsigned char *file_compressed, unsigned file_csi
 
 	/* File compressed bitstream */
 	membuf_append(archive, file_compressed, file_csize);
+	if (masters_size) membuf_append(archive, master_data, masters_size);
 
 	/* COMPRESS record for cdir (10 bytes) */
 	unsigned char cdir_compress_rec[10];
@@ -246,5 +254,13 @@ static int build_archive(const unsigned char *file_compressed, unsigned file_csi
 
 	membuf_free(&cdir_compressed);
 	return 0;
+}
+
+static int build_archive(const unsigned char *file_compressed, unsigned file_csize,
+                         unsigned file_orig_size, unsigned short file_csum,
+                         unsigned master_id, int level, struct membuf *archive)
+{
+	return build_archive_parts(file_compressed, file_csize, file_orig_size,
+		file_csum, master_id, level, archive, NULL, 0, NULL, 0);
 }
 

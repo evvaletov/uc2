@@ -297,13 +297,14 @@ def create(source, repository, *, label="", max_total_size=1 << 40):
                 keys.add(key)
                 if len(keys) > MAX_ENTRIES:
                     raise ValueError("snapshot entry limit exceeded")
-                mode = path.lstat().st_mode
+                path_before = path.lstat()
+                mode = path_before.st_mode
                 if stat.S_ISDIR(mode):
                     entry = dict(path=relative)
                     entries.append(entry)
                     visit(path, entry)
                 elif stat.S_ISREG(mode):
-                    entry = dict(path=relative, **_metadata(path, "file"), chunks=[])
+                    entry = dict(path=relative, **_metadata(path, "file", path_before), chunks=[])
                     sha, size = hashlib.sha256(), 0
                     with _regular(path) as stream:
                         before = os.fstat(stream.fileno())
@@ -323,7 +324,14 @@ def create(source, repository, *, label="", max_total_size=1 << 40):
                         after = os.fstat(stream.fileno())
                         current = path.lstat()
                         signature = lambda s: (s.st_dev, s.st_ino, s.st_size, s.st_mtime_ns, s.st_ctime_ns)
-                        if signature(before) != signature(after) or signature(before) != signature(current) or size != before.st_size:
+                        # Windows fstat and lstat can give ctime different
+                        # meanings (change time versus creation time). Compare
+                        # timestamps only within the same API, and identities
+                        # across APIs. Keep both change checks on every OS.
+                        if (signature(before) != signature(after) or
+                                signature(path_before) != signature(current) or
+                                (before.st_dev, before.st_ino) != (path_before.st_dev, path_before.st_ino) or
+                                size != before.st_size):
                             raise ValueError(f"source changed during snapshot: {relative}")
                     entry.update(size=size, sha256=sha.hexdigest(), mtime_ns=before.st_mtime_ns,
                                  mode=stat.S_IMODE(before.st_mode) & 0o777)

@@ -557,14 +557,15 @@ static struct master_info *find_master(struct uc2_context *uc2, unsigned id)
 
 static int resolve_master(struct uc2_context *uc2, unsigned master)
 {
+	int ret = UC2_Damaged;
 	if (uc2->pcp) {
 		uc2->message = "PCP not implemented";
 		return UC2_Unimplemented;
 	}
 
 	if (!uc2->supermaster) {
-		uc2->supermaster = u_alloc(uc2, 49152);
-		if (!uc2->supermaster)
+		u8 *data = u_alloc(uc2, 49152);
+		if (!data)
 			return UC2_UserFault;
 
 #ifdef UC2_SUPER_C
@@ -575,15 +576,16 @@ static int resolve_master(struct uc2_context *uc2, unsigned master)
 		extern u8 uc2_supermaster_compressed[], uc2_supermaster_compressed_end[];
 		struct range br = {.ptr = uc2_supermaster_compressed, .end = uc2_supermaster_compressed_end};
 #endif
-		struct range bw = {.ptr = uc2->supermaster, .end = uc2->supermaster + 49152};
+		struct range bw = {.ptr = data, .end = data + 49152};
 		struct reader rd = {.read = buf_read, .context = &br};
 		struct writer wr = {.write = buf_write, .context = &bw};
-		u16 csum;
+		u16 csum = 0;
 		int r = decompressor(uc2, 4, &rd, &wr, NoMaster, 49152, &csum);
-		if (r < 0)
-			return r;
-		if (csum != 0x1E55)
-			return UC2_InternalError;
+		if (r < 0 || range_len(&bw) || csum != 0x1E55) {
+			u_free(uc2, data);
+			return r < 0 ? r : UC2_InternalError;
+		}
+		uc2->supermaster = data;
 	}
 
 	if (master < FirstMaster)
@@ -594,13 +596,13 @@ static int resolve_master(struct uc2_context *uc2, unsigned master)
 		struct master_info *m = find_master(uc2, master);
 		if (!m) {
 			diag("Master %X missing\n", master);
-			return UC2_Damaged;
+			goto fail;
 		}
 		if (m->size > 0xffff)
-			return UC2_Damaged;
+			goto fail;
 		if (m->needed_by) {
 			diag("%X: Circular dependency\n", master);
-			return UC2_Damaged;
+			goto fail;
 		}
 		if (m->data)
 			break;
@@ -612,23 +614,34 @@ static int resolve_master(struct uc2_context *uc2, unsigned master)
 
 	while (mi) {
 		diag("Decompressing master %X size:%u master:%X method:%u\n", mi->id, mi->size, mi->com.master, mi->com.method);
-		mi->data = u_alloc(uc2, mi->size);
-		if (!mi->data)
-			return UC2_UserFault;
+		u8 *data = u_alloc(uc2, mi->size ? mi->size : 1);
+		if (!data) { ret = UC2_UserFault; goto fail; }
 		struct archive_ctx ar = {.offset = mi->offset, .uc2 = uc2};
 		struct reader rd = {.read = archive_read, .context = &ar};
-		struct range bw = {.ptr = mi->data, .end = mi->data + mi->size};
+		struct range bw = {.ptr = data, .end = data + mi->size};
 		struct writer wr = {.write = buf_write, .context = &bw};
 		int r = decompressor(uc2, mi->com.method, &rd, &wr, mi->com.master, mi->size, 0);
 		diag("Decompressed master %u left:%u\n", mi->id, range_len(&bw));
-		if (r < 0)
-			return r;
+		if (r < 0 || range_len(&bw)) {
+			u_free(uc2, data);
+			ret = r < 0 ? r : UC2_Truncated;
+			goto fail;
+		}
+		mi->data = data;
 		struct master_info *m = mi;
 		mi = mi->needed_by;
 		m->needed_by = 0;
 	}
 
 	return 0;
+
+fail:
+	/* A caller may retry extraction on this handle after an allocation or
+	   input error. Only complete dictionaries are cached, and no traversal
+	   links may survive a failed resolution (including dependency cycles). */
+	for (struct list *l = uc2->masters.next; l != &uc2->masters; l = l->next)
+		list_item(l, struct master_info, list)->needed_by = 0;
+	return ret;
 }
 
 static int use_master(struct uc2_context *uc2, u8 buffer[65535], u32 id)
@@ -1141,7 +1154,7 @@ static int decompressor_turbo(struct uc2_context *uc2, unsigned master,
 		ret = turbo_read(rd, header, 2);
 		if (ret < 0) break;
 		unsigned count = header[0] | (unsigned)header[1] << 8;
-		if (!count) { *csum = csum_get(&cs); break; }
+		if (!count) { if (csum) *csum = csum_get(&cs); break; }
 		if (count > sizeof t->input) { ret = UC2_Damaged; break; }
 		ret = turbo_read(rd, t->input, count);
 		if (ret < 0) break;

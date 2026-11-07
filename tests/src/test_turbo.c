@@ -56,6 +56,61 @@ static int extract(struct membuf *archive, struct membuf *out)
     return ret;
 }
 
+static unsigned fail_allocation, allocation_count;
+static void *retry_alloc(void *ctx, unsigned size)
+{
+    (void)ctx;
+    if (++allocation_count == fail_allocation) return NULL;
+    return malloc(size);
+}
+
+/* Two Turbo-compressed master dictionaries exercise the NULL-checksum
+ * decoder path and recovery on the SAME handle after failed resolution. */
+static void master_case(unsigned mode, unsigned fail_at)
+{
+    unsigned char zero[32] = {0}, records[78] = {0};
+    struct membuf compressed, archive, out;
+    encode(zero, sizeof zero, 1, &compressed);
+    for (unsigned i = 0; i < 2; i++) {
+        unsigned char *p = records + i * 39;
+        p[0] = 3;                              /* MasterEntry */
+        put_u32le(p + 1, i + 2);               /* id */
+        put_u16le(p + 17, 32 + (mode == 1 && i == 1));
+        put_u16le(p + 19, 0xdede);             /* unused checksum */
+        put_u32le(p + 21, compressed.len);
+        put_u16le(p + 25, 80);
+        put_u32le(p + 27, i == 0 ? 3 : mode == 2 ? 2 : mode == 3 ? 99 : 1);
+        put_u32le(p + 31, 1);                  /* volume */
+        put_u32le(p + 35, 29 + compressed.len);
+    }
+    const unsigned char bad[] = {1, 0, 0, 0, 0};
+    int ret = build_archive_parts(compressed.data, compressed.len, sizeof zero,
+        fletcher_checksum(zero, sizeof zero), 2, 80, &archive,
+        records, sizeof records, mode == 4 ? bad : compressed.data,
+        mode == 4 ? sizeof bad : compressed.len);
+    assert(ret >= 0);
+    struct uc2_io io = {archive_read, retry_alloc, my_free, NULL};
+    fail_allocation = 0; allocation_count = 0;
+    uc2_handle h = uc2_open(&io, &archive); assert(h);
+    struct uc2_entry entry;
+    ret = uc2_read_cdir(h, &entry); assert(ret == UC2_BareEntry);
+    ret = uc2_read_cdir(h, NULL); assert(ret == UC2_End);
+    fail_allocation = fail_at; allocation_count = 0;
+    membuf_init(&out);
+    ret = uc2_extract(h, &entry.xi, entry.size, membuf_write, &out);
+    if (mode || (fail_at && allocation_count >= fail_at)) assert(ret < 0);
+    else assert(ret >= 0 && out.len == sizeof zero && !memcmp(out.data, zero, sizeof zero));
+    membuf_free(&out);
+    fail_allocation = 0;
+    membuf_init(&out);
+    ret = uc2_extract(h, &entry.xi, entry.size, membuf_write, &out);
+    if (mode) assert(ret < 0 && out.len == 0);
+    else assert(ret >= 0 && out.len == sizeof zero && !memcmp(out.data, zero, sizeof zero));
+    membuf_free(&out);
+    uc2_close(h);
+    membuf_free(&archive); membuf_free(&compressed);
+}
+
 int main(int argc, char **argv)
 {
     static unsigned char data[70001];
@@ -113,6 +168,8 @@ int main(int argc, char **argv)
         ret = extract(&archive, &out); assert(ret < 0);
         membuf_free(&out); membuf_free(&archive);
     }
-    puts("Turbo: 18 size/master cases and malformed stream checks passed");
+    for (unsigned mode = 0; mode < 5; mode++) master_case(mode, 0);
+    for (unsigned fail_at = 1; fail_at <= 12; fail_at++) master_case(0, fail_at);
+    puts("Turbo: size/master, malformed streams and dictionary retry checks passed");
     return 0;
 }
