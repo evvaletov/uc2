@@ -18,7 +18,7 @@ jobs:
       matrix:
         include:
           - {arch: x64, suffix: wcx64, app: TOTALCMD64.EXE, python: x64, extension: uc2}
-          - {arch: Win32, suffix: wcx, app: TOTALCMD.EXE, python: x86, extension: u2r}
+          - {arch: Win32, suffix: wcx, app: TOTALCMD.EXE, python: x86, extension: uc2}
     steps:
       - uses: actions/checkout@v6
         with:

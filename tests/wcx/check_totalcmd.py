@@ -19,6 +19,7 @@ parser.add_argument("--plugin", type=Path, required=True)
 parser.add_argument("--uc2", type=Path, required=True)
 parser.add_argument("--work", type=Path, required=True)
 parser.add_argument("--extension", choices=("uc2", "u2r"), default="uc2")
+parser.add_argument("--association", choices=("none", "uc2", "u2r"), default="none")
 args = parser.parse_args()
 root = args.work.resolve()
 root.mkdir(parents=True, exist_ok=False)
@@ -37,8 +38,9 @@ subprocess.run([str(args.uc2.resolve()), "-qw", str(archive), "hello.txt", "nest
 ini = root / "wincmd.ini"
 ini.write_text("[Configuration]\nUseIniInProgramDir=0\nFirstTime=0\nUseNewDefFont=1\n"
                "DirBrackets=0\nStartupScreen=0\n[PackerPlugins]\n"
-               f"uc2=196,{args.plugin.resolve()}\nu2r=196,{args.plugin.resolve()}\n"
-               "[Associations]\nFilter1=*.uc2\nFilter1_open=**u2r\n", encoding="utf-8")
+               f"uc2=196,{args.plugin.resolve()}\nu2r=196,{args.plugin.resolve()}\n" +
+               ("" if args.association == "none" else
+                f"[Associations]\nFilter1=*.uc2\nFilter1_open=**{args.association}\n"), encoding="utf-8")
 command = [str(args.app.resolve()), "/N", f"/I={ini}", f"/F={root / 'wcx_ftp.ini'}",
            f"/L={browse}", f"/R={output}"]
 process = subprocess.Popen(command)
@@ -122,7 +124,7 @@ try:
         press_trial_prompt()
         time.sleep(0.2)
     main.send_message(1075, 2049, 0)  # cm_GoToFirstEntry: only the fixture in this panel
-    main.post_message(1075, 1001, 0)  # cm_Return honors the explicit internal association
+    main.post_message(1075, 1001, 0)  # cm_Return opens through the registered packer
     deadline = time.monotonic() + 10
     while time.monotonic() < deadline:
         if any(archive.name in c.window_text().lower() for c in main.descendants()):
@@ -168,7 +170,7 @@ try:
                     files={name: hashlib.sha256(data).hexdigest() for name, data in files.items()},
                     native_application=True, plugin_module_observed=observed_module,
                     archive_extension=args.extension,
-                    archive_opened=True, association="**u2r", packer_type=packer_type,
+                    archive_opened=True, association=args.association, packer_type=packer_type,
                     extracted_bytes_verified=True)
     (root / "result.json").write_text(json.dumps(evidence, indent=2) + "\n")
     print(json.dumps(evidence))
