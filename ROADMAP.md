@@ -2,7 +2,7 @@
 
 ## Recommended next priorities (2026-11-07)
 
-Alpha9 implements the previous top two: direct `.uc2` routing in 32-bit
+Published alpha9 implements the previous top two: direct `.uc2` routing in 32-bit
 Total Commander, and browser ZIP export/offline use with three-engine tests.
 The next five priorities are below.
 
@@ -506,6 +506,13 @@ Bobrowski already shipped prototypes; update for UC2 v3.
 - Phase 9: ZK proof soundness and completeness
 
 ## Maintenance Log
+
+- 2026-11-07: Published alpha9 from `19c725a`: direct `.uc2` WCX routing in
+  native TC32/TC64, selected browser ZIP exports, offline cache/repair/update
+  support, and Chromium/Firefox/WebKit coverage. Public artifact hashes, live
+  offline ZIP exports and the installed package are verified. Closed 81c0c8a
+  and 5332dc5. Updated the next five above; the full-project audit stays open.
+  Evidence: `docs/releases/3.0.0a9-qa.md`.
 
 - 2026-11-07: Published alpha8 from `0597a35`: incremental directory snapshots,
   Turbo/method 80, the 39-archive/684-entry interoperability corpus, and bounded
