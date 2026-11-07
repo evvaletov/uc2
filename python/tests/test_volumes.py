@@ -117,3 +117,14 @@ print('handles preserved')
                           cwd=tmp_path,capture_output=True,text=True)
     assert result.returncode == 0, result.stderr
     assert result.stdout.strip() == 'handles preserved'
+
+
+@pytest.mark.skipif(__import__('os').name == 'nt', reason='POSIX byte filenames')
+def test_non_utf8_volume_path(tmp_path):
+    import os
+    directory=tmp_path/os.fsdecode(b'volume-\xff')
+    directory.mkdir()
+    first=directory/'MORE.EXE'
+    shutil.copyfile(FIXTURES/'sea'/'MORE.EXE', first)
+    with UC2File(os.fsencode(first)) as archive:
+        assert archive.read('SUB/NOTE.TXT') == b'UC2SEA nested file\r\n'*17

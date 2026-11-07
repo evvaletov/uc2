@@ -303,10 +303,8 @@ static PyObject *chunk_length(PyObject *module, PyObject *args)
     uc2_chunker_next(&chunker, (const uint8_t *)data, (size_t)length, &offset, &size);
     return PyLong_FromSize_t(size);
 }
-static PyObject *open_path(PyObject *module, PyObject *args)
+static PyObject *open_path_impl(PyObject *module, const char *path)
 {
-    const char *path;
-    if (!PyArg_ParseTuple(args, "s", &path)) return NULL;
     char error[256];
     FILE *stream;
     Py_BEGIN_ALLOW_THREADS
@@ -354,6 +352,22 @@ static PyObject *open_path(PyObject *module, PyObject *args)
     if (!result) close(fd);
 #endif
     return result;
+}
+static PyObject *open_path(PyObject *module, PyObject *args)
+{
+#ifdef _WIN32
+    /* The Windows path opener explicitly converts UTF-8 to UTF-16. */
+    const char *path;
+    if (!PyArg_ParseTuple(args,"s",&path)) return NULL;
+    return open_path_impl(module,path);
+#else
+    /* Preserve surrogateescaped filesystem bytes, including bytes paths. */
+    PyObject *encoded=NULL;
+    if (!PyArg_ParseTuple(args,"O&",PyUnicode_FSConverter,&encoded)) return NULL;
+    PyObject *result=open_path_impl(module,PyBytes_AS_STRING(encoded));
+    Py_DECREF(encoded);
+    return result;
+#endif
 }
 static PyMethodDef module_methods[] = {
     {"open_path", open_path, METH_VARARGS, "Open/reassemble SAS or UC2SEA input without executing it."},
