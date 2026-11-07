@@ -16,7 +16,7 @@ function crc32(bytes) {
   return (crc ^ 0xffffffff) >>> 0;
 }
 function zipPath(row) {
-  const leaf = row.name.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/^[.]+|[.]+$/g, '').slice(0, 80) || 'entry';
+  const leaf = row.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 80).replace(/^[.]+|[.]+$/g, '') || 'entry';
   return `files/${String(row.index).padStart(5, '0')}-v${row.version}-${leaf}`;
 }
 function zipDate(value) {

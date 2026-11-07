@@ -19,18 +19,14 @@
     });
   }
   async function report(registration, repair = false) {
-    if (registration.waiting) {
-      label.textContent = 'Offline update saved. Close all reader tabs and reopen to use it.';
-      return;
-    }
-    if (!registration.active) throw new Error('The offline reader is not ready. Try again while connected.');
-    let result = await ask(registration.active, 'status');
-    if (result.version !== version) {
-      label.textContent = 'A different offline version is saved. Close all reader tabs and reopen to update.';
-      return;
-    }
-    if (repair && !result.ready) result = await ask(registration.active, 'prepare');
-    label.textContent = result.ready ? 'Reader saved for offline use. Reopen this page when offline.' : 'Offline reader is incomplete. Save it again while connected.';
+    const worker = registration.waiting || registration.active;
+    if (!worker) throw new Error('The offline reader is not ready. Try again while connected.');
+    let result = await ask(worker, 'status');
+    if (repair && !result.ready) result = await ask(worker, 'prepare');
+    if (!result.ready) label.textContent = 'Offline reader is incomplete. Save it again while connected.';
+    else if (registration.waiting === worker) label.textContent = 'Offline update saved. Close all reader tabs and reopen to use it.';
+    else if (result.version !== version) label.textContent = 'A different offline version is saved. Close all reader tabs and reopen to update.';
+    else label.textContent = 'Reader saved for offline use. Reopen this page when offline.';
   }
   function installed(worker, updating) {
     const complete = () => worker.state === 'activated' || (updating && worker.state === 'installed');
@@ -53,8 +49,9 @@
     button.disabled = true; label.textContent = 'Saving the reader for offline use…';
     try {
       const registration = await navigator.serviceWorker.register('sw.js', {scope: './', updateViaCache: 'none'});
-      await registration.update();
-      await installed(registration.installing, !!registration.active);
+      const updating = !!registration.active;
+      if (!registration.installing) await registration.update();
+      await installed(registration.installing || registration.waiting || registration.active, updating);
       await report(registration, true);
     } catch (error) { label.textContent = error.message; }
     finally { button.disabled = false; }

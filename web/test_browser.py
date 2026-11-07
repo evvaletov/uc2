@@ -51,6 +51,7 @@ def check_zip(path, archive, wanted=None):
         for row, info in zip(files, expected):
             assert (row['path'], row['version']) == (info.filename, info.version)
             assert re.fullmatch(r'files/\d+-v\d+-[A-Za-z0-9._-]+', row['output'])
+            assert not row['output'].endswith('.')
             data = exported.read(row['output'])
             assert data == reference.read(info), row['path']
             assert row['size'] == len(data) and row['verified'] is True
@@ -73,10 +74,33 @@ def main():
         with tempfile.TemporaryDirectory(prefix='uc2-browser-test-') as temporary, sync_playwright() as pw:
             scratch = Path(temporary)
             browser = getattr(pw, args.engine).launch(headless=True, executable_path=args.browser)
+            # A failed first install must be visible and allow a clean retry.
+            first = browser.new_context()
+            first_page = first.new_page()
+            first_page.goto(url)
+            server.overrides = {'/icon-192.png': b'inconsistent deployment'}
+            first_page.get_by_role('button', name='Save reader offline').click()
+            expect(first_page.locator('#offline-status')).to_contain_text('Offline download failed', timeout=30000)
+            assert first_page.evaluate('caches.keys()') == []
+            server.overrides = {}
+            first_page.get_by_role('button', name='Save reader offline').click()
+            expect(first_page.locator('#offline-status')).to_contain_text('Reader saved for offline use', timeout=120000)
+            first.close()
             context = browser.new_context(accept_downloads=True)
             page = context.new_page()
             errors, requests, downloads = [], [], []
-            page.on('pageerror', lambda error: errors.append(str(error)))
+            injected_corruption = False
+            def record_error(error):
+                message = str(error)
+                # WebKit also forwards deliberately rejected SW fetches to
+                # pageerror; Chromium/Firefox expose only the fetch rejection.
+                if injected_corruption and args.engine == 'webkit' and message in (
+                    'Error: The reader changed during download. Reload and try again.',
+                    f'/127.0.0.1:{server.server_port}/icon-192.png.',
+                ):
+                    return
+                errors.append(message)
+            page.on('pageerror', record_error)
             context.on('request', lambda request: requests.append((request.method, request.url)))
             page.on('download', lambda download: downloads.append(download))
             page.goto(url)
@@ -110,6 +134,7 @@ def main():
                 writer.mkdir('empty-directory')
                 writer.writestr('empty', b'')
                 writer.writestr('CON.txt', b'reserved filename')
+                writer.writestr('a' * 79 + '.txt', b'truncated leaf must not end in a dot')
             page.locator('#archive').set_input_files(modern)
             expect(page.locator('#archive-name')).to_have_text(modern.name, timeout=30000)
             page.locator('#versions').check()
@@ -121,7 +146,7 @@ def main():
             downloaded.value.save_as(scratch / 'old')
             assert (scratch / 'old').read_bytes() == b'old version'
             page.get_by_role('button', name='Verify all versions').click()
-            expect(page.locator('#status')).to_contain_text('All 5 stored files passed', timeout=30000)
+            expect(page.locator('#status')).to_contain_text('All 6 stored files passed', timeout=30000)
             with page.expect_download() as downloaded:
                 page.get_by_role('button', name='Save inventory').click()
             downloaded.value.save_as(scratch / 'inventory.json')
@@ -135,11 +160,11 @@ def main():
             # Selection survives filtering. Older versions have separate ZIP
             # paths, and the exported inventory maps those paths back exactly.
             page.get_by_role('button', name='Select matching files').click()
-            expect(page.locator('#selection-count')).to_contain_text('5 file versions')
+            expect(page.locator('#selection-count')).to_contain_text('6 file versions')
             page.locator('#versions').uncheck()
             page.locator('#search').fill('café')
             expect(page.locator('#entries tr')).to_have_count(1)
-            expect(page.locator('#selection-count')).to_contain_text('5 file versions')
+            expect(page.locator('#selection-count')).to_contain_text('6 file versions')
             with page.expect_download() as downloaded:
                 page.get_by_role('button', name='Save selected ZIP').click()
             downloaded.value.save_as(scratch / 'all.zip')
@@ -206,6 +231,39 @@ def main():
             expect(page.locator('#status')).to_contain_text('between 1 and 1,000')
             assert len(downloads) == before
 
+            large = scratch / 'large.uc2'
+            payload = b'\0' * (64 * 1024 * 1024)
+            with UC2Writer(large, level=2) as writer:
+                writer.writestr('limit', payload)
+                writer.writestr('second', payload)
+                writer.writestr('over', payload + b'x')
+            del payload
+            page.locator('#archive').set_input_files(large)
+            expect(page.locator('#archive-name')).to_have_text(large.name, timeout=30000)
+            page.get_by_role('checkbox', name='Include over (version 0)', exact=True).check()
+            page.get_by_role('button', name='Save selected ZIP').click()
+            expect(page.locator('#status')).to_contain_text('64 MiB limit')
+            page.get_by_role('button', name='Clear selection').click()
+            page.get_by_role('checkbox', name='Include limit (version 0)', exact=True).check()
+            page.get_by_role('checkbox', name='Include second (version 0)', exact=True).check()
+            page.get_by_role('button', name='Save selected ZIP').click()
+            expect(page.locator('#status')).to_contain_text('128 MiB download limit')
+            assert len(downloads) == before
+            page.get_by_role('checkbox', name='Include second (version 0)', exact=True).uncheck()
+            with page.expect_download(timeout=30000) as downloaded:
+                page.get_by_role('button', name='Save selected ZIP').click()
+            downloaded.value.save_as(scratch / 'large.zip')
+            check_zip(scratch / 'large.zip', large, {('limit', 0)})
+            # The same timeout/reopen contract also applies to bulk export.
+            before = len(downloads)
+            page.evaluate('worker.terminate()')
+            page.get_by_role('button', name='Save selected ZIP').click()
+            page.clock.fast_forward(30001)
+            expect(page.locator('#status')).to_contain_text('Time limit reached')
+            expect(page.locator('#download-zip')).to_be_disabled()
+            assert len(downloads) == before
+            page.clock.resume()
+
             broken = scratch / 'broken.uc2'
             broken.write_bytes(b'not an archive')
             page.locator('#archive').set_input_files(broken)
@@ -251,6 +309,7 @@ def main():
             assert not any(fixture.name in target for target in cached[0]['urls'])
             context.set_offline(False)
             page.evaluate("async () => { const c = await caches.open((await caches.keys())[0]); await c.delete(new URL('icon-192.png', location.href).href); }")
+            injected_corruption = True
             server.overrides = {'/icon-192.png': b'wrong build'}
             assert page.evaluate("fetch('icon-192.png').then(() => false, () => true)")
             server.overrides = {}
@@ -279,12 +338,22 @@ def main():
             assert result is True
             assert page.evaluate('navigator.serviceWorker.controller !== null')
             assert page.evaluate('caches.keys()') == [cached[0]['name']]
+            injected_corruption = False
             server.overrides['/'] = server.overrides['/index.html'] = next_index
             page.get_by_role('button', name='Save reader offline').click()
             expect(page.locator('#offline-status')).to_contain_text('Offline update saved', timeout=120000)
             assert page.locator('meta[name="uc2-build"]').get_attribute('content') == old_version
+            page.evaluate('''async version => {
+                const name = (await caches.keys()).find(k => k.endsWith(version));
+                await (await caches.open(name)).delete(new URL('icon-192.png', location.href).href);
+            }''', new_version)
+            page.reload()
+            expect(page.locator('#offline-status')).to_contain_text('incomplete')
+            page.get_by_role('button', name='Save reader offline').click()
+            expect(page.locator('#offline-status')).to_contain_text('Offline update saved', timeout=120000)
             page.close()
             page = context.new_page()
+            page.on('pageerror', record_error)
             # Waiting-worker activation may finish just after the old tab closes.
             page.goto(url)
             page.wait_for_function('''async version => {
