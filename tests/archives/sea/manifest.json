@@ -1,0 +1,84 @@
+{
+  "provenance": "Compressed records produced by original UC2SEA 2.3 in DOSBox-X. The original executable stub has been removed and replaced with a synthetic, non-runnable 64-byte MZ envelope. Banner, file records and compressed payload are retained. This is an original-encoder data fixture, not a historical archive or runnable SFX.",
+  "distribution_sha256": "db5fd20ff3895bd6fea91869e8769e24549fe921a696dc5afcc205227622145b",
+  "sets": [
+    {
+      "name": "NORMAL",
+      "parts": [
+        {
+          "path": "NORMAL.EXE",
+          "size": 19856,
+          "sha256": "d524ea4473763cb8419500034c1be20eb6093b50c62c2a878f21f9289db5bf3c"
+        },
+        {
+          "path": "NORMAL.001",
+          "size": 32768,
+          "sha256": "c1c60ee9d7e7f623b125f68873bf0e7621a7bc5dd1af9bb1d0e8d6a3ef5b25a5"
+        },
+        {
+          "path": "NORMAL.002",
+          "size": 32768,
+          "sha256": "1d90e1b53c0cabe95e991208422b8d9376adaf47e85761ea684c0dafaf33965f"
+        },
+        {
+          "path": "NORMAL.003",
+          "size": 32768,
+          "sha256": "ff6e67b75da27f5287797c9b1e1c33c541f509ed96c6473202ab3ea90e06cc81"
+        },
+        {
+          "path": "NORMAL.004",
+          "size": 32768,
+          "sha256": "7043c828151d340e04440fcf1bcd74b5850177a331bd48cc52252605f49ecf34"
+        },
+        {
+          "path": "NORMAL.005",
+          "size": 9843,
+          "sha256": "e8f5b8a13eb9cf21e91f8abce7b26b07c6770711ebe8e65af714326e7334b55d"
+        }
+      ],
+      "payloads": [
+        {
+          "path": "HELLO.TXT",
+          "size": 4000,
+          "sha256": "482f011f9b6e409baa9c95f5e4aed4d4b36f9392edf1283582b6b3ace8254a53"
+        },
+        {
+          "path": "RANDOM.BIN",
+          "size": 160000,
+          "sha256": "ce387ca6194ffaa40ba0c226189ddac21acaf03eee058a4fdd8d70f17998e6cf"
+        }
+      ],
+      "original_first_sha256": "caec96d7ccc105b118639873f6cdb30c6013100bd485d1f1a426b5d644b1bd70",
+      "flags": "-v32"
+    },
+    {
+      "name": "MORE",
+      "parts": [
+        {
+          "path": "MORE.EXE",
+          "size": 256,
+          "sha256": "d774b1fbc1836149862ead342547a0f6e1ebaafb7fddf65986e54bb68a764620"
+        }
+      ],
+      "payloads": [
+        {
+          "path": "EMPTY.TXT",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "SEASTART.BAT",
+          "size": 44,
+          "sha256": "4fcfdccd6eaa1a330f14ceefbf7412b958ad0a21c2672aa7166a952786ecedb7"
+        },
+        {
+          "path": "SUB/NOTE.TXT",
+          "size": 340,
+          "sha256": "2e996832714881dca387a71555aa352716fc377a0e9d7f4b5c51e6344279f419"
+        }
+      ],
+      "original_first_sha256": "6aee24d080c932145adfff2785fdad6d9afc01001c5d52c188f47d12ba3f887c",
+      "flags": "-f -bBANNER.TXT"
+    }
+  ]
+}

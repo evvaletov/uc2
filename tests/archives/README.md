@@ -60,4 +60,6 @@ are fetched separately; only provenance and expected metadata/hashes ship here.
 `sas/` contains three original SAS 2.3 split parts of the
 generated Turbo fixture. The original `SAS B SPLIT` tool reassembled them
 byte for byte. Their manifest records hashes and provenance. Native reads
-refuse each part explicitly; automatic SAS and UC2SEA reassembly remain open.
+reassemble these parts directly in alpha10. The `sea/` fixtures preserve original
+UC2SEA compressed records under a synthetic envelope without the restricted
+executable stub; their manifest records payload and part hashes.

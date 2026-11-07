@@ -181,7 +181,7 @@ jobs:
           cmake --build build --target uc2 -j
       - name: Build fuzz harnesses
         run: |
-          for h in fuzz_extract fuzz_roundtrip; do
+          for h in fuzz_extract fuzz_roundtrip fuzz_sea; do
             clang -fsanitize=fuzzer,address -O1 -g \
               -Ilib/include -Ilib/src -Ibuild/lib \
               tests/fuzz/$h.c lib/src/*.c build/lib/super_data.S \
@@ -196,6 +196,12 @@ jobs:
           cp tests/fuzz/seeds/* tests/fuzz/regressions/* corpus_extract/ || true
           ./fuzz_extract -max_len=65536 -timeout=20 -rss_limit_mb=2048 \
             -max_total_time=$FUZZ_SECONDS corpus_extract/
+      - name: Fuzz standalone SEA decoder
+        run: |
+          mkdir -p corpus_sea
+          python3 -c 'from pathlib import Path; d=Path("tests/archives/sea/MORE.EXE").read_bytes(); p=d.index(b"UC2SFX Header"); Path("corpus_sea/more").write_bytes(d[int.from_bytes(d[p+15:p+19], "little"):])'
+          ./fuzz_sea -max_len=65536 -timeout=20 -rss_limit_mb=2048 \
+            -max_total_time=$FUZZ_SECONDS corpus_sea/
       - name: Fuzz compress / round-trip path
         run: |
           mkdir -p corpus_rt

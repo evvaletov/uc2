@@ -20,5 +20,5 @@
       "sha256": "bb08ec353821cc706b3a10566354375401485d9beaca7157f7cf89ae28f2ac0a"
     }
   ],
-  "native_support": "Explicitly refused until reassembled; automatic SAS and UC2SEA multi-volume input remain unsupported."
+  "native_support": "Native CLI and Python filesystem paths transparently reassemble canonical .pNN/.PNN sets in alpha10; streams cannot resolve siblings."
 }

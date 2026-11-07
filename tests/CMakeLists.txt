@@ -231,3 +231,8 @@ add_executable(test_writer src/test_writer.c)
 target_link_libraries(test_writer PRIVATE uc2)
 target_compile_features(test_writer PRIVATE c_std_99)
 add_test(NAME writer COMMAND test_writer)
+
+add_executable(test_sea src/test_sea.c)
+target_link_libraries(test_sea PRIVATE uc2)
+target_compile_features(test_sea PRIVATE c_std_99)
+add_test(NAME sea COMMAND test_sea "${CMAKE_CURRENT_BINARY_DIR}/synthetic-sea.exe")

@@ -83,6 +83,14 @@ UC2_API int uc2_extract(
 	void *context
 );
 
+/* Decode a standalone Huffman bitstream with its 512-byte zero history.
+   Returns decoded byte count or a negative error. max_output must be 1..INT_MAX.
+   compressed_size must be even; rejects consumed padding and trailing words.
+   Does not authenticate data; callers must validate framing/checksums. */
+UC2_API int uc2_decompress_raw(struct uc2_io *, void *io_context, unsigned offset,
+                              unsigned compressed_size, unsigned max_output,
+                              int (*write)(void *, const void *, unsigned), void *output);
+
 UC2_API const char *uc2_message(uc2_handle, int ret);
 
 #ifndef UC2_HUFFMAN_ONLY

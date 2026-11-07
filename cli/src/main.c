@@ -51,6 +51,7 @@ void setprogname(const char *argv0);
 
 #include <uc2/libuc2.h>
 #include <uc2/uc2_writer.h>
+#include <uc2/uc2_path.h>
 #include <uc2/uc2_cdc.h>
 #include <uc2/uc2_ingest.h>
 #include <uc2/uc2_merkle.h>
@@ -60,6 +61,7 @@ void setprogname(const char *argv0);
 #include <uc2/uc2_version.h>
 
 #include "list.h"
+#include "ingest_tar.h"
 #define endof(T) (T + sizeof T/sizeof*T)
 #define STR(S) STR_(S)
 #define STR_(S) #S
@@ -74,7 +76,8 @@ enum ots_mode {
 enum ingest_mode {
 	INGEST_MODE_NONE = 0,
 	INGEST_MODE_WRITE,
-	INGEST_MODE_RESTORE
+	INGEST_MODE_RESTORE,
+	INGEST_MODE_TAR
 };
 
 struct options {
@@ -1270,7 +1273,14 @@ static int extract_ingest_long_opts(int *argcp, char **argv, char **out_path)
 		int new_mode = INGEST_MODE_NONE;
 		const char *inline_value = NULL;
 
-		if (strcmp(a, "--ingest") == 0) {
+        if (strcmp(a, "--ingest-tar") == 0) {
+            new_mode = INGEST_MODE_TAR;
+            matched_args = 1;
+        } else if (strncmp(a, "--ingest-tar=", 13) == 0) {
+            new_mode = INGEST_MODE_TAR;
+            matched_args = 1;
+            inline_value = a + 13;
+        } else if (strcmp(a, "--ingest") == 0) {
 			new_mode = INGEST_MODE_WRITE;
 			matched_args = 1;
 		} else if (strncmp(a, "--ingest=", 9) == 0) {
@@ -1735,6 +1745,26 @@ static int ingest_restore_v3(const char *archive_path, FILE *out)
 	return rc;
 }
 
+static int cmd_ingest_tar(const char *archive_path)
+{
+    binary_stream(stdin);
+    uc2_writer *writer=uc2_writer_create(NULL);
+    if (!writer) errx(EXIT_FAILURE,"cannot initialize tar archive writer");
+    char error[256];
+    if (uc2_tar_read(writer,stdin,error,sizeof error)<0) errx(EXIT_FAILURE,"%s",error);
+    FILE *out=stage_output(archive_path);
+    int result=uc2_writer_finish(writer,fwrite_cb,out);
+    int closed=fclose(out);
+    writer_check(writer,result,archive_path);
+    if (closed!=0) err(EXIT_FAILURE,"output close failed");
+    commit_staged_output(archive_path);
+    struct uc2_writer_stats stats;
+    uc2_writer_get_stats(writer,&stats);
+    uc2_writer_free(writer);
+    uc2_say(stderr,"Ingested tar: %u files, %u directories, %u archive bytes\n",stats.files,stats.directories,stats.archive_size);
+    return EXIT_SUCCESS;
+}
+
 static int cmd_ingest_write(const char *archive_path)
 {
 	binary_stream(stdin);
@@ -1840,6 +1870,8 @@ int main(int argc, char *argv[])
 	{
 		char *ingest_path = NULL;
 		opt.ingest_mode = extract_ingest_long_opts(&argc, argv, &ingest_path);
+		if (opt.ingest_mode == INGEST_MODE_TAR)
+			return cmd_ingest_tar(ingest_path);
 		if (opt.ingest_mode == INGEST_MODE_WRITE)
 			return cmd_ingest_write(ingest_path);
 		if (opt.ingest_mode == INGEST_MODE_RESTORE)
@@ -1918,6 +1950,7 @@ usage:
 				"uc2 --ots-extract archive.uc2 <out.ots>\n"
 				"uc2 --ots-info archive.uc2\n"
 				"uc2 --ingest <archive>            # stdin -> dedup UC2 archive\n"
+				"uc2 --ingest-tar <archive>        # tar stdin -> named UC2 entries\n"
 				"uc2 --ingest-restore <archive>    # archive -> stdout\n"
 			);
 			if (!opt.help)
@@ -1970,8 +2003,9 @@ usage:
 	if (opt.pipe && !opt.test && !opt.list)
 		binary_stream(stdout);
 
-	FILE *f = fopen(opt.archive, "rb");
-	if (!f) err(EXIT_FAILURE, "%s", opt.archive);
+	char open_error[256];
+	FILE *f = uc2_open_path(opt.archive, open_error, sizeof open_error);
+	if (!f) errx(EXIT_FAILURE, "%s: %s", opt.archive, open_error);
 
 	uc2_handle uc2 = uc2_open(&io, f);
 

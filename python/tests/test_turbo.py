@@ -17,11 +17,11 @@ def test_turbo_original_and_independent_hashes(case):
         assert hashlib.sha256(archive.read(info)).hexdigest() == case['payload_sha256']
 
 
-def test_original_sas_parts_are_explicitly_unsupported():
+def test_original_sas_fixture_hashes():
     from uc2 import BadArchiveError
     manifest = json.loads((CORPUS/'sas/manifest.json').read_text())
     for item in manifest['parts']:
         path = CORPUS/'sas'/item['path']
         assert hashlib.sha256(path.read_bytes()).hexdigest() == item['sha256']
-        with pytest.raises(BadArchiveError, match='SAS split archive'):
-            UC2File(path)
+        with UC2File(path) as archive:
+            archive.verify()

@@ -207,3 +207,8 @@ credits, and the per-file audit are included in the distribution.
 Incremental directory versions are available through `uc2 snapshot` in the
 Python package, with shared SHA-256-addressed UC2 chunks and verified restores.
 See [the snapshot guide](https://github.com/evvaletov/uc2/blob/main/docs/snapshots.md).
+
+Filesystem paths now resolve SAS and DOS UC2SEA sets without executing input.
+Keep all volumes together. Snapshot maintenance adds explicit `prune`, `repair`
+and `compact`; packed repositories require alpha10 or later. See the
+[repository guides](https://github.com/evvaletov/uc2/tree/main/docs).

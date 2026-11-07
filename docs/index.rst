@@ -17,8 +17,13 @@ verified ZIP/tar exports. See the `preservation guide
 <https://github.com/evvaletov/uc2/blob/main/docs/preservation.md>`_.
 
 ``uc2 snapshot`` in the Python package creates incremental directory versions
-with shared chunks and verified restores. See the `snapshot guide
+with shared chunks, verified restores, explicit retention and replica repair. See the `snapshot guide
 <https://github.com/evvaletov/uc2/blob/main/docs/snapshots.md>`_.
+
+The native CLI also supports tar ingestion with separate entries and data-only
+SAS/UC2SEA reads. See the `tar guide
+<https://github.com/evvaletov/uc2/blob/main/docs/tar-ingestion.md>`_ and
+`volume guide <https://github.com/evvaletov/uc2/blob/main/docs/volumes.md>`_.
 
 .. toctree::
    :maxdepth: 2

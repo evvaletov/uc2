@@ -5,7 +5,7 @@ Nico de Vries (1992-1996). UC2 used shared compression dictionaries
 ("master blocks") and file versioning.
 
 UC2 v3 is under development in portable C99. The current alpha is
-[3.0.0a9](https://pypi.org/project/uc2/3.0.0a9/).
+[3.0.0a10](https://pypi.org/project/uc2/3.0.0a10/).
 Compression levels 2-5 use the original Huffman format; levels 6-9 require the
 new rANS reader. Original-format compatibility is
 covered by DOSBox-X fixtures, including Turbo/method 80 reads. Multi-volume
@@ -192,3 +192,7 @@ the [per-file license audit](docs/license-audit.md).
 Incremental directory versions are available through `uc2 snapshot` in the
 Python package, with shared SHA-256-addressed UC2 chunks and verified restores.
 See [the snapshot guide](https://github.com/evvaletov/uc2/blob/main/docs/snapshots.md).
+
+Alpha10 adds [snapshot retention, repair and packing](docs/snapshots.md),
+[data-only SAS/UC2SEA reads](docs/volumes.md), and
+[tar ingestion with individual file entries](docs/tar-ingestion.md).

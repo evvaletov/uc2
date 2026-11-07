@@ -3,6 +3,7 @@
 # Copyright (c) 2026 Eremey Valetov. See ../libarchive/LICENSE.BSD-2-Clause.
 """Read-only UC2 extfs helper for Midnight Commander."""
 import os
+import shlex
 from pathlib import Path
 import subprocess
 import sys
@@ -10,7 +11,9 @@ import tempfile
 
 
 def entries(archive):
-    result = subprocess.run([os.environ.get('UC2', 'uc2'), '-qlaT', '--', archive],
+    command = (shlex.split(os.environ['MC_TEST_EXTFS_LIST_CMD'])
+               if 'MC_TEST_EXTFS_LIST_CMD' in os.environ else [os.environ.get('UC2', 'uc2')])
+    result = subprocess.run(command + ['-qlaT', '--', archive],
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                             encoding='utf-8', errors='strict')
     if result.returncode:

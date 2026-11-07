@@ -7,6 +7,7 @@
 #endif
 #include <uc2/uc2_writer.h>
 #include <uc2/uc2_cdc.h>
+#include <uc2/uc2_sha256.h>
 #include <ctype.h>
 #include <limits.h>
 #include <stdio.h>
@@ -20,7 +21,8 @@
 struct entry {
     char name[256];
     unsigned parent, id, depth, time, attr;
-    unsigned size, csize, offset, master, spool;
+    unsigned size, csize, offset, master, spool, duplicate;
+    unsigned char digest[32];
     unsigned short checksum;
 };
 struct master {
@@ -209,6 +211,7 @@ int uc2_writer_add_file(uc2_writer *w, unsigned parent, const char *name,
     e->spool=(unsigned)w->input_size;
     unsigned char buffer[65536];
     uint64_t consumed=0;
+    struct uc2_sha256 sha; uc2_sha256_init(&sha);
     w->state=1;
     for (;;) {
         uint64_t limit=w->options.max_input_size-w->input_size;
@@ -219,9 +222,11 @@ int uc2_writer_add_file(uc2_writer *w, unsigned parent, const char *name,
         if (!n) break;
         if ((unsigned)n>limit) return fail(w,UC2_WRITER_LIMIT,"input exceeds declared size or total input limit");
         if (fwrite(buffer,1,(size_t)n,w->input)!=(size_t)n) return fail(w,UC2_UserFault,"temporary input write failed");
+        uc2_sha256_update(&sha,buffer,(unsigned)n);
         consumed+=(unsigned)n; w->input_size+=(unsigned)n;
     }
     if (size!=UC2_WRITER_UNKNOWN_SIZE && consumed!=size) return fail(w,UC2_Truncated,"input ended before its declared size");
+    uc2_sha256_final(&sha,e->digest);
     e->size=(unsigned)consumed; w->state=0;
     return 0;
 }
@@ -257,7 +262,7 @@ static int group_files(uc2_writer *w)
     unsigned char buffer[CHUNK_MAX];
     for (unsigned i=0; i<w->count; ++i) {
         struct entry *e=&w->entries[i];
-        if (e->id || e->size<1024) continue;
+        if (e->id || e->duplicate || e->size<1024) continue;
         unsigned pos=0;
         while (pos<e->size) {
             unsigned n=e->size-pos; if (n>sizeof buffer) n=sizeof buffer;
@@ -296,7 +301,7 @@ static int group_files(uc2_writer *w)
     if (!remaining) return fail(w,UC2_UserFault,"cannot allocate fallback group");
     unsigned n=0;
     for (unsigned i=0; i<w->count; ++i)
-        if (!w->entries[i].id && !w->entries[i].master) remaining[n++]=i;
+        if (!w->entries[i].id && !w->entries[i].duplicate && !w->entries[i].master) remaining[n++]=i;
     if (n) add_master(w,remaining,n);
     free(remaining); free(w->chunks); w->chunks=NULL;
     w->stats.masters=w->master_count;
@@ -335,10 +340,54 @@ static int load_master(uc2_writer *w, const struct master *m, unsigned char *buf
     if (!e->size) { buf[0]=0; return 0; }
     return load_at(w,e->spool,buf,m->size);
 }
+struct fingerprint { unsigned file, size; unsigned char digest[32]; };
+static int fingerprint_compare(const void *left, const void *right)
+{
+    const struct fingerprint *a=left,*b=right;
+    if (a->size!=b->size) return a->size<b->size ? -1 : 1;
+    int r=memcmp(a->digest,b->digest,32);
+    return r ? r : a->file<b->file ? -1 : a->file>b->file;
+}
+static int duplicates(uc2_writer *w)
+{
+    struct fingerprint *index=calloc(w->stats.files ? w->stats.files : 1,sizeof *index);
+    if (!index) return fail(w,UC2_UserFault,"cannot allocate duplicate index");
+    unsigned count=0;
+    for (unsigned i=0; i<w->count; ++i) if (!w->entries[i].id) {
+        index[count].file=i; index[count].size=w->entries[i].size;
+        memcpy(index[count++].digest,w->entries[i].digest,32);
+    }
+    qsort(index,count,sizeof *index,fingerprint_compare);
+    unsigned char a[16384],b[16384];
+    for (unsigned i=0; i<count;) {
+        unsigned end=i+1;
+        while (end<count && index[end].size==index[i].size && !memcmp(index[end].digest,index[i].digest,32)) ++end;
+        struct entry *first=&w->entries[index[i].file];
+        for (unsigned j=i+1; j<end; ++j) {
+            struct entry *e=&w->entries[index[j].file];
+            unsigned pos=0;
+            while (pos<e->size) {
+                unsigned n=e->size-pos; if (n>sizeof a) n=sizeof a;
+                if (load_at(w,first->spool+pos,a,n)<0 || load_at(w,e->spool+pos,b,n)<0) { free(index); return w->error; }
+                if (memcmp(a,b,n)) break;
+                pos+=n;
+            }
+            if (pos==e->size) e->duplicate=index[i].file+1;
+        }
+        i=end;
+    }
+    free(index); return 0;
+}
 static int assemble(uc2_writer *w)
 {
     if (fflush(w->input)!=0) return fail(w,UC2_UserFault,"temporary input flush failed");
-    if (group_files(w)<0) return w->error;
+    if (duplicates(w)<0 || group_files(w)<0) return w->error;
+    for (unsigned i=0; i<w->count; ++i) if (w->entries[i].duplicate) {
+        struct entry *e=&w->entries[i];
+        e->master=w->entries[e->duplicate-1].master;
+        struct master *m=&w->masters[e->master-2];
+        m->ref_len+=e->size; ++m->ref_count;
+    }
     w->output=tmpfile();
     if (!w->output) return fail(w,UC2_UserFault,"cannot create temporary archive");
     unsigned char header[29]={0}, super[49152], master_data[MASTER_MAX];
@@ -354,6 +403,11 @@ static int assemble(uc2_writer *w)
     }
     for (unsigned i=0; i<w->count; ++i) {
         struct entry *e=&w->entries[i]; if (e->id) continue;
+        if (e->duplicate) {
+            const struct entry *original=&w->entries[e->duplicate-1];
+            e->offset=original->offset; e->csize=original->csize; e->checksum=original->checksum;
+            continue;
+        }
         struct master *m=&w->masters[e->master-2];
         if (load_master(w,m,master_data)<0) return w->error;
         if (seek_file(w->input,e->spool)!=0) return fail(w,UC2_UserFault,"temporary input seek failed");

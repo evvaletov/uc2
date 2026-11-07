@@ -13,6 +13,7 @@
 */
 
 #include <stdint.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
@@ -317,6 +318,7 @@ static void *range_get(struct range *r, unsigned n)
 /* bits */
 
 struct bits {
+    uint64_t consumed;
 	u32 bits;
 	unsigned have_bits;
 	unsigned head, tail;
@@ -327,6 +329,7 @@ struct bits {
 
 static int bits_init(struct bits *bi, struct reader *rd)
 {
+    bi->consumed = 0;
 	bi->head = 0;
 	bi->tail = 0;
 	bi->bits = 0;
@@ -340,6 +343,7 @@ static void bits_skip(struct bits *bi, unsigned n)
 {
 	assert(bi->have_bits >= n);
 	bi->have_bits -= n;
+    bi->consumed += n;
 }
 
 static int bits_feed(struct bits *bi, unsigned n)
@@ -1078,7 +1082,7 @@ int uc2_extract(
 
 /* decompress */
 
-static int decompressor_ultra(struct uc2_context *uc2, unsigned master, unsigned delta, struct reader *rd, struct writer *wr, unsigned limit, u16 *csum);
+static int decompressor_ultra(struct uc2_context *uc2, unsigned master, unsigned delta, struct reader *rd, struct writer *wr, unsigned limit, u16 *csum, uint64_t *used);
 static int decompressor_turbo(struct uc2_context *uc2, unsigned master, struct reader *rd, struct writer *wr, unsigned limit, u16 *csum);
 #ifndef UC2_HUFFMAN_ONLY
 static int decompressor_rans(struct uc2_context *uc2, unsigned master_id, struct reader *rd, struct writer *wr, unsigned limit, u16 *csum);
@@ -1094,7 +1098,7 @@ static int decompressor(struct uc2_context *uc2, int method, struct reader *rd, 
 		delta = 0;
 ultra:
 		if (delta) diag("Using delta %d\n", delta);
-		ret = decompressor_ultra(uc2, master, delta, rd, wr, len, csum);
+		ret = decompressor_ultra(uc2, master, delta, rd, wr, len, csum, NULL);
 	} else if (method >= 30 && method <= 39) {
 		delta = method - 29;
 		goto ultra;
@@ -1328,6 +1332,7 @@ static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
 /* cbuf */
 
 struct cbuffer {
+    int strict_limit;
 	u16 head, tail;
 	unsigned limit;
 	unsigned produced;  /* bytes written to the window (master + output), <= 0x10000 */
@@ -1350,9 +1355,11 @@ static int cbuf_flush(struct writer *wr, struct cbuffer *cb, struct delta *db, u
 	for (;;) {
 		unsigned n = cbuf_have(cb);
 		if (!n) return 0;
+        if (cb->strict_limit && cb->limit < n) return UC2_Damaged;
 		unsigned u = 0x10000 - cb->head;
 		if (n > u) n = u;
 		if (cb->limit < n) {
+            if (cb->strict_limit) return UC2_Damaged;
 			diag("cbuf_flush %u < %u\a\n", cb->limit, n);
 			n = cb->limit;
 		}
@@ -1587,7 +1594,7 @@ enum {
 	More
 };
 
-static int decompressor_ultra(struct uc2_context *uc2, unsigned master, unsigned delta, struct reader *rd, struct writer *wr, unsigned limit, u16 *csum)
+static int decompressor_ultra(struct uc2_context *uc2, unsigned master, unsigned delta, struct reader *rd, struct writer *wr, unsigned limit, u16 *csum, uint64_t *used)
 {
 	diag("decompressor_ultra master:%X limit:%u\n", master, limit);
 
@@ -1601,6 +1608,7 @@ static int decompressor_ultra(struct uc2_context *uc2, unsigned master, unsigned
 	if (ret < 0)
 		goto ret;
 	ultra->cb.limit = limit;
+    ultra->cb.strict_limit = used != NULL;
 	ultra->cb.head = ultra->cb.tail = ret;
 	ultra->cb.produced = ret;
 	csum_init(&ultra->cb.csum);
@@ -1626,10 +1634,11 @@ static int decompressor_ultra(struct uc2_context *uc2, unsigned master, unsigned
 	dc_init(&ultra->dc);
 	for (;;) {
 		ret = decode_ht(ultra);
-		if (ret <= 0)
-			break;
+		if (ret < 0 && used) goto ret2;
+		if (ret <= 0) break;
 		for (;;) {
 			int o = decompress_block(ultra);
+			if (o < 0 && used) { ret = o; goto ret2; }
 			ret = cbuf_flush(wr, &ultra->cb, &db, dbuf);
 			if (ret < 0)
 				goto ret2;
@@ -1637,6 +1646,7 @@ static int decompressor_ultra(struct uc2_context *uc2, unsigned master, unsigned
 				break;
 		}
 	}
+    if (used) *used = ultra->bi.consumed;
 	bits_destroy(&ultra->bi);
 	if (csum)
 		*csum = csum_get(&ultra->cb.csum);
@@ -1788,6 +1798,45 @@ not_uc2:
 	}
 
 	return decompress_cdir(uc2, get32(h.xhead.cdir.offset), get16(h.xhead.fletch));
+}
+
+/* A Huffman lookup peeks 13 bits, but may consume only one. Supply one
+ * zero word for lookahead and reject any consumed bit beyond the real stream. */
+struct raw_reader { struct uc2_context *uc2; unsigned offset, remaining, padded; };
+static int raw_read(void *context, void *buffer, unsigned size)
+{
+    struct raw_reader *r = context;
+    if (r->remaining) {
+        if (size > r->remaining) size = r->remaining;
+        int n = u_read(r->uc2, r->offset, buffer, size);
+        if (n > 0) { r->offset += n; r->remaining -= n; }
+        return n;
+    }
+    if (r->padded) return 0;
+    if (size > 2) size = 2;
+    memset(buffer, 0, size); r->padded = 1;
+    return (int)size;
+}
+
+int uc2_decompress_raw(struct uc2_io *io, void *context, unsigned offset,
+                       unsigned compressed_size, unsigned limit,
+                       int (*write)(void *, const void *, unsigned), void *output)
+{
+    if (!io || !io->read || !io->alloc || !io->free || !write || !limit || limit > INT_MAX ||
+        !compressed_size || (compressed_size & 1) || compressed_size > UINT_MAX - offset)
+        return UC2_BadState;
+    struct uc2_context *uc2 = uc2_open(io, context);
+    if (!uc2) return UC2_UserFault;
+    struct raw_reader source = {uc2, offset, compressed_size, 0};
+    struct reader rd = {.read=raw_read, .context=&source};
+    struct user_write_ctx uw = {.write=write, .context=output, .remaining=limit};
+    struct writer wr = {.write=user_write, .context=&uw};
+    uint64_t used = 0;
+    int result = decompressor_ultra(uc2, NoMaster, 0, &rd, &wr, limit, NULL, &used);
+    if (result >= 0 && used > (uint64_t)compressed_size * 8) result = UC2_Truncated;
+    if (result >= 0 && (used + 15) / 16 * 2 != compressed_size) result = UC2_Damaged;
+    uc2_close(uc2);
+    return result;
 }
 
 /* public */

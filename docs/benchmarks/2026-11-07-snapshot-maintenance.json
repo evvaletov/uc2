@@ -1,0 +1,130 @@
+{
+  "corpus": "MidnightCommander/mc tracked regular files",
+  "commit": "3228c23fd57db28c20c35db8e0e1c6d3b087b3c7",
+  "source_files": 1045,
+  "source_bytes": 13707834,
+  "create_v1": {
+    "seconds": 178.021,
+    "result": {
+      "snapshot": "958906296c2b205d534f27050e236dda3834699f3368f987b7bdc476978af052",
+      "files": 1045,
+      "total_size": 13707834,
+      "new_chunks": 2003,
+      "new_chunk_bytes": 4234659,
+      "manifest_bytes": 361236,
+      "new_manifest_bytes": 361236,
+      "growth_bytes": 4595895
+    }
+  },
+  "v1_storage": {
+    "files": 2005,
+    "logical_bytes": 4596007,
+    "allocated_bytes": 9789440
+  },
+  "compact": {
+    "seconds": 43.395,
+    "result": {
+      "format_version": 2,
+      "snapshots": 1,
+      "removed_loose_files": 2004,
+      "database_bytes": 5726208
+    }
+  },
+  "v2_storage": {
+    "files": 2,
+    "logical_bytes": 5726327,
+    "allocated_bytes": 5734400
+  },
+  "verify_packed": {
+    "seconds": 6.036,
+    "result": {
+      "snapshot": "958906296c2b205d534f27050e236dda3834699f3368f987b7bdc476978af052",
+      "verified_files": 1045,
+      "total_size": 13707834
+    }
+  },
+  "unchanged_v2": {
+    "seconds": 24.816,
+    "result": {
+      "snapshot": "e9a2c845366abddf64100c8c706b02788263bec01465161be8f5e748dc6e69ae",
+      "files": 1045,
+      "total_size": 13707834,
+      "new_chunks": 0,
+      "new_chunk_bytes": 0,
+      "manifest_bytes": 361227,
+      "new_manifest_bytes": 118714,
+      "growth_bytes": 118714
+    }
+  },
+  "changed_v2": {
+    "seconds": 8.726,
+    "result": {
+      "snapshot": "075fa7bac14e5cba9bade5a8c8df312e8a0d8a7a26d49fd7454a0bc250dbdaeb",
+      "files": 1046,
+      "total_size": 13707915,
+      "new_chunks": 3,
+      "new_chunk_bytes": 2521,
+      "manifest_bytes": 361563,
+      "new_manifest_bytes": 118849,
+      "growth_bytes": 121370
+    }
+  },
+  "restore_v2": {
+    "seconds": 47.692,
+    "result": {
+      "snapshot": "075fa7bac14e5cba9bade5a8c8df312e8a0d8a7a26d49fd7454a0bc250dbdaeb",
+      "restored_files": 1046,
+      "total_size": 13707915
+    }
+  },
+  "restored_equal": true,
+  "after_incremental_storage": {
+    "files": 2,
+    "logical_bytes": 5967991,
+    "allocated_bytes": 9904128
+  },
+  "prune_plan": {
+    "seconds": 10.855,
+    "result": {
+      "applied": false,
+      "retained_snapshots": [
+        "075fa7bac14e5cba9bade5a8c8df312e8a0d8a7a26d49fd7454a0bc250dbdaeb"
+      ],
+      "removed_snapshots": [
+        "958906296c2b205d534f27050e236dda3834699f3368f987b7bdc476978af052",
+        "e9a2c845366abddf64100c8c706b02788263bec01465161be8f5e748dc6e69ae"
+      ],
+      "unreachable_chunks": 1,
+      "unreachable_chunk_bytes": 2195
+    }
+  },
+  "prune_apply": {
+    "seconds": 8.813,
+    "result": {
+      "applied": true,
+      "retained_snapshots": [
+        "075fa7bac14e5cba9bade5a8c8df312e8a0d8a7a26d49fd7454a0bc250dbdaeb"
+      ],
+      "removed_snapshots": [
+        "958906296c2b205d534f27050e236dda3834699f3368f987b7bdc476978af052",
+        "e9a2c845366abddf64100c8c706b02788263bec01465161be8f5e748dc6e69ae"
+      ],
+      "unreachable_chunks": 1,
+      "unreachable_chunk_bytes": 2195
+    }
+  },
+  "reclaim": {
+    "seconds": 6.307,
+    "result": {
+      "format_version": 2,
+      "snapshots": 1,
+      "removed_loose_files": 0,
+      "database_bytes": 5709824
+    }
+  },
+  "after_retention_storage": {
+    "files": 2,
+    "logical_bytes": 5709943,
+    "allocated_bytes": 5718016
+  }
+}

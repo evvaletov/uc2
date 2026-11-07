@@ -1,6 +1,6 @@
 # libuc2 — UC2 decompression library
 
-set(LIBUC2_SOURCES src/decompress.c src/compress.c src/uc2_tables.c src/uc2_cdc.c src/uc2_merkle.c src/uc2_blockstore.c src/uc2_simhash.c src/uc2_delta.c src/uc2_rans.c src/uc2_dict.c src/uc2_preprocess.c src/uc2_lz4.c src/uc2_blake3.c src/uc2_sha256.c src/uc2_ots.c src/uc2_ingest.c src/uc2_writer.c)
+set(LIBUC2_SOURCES src/decompress.c src/compress.c src/uc2_tables.c src/uc2_cdc.c src/uc2_merkle.c src/uc2_blockstore.c src/uc2_simhash.c src/uc2_delta.c src/uc2_rans.c src/uc2_dict.c src/uc2_preprocess.c src/uc2_lz4.c src/uc2_blake3.c src/uc2_sha256.c src/uc2_ots.c src/uc2_ingest.c src/uc2_writer.c src/uc2_path.c src/uc2_sea.c)
 
 # Embed super.bin: generated C on Windows, assembly .incbin elsewhere.
 if(WIN32)

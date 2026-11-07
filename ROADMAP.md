@@ -2,37 +2,47 @@
 
 ## Recommended next priorities (2026-11-07)
 
-Published alpha9 implements the previous top two: direct `.uc2` routing in 32-bit
-Total Commander, and browser ZIP export/offline use with three-engine tests.
-The next five priorities are below.
+Alpha10 implements snapshot retention/replica repair/packing, direct native
+SAS/UC2SEA reads and tar ingestion with named files. The next priorities are:
 
-1. [ ] **Scale and maintain snapshot repositories.**
-   Add explicit retention/pruning with reachability checks, recovery tooling
-   and larger-collection measurements. Reduce per-chunk archive and full-manifest
-   overhead. The initial SHA-256 store has no automatic pruning or redundancy.
-   Tracking: ecb9dc7. [Current contract](docs/snapshots.md).
+1. [ ] **Take the Total Commander and Midnight Commander proposals upstream.**
+   Review the [TC catalog draft](contrib/totalcommander/CATALOG-DRAFT.md) and
+   [MC extfs patch](contrib/mc/upstream/REVIEW.md), then authorize the first
+   contact/submission. Confirm MC's DCO sign-off. No external contact yet.
 
-2. [ ] **Read SAS/UC2SEA multi-volume collections directly.**
-   Add automatic reassembly, missing/mixed-part diagnostics and UC2SEA coverage.
-   The corpus includes original SAS 2.3 split parts and verified original
-   reassembly. Tracking: 2b65f0a.
+2. [ ] **Take the bounded libarchive patch through upstream review.**
+   The [review patch](contrib/libarchive/upstream/REVIEW.md) includes Turbo and
+   resource limits. Obtain maintainer agreement on the optional LGPL dependency,
+   defaults and format ID. Submission remains unsent. Tracking: 7bbb6b6.
 
-3. [ ] **Take the bounded libarchive patch through upstream review.**
-   The [review patch](contrib/libarchive/upstream/REVIEW.md) covers metadata,
-   dictionaries, spool and decoded-output limits, plus Turbo. Obtain maintainer
-   agreement on the optional LGPL dependency, resource defaults and format ID.
-   External contact/submission requires authorization; none has been made.
-   Tracking: 7bbb6b6.
+3. [ ] **Complete the project-wide task-qa + task-at audit.**
+   Audit the remaining core and maintained documentation. Release-scoped panels
+   do not close this task. Tracking: c9edf0b.
 
-4. [ ] **Preserve tar entries during stream ingestion.**
-   Parse tar boundaries so individual files remain recoverable as archive
-   entries while retaining chunk deduplication. Current tar ingestion restores
-   the complete opaque stream. Tracking: bd13adb.
+4. [ ] **Measure and harden multi-gigabyte snapshot collections.**
+   Alpha10's 1,045-file, 13 MiB measurement verifies restore and storage savings.
+   Measure near the reference/manifest caps, test process-kill and low-disk
+   recovery, and assess read-only/concurrent readers. Current operations require
+   a writable, exclusively locked repository. [Contract](docs/snapshots.md).
 
-5. [ ] **Complete the project-wide task-qa + task-at audit.**
-   Review the remaining core and maintained documentation with independent
-   reviewers. Recent release panels cover their changed code only; they do
-   not close this broader task. Tracking: c9edf0b.
+5. [ ] **Extend chunk sharing inside named archive entries.**
+   Tar entries now preserve individual files and reuse identical-file payloads
+   plus CDC-derived dictionaries. General chunk references across partially
+   changed files remain a separate format/writer task. Tracking: 2b91541.
+
+### Implemented for 3.0.0a10
+
+- [x] Snapshot dry-run/apply retention after full history verification; explicit
+  repair from a verified replica; atomic migration to SQLite-packed UC2 blobs
+  and compressed manifests, with bounded caches and retained v1 readability.
+- [x] Native CLI/Python path opening of original SAS and DOS UC2SEA sets,
+  missing/damaged-part diagnostics, data-only startup handling and bounded spools.
+  Creating new volume sets/platform SFX remains open under 2b65f0a/51eae2d.
+- [x] `--ingest-tar` handles V7/USTAR/GNU long names and supported PAX metadata,
+  exposes separate files/directories and stored versions, and reuses exact
+  duplicate payloads. Unsupported tar features fail before publication.
+- [x] Reviewable MC patch with parser fixtures and TC catalog draft, both unsent.
+- Evidence: [alpha10 verification](docs/releases/3.0.0a10-qa.md).
 
 ### Implemented for 3.0.0a9
 

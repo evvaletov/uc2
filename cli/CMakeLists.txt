@@ -2,7 +2,7 @@
 
 include(GNUInstallDirs)
 
-add_executable(uc2-cli src/main.c)
+add_executable(uc2-cli src/main.c src/ingest_tar.c)
 set_target_properties(uc2-cli PROPERTIES OUTPUT_NAME uc2)
 
 target_link_libraries(uc2-cli PRIVATE uc2)

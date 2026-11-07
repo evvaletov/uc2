@@ -79,6 +79,18 @@ class UC2File:
         if isinstance(file, (str, bytes, os.PathLike)):
             self._source = open(file, "rb")
             self._owned = True
+            try:
+                magic = self._source.read(4)
+                self._source.seek(0)
+                suffix = os.path.splitext(os.fsdecode(file))[1]
+                numbered = len(suffix) == 4 and suffix[1:].isascii() and suffix[1:].isdigit()
+                if (magic == b"\x45\x14\x02\x0f" or magic[:2] == b"MZ" or
+                        (numbered and magic != b"UC2\x1a")):
+                    self._source.close()
+                    self._source = _native.open_path(os.fsdecode(file))
+            except BaseException:
+                self.close()
+                raise
         else:
             self._source = file
         try:

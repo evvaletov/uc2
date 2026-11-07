@@ -7,6 +7,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <uc2/libuc2.h>
+#include <uc2/uc2_path.h>
+#ifdef _WIN32
+#include <io.h>
+#define dup _dup
+#define close _close
+#define fileno _fileno
+#else
+#include <unistd.h>
+#endif
 
 struct module_state { PyObject *bad_archive, *resource_limit; };
 typedef struct {
@@ -294,7 +303,29 @@ static PyObject *chunk_length(PyObject *module, PyObject *args)
     uc2_chunker_next(&chunker, (const uint8_t *)data, (size_t)length, &offset, &size);
     return PyLong_FromSize_t(size);
 }
+static PyObject *open_path(PyObject *module, PyObject *args)
+{
+    const char *path;
+    if (!PyArg_ParseTuple(args, "s", &path)) return NULL;
+    char error[256];
+    FILE *stream;
+    Py_BEGIN_ALLOW_THREADS
+    stream=uc2_open_path(path,error,sizeof error);
+    Py_END_ALLOW_THREADS
+    if (!stream) {
+        struct module_state *state=PyModule_GetState(module);
+        PyErr_SetString(state->bad_archive,error);
+        return NULL;
+    }
+    int fd=dup(fileno(stream));
+    fclose(stream);
+    if (fd<0) return PyErr_SetFromErrno(PyExc_OSError);
+    PyObject *result=PyFile_FromFd(fd,path,"rb",-1,NULL,NULL,NULL,1);
+    if (!result) close(fd);
+    return result;
+}
 static PyMethodDef module_methods[] = {
+    {"open_path", open_path, METH_VARARGS, "Open/reassemble SAS or UC2SEA input without executing it."},
     {"chunk_length", chunk_length, METH_VARARGS, "First Gear chunk length (8 KiB target)."},
     {NULL, NULL, 0, NULL}
 };
