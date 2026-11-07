@@ -9,6 +9,7 @@ SAS/UC2SEA reads and tar ingestion with named files. The next priorities are:
    Review the [TC catalog draft](contrib/totalcommander/CATALOG-DRAFT.md) and
    [MC extfs patch](contrib/mc/upstream/REVIEW.md), then authorize the first
    contact/submission. Confirm MC's DCO sign-off. No external contact yet.
+   Tracking: 4b7fbd1.
 
 2. [ ] **Take the bounded libarchive patch through upstream review.**
    The [review patch](contrib/libarchive/upstream/REVIEW.md) includes Turbo and
@@ -24,6 +25,7 @@ SAS/UC2SEA reads and tar ingestion with named files. The next priorities are:
    Measure near the reference/manifest caps, test process-kill and low-disk
    recovery, and assess read-only/concurrent readers. Current operations require
    a writable, exclusively locked repository. [Contract](docs/snapshots.md).
+   Tracking: a3bcfb4.
 
 5. [ ] **Extend chunk sharing inside named archive entries.**
    Tar entries now preserve individual files and reuse identical-file payloads
@@ -105,8 +107,8 @@ SAS/UC2SEA reads and tar ingestion with named files. The next priorities are:
   Third-party archive bytes are fetched separately; only URLs, hashes and
   metadata are redistributed. [Corpus provenance](tests/archives/README.md).
 At alpha7, Turbo and multi-volume decoding were unsupported. Alpha8 adds
-Turbo; direct multi-volume input remains open. Alpha9 adds Firefox and WebKit
-coverage alongside Chromium.
+Turbo. Alpha9 adds Firefox and WebKit coverage alongside Chromium; alpha10
+adds direct SAS/UC2SEA path input.
 - Release and scoped review evidence: [alpha7 verification](docs/releases/3.0.0a7-qa.md).
 
 ### Delivered in 3.0.0a6: writer APIs and audit repairs

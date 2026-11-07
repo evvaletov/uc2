@@ -6,7 +6,8 @@ Prepared November 7, 2026. No upstream issue, PR or message has been sent.
 `3228c23fd57db28c20c35db8e0e1c6d3b087b3c7`, adds a read-only Python extfs
 helper, configure/install entries, a `.uc2` association, and listing fixtures.
 It calls the separately installed native `uc2` CLI; it adds no linked library
-dependency to MC. Python 3 is required. The helper lists stored versions and
+dependency to MC. Tested CLI release: [3.0.0a10](https://github.com/evvaletov/uc2/releases/tag/v3.0.0-alpha.10).
+Python 3 is required. The helper lists stored versions and
 copies files out with literal path selection and staged replacement. Writes
 are refused. The configured helper retains the upstream test command hook.
 
