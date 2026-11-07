@@ -3,7 +3,7 @@
 ## Recommended next priorities (2026-11-07)
 
 The browser reader and preservation toolkit from the previous top two are
-implemented for alpha7. The next five priorities are below. The separate
+published in alpha7. The next five priorities are below. The separate
 project-wide task-qa + task-at audit remains open (c9edf0b).
 
 1. [ ] **Incremental collection snapshots.**
@@ -36,6 +36,7 @@ project-wide task-qa + task-at audit remains open (c9edf0b).
    Add a verified ZIP download for selected files/versions and an installable
    offline reader. Preserve the worker's resource limits and cancellation;
    test Firefox and WebKit alongside Chromium before broadening browser claims.
+   Tracking: 5332dc5.
 
 ### Delivered in 3.0.0a7: browser reader and preservation toolkit
 
@@ -147,7 +148,10 @@ project-wide task-qa + task-at audit remains open (c9edf0b).
   Alpha6 completed the local project audit and repairs, including maintained
   prose and auxiliary codecs. Independent review remains incomplete: Claude
   subscription access is disabled, Gemini ran out of quota, Grok timed out,
-  and paid fallbacks have no credit. Misses are not counted as approval.
+  and paid fallbacks had no credit at that time. Alpha7 adds completed Gemini
+  and Kimi reviews of the new browser/preservation code; Grok has not returned
+  a code verdict. Those scoped reviews do not complete this project-wide task.
+  Misses are not counted as approval.
   The shared workflows are at
   `/home/evaletov/.claude-skills-shared/task-qa/SKILL.md` and
   `/home/evaletov/.claude-skills-shared/task-at/SKILL.md`.
@@ -462,6 +466,14 @@ Bobrowski already shipped prototypes; update for UC2 v3.
 - Phase 9: ZK proof soundness and completeness
 
 ## Maintenance Log
+
+- 2026-11-07: Published alpha7 from `3d2e3de`: local-only browser reader,
+  verified collection inventory/ZIP/tar migration, original-encoder corpus
+  provenance and three historical interoperability samples. Public artifact
+  hashes, live reader behavior and the installed tools are verified. Updated
+  priorities are snapshots, historical compatibility, libarchive review,
+  Total Commander 32-bit routing, and browser bulk/offline support. See
+  `docs/releases/3.0.0a7-qa.md`; the whole-project audit remains open.
 
 - 2026-11-07: Updated the GitHub repository description to "UltraCompressor II
   for Linux, macOS, Windows and DOS" and verified it through the GitHub API.
