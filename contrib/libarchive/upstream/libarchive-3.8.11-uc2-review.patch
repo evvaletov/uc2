@@ -13,7 +13,7 @@
 +  IF(NOT UC2READ_INCLUDE_DIR OR NOT UC2READ_LIBRARY)
 +    MESSAGE(FATAL_ERROR "ENABLE_UC2READ requires the external libuc2read shared reader")
 +  ENDIF()
-+  IF(UC2READ_LIBRARY MATCHES "[.]a$")
++  IF(UC2READ_LIBRARY MATCHES "[.]a$" AND NOT UC2READ_LIBRARY MATCHES "[.]dll[.]a$")
 +    MESSAGE(FATAL_ERROR "UC2 requires a shared libuc2read, not a static archive")
 +  ENDIF()
 +  INCLUDE(CheckCSourceCompiles)
@@ -75,7 +75,7 @@
 +#cmakedefine HAVE_LIBUC2READ 1
 --- a/configure.ac
 +++ b/configure.ac
-@@ -491,6 +491,20 @@
+@@ -491,6 +491,25 @@
        AC_CHECK_LIB(charset,locale_charset)
      fi
    fi
@@ -86,6 +86,11 @@
 +  [], [with_uc2read=no])
 +if test "x$with_uc2read" = "xyes"; then
 +  PKG_CHECK_MODULES(UC2READ, [libuc2read >= 3.0.0])
++  dnl The published dependency is shared-only. Refuse explicit static overrides.
++  for uc2read_flag in $UC2READ_LIBS; do
++    AS_CASE([$uc2read_flag], [*.dll.a], [], [*.a|-static|-Wl,-Bstatic],
++      [AC_MSG_ERROR([UC2 requires the shared libuc2read dependency])])
++  done
 +  CPPFLAGS="${CPPFLAGS} ${UC2READ_CFLAGS}"
 +  LIBS="${LIBS} ${UC2READ_LIBS}"
 +  AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <uc2/libuc2.h>]],
@@ -98,7 +103,7 @@
  AC_ARG_WITH([lz4],
 --- /dev/null
 +++ b/doc/uc2-reader.md
-@@ -0,0 +1,79 @@
+@@ -0,0 +1,82 @@
 +# Proposed UC2 reader for libarchive
 +
 +Prepared for review against libarchive 3.8.11. No contribution has been sent
@@ -126,7 +131,10 @@
 +they never silently truncate output. Listing and skipping do not decode files.
 +The fixed adapter state (about 65 KiB), stdio and libarchive's own allocations
 +are outside the shared memory budget. The input and current decoded entry use
-+disk space; the decoded entry spool is released between files.
++disk space; the decoded entry spool is released between files. Spools use
++libarchive's anonymous temporary-file helper, including its Windows temp-directory
++handling. These libarchive build/runtime checks were performed on Linux; native
++Windows execution of the optional adapter has not been validated.
 +
 +Override limits before reading with libarchive format options, for example
 +`bsdtar --options uc2:memory-limit=134217728,uc2:entry-limit=2147483648 -xf data.uc2`.
@@ -153,7 +161,7 @@
 +cmake --build /tmp/uc2-reader
 +cmake --install /tmp/uc2-reader
 +python3 contrib/libarchive/prepare_upstream.py \
-+  --source /path/to/libarchive-3.8.11 --uc2 /path/to/uc2 \
++  --source /path/to/libarchive-3.8.11 --uc2 /path/to/uc2/build/cli/uc2 \
 +  --output /tmp/uc2-review
 +cmake -S /tmp/uc2-review/libarchive -B /tmp/uc2-review/build \
 +  -DCMAKE_PREFIX_PATH=/tmp/uc2-reader-prefix -DENABLE_UC2READ=ON \
@@ -207,6 +215,17 @@
  __LA_DECL int archive_read_support_format_all(struct archive *);
  __LA_DECL int archive_read_support_format_ar(struct archive *);
  __LA_DECL int archive_read_support_format_by_code(struct archive *, int);
+--- a/libarchive/archive_read_private.h
++++ b/libarchive/archive_read_private.h
+@@ -208,7 +208,7 @@
+ 		int	(*cleanup)(struct archive_read *);
+ 		int	(*format_capabilties)(struct archive_read *);
+ 		int	(*has_encrypted_entries)(struct archive_read *);
+-	}	formats[16];
++	}	formats[17];
+ 	struct archive_format_descriptor	*format; /* Active format. */
+ 
+ 	/*
 --- a/libarchive/archive_read_set_format.c
 +++ b/libarchive/archive_read_set_format.c
 @@ -78,6 +78,9 @@
@@ -246,19 +265,19 @@
 +/* SPDX-License-Identifier: BSD-2-Clause */
 +/*
 + * BSD 2-Clause License
-+ * 
++ *
 + * Copyright (c) 2026, Eremey Valetov
 + * All rights reserved.
-+ * 
++ *
 + * Redistribution and use in source and binary forms, with or without
 + * modification, are permitted provided that the following conditions are met:
-+ * 
++ *
 + * 1. Redistributions of source code must retain the above copyright notice, this
 + *    list of conditions and the following disclaimer.
 + * 2. Redistributions in binary form must reproduce the above copyright notice,
 + *    this list of conditions and the following disclaimer in the documentation
 + *    and/or other materials provided with the distribution.
-+ * 
++ *
 + * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 + * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 + * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -578,14 +597,14 @@
 +{
 +	const unsigned char *p;
 +
-+	(void)best_bid;
++	if (best_bid >= 32) return 0;
 +
 +	p = __archive_read_ahead(a, 4, NULL);
 +	if (p == NULL)
 +		return (-1);
 +
 +	if (p[0] == 0x55 && p[1] == 0x43 && p[2] == 0x32 && p[3] == 0x1A)
-+		return (64);
++		return (32);
 +	return (0);
 +}
 +
@@ -949,7 +968,7 @@
      test_read_format_lha_bugfix_0.c
 --- /dev/null
 +++ b/libarchive/test/test_read_format_uc2.c
-@@ -0,0 +1,67 @@
+@@ -0,0 +1,72 @@
 +/* SPDX-License-Identifier: BSD-2-Clause */
 +/* Copyright (c) 2026 Eremey Valetov. */
 +#include "test.h"
@@ -957,14 +976,19 @@
 +DEFINE_TEST(test_read_format_uc2)
 +{
 +    struct archive *a = archive_read_new();
-+    struct archive_entry *e;
-+    char data[2000];
 +    int result = archive_read_support_format_uc2(a);
 +#ifndef HAVE_LIBUC2READ
 +    assertEqualInt(ARCHIVE_WARN, result);
 +    assertEqualInt(ARCHIVE_OK, archive_read_free(a));
 +#else
++    struct archive_entry *e;
++    char data[2000];
 +    assertEqualInt(ARCHIVE_OK, result);
++    /* Keep room for explicit raw fallback after registering every format. */
++    struct archive *all = archive_read_new();
++    assertEqualInt(ARCHIVE_OK, archive_read_support_format_all(all));
++    assertEqualIntA(all, ARCHIVE_OK, archive_read_support_format_raw(all));
++    assertEqualInt(ARCHIVE_OK, archive_read_free(all));
 +    extract_reference_file("test_read_format_uc2_4.uc2");
 +    assertEqualIntA(a, ARCHIVE_OK, archive_read_open_filename(a, "test_read_format_uc2_4.uc2", 7));
 +    assertEqualIntA(a, ARCHIVE_OK, archive_read_next_header(a, &e));

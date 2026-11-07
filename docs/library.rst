@@ -226,3 +226,10 @@ nesting at 64, and the CDC index at 1,048,576 chunks. Metadata grows with the
 collection while payload buffers remain fixed. Source and archive temporary
 files require disk space. The public header defines return values, metadata
 fields, limits, and ``uc2_writer_get_stats``.
+
+Set ``options.chunked = 1`` to share payload chunks across named files and
+versions. Python exposes this as ``UC2Writer(..., chunked=True)``. This opt-in
+format requires the full a11 or newer reader. See the `chunk-sharing guide
+<https://github.com/evvaletov/uc2/blob/main/docs/chunk-sharing.md>`_ for the wire
+format, reference limits and compressed-size accounting. Rebuild C callers
+against the matching header when upgrading writer option/stat structures.

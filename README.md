@@ -5,7 +5,7 @@ Nico de Vries (1992-1996). UC2 used shared compression dictionaries
 ("master blocks") and file versioning.
 
 UC2 v3 is under development in portable C99. The current alpha is
-[3.0.0a10](https://pypi.org/project/uc2/3.0.0a10/).
+[3.0.0a11](https://pypi.org/project/uc2/3.0.0a11/).
 Compression levels 2-5 use the original Huffman format; levels 6-9 require the
 new rANS reader. Original-format compatibility is
 covered by DOSBox-X fixtures, including Turbo/method 80 reads. Multi-volume
@@ -18,7 +18,8 @@ nested directories, stored file versions, shared master blocks, output to
 stdout, tab-separated listings, and a quiet mode for scripts.
 
 - LZ77 with Huffman coding at levels 2-5, or rANS at levels 6-9.
-- Content-defined chunking and identical-chunk deduplication through `--ingest`.
+- Optional shared payload chunks across named files and versions with `--chunked`;
+  see the [compatibility and format guide](docs/chunk-sharing.md).
   The resulting archive is self-contained; `--ingest-restore` reconstructs the
   input stream. A tar input remains a byte stream of `part-N` entries.
 - Compression comparisons through `-B`, including the library's LZ4 method.

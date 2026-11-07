@@ -30,18 +30,20 @@ static int read_at(void *ctx, unsigned pos, void *data, unsigned n)
     if (n>b->size-pos) n=b->size-pos;
     memcpy(data,b->data+pos,n); return (int)n;
 }
-static void *allocate(void *ctx, unsigned n) { return malloc(n); }
+static int refuse_allocation;
+static void *allocate(void *ctx, unsigned n) { return refuse_allocation ? NULL : malloc(n); }
 static void release(void *ctx, void *p) { free(p); }
 static struct uc2_io io={read_at,allocate,release,NULL};
 static int fail_read(void *ctx,void *p,unsigned n) { return -1; }
 static int bad_read(void *ctx,void *p,unsigned n) { return (int)n+1; }
 static int fail_write(void *ctx,const void *p,unsigned n) { return -1; }
-static void roundtrip(int level)
+static void roundtrip(int level, int chunked)
 {
     unsigned char data[70001];
     for (unsigned i=0; i<sizeof data; ++i) data[i]=(unsigned char)(i*17+i/13);
     struct buffer source={data,sizeof data,0}, encoded={0};
     struct uc2_writer_options options=UC2_WRITER_OPTIONS_INIT; options.level=level;
+    options.chunked=chunked;
     uc2_writer *w=uc2_writer_create(&options); CHECK(w);
     unsigned directory;
     CHECK(uc2_writer_add_directory(w,0,"nested",0,0,&directory)==0);
@@ -54,6 +56,7 @@ static void roundtrip(int level)
     CHECK(uc2_writer_finish(w,output,&encoded)==UC2_BadState);
     struct uc2_writer_stats stats; uc2_writer_get_stats(w,&stats);
     CHECK(stats.files==3 && stats.directories==1 && stats.archive_size==encoded.size);
+    if (chunked) CHECK(stats.unique_chunks && stats.chunk_references>stats.unique_chunks && stats.shared_bytes>=sizeof data);
     uc2_writer_free(w);
     uc2_handle h=uc2_open(&io,&encoded); CHECK(h);
     struct uc2_entry entries[4]; unsigned count=0;
@@ -66,6 +69,7 @@ static void roundtrip(int level)
     }
     CHECK(count==4 && uc2_finish_cdir(h,NULL)==0);
     for (unsigned i=0; i<count; ++i) if (!entries[i].is_dir) {
+        if (chunked) CHECK(entries[i].xi.method==11);
         struct buffer decoded={0};
         int result = uc2_extract(h,&entries[i].xi,entries[i].size,output,&decoded);
         if (result < 0) fprintf(stderr,"level %d, entry %s: extract returned %d\n", level, entries[i].name, result);
@@ -76,6 +80,12 @@ static void roundtrip(int level)
             CHECK(decoded.size==sizeof data && !memcmp(decoded.data,data,sizeof data));
         }
         free(decoded.data);
+        if (chunked && entries[i].size) {
+            CHECK(uc2_extract(h,&entries[i].xi,entries[i].size,fail_write,NULL)==UC2_UserFault);
+            refuse_allocation=1;
+            CHECK(uc2_extract(h,&entries[i].xi,entries[i].size,fail_write,NULL)==UC2_UserFault);
+            refuse_allocation=0;
+        }
     }
     uc2_close(h); free(encoded.data);
 }
@@ -117,6 +127,8 @@ static void errors(void)
 }
 int main(void)
 {
-    for (int level=2; level<=9; ++level) roundtrip(level);
+    for (int level=2; level<=9; ++level) {
+        roundtrip(level,0); roundtrip(level,1);
+    }
     errors(); puts("writer: all levels, versions, directories, streams and failures passed"); return 0;
 }

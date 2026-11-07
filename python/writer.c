@@ -30,14 +30,14 @@ static void set_error(Writer *self, int result)
 }
 static int writer_init(Writer *self, PyObject *args, PyObject *kwargs)
 {
-    int level=4; unsigned maximum=100000; long long total=UINT32_MAX;
-    static char *names[]={"level","max_entries","max_total_size",NULL};
+    int level=4,chunked=0; unsigned maximum=100000; long long total=UINT32_MAX;
+    static char *names[]={"level","max_entries","max_total_size","chunked",NULL};
     if (self->initialized) { PyErr_SetString(PyExc_RuntimeError,"writer cannot be initialized twice"); return -1; }
-    if (!PyArg_ParseTupleAndKeywords(args,kwargs,"|iIL",names,&level,&maximum,&total)) return -1;
+    if (!PyArg_ParseTupleAndKeywords(args,kwargs,"|iILp",names,&level,&maximum,&total,&chunked)) return -1;
     if (level<2 || level>9 || maximum<1 || maximum>1000000 || total<1 || total>UINT32_MAX) {
         PyErr_SetString(PyExc_ValueError,"invalid writer level or limits"); return -1;
     }
-    struct uc2_writer_options options={level,maximum,(uint64_t)total};
+    struct uc2_writer_options options={level,maximum,(uint64_t)total,chunked};
     self->initialized=1; self->writer=uc2_writer_create(&options);
     if (!self->writer) { PyErr_SetString(PyExc_OSError,"cannot allocate writer or create temporary input file"); return -1; }
     return 0;
@@ -108,8 +108,10 @@ static PyObject *writer_finish(Writer *self, PyObject *destination)
     if (r<0 || PyErr_Occurred()) { set_error(self,r); return NULL; }
     struct uc2_writer_stats stats; uc2_writer_get_stats(self->writer,&stats);
     uc2_writer_free(self->writer); self->writer=NULL;
-    return Py_BuildValue("{sI,sI,sI,sI}","files",stats.files,"directories",stats.directories,
-                         "masters",stats.masters,"archive_size",stats.archive_size);
+    return Py_BuildValue("{sI,sI,sI,sI,sI,sI,sK}","files",stats.files,"directories",stats.directories,
+                         "masters",stats.masters,"archive_size",stats.archive_size,
+                         "unique_chunks",stats.unique_chunks,"chunk_references",stats.chunk_references,
+                         "shared_bytes",(unsigned long long)stats.shared_bytes);
 }
 static PyMethodDef methods[]={
     {"abort",(PyCFunction)writer_abort,METH_NOARGS,NULL},

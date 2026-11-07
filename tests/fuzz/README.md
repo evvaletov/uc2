@@ -59,3 +59,10 @@ Two layers run automatically:
 `regressions/turbo-empty-checksum.uc2` is a generated method80 archive with
 a zero-length file and deliberately wrong file checksum. Libarchive must
 verify the stream even when the declared file size is zero.
+
+`fuzz_chunks.c` replays method-11 archives and recomputes the bounded recipe
+digest after mutations, reaching descriptor and compressed-payload checks.
+`chunk-raw.uc2`, `chunk-huffman.uc2` and `chunk-rans.uc2` are generated a11
+fixtures containing pseudorandom data or repeated test strings. The regular
+read-path replay also opens them. CI builds harnesses with `NDEBUG`, matching
+the production library and suppressing diagnostic output.

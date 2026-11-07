@@ -298,14 +298,14 @@ uc2_la_bid(struct archive_read *a, int best_bid)
 {
 	const unsigned char *p;
 
-	(void)best_bid;
+	if (best_bid >= 32) return 0;
 
 	p = __archive_read_ahead(a, 4, NULL);
 	if (p == NULL)
 		return (-1);
 
 	if (p[0] == 0x55 && p[1] == 0x43 && p[2] == 0x32 && p[3] == 0x1A)
-		return (64);
+		return (32);
 	return (0);
 }
 

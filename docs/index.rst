@@ -20,6 +20,10 @@ verified ZIP/tar exports. See the `preservation guide
 with shared chunks, verified restores, explicit retention and replica repair. See the `snapshot guide
 <https://github.com/evvaletov/uc2/blob/main/docs/snapshots.md>`_.
 
+The optional ``--chunked`` writer shares payload chunks across named files and
+stored versions; see the `chunk-sharing guide
+<https://github.com/evvaletov/uc2/blob/main/docs/chunk-sharing.md>`_ for compatibility.
+
 The native CLI also supports tar ingestion with separate entries and data-only
 SAS/UC2SEA reads. See the `tar guide
 <https://github.com/evvaletov/uc2/blob/main/docs/tar-ingestion.md>`_ and

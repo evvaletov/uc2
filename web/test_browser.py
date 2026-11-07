@@ -8,6 +8,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import json
 from pathlib import Path
 import re
+import random
 import tempfile
 from threading import Thread
 from urllib.parse import urlsplit
@@ -125,6 +126,24 @@ def main():
                         target = scratch / 'download'
                         downloaded.value.save_as(target)
                         assert target.read_bytes() == reference.read(info), info.filename
+
+            # Exercise shared raw/compressed chunks through the WASM decoder and ZIP exporter.
+            base = random.Random(11).randbytes(80000) + b'chunk-sharing' * 8000
+            for level in (4, 8):
+                shared = scratch / f'shared-{level}.uc2'
+                with UC2Writer(shared, level=level, chunked=True) as writer:
+                    writer.writestr('old.bin', base)
+                    writer.writestr('new.bin', base[:40000] + b'inserted' + base[40000:])
+                assert writer.stats['shared_bytes'] > 100000
+                page.locator('#archive').set_input_files(shared)
+                expect(page.locator('#archive-name')).to_have_text(shared.name, timeout=30000)
+                page.get_by_role('button', name='Verify all versions').click()
+                expect(page.locator('#status')).to_contain_text('All 2 stored files passed', timeout=30000)
+                page.get_by_role('button', name='Select matching files').click()
+                with page.expect_download() as downloaded:
+                    page.get_by_role('button', name='Save selected ZIP').click()
+                downloaded.value.save_as(scratch / f'shared-{level}.zip')
+                check_zip(scratch / f'shared-{level}.zip', shared)
 
             modern = scratch / 'versions.uc2'
             with UC2Writer(modern, level=8) as writer:
@@ -373,7 +392,7 @@ def main():
                           if method != 'GET' or not target.startswith((url, 'blob:' + url))]
             assert not unexpected, unexpected
             browser.close()
-            print(f'{args.engine} {browser.version} checks passed: original fixtures, rANS, versions, verified ZIP/CRC/hash/paths, selection, limits, corruption, cancellation, timeout recovery, offline use/repair/update/integrity, mobile layout, and no uploads.')
+            print(f'{args.engine} {browser.version} checks passed: original fixtures, rANS, shared chunks, versions, verified ZIP/CRC/hash/paths, selection, limits, corruption, cancellation, timeout recovery, offline use/repair/update/integrity, mobile layout, and no uploads.')
     finally:
         server.shutdown()
         server.server_close()

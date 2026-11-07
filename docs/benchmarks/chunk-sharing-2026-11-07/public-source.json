@@ -1,0 +1,83 @@
+{
+  "platform": "Linux-6.12.0-211.73.1.el10_2.x86_64-x86_64-with-glibc2.39",
+  "cli_sha256": "e0e02429da449e41609abac781625935f7a023b06b683a74286e3193351c950f",
+  "source_revision": "eb57ffefe20e98eb7ba05829ee1c23b90e589a71",
+  "source_hashes": {
+    "archive_read_support_format_zip.c": "e165b2a6b56317aed9b06070813caa444ad6eeca370f4f6aaf51f85edac5886e",
+    "archive_read_support_format_7zip.c": "3456c0e2d79c3a7fb2b611ca28617b11a146e4ae57d40523f6767fc52412c2e3",
+    "archive_read_support_format_rar5.c": "0a21cc37ef7ae0f83bbffdac1b08414380787ddf1cddae7b8539985e4b28e3ab",
+    "archive_read_support_format_tar.c": "30bfbc0916511bdab1d2803bb7ed305a6d3721dd06b08ed8035032a7fd3af773",
+    "archive_read_support_format_rar.c": "c9afc9af8b2f537f1ecaee4ce521208562b3c37aa103f7d87e8e656e2150ab88",
+    "archive_read_support_format_iso9660.c": "c8402502d58f205c48e1da5a0a031491e932fd605548e10a710c1b2a7e3002d7",
+    "archive_read_support_format_xar.c": "fdfcd9280bf21dc9c1798b2b6b1b2f3e166d142198948b21c56e3e2a4d598e50",
+    "archive_read_support_format_cab.c": "aa3ca37bdb96011ac438afbd9d8248ff73fa4fd9f68053b5d6fb3d21b4c70d05",
+    "archive_read_support_format_lha.c": "9e0bc4c644cef5159ad4e07ccc69b973fc370b57fcb647a33cf78611531abfa3",
+    "archive_read_support_format_mtree.c": "8292142956d282b27d2d725ec9cf5201efb1858cfaf226e813c85bd550836b0f",
+    "archive_read_support_format_cpio.c": "7b2103a005b8d68fdd25a317751929617d19788248eeaba6b75df9bb7a566f78",
+    "archive_read_support_format_warc.c": "b7f64302ce6ade6b40eb902094d3920f5d99257c025f494047668cc28e0c5a60"
+  },
+  "input_bytes": 2237336,
+  "files": 24,
+  "results": [
+    {
+      "trial": 0,
+      "chunked": false,
+      "archive_bytes": 378945,
+      "create_seconds": 0.627,
+      "restore_seconds": 0.075,
+      "peak_kib": 2584,
+      "restore_peak_kib": 2448,
+      "verified": true
+    },
+    {
+      "trial": 0,
+      "chunked": true,
+      "archive_bytes": 413429,
+      "create_seconds": 0.271,
+      "restore_seconds": 0.169,
+      "peak_kib": 2652,
+      "restore_peak_kib": 1592,
+      "verified": true
+    },
+    {
+      "trial": 1,
+      "chunked": false,
+      "archive_bytes": 378945,
+      "create_seconds": 0.73,
+      "restore_seconds": 0.073,
+      "peak_kib": 2564,
+      "restore_peak_kib": 2116,
+      "verified": true
+    },
+    {
+      "trial": 1,
+      "chunked": true,
+      "archive_bytes": 413429,
+      "create_seconds": 0.469,
+      "restore_seconds": 0.12,
+      "peak_kib": 2692,
+      "restore_peak_kib": 1796,
+      "verified": true
+    },
+    {
+      "trial": 2,
+      "chunked": false,
+      "archive_bytes": 378945,
+      "create_seconds": 0.627,
+      "restore_seconds": 0.066,
+      "peak_kib": 2564,
+      "restore_peak_kib": 2248,
+      "verified": true
+    },
+    {
+      "trial": 2,
+      "chunked": true,
+      "archive_bytes": 413429,
+      "create_seconds": 0.319,
+      "restore_seconds": 0.169,
+      "peak_kib": 2468,
+      "restore_peak_kib": 1796,
+      "verified": true
+    }
+  ]
+}

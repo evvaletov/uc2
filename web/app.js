@@ -93,8 +93,8 @@ function select(row) {
   $('selected-name').textContent = row.path;
   const pairs = [
     ['Kind', row.directory ? 'Directory' : 'File'], ['Version', row.version === 0 ? '0 (newest)' : String(row.version)],
-    ['Size', size(row.size)], ['Compressed', size(row.compressedSize)],
-    ['Method', row.directory ? 'n/a' : String(row.method) + (row.method === 80 ? ' (Turbo)' : '')],
+    ['Size', size(row.size)], [row.method === 11 ? 'Recipe size' : 'Compressed', size(row.compressedSize)],
+    ['Method', row.directory ? 'n/a' : String(row.method) + (row.method === 80 ? ' (Turbo)' : row.method === 11 ? ' (shared chunks)' : '')],
     ['Timestamp', dosDate(row.dosTime)], ['DOS attributes', '0x' + row.attributes.toString(16).padStart(2, '0')],
     ['Check', checks.get(row.index)?.error || (checks.get(row.index)?.verified ? 'UC2 checksum verified' : 'Unchecked')],
   ];

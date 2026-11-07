@@ -49,6 +49,7 @@ replace("libarchive/archive.h", "#define\tARCHIVE_FORMAT_RAR_V5\t\t\t0x100000",
 replace("libarchive/archive.h", "__LA_DECL int archive_read_support_format_all(struct archive *);",
         "__LA_DECL int archive_read_support_format_uc2(struct archive *);\n"
         "__LA_DECL int archive_read_support_format_all(struct archive *);")
+replace("libarchive/archive_read_private.h", "formats[16]", "formats[17]")
 replace("libarchive/archive_read_support_format_all.c", "\tarchive_read_support_format_ar(a);",
         "\tarchive_read_support_format_uc2(a);\n\tarchive_read_support_format_ar(a);")
 replace("libarchive/archive_read_support_format_by_code.c", "\tcase ARCHIVE_FORMAT_RAW:",
@@ -75,7 +76,7 @@ notice = (repo / "contrib/libarchive/LICENSE.BSD-2-Clause").read_text()
 adapter = ("/* SPDX-License-Identifier: BSD-2-Clause */\n/*\n * " +
            notice.rstrip().replace("\n", "\n * ") + "\n */\n" +
            "\n".join(adapter.splitlines()[2:]) + "\n")
-write("libarchive/archive_read_support_format_uc2.c", adapter)
+write("libarchive/archive_read_support_format_uc2.c", "\n".join(line.rstrip() for line in adapter.splitlines()) + "\n")
 replace("libarchive/CMakeLists.txt", "  archive_read_support_format_7zip.c",
         "  archive_read_support_format_uc2.c\n  archive_read_support_format_7zip.c")
 replace("Makefile.am", "\tlibarchive/archive_read_support_format_7zip.c \\",
@@ -90,7 +91,7 @@ IF(ENABLE_UC2READ)
   IF(NOT UC2READ_INCLUDE_DIR OR NOT UC2READ_LIBRARY)
     MESSAGE(FATAL_ERROR "ENABLE_UC2READ requires the external libuc2read shared reader")
   ENDIF()
-  IF(UC2READ_LIBRARY MATCHES "[.]a$")
+  IF(UC2READ_LIBRARY MATCHES "[.]a$" AND NOT UC2READ_LIBRARY MATCHES "[.]dll[.]a$")
     MESSAGE(FATAL_ERROR "UC2 requires a shared libuc2read, not a static archive")
   ENDIF()
   INCLUDE(CheckCSourceCompiles)
@@ -118,6 +119,11 @@ replace("configure.ac", "AC_ARG_WITH([lz4],", '''AC_ARG_WITH([uc2read],
   [], [with_uc2read=no])
 if test "x$with_uc2read" = "xyes"; then
   PKG_CHECK_MODULES(UC2READ, [libuc2read >= 3.0.0])
+  dnl The published dependency is shared-only. Refuse explicit static overrides.
+  for uc2read_flag in $UC2READ_LIBS; do
+    AS_CASE([$uc2read_flag], [*.dll.a], [], [*.a|-static|-Wl,-Bstatic],
+      [AC_MSG_ERROR([UC2 requires the shared libuc2read dependency])])
+  done
   CPPFLAGS="${CPPFLAGS} ${UC2READ_CFLAGS}"
   LIBS="${LIBS} ${UC2READ_LIBS}"
   AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <uc2/libuc2.h>]],
@@ -154,14 +160,19 @@ test = '''/* SPDX-License-Identifier: BSD-2-Clause */
 DEFINE_TEST(test_read_format_uc2)
 {
     struct archive *a = archive_read_new();
-    struct archive_entry *e;
-    char data[2000];
     int result = archive_read_support_format_uc2(a);
 #ifndef HAVE_LIBUC2READ
     assertEqualInt(ARCHIVE_WARN, result);
     assertEqualInt(ARCHIVE_OK, archive_read_free(a));
 #else
+    struct archive_entry *e;
+    char data[2000];
     assertEqualInt(ARCHIVE_OK, result);
+    /* Keep room for explicit raw fallback after registering every format. */
+    struct archive *all = archive_read_new();
+    assertEqualInt(ARCHIVE_OK, archive_read_support_format_all(all));
+    assertEqualIntA(all, ARCHIVE_OK, archive_read_support_format_raw(all));
+    assertEqualInt(ARCHIVE_OK, archive_read_free(all));
     extract_reference_file("test_read_format_uc2_4.uc2");
     assertEqualIntA(a, ARCHIVE_OK, archive_read_open_filename(a, "test_read_format_uc2_4.uc2", 7));
     assertEqualIntA(a, ARCHIVE_OK, archive_read_next_header(a, &e));

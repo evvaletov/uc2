@@ -22,6 +22,8 @@
 #include "uc2/libuc2.h"
 #ifndef UC2_HUFFMAN_ONLY
 #include "uc2/uc2_rans.h"
+#include "uc2/uc2_sha256.h"
+#include "uc2/uc2_chunks.h"
 #endif
 
 #if !defined NDEBUG && !defined NDIAG
@@ -195,6 +197,7 @@ struct uc2_context {
 
 	u8 *cdir_buf;
 	struct range cdir_range;
+    unsigned data_end;
 
 	enum {
 		Start,
@@ -205,6 +208,7 @@ struct uc2_context {
 
 	u8 scanned:1;
 	u8 pcp:1;
+    u8 chunked:1;
 };
 
 /* callback */
@@ -684,28 +688,20 @@ static int use_master(struct uc2_context *uc2, u8 buffer[65535], u32 id)
 
 static int cdir_damaged(struct uc2_context *uc2);
 
-/* Writer for the central-directory decode that also enforces a
-   compression-ratio ceiling.  A tiny crafted cdir stream can expand via
-   long matches into tens of megabytes (a decompression bomb), turning a
-   few-hundred-byte archive into a multi-second decode.  Abort once the
-   output far outgrows the compressed bytes consumed. */
+/* Repeated names and stored versions can legitimately exceed a 64:1 ratio.
+ * Bound decoded metadata directly, matching the archive writer's 64 MiB cap. */
+enum { CdirLimit = 64u * 1024u * 1024u };
 struct cdir_writer {
-	struct range out;
-	struct archive_ctx *src;   /* reader context, for bytes consumed */
-	unsigned base;             /* src->offset at decode start */
-	unsigned long produced;
+    struct range out;
+    unsigned produced;
 };
 
 static int cdir_write(void *context, const void *ptr, unsigned size)
 {
-	struct cdir_writer *w = context;
-	w->produced += size;
-	unsigned consumed = w->src->offset - w->base;
-	/* Real cdir metadata compresses well under ~20:1; 64:1 with a
-	   64 KiB floor leaves ample headroom while stopping bombs. */
-	if (w->produced > 65536 + 64ul * consumed)
-		return UC2_Damaged;
-	return buf_write(&w->out, ptr, size);
+    struct cdir_writer *w = context;
+    if (size > CdirLimit - w->produced) return UC2_Damaged;
+    w->produced += size;
+    return buf_write(&w->out, ptr, size);
 }
 
 static int decompress_cdir(struct uc2_context *uc2, u32 offset, u16 csum)
@@ -736,12 +732,11 @@ static int decompress_cdir(struct uc2_context *uc2, u32 offset, u16 csum)
 		struct archive_ctx ar = {.offset = offset, .uc2 = uc2};
 		struct reader rd = {.read = archive_read, .context = &ar};
 		struct cdir_writer wctx = {
-			.out = {uc2->cdir_buf, uc2->cdir_buf + size},
-			.src = &ar, .base = offset
+			.out = {uc2->cdir_buf, uc2->cdir_buf + size}
 		};
 		struct writer wr = {.write = cdir_write, .context = &wctx};
 		u16 cs;
-		ret = decompressor(uc2, get16(c.method), &rd, &wr, NoMaster, 100000000, &cs);
+		ret = decompressor(uc2, get16(c.method), &rd, &wr, NoMaster, CdirLimit + 1, &cs);
 		if (ret < 0)
 			goto fail;
 
@@ -777,6 +772,11 @@ fail:
 static int start_read(struct uc2_context *uc2);
 static int read_entry(struct uc2_context *uc2, struct uc2_entry *e, u8 type);
 static void copy_dos_name(u8 *dos_name, u8 *s);
+#ifndef UC2_HUFFMAN_ONLY
+static int chunk_header(struct uc2_context *, const struct uc2_xinfo *, unsigned, const unsigned *, u8 *);
+static int extract_chunks(struct uc2_context *, const struct uc2_xinfo *, unsigned,
+                          int (*)(void *, const void *, unsigned), void *);
+#endif
 
 int uc2_read_cdir(struct uc2_context *uc2, struct uc2_entry *e)
 {
@@ -896,6 +896,16 @@ static int read_entry(struct uc2_context *uc2, struct uc2_entry *e, u8 type)
 			e->xi.master = get32(rc->u.f.c.masterPrefix);
 			e->xi.csum = get16(rc->u.f.m.fletch);
 			e->xi.method = get16(rc->u.f.c.method);
+            if (e->xi.method==11) {
+#ifdef UC2_HUFFMAN_ONLY
+                uc2->message="Chunk sharing requires the full UC2 reader";
+                return UC2_Unimplemented;
+#else
+                u8 header[UC2_CHUNK_HEADER];
+                int result=chunk_header(uc2,&e->xi,e->size,&e->csize,header);
+                if (result<0) return result;
+#endif
+            }
 			e->is_dir = 0;
 		} else {
 			e->id = get32(rc->u.d.m.index);
@@ -1063,6 +1073,14 @@ int uc2_extract(
 
 	if (!uc2->scanned)
 		return UC2_BadState;
+    if (xi->method==11) {
+#ifdef UC2_HUFFMAN_ONLY
+        uc2->message="Chunk sharing requires the full UC2 reader";
+        return UC2_Unimplemented;
+#else
+        return extract_chunks(uc2,xi,size,write,context);
+#endif
+    }
 	ret = resolve_master(uc2, xi->master);
 	if (ret < 0)
 		return ret;
@@ -1085,7 +1103,7 @@ int uc2_extract(
 static int decompressor_ultra(struct uc2_context *uc2, unsigned master, unsigned delta, struct reader *rd, struct writer *wr, unsigned limit, u16 *csum, uint64_t *used);
 static int decompressor_turbo(struct uc2_context *uc2, unsigned master, struct reader *rd, struct writer *wr, unsigned limit, u16 *csum);
 #ifndef UC2_HUFFMAN_ONLY
-static int decompressor_rans(struct uc2_context *uc2, unsigned master_id, struct reader *rd, struct writer *wr, unsigned limit, u16 *csum);
+static int decompressor_rans(struct uc2_context *uc2, unsigned master_id, struct reader *rd, struct writer *wr, unsigned limit, u16 *csum, uint64_t *used);
 #endif
 
 static int decompressor(struct uc2_context *uc2, int method, struct reader *rd, struct writer *wr, unsigned master, unsigned len, u16 *csum)
@@ -1113,7 +1131,7 @@ ultra:
 		uc2->message = "rANS requires the full UC2 reader";
 		ret = UC2_Unimplemented;
 #else
-		ret = decompressor_rans(uc2, master, rd, wr, len, csum);
+		ret = decompressor_rans(uc2, master, rd, wr, len, csum, NULL);
 #endif
 	} else if (method == 80) {
 		ret = decompressor_turbo(uc2, master, rd, wr, len, csum);
@@ -1202,8 +1220,9 @@ static int rans_flush(struct writer *wr, struct csum *cs, const u8 *buf,
 		unsigned lin = 0x10000u - *wpos;
 		if (n > lin) n = lin;
 		csum_update(cs, buf + *wpos, n);
-		if (wr->write(wr->context, buf + *wpos, n) < 0)
-			return UC2_UserFault;
+		int result = wr->write(wr->context, buf + *wpos, n);
+		if (result < 0)
+			return result;
 		*wpos = (u16)(*wpos + n);
 	}
 	return 0;
@@ -1212,7 +1231,7 @@ static int rans_flush(struct writer *wr, struct csum *cs, const u8 *buf,
 /* rANS decompressor (method 10) */
 static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
                              struct reader *rd, struct writer *wr,
-                             unsigned limit, u16 *csum)
+                             unsigned limit, u16 *csum, uint64_t *used)
 {
 	const unsigned EOB = 64001;
 	int ret;
@@ -1263,9 +1282,12 @@ static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
 		/* Decode all nsyms symbols, including the trailing EOB pair and
 		   its extra bits: stopping at remaining == 0 would leave the bit
 		   cursor mid-block and desynchronize the next block-present bit. */
+		int ended = 0;
 		for (unsigned s = 0; s < nsyms; s++) {
 			int sym = uc2_rans_decode(&dec);
+            if (used && (sym<0 || sym>=316)) { bi.err=UC2_Damaged; break; }
 			if (sym < 256) {
+                if (used && !remaining) { bi.err=UC2_Damaged; break; }
 				if (remaining) {
 					buf[tail++] = (u8)sym;
 					remaining--;
@@ -1282,10 +1304,20 @@ static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
 					(ds < 45) ? (ds-30+1)*256 + (bits_get(&bi, 8) & 0xff) :
 					            (ds-45+1)*4096 + (bits_get(&bi, 12) & 0xfff);
 				if (bi.err) break;
-				if (dist == EOB) { s++; if (s < nsyms) uc2_rans_decode(&dec); break; }
+				if (dist == EOB) {
+                    ended = 1;
+                    s++;
+                    if (used && s>=nsyms) { bi.err=UC2_Damaged; break; }
+                    if (s<nsyms) {
+                        int end=uc2_rans_decode(&dec);
+                        if (used && (end<316 || end>=344 || s+1!=nsyms)) bi.err=UC2_Damaged;
+                    }
+                    break;
+                }
 				s++;
-				if (s >= nsyms) break;
+				if (s >= nsyms) { if (used) bi.err=UC2_Damaged; break; }
 				int ls = uc2_rans_decode(&dec) - 316;
+                if (used && (ls<0 || ls>=28)) { bi.err=UC2_Damaged; break; }
 				if (ls < 0) ls = 0;
 				unsigned length = (ls < 8) ? ls + 3 :
 					(ls < 16) ? (ls-8)*2+11+(bits_get(&bi,1) & 0x1) :
@@ -1295,6 +1327,7 @@ static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
 					(ls == 26) ? 667+(bits_get(&bi,11) & 0x7ff) :
 					             2715+(bits_get(&bi,15) & 0x7fff);
 				if (bi.err) break;
+				if (used && length>remaining) { bi.err=UC2_Damaged; break; }
 				if (dist > produced) { bi.err = UC2_Damaged; break; }
 				for (unsigned j = 0; j < length && remaining > 0; j++) {
 					buf[tail] = buf[(u16)(tail - dist)];
@@ -1308,6 +1341,7 @@ static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
 				if (bi.err) break;
 			}
 		}
+		if (used && !ended) bi.err=UC2_Damaged;
 		u_free(uc2, rdata);
 		if (bi.err) break;
 	}
@@ -1324,6 +1358,7 @@ static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
 	bits_destroy(&bi);
 	u_free(uc2, buf);
 	if (csum) *csum = csum_get(&cs);
+    if (used) *used=bi.consumed;
 	return limit - remaining;
 }
 
@@ -1791,7 +1826,15 @@ not_uc2:
 	 get32(h.xhead.cdir.offset), get16(h.xhead.versionMadeBy), ver);
 
 
-	if (ver >= 203) {
+    uc2->data_end=get32(h.xhead.cdir.offset);
+    if (ver==300) {
+#ifdef UC2_HUFFMAN_ONLY
+        uc2->message="Chunk sharing requires the full UC2 reader";
+        return UC2_Unimplemented;
+#else
+        uc2->chunked=1;
+#endif
+    } else if (ver >= 203) {
 		if (ver > 203)
 			goto not_uc2;
 		uc2->pcp = 1;
@@ -1809,6 +1852,7 @@ static int raw_read(void *context, void *buffer, unsigned size)
     if (r->remaining) {
         if (size > r->remaining) size = r->remaining;
         int n = u_read(r->uc2, r->offset, buffer, size);
+        if (n>0 && (unsigned)n>size) return UC2_UserFault;
         if (n > 0) { r->offset += n; r->remaining -= n; }
         return n;
     }
@@ -1839,6 +1883,94 @@ int uc2_decompress_raw(struct uc2_io *io, void *context, unsigned offset,
     return result;
 }
 
+#ifndef UC2_HUFFMAN_ONLY
+static unsigned chunk_u32(const u8 *p)
+{ return p[0]|(unsigned)p[1]<<8|(unsigned)p[2]<<16|(unsigned)p[3]<<24; }
+static unsigned chunk_u16(const u8 *p) { return p[0]|(unsigned)p[1]<<8; }
+static int chunk_header(struct uc2_context *uc2, const struct uc2_xinfo *xi,
+                         unsigned size, const unsigned *csize, u8 *header)
+{
+    if (!uc2->chunked || xi->master!=NoMaster || xi->offset<29 ||
+        xi->offset>uc2->data_end || UC2_CHUNK_HEADER>uc2->data_end-xi->offset)
+        return UC2_Damaged;
+    int ret=u_read_all(uc2,xi->offset,header,UC2_CHUNK_HEADER);
+    if (ret<0) return ret;
+    unsigned count=chunk_u32(header+8), table=chunk_u32(header+16);
+    if (memcmp(header,UC2_CHUNK_MAGIC,8) || chunk_u32(header+12)!=size ||
+        chunk_u32(header+20) || count>UC2_CHUNK_LIMIT || count>size ||
+        (!count)!=(!size) || table!=count*UC2_CHUNK_RECORD ||
+        table>uc2->data_end-xi->offset-UC2_CHUNK_HEADER ||
+        (csize && *csize!=UC2_CHUNK_HEADER+table)) return UC2_Damaged;
+    return 0;
+}
+static int chunk_record_valid(const u8 *record, unsigned before)
+{
+    unsigned offset=chunk_u32(record), csize=chunk_u32(record+4);
+    unsigned size=chunk_u32(record+8), method=chunk_u16(record+12);
+    return size && size<=UC2_CHUNK_MAX && csize && csize<=2*UC2_CHUNK_MAX &&
+        offset>=29 && offset<=before && csize<=before-offset &&
+        (method==0 ? csize==size : method<=10 && !(csize&1));
+}
+static int extract_chunks(struct uc2_context *uc2, const struct uc2_xinfo *xi,
+                           unsigned size, int (*write)(void *, const void *, unsigned), void *output)
+{
+    u8 header[UC2_CHUNK_HEADER], record[UC2_CHUNK_RECORD], digest[32];
+    int ret=chunk_header(uc2,xi,size,NULL,header);
+    if (ret<0) return ret;
+    unsigned count=chunk_u32(header+8), total=0;
+    struct uc2_sha256 table_hash;
+    uc2_sha256_init(&table_hash); uc2_sha256_update(&table_hash,header,56);
+    for (unsigned i=0; i<count; ++i) {
+        ret=u_read_all(uc2,xi->offset+UC2_CHUNK_HEADER+i*UC2_CHUNK_RECORD,record,sizeof record);
+        if (ret<0) return ret;
+        unsigned n=chunk_u32(record+8);
+        if (!chunk_record_valid(record,xi->offset) || n>size-total) return UC2_Damaged;
+        total+=n; uc2_sha256_update(&table_hash,record,sizeof record);
+    }
+    uc2_sha256_final(&table_hash,digest);
+    if (total!=size || memcmp(digest,header+56,32)) return UC2_Damaged;
+    u8 *data=u_alloc(uc2,UC2_CHUNK_MAX);
+    if (!data) return UC2_UserFault;
+    struct uc2_sha256 file_hash; struct csum file_sum;
+    uc2_sha256_init(&file_hash); csum_init(&file_sum); total=0;
+    for (unsigned i=0; i<count; ++i) {
+        ret=u_read_all(uc2,xi->offset+UC2_CHUNK_HEADER+i*UC2_CHUNK_RECORD,record,sizeof record);
+        if (ret<0) goto done;
+        unsigned n=chunk_u32(record+8), csize=chunk_u32(record+4), method=chunk_u16(record+12);
+        if (!chunk_record_valid(record,xi->offset) || n>size-total) { ret=UC2_Damaged; goto done; }
+        u16 sum=0;
+        if (!method) {
+            ret=u_read_all(uc2,chunk_u32(record),data,n);
+            if (ret<0) goto done;
+            struct csum cs; csum_init(&cs); csum_update(&cs,data,n); sum=csum_get(&cs);
+        } else {
+            struct raw_reader source={uc2,chunk_u32(record),csize,0};
+            struct reader rd={.read=raw_read,.context=&source};
+            struct range buffer={data,data+n};
+            struct user_write_ctx sink={.write=buf_write,.context=&buffer,.remaining=n};
+            struct writer wr={.write=user_write,.context=&sink};
+            uint64_t used=0;
+            ret=method==10 ? decompressor_rans(uc2,NoMaster,&rd,&wr,n,&sum,&used) :
+                            decompressor_ultra(uc2,NoMaster,0,&rd,&wr,n,&sum,&used);
+            if (ret<0) goto done;
+            if (sink.remaining || used>(uint64_t)csize*8 || (used+15)/16*2!=csize) {
+                ret=UC2_Damaged; goto done;
+            }
+        }
+        struct uc2_sha256 chunk_hash;
+        uc2_sha256_init(&chunk_hash); uc2_sha256_update(&chunk_hash,data,n); uc2_sha256_final(&chunk_hash,digest);
+        if (sum!=chunk_u16(record+14) || memcmp(digest,record+16,32)) { ret=UC2_Damaged; goto done; }
+        uc2_sha256_update(&file_hash,data,n); csum_update(&file_sum,data,n); total+=n;
+        if (write(output,data,n)<0) { ret=UC2_UserFault; goto done; }
+    }
+    uc2_sha256_final(&file_hash,digest);
+    ret=total==size && csum_get(&file_sum)==xi->csum && !memcmp(digest,header+24,32) ? 0 : UC2_Damaged;
+done:
+    u_free(uc2,data);
+    return ret;
+}
+#endif
+
 /* public */
 
 struct uc2_context *uc2_open(struct uc2_io *io, void *io_ctx)
@@ -1853,6 +1985,8 @@ struct uc2_context *uc2_open(struct uc2_io *io, void *io_ctx)
 		uc2->cdir_state = Start;
 		uc2->scanned = 0;
 		uc2->pcp = 0;
+        uc2->chunked = 0;
+        uc2->data_end = 0;
 		list_init(&uc2->masters);
 	}
 	return uc2;

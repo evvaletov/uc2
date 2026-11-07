@@ -16,6 +16,8 @@ work = args.build.resolve()
 work.mkdir(parents=True, exist_ok=False)
 source = work / 'source'
 shutil.copytree(args.source, source)
+p = source/'libarchive/archive_read_private.h'
+p.write_text(p.read_text().replace('formats[16]', 'formats[17]'))
 p = source/'libarchive/archive_read_support_format_all.c'
 s = p.read_text()
 anchor = '\tarchive_read_support_format_ar(a);'

@@ -22,9 +22,20 @@ struct uc2_writer_options {
     int level;                 /* 2-5 Huffman, 6-9 rANS */
     unsigned max_entries;      /* files plus directories; 1..1000000 */
     uint64_t max_input_size;    /* total spooled bytes; 1..UINT32_MAX */
+    int chunked;               /* 0: classic layout; 1: shared chunk recipes */
 };
-#define UC2_WRITER_OPTIONS_INIT {4, 100000, UINT32_MAX}
-struct uc2_writer_stats { unsigned files, directories, masters, archive_size; };
+#define UC2_WRITER_OPTIONS_INIT {4, 100000, UINT32_MAX, 0}
+struct uc2_writer_stats {
+    unsigned files, directories, masters, archive_size;
+    unsigned unique_chunks, chunk_references;
+    uint64_t shared_bytes;
+};
+
+/* chunked=1 requires the full revival reader 3.0.0a11 or newer. It stores
+ * independent Gear chunks once across files/versions and a recipe per file.
+ * Maximum 1048576 logical chunk references across the input collection.
+ * Classic output remains the default; historical DOS readers cannot read
+ * chunked archives. No cross-archive references are created. */
 
 /* NULL options selects defaults. NULL result: invalid options or allocation/
  * temporary-file failure. Uses malloc/free and the platform's tmpfile(). */

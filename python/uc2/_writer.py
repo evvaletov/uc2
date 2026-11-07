@@ -68,7 +68,7 @@ class UC2Writer:
     """
 
     def __init__(self, file, *, level: int = 4, max_entries: int = 100_000,
-                 max_total_size: int = 0xFFFFFFFF):
+                 max_total_size: int = 0xFFFFFFFF, chunked: bool = False):
         self._writer = None
         self._busy = False
         self._temporary = None
@@ -83,9 +83,11 @@ class UC2Writer:
         _integer("max_total_size", max_total_size, 0xFFFFFFFF)
         if not max_entries or not max_total_size:
             raise ValueError("writer limits must be positive")
+        if not isinstance(chunked, bool):
+            raise TypeError("chunked must be a bool")
         self._directories = {(): 0}
         self._files = set()
-        self._writer = _native.Writer(level, max_entries, max_total_size)
+        self._writer = _native.Writer(level, max_entries, max_total_size, chunked)
 
     @property
     def closed(self) -> bool:

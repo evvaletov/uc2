@@ -8,6 +8,7 @@
 #include <uc2/uc2_writer.h>
 #include <uc2/uc2_cdc.h>
 #include <uc2/uc2_sha256.h>
+#include <uc2/uc2_chunks.h>
 #include <ctype.h>
 #include <limits.h>
 #include <stdio.h>
@@ -21,7 +22,7 @@
 struct entry {
     char name[256];
     unsigned parent, id, depth, time, attr;
-    unsigned size, csize, offset, master, spool, duplicate;
+    unsigned size, csize, offset, master, spool, duplicate, chunk_count;
     unsigned char digest[32];
     unsigned short checksum;
 };
@@ -138,7 +139,8 @@ uc2_writer *uc2_writer_create(const struct uc2_writer_options *options)
     if (!options) options=&defaults;
     if (options->level<2 || options->level>9 || !options->max_entries ||
         options->max_entries>1000000 || !options->max_input_size ||
-        options->max_input_size>UINT32_MAX) return NULL;
+        options->max_input_size>UINT32_MAX ||
+        (options->chunked!=0 && options->chunked!=1)) return NULL;
     uc2_writer *w=calloc(1,sizeof *w);
     if (!w) return NULL;
     w->options=*options;
@@ -211,6 +213,7 @@ int uc2_writer_add_file(uc2_writer *w, unsigned parent, const char *name,
     e->spool=(unsigned)w->input_size;
     unsigned char buffer[65536];
     uint64_t consumed=0;
+    unsigned sum=0xa55a;
     struct uc2_sha256 sha; uc2_sha256_init(&sha);
     w->state=1;
     for (;;) {
@@ -223,11 +226,14 @@ int uc2_writer_add_file(uc2_writer *w, unsigned parent, const char *name,
         if ((unsigned)n>limit) return fail(w,UC2_WRITER_LIMIT,"input exceeds declared size or total input limit");
         if (fwrite(buffer,1,(size_t)n,w->input)!=(size_t)n) return fail(w,UC2_UserFault,"temporary input write failed");
         uc2_sha256_update(&sha,buffer,(unsigned)n);
+        if (w->options.chunked)
+            for (unsigned i=0; i<(unsigned)n; ++i)
+                sum^=(unsigned)buffer[i]<<(((consumed+i)&1)*8);
         consumed+=(unsigned)n; w->input_size+=(unsigned)n;
     }
     if (size!=UC2_WRITER_UNKNOWN_SIZE && consumed!=size) return fail(w,UC2_Truncated,"input ended before its declared size");
     uc2_sha256_final(&sha,e->digest);
-    e->size=(unsigned)consumed; w->state=0;
+    e->size=(unsigned)consumed; e->checksum=(unsigned short)sum; w->state=0;
     return 0;
 }
 static int load_at(uc2_writer *w, unsigned pos, void *buf, unsigned n)
@@ -378,11 +384,155 @@ static int duplicates(uc2_writer *w)
     }
     free(index); return 0;
 }
+
+struct shared_chunk {
+    unsigned spool, size, offset, csize;
+    unsigned short checksum, method;
+    unsigned char digest[32];
+};
+struct chunk_index {
+    struct shared_chunk *chunks;
+    unsigned *slots, *refs;
+    unsigned count, capacity, slot_count, ref_capacity;
+    unsigned char *raw, *compressed, *compare;
+};
+static unsigned chunk_slot(const unsigned char digest[32], unsigned count)
+{
+    uint64_t h=0;
+    for (unsigned i=0; i<8; ++i) h=(h<<8)|digest[i];
+    return (unsigned)(h^(h>>32))&(count-1);
+}
+static int chunk_index_grow(uc2_writer *w, struct chunk_index *index)
+{
+    if ((index->count+1)*2<=index->slot_count) return 0;
+    unsigned count=index->slot_count ? index->slot_count*2 : 256;
+    unsigned *slots=calloc(count,sizeof *slots);
+    if (!slots) return fail(w,UC2_UserFault,"cannot allocate shared chunk index");
+    for (unsigned i=0; i<index->count; ++i) {
+        unsigned slot=chunk_slot(index->chunks[i].digest,count);
+        while (slots[slot]) slot=(slot+1)&(count-1);
+        slots[slot]=i+1;
+    }
+    free(index->slots); index->slots=slots; index->slot_count=count;
+    return 0;
+}
+struct compressed_chunk { unsigned char *data; unsigned size; };
+static int chunk_output(void *ctx, const void *data, unsigned n)
+{
+    struct compressed_chunk *b=ctx;
+    if (n>2*UC2_CHUNK_MAX-b->size) return -1;
+    memcpy(b->data+b->size,data,n); b->size+=n; return 0;
+}
+static void chunk_record(unsigned char record[UC2_CHUNK_RECORD], const struct shared_chunk *c)
+{
+    w32(record,c->offset); w32(record+4,c->csize); w32(record+8,c->size);
+    w16(record+12,c->method); w16(record+14,c->checksum);
+    memcpy(record+16,c->digest,32);
+}
+static int shared_chunk(uc2_writer *w, struct chunk_index *index,
+                        unsigned spool, unsigned size, unsigned *id)
+{
+    struct uc2_sha256 sha; unsigned char digest[32];
+    uc2_sha256_init(&sha); uc2_sha256_update(&sha,index->raw,size); uc2_sha256_final(&sha,digest);
+    if (chunk_index_grow(w,index)<0) return w->error;
+    unsigned slot=chunk_slot(digest,index->slot_count);
+    while (index->slots[slot]) {
+        unsigned i=index->slots[slot]-1;
+        struct shared_chunk *c=&index->chunks[i];
+        if (c->size==size && !memcmp(c->digest,digest,32)) {
+            if (load_at(w,c->spool,index->compare,size)<0) return w->error;
+            if (!memcmp(index->raw,index->compare,size)) {
+                *id=i; w->stats.shared_bytes+=size; return 0;
+            }
+        }
+        slot=(slot+1)&(index->slot_count-1);
+    }
+    if (index->count==index->capacity) {
+        unsigned cap=index->capacity ? index->capacity*2 : 256;
+        void *p=realloc(index->chunks,(size_t)cap*sizeof *index->chunks);
+        if (!p) return fail(w,UC2_UserFault,"cannot allocate shared chunk metadata");
+        index->chunks=p; index->capacity=cap;
+    }
+    struct shared_chunk c={0};
+    c.spool=spool; c.size=size; c.offset=(unsigned)w->output_size;
+    memcpy(c.digest,digest,32);
+    struct memory in={index->raw,0,size};
+    struct compressed_chunk out={index->compressed,0};
+    int r=uc2_compress(w->options.level,memory_cb,&in,chunk_output,&out,size,&c.checksum,&c.csize);
+    if (r<0) return fail(w,r,"shared chunk compression failed");
+    c.method=w->options.level>=6 ? 10 : (unsigned short)w->options.level;
+    const unsigned char *data=index->compressed;
+    if (out.size>=size) { c.method=0; c.csize=size; data=index->raw; }
+    if (output_cb(w,data,c.csize)<0) return w->error;
+    *id=index->count; index->chunks[index->count++]=c; index->slots[slot]=index->count;
+    return 0;
+}
+static int write_chunked(uc2_writer *w)
+{
+    struct chunk_index index={0};
+    index.raw=malloc(4*UC2_CHUNK_MAX);
+    if (!index.raw) return fail(w,UC2_UserFault,"cannot allocate chunk buffers");
+    index.compressed=index.raw+UC2_CHUNK_MAX;
+    index.compare=index.raw+3*UC2_CHUNK_MAX;
+    for (unsigned i=0; i<w->count; ++i) {
+        struct entry *e=&w->entries[i];
+        if (e->id) continue;
+        e->master=1;
+        if (e->duplicate) {
+            const struct entry *first=&w->entries[e->duplicate-1];
+            e->offset=first->offset; e->csize=first->csize; e->chunk_count=first->chunk_count;
+            if (e->chunk_count>UC2_CHUNK_LIMIT-w->stats.chunk_references) {
+                fail(w,UC2_WRITER_LIMIT,"shared chunk reference limit exceeded"); goto done;
+            }
+            w->stats.chunk_references+=e->chunk_count; w->stats.shared_bytes+=e->size;
+            continue;
+        }
+        for (unsigned pos=0; pos<e->size;) {
+            if (w->stats.chunk_references==UC2_CHUNK_LIMIT) {
+                fail(w,UC2_WRITER_LIMIT,"shared chunk reference limit exceeded"); goto done;
+            }
+            unsigned n=e->size-pos;
+            if (n>UC2_CHUNK_MAX) n=UC2_CHUNK_MAX;
+            if (load_at(w,e->spool+pos,index.raw,n)<0) goto done;
+            struct uc2_chunker c; size_t off=0,len=0;
+            uc2_chunker_init(&c,13,0,UC2_CHUNK_MAX);
+            uc2_chunker_next(&c,index.raw,n,&off,&len);
+            if (!len) { fail(w,UC2_InternalError,"chunker made no progress"); goto done; }
+            if (e->chunk_count==index.ref_capacity) {
+                unsigned cap=index.ref_capacity ? index.ref_capacity*2 : 256;
+                void *p=realloc(index.refs,(size_t)cap*sizeof *index.refs);
+                if (!p) { fail(w,UC2_UserFault,"cannot allocate chunk recipe"); goto done; }
+                index.refs=p; index.ref_capacity=cap;
+            }
+            if (shared_chunk(w,&index,e->spool+pos,(unsigned)len,&index.refs[e->chunk_count])<0) goto done;
+            ++e->chunk_count; ++w->stats.chunk_references; pos+=(unsigned)len;
+        }
+        unsigned char header[UC2_CHUNK_HEADER]={0}, record[UC2_CHUNK_RECORD];
+        memcpy(header,UC2_CHUNK_MAGIC,8); w32(header+8,e->chunk_count); w32(header+12,e->size);
+        w32(header+16,e->chunk_count*UC2_CHUNK_RECORD); memcpy(header+24,e->digest,32);
+        struct uc2_sha256 sha; uc2_sha256_init(&sha); uc2_sha256_update(&sha,header,56);
+        for (unsigned j=0; j<e->chunk_count; ++j) {
+            chunk_record(record,&index.chunks[index.refs[j]]); uc2_sha256_update(&sha,record,sizeof record);
+        }
+        uc2_sha256_final(&sha,header+56);
+        e->offset=(unsigned)w->output_size;
+        e->csize=UC2_CHUNK_HEADER+e->chunk_count*UC2_CHUNK_RECORD;
+        if (output_cb(w,header,sizeof header)<0) goto done;
+        for (unsigned j=0; j<e->chunk_count; ++j) {
+            chunk_record(record,&index.chunks[index.refs[j]]);
+            if (output_cb(w,record,sizeof record)<0) goto done;
+        }
+    }
+done:
+    w->stats.unique_chunks=index.count;
+    free(index.raw); free(index.chunks); free(index.slots); free(index.refs);
+    return w->error;
+}
 static int assemble(uc2_writer *w)
 {
     if (fflush(w->input)!=0) return fail(w,UC2_UserFault,"temporary input flush failed");
-    if (duplicates(w)<0 || group_files(w)<0) return w->error;
-    for (unsigned i=0; i<w->count; ++i) if (w->entries[i].duplicate) {
+    if (duplicates(w)<0 || (!w->options.chunked && group_files(w)<0)) return w->error;
+    for (unsigned i=0; !w->options.chunked && i<w->count; ++i) if (w->entries[i].duplicate) {
         struct entry *e=&w->entries[i];
         e->master=w->entries[e->duplicate-1].master;
         struct master *m=&w->masters[e->master-2];
@@ -391,8 +541,11 @@ static int assemble(uc2_writer *w)
     w->output=tmpfile();
     if (!w->output) return fail(w,UC2_UserFault,"cannot create temporary archive");
     unsigned char header[29]={0}, super[49152], master_data[MASTER_MAX];
-    if (uc2_get_supermaster(super,sizeof super)<0) return fail(w,UC2_InternalError,"SuperMaster decoding failed");
     if (output_cb(w,header,sizeof header)<0) return w->error;
+    if (w->options.chunked) {
+        if (write_chunked(w)<0) return w->error;
+    } else {
+    if (uc2_get_supermaster(super,sizeof super)<0) return fail(w,UC2_InternalError,"SuperMaster decoding failed");
     for (unsigned i=0; i<w->master_count; ++i) {
         struct master *m=&w->masters[i];
         if (load_master(w,m,master_data)<0) return w->error;
@@ -414,6 +567,7 @@ static int assemble(uc2_writer *w)
         e->offset=(unsigned)w->output_size;
         int r=uc2_compress_ex(w->options.level,master_data,m->size,input_cb,w->input,output_cb,w,e->size,&e->checksum,&e->csize);
         if (r<0) return fail(w,r,"file compression failed");
+    }
     }
     uint64_t cap=22+(uint64_t)39*w->master_count;
     for (unsigned i=0; i<w->count; ++i) cap+=(w->entries[i].id ? 27 : 47)+22+strlen(w->entries[i].name);
@@ -437,7 +591,7 @@ static int assemble(uc2_writer *w)
         if (e->id) { w32(p,e->id); p+=4; }
         else {
             w32(p,e->size); p+=4; w16(p,e->checksum); p+=2;
-            w32(p,e->csize); p+=4; w16(p,method); p+=2; w32(p,e->master); p+=4;
+            w32(p,e->csize); p+=4; w16(p,w->options.chunked ? UC2_CHUNK_METHOD : method); p+=2; w32(p,e->master); p+=4;
             w32(p,1); p+=4; w32(p,e->offset); p+=4;
         }
         unsigned n=(unsigned)strlen(e->name)+1;
@@ -454,7 +608,9 @@ static int assemble(uc2_writer *w)
     free(raw); if (r<0) return fail(w,r,"central directory compression failed");
     unsigned total=(unsigned)w->output_size, length=total-13;
     w32(header,0x1a324355); w32(header+4,length); w32(header+8,length+0x01b2c3d4);
-    w32(header+13,1); w32(header+17,cdir_offset); w16(header+21,csum); w16(header+24,203); w16(header+26,200);
+    w32(header+13,1); w32(header+17,cdir_offset); w16(header+21,csum);
+    w16(header+24,w->options.chunked ? UC2_CHUNK_VERSION : 203);
+    w16(header+26,w->options.chunked ? UC2_CHUNK_VERSION : 200);
     if (seek_file(w->output,0)!=0 || fwrite(header,1,sizeof header,w->output)!=sizeof header || fflush(w->output)!=0)
         return fail(w,UC2_UserFault,"archive header write or flush failed");
     w->stats.archive_size=total;

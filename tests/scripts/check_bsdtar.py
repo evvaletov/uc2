@@ -20,14 +20,15 @@ with tempfile.TemporaryDirectory(prefix='uc2-bsdtar-') as temp:
     (src/'folder'/'long filename.txt').write_bytes(b'libarchive integration\n' * 10000)
     (src/'empty').write_bytes(b'')
     (src/'root.bin').write_bytes(bytes(range(256))*400)
-    for level in ((4,) if '--legacy-only' in sys.argv[3:] else (4, 6)):
-        archive=root/f'level{level}.uc2'
-        subprocess.run([uc2,'-qw','-L',str(level),str(archive),'folder','empty','root.bin'],cwd=src,check=True)
+    for level, chunked in (((4, False),) if '--legacy-only' in sys.argv[3:] else
+                           ((4, False), (6, False), (4, True), (6, True))):
+        archive=root/f'level{level}-{chunked}.uc2'
+        subprocess.run([uc2,*(['--chunked'] if chunked else []),'-qw','-L',str(level),str(archive),'folder','empty','root.bin'],cwd=src,check=True)
         listed=subprocess.check_output([tar,'-tf',str(archive)]).decode().splitlines()
         for name in ('folder/long filename.txt','empty','root.bin'):
             if name not in listed: raise AssertionError('missing '+name)
         for pipe in (False,True):
-            out=root/f'out-{level}-{pipe}';out.mkdir()
+            out=root/f'out-{level}-{chunked}-{pipe}';out.mkdir()
             with archive.open('rb') as inp:
                 subprocess.run([tar,'-xf','-' if pipe else str(archive),'-C',str(out)],
                                stdin=inp if pipe else None,check=True)
@@ -35,7 +36,7 @@ with tempfile.TemporaryDirectory(prefix='uc2-bsdtar-') as temp:
                 if path.is_file() and sha(path)!=sha(out/path.relative_to(src)):
                     raise AssertionError('restore mismatch')
         # Skip earlier entries and extract just one member through libarchive.
-        single=root/f'single-{level}';single.mkdir()
+        single=root/f'single-{level}-{chunked}';single.mkdir()
         subprocess.run([tar,'-xf',str(archive),'-C',str(single),'folder/long filename.txt'],check=True)
         if sha(src/'folder/long filename.txt') != sha(single/'folder/long filename.txt'):
             raise AssertionError('selective extraction mismatch')

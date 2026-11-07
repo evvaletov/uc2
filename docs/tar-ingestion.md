@@ -32,5 +32,6 @@ file names create stored versions.
 
 Identical files share one compressed payload after SHA-256 and exact-byte
 comparison. The writer also uses content-defined chunks to form shared master
-dictionaries. This is whole-file payload reuse plus dictionary sharing; named
-files do not yet refer to a general pool of independently stored chunks.
+dictionaries. Add `--chunked` to share independently stored payload chunks across partially
+changed files. This opt-in format requires the full a11 or newer reader; see
+[chunk sharing](chunk-sharing.md) for compatibility, limits and examples.

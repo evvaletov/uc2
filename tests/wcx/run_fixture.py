@@ -45,13 +45,13 @@ def run_host(arguments):
     subprocess.run(command, check=True, timeout=120)
 
 
-for level in (4, 6):
-    archive = root/f'архив-{level}.uc2'
+for level, chunked in ((4, False), (6, False), (4, True), (6, True)):
+    archive = root/f'архив-{level}-{chunked}.uc2'
     created = root/'fixture.uc2'
-    subprocess.run([str(args.uc2.resolve()), '-qw', '-L', str(level), str(created),
+    subprocess.run([str(args.uc2.resolve()), *(['--chunked'] if chunked else []), '-qw', '-L', str(level), str(created),
                     'sub dir', 'empty.dat', 'random.bin'], cwd=source, check=True)
     created.rename(archive)
-    out = root/f'out-{level}'
+    out = root/f'out-{level}-{chunked}'
     out.mkdir()
     run_host([plugin, archive, source, out])
 

@@ -232,6 +232,11 @@ target_link_libraries(test_writer PRIVATE uc2)
 target_compile_features(test_writer PRIVATE c_std_99)
 add_test(NAME writer COMMAND test_writer)
 
+add_executable(test_chunk_corruption src/test_chunk_corruption.c)
+target_link_libraries(test_chunk_corruption PRIVATE uc2)
+target_compile_features(test_chunk_corruption PRIVATE c_std_99)
+add_test(NAME chunk_corruption COMMAND test_chunk_corruption)
+
 add_executable(test_sea src/test_sea.c)
 target_link_libraries(test_sea PRIVATE uc2)
 target_compile_features(test_sea PRIVATE c_std_99)

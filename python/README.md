@@ -136,7 +136,7 @@ through EOF without seeking and leaves the input open. A supplied size must
 match exactly; detecting excess input can consume one extra byte.
 
 Inputs spool to anonymous temporary files as they are added. Compression runs
-at close, using CDC-selected custom master dictionaries. Payload buffers have
+at close, using CDC-selected custom master dictionaries by default. Payload buffers have
 fixed sizes; metadata grows with entries and chunks. Temporary disk space
 covers the uncompressed inputs and completed archive, plus the destination's
 sibling temporary file during the final copy. Duplicate file paths store
@@ -212,3 +212,8 @@ Filesystem paths now resolve SAS and DOS UC2SEA sets without executing input.
 Keep all volumes together. Snapshot maintenance adds explicit `prune`, `repair`
 and `compact`; packed repositories require alpha10 or later. See the
 [repository guides](https://github.com/evvaletov/uc2/tree/main/docs).
+
+Optional `UC2Writer(..., chunked=True)` shares payload chunks across partly
+changed files and stored versions. Use the full 3.0.0a11 or newer reader.
+For method 11, `UC2Info.compress_size` counts the recipe only; shared payloads
+are excluded. See the [chunk-sharing guide](../docs/chunk-sharing.md).

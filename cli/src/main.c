@@ -92,6 +92,7 @@ struct options {
 	bool help:1;
 	bool quiet:1;
 	bool benchmark:1;
+	bool chunked:1;
 	int ots_mode;
 	int ingest_mode;
 	char sep;
@@ -1098,6 +1099,7 @@ static int create_archive(int nargs, char **args)
 {
     struct uc2_writer_options options = UC2_WRITER_OPTIONS_INIT;
     options.level = opt.level;
+    options.chunked = opt.chunked;
     uc2_writer *writer = uc2_writer_create(&options);
     if (!writer) errx(EXIT_FAILURE, "cannot initialize archive writer");
     uc2_say(stderr, "UC2 compression level: %s\n", level_name(opt.level));
@@ -1135,6 +1137,9 @@ static int create_archive(int nargs, char **args)
     uc2_writer_free(writer);
     if (stats.masters)
         uc2_say(stderr, "  master[2]: custom master dictionaries: %u\n", stats.masters);
+    if (opt.chunked)
+        uc2_say(stderr,"  shared chunks: %u unique, %u references, %llu payload bytes reused\n",
+                stats.unique_chunks,stats.chunk_references,(unsigned long long)stats.shared_bytes);
     uc2_say(stderr, "Created %s (%u files, %u dirs, %u masters, %u bytes)\n",
             opt.archive, stats.files, stats.directories, stats.masters, stats.archive_size);
     uc2_say(stderr, "Everything went OK\n");
@@ -1269,6 +1274,12 @@ static int extract_ingest_long_opts(int *argcp, char **argv, char **out_path)
 	*out_path = NULL;
 	for (int i = 1; i < argc; ) {
 		const char *a = argv[i];
+		if (!strcmp(a,"--")) break;
+		if (!strcmp(a,"--chunked")) {
+			opt.chunked=true;
+			for (int j=i; j+1<argc; ++j) argv[j]=argv[j+1];
+			--argc; continue;
+		}
 		int matched_args = 0;
 		int new_mode = INGEST_MODE_NONE;
 		const char *inline_value = NULL;
@@ -1748,7 +1759,9 @@ static int ingest_restore_v3(const char *archive_path, FILE *out)
 static int cmd_ingest_tar(const char *archive_path)
 {
     binary_stream(stdin);
-    uc2_writer *writer=uc2_writer_create(NULL);
+    struct uc2_writer_options options=UC2_WRITER_OPTIONS_INIT;
+    options.chunked=opt.chunked;
+    uc2_writer *writer=uc2_writer_create(&options);
     if (!writer) errx(EXIT_FAILURE,"cannot initialize tar archive writer");
     char error[256];
     if (uc2_tar_read(writer,stdin,error,sizeof error)<0) errx(EXIT_FAILURE,"%s",error);
@@ -1762,12 +1775,31 @@ static int cmd_ingest_tar(const char *archive_path)
     uc2_writer_get_stats(writer,&stats);
     uc2_writer_free(writer);
     uc2_say(stderr,"Ingested tar: %u files, %u directories, %u archive bytes\n",stats.files,stats.directories,stats.archive_size);
+    if (opt.chunked)
+        uc2_say(stderr,"Shared chunks: %u unique, %u references, %llu payload bytes reused\n",
+                stats.unique_chunks,stats.chunk_references,(unsigned long long)stats.shared_bytes);
     return EXIT_SUCCESS;
 }
 
 static int cmd_ingest_write(const char *archive_path)
 {
 	binary_stream(stdin);
+    if (opt.chunked) {
+        struct uc2_writer_options options=UC2_WRITER_OPTIONS_INIT; options.chunked=1;
+        uc2_writer *writer=uc2_writer_create(&options);
+        if (!writer) errx(EXIT_FAILURE,"cannot initialize chunked stream writer");
+        writer_check(writer,uc2_writer_add_file(writer,0,"data",0,0x20,UC2_WRITER_UNKNOWN_SIZE,
+                                              fread_cb,stdin),archive_path);
+        FILE *out=stage_output(archive_path);
+        int result=uc2_writer_finish(writer,fwrite_cb,out), closed=fclose(out);
+        writer_check(writer,result,archive_path);
+        if (closed!=0) err(EXIT_FAILURE,"output close failed");
+        commit_staged_output(archive_path);
+        struct uc2_writer_stats stats; uc2_writer_get_stats(writer,&stats); uc2_writer_free(writer);
+        uc2_say(stderr,"Ingested stream: %u unique chunks, %u references, %llu payload bytes reused\n",
+                stats.unique_chunks,stats.chunk_references,(unsigned long long)stats.shared_bytes);
+        return EXIT_SUCCESS;
+    }
 	struct uc2_ingest_stats st;
 	int rc = ingest_write_v3(archive_path, stdin, &st);
 	if (rc != 0)
@@ -1874,8 +1906,10 @@ int main(int argc, char *argv[])
 			return cmd_ingest_tar(ingest_path);
 		if (opt.ingest_mode == INGEST_MODE_WRITE)
 			return cmd_ingest_write(ingest_path);
-		if (opt.ingest_mode == INGEST_MODE_RESTORE)
+		if (opt.ingest_mode == INGEST_MODE_RESTORE) {
+			if (opt.chunked) errx(EXIT_FAILURE,"--chunked is a creation option");
 			return cmd_ingest_restore(ingest_path);
+		}
 	}
 
 	opt.ots_mode = extract_ots_long_opts(&argc, argv, &opt.ots_path);
@@ -1960,6 +1994,7 @@ usage:
 					" -l      List\n"
 					" -t      Test\n"
 					" -w      Create archive\n"
+					" --chunked  Share chunks across files (requires revival 3.0.0a11+)\n"
 					" -L n    Level: 2=Fast 3=Normal 4=Tight(default) 5=Ultra 6-9=rANS\n"
 					" -a      All versions of files\n"
 					" -d path Destination to extract to\n"
@@ -1978,6 +2013,7 @@ usage:
 	if (argc == optind)
 		errx(EXIT_FAILURE, "Archive not given");
 	opt.archive = argv[optind++];
+    if (opt.chunked && !opt.create) errx(EXIT_FAILURE,"--chunked is a creation option");
 
 	if (opt.benchmark) {
 		/* -B: benchmark uses remaining args as input files (archive arg is first file) */

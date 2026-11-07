@@ -125,15 +125,16 @@ def main():
                     tar.addfile(info, f)
         (root / f'{kind}.manifest.json').write_text(json.dumps(expected, indent=2)+'\n')
         for trial in range(args.repeat):
-            for method in ['uc2-files', 'tar-uc2', '7z', 'tar-zstd']:
+            for method in ['uc2-files', 'uc2-chunks', 'tar-uc2', '7z', 'tar-zstd']:
                 work = root / f'{kind}-{method}-{trial}'
                 work.mkdir()
                 archive = work / ('archive.7z' if method == '7z' else 'archive')
                 restored = work / 'restored'
                 restored.mkdir()
                 with tar_path.open('rb') as stream:
-                    if method == 'uc2-files':
-                        cmd = [uc2, '-q', '-w', '-L', '4', archive, *sorted(expected)]
+                    if method in ('uc2-files', 'uc2-chunks'):
+                        cmd = [uc2, *(['--chunked'] if method == 'uc2-chunks' else []),
+                               '-q', '-w', '-L', '4', archive, *sorted(expected)]
                         inp = None
                     elif method == 'tar-uc2':
                         cmd, inp = [uc2, '--ingest', archive], stream
@@ -142,7 +143,7 @@ def main():
                     else:
                         cmd, inp = ['zstd', '-q', '-3', '-T1', '-o', archive], stream
                     enc, enc_rss = run(cmd, folder, work, 'create', stdin=inp)
-                if method == 'uc2-files':
+                if method in ('uc2-files', 'uc2-chunks'):
                     dec, dec_rss = run([uc2, '-q', '-d', restored, archive], root, work, 'restore')
                 elif method == '7z':
                     dec, dec_rss = run([seven, 'x', '-y', '-o'+str(restored), archive], root, work, 'restore')
