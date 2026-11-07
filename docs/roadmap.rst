@@ -1,17 +1,17 @@
 Roadmap
 =======
 
-UC2 alpha9 adds selected ZIP export and offline use to the browser reader,
-with Chromium, Firefox and WebKit checks. Total Commander now opens and
-extracts ``.uc2`` directly in both architectures. The next priorities are:
+Alpha11 adds optional shared chunks across named files and stored versions.
+The libarchive contribution is submitted as `PR #3832
+<https://github.com/libarchive/libarchive/pull/3832>`_. The next priorities are:
 
-1. Snapshot retention, recovery tooling and larger-collection measurements.
-2. Direct SAS/UC2SEA multi-volume reads with missing/mixed-part diagnostics.
-3. Upstream review of the bounded optional libarchive reader, after authorization
-   for maintainer contact.
-4. Tar-entry ingestion, preserving individual files inside streamed inputs.
-5. Complete the independent project-wide task-qa and task-at audit. Scoped
-   release reviews do not close that broader task.
+1. Submit the prepared Total Commander and Midnight Commander proposals after
+   the user's authorization for those contacts; confirm MC's DCO sign-off.
+2. Respond to libarchive review and settle the optional dependency and format ID.
+3. Complete the independent project-wide task-qa and task-at audit.
+4. Measure multi-gigabyte snapshot collections and harden interruption recovery.
+5. Tune shared-chunk compression and mode selection against the documented
+   public-source regression and edited-binary gains.
 
 See `ROADMAP.md on GitHub
 <https://github.com/evvaletov/uc2/blob/main/ROADMAP.md>`_ for the inventory,

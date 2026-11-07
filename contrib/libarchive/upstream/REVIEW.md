@@ -1,18 +1,25 @@
 # Proposed UC2 reader for libarchive
 
-Prepared for review against libarchive 3.8.11. No contribution has been sent
-upstream. `0x110000` is a proposed format code, not an assigned identifier.
-The local full-feature plugin continues using its private ID until acceptance.
+Submitted as [libarchive/libarchive#3832](https://github.com/libarchive/libarchive/pull/3832)
+on 2026-11-07, from `evvaletov:uc2-optional-reader` at `5ad7e3d7`, based on
+upstream `eb57ffefe20e98eb7ba05829ee1c23b90e589a71`. Maintainer review is pending.
+`0x110000` remains proposed, not assigned. The local full-feature adapter keeps
+its private ID until acceptance.
+
+The patch in this directory is a reproducible **libarchive 3.8.11** validation
+bundle. It is not the exact current-master PR diff; use the PR for that source,
+its upstream formatting, man-page additions and pinned dependency instructions.
+`review.json` records this distinction.
 
 The patch registers a BSD-2-Clause adapter and links an optional external
 `libuc2read` shared library. That library compiles the existing LGPL-3.0-only
-reader with rANS disabled. It does not contain the GPL compressor or GPL rANS
-module. No existing UC2 or third-party source license changes. Enable it
+reader with rANS and the new shared-chunk extension disabled. It does not
+contain the GPL compressor, rANS or SHA-256 modules. No existing UC2 or third-party source license changes. Enable it
 explicitly with CMake `-DENABLE_UC2READ=ON` or Autotools `--with-uc2read`.
 The default build does not acquire the dependency and reports UC2 unavailable.
 
 The adapter reads historical supported Huffman/delta and Turbo entries,
-including custom dictionaries. rANS, encrypted and multi-volume archives are outside
+including custom dictionaries. rANS, shared chunks, encrypted and multi-volume archives are outside
 this proposed dependency's scope. The regular UC2 release retains rANS.
 The patch includes registration by code, public declarations, CMake/Autotools
 wiring, and fixtures for legacy/Turbo reads, quota failures and rANS rejection.
@@ -80,3 +87,10 @@ execution. Configure runs linked test programs, so setting the runtime path
 only when running bsdtar is insufficient. This validation built bsdtar with
 `--disable-shared --without-xml2 --without-expat` and restored the legacy fixture
 byte for byte; it does not establish support for every optional dependency.
+
+Current-master validation: all 969 libarchive tests pass. Focused enabled CMake
+and Autotools tests pass 130,390 assertions; disabled CMake tests also pass with
+warnings as errors. Full-suite testing caught and fixed format-slot exhaustion
+when registering the raw fallback after all formats. Resource-limit and actual
+bsdtar tests pass. The PR is submitted; acceptance and any review revisions
+remain open under 7bbb6b6.

@@ -10,3 +10,6 @@ tests/corpus/** binary
 tests/archives/** binary
 tests/archives/*.md text eol=lf diff
 tests/archives/*.json text eol=lf diff
+
+# Unified patches preserve upstream whitespace, including context prefixes.
+contrib/**/upstream/*.patch -whitespace

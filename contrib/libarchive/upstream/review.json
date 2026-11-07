@@ -1,10 +1,14 @@
 {
   "base": "libarchive 3.8.11",
   "submitted": false,
+  "upstream_pr": "https://github.com/libarchive/libarchive/pull/3832",
+  "note": "Release-based reproduction; the submitted PR targets upstream master",
+  "upstream_base": "eb57ffefe20e98eb7ba05829ee1c23b90e589a71",
+  "upstream_head": "5ad7e3d7",
   "format_id": "0x110000 (proposed, not allocated)",
   "decoder": "optional shared libuc2read; existing LGPL-3.0-only sources",
   "adapter_license": "BSD-2-Clause option",
-  "patch_sha256": "4b406969a27b96d94089bed70eac59e5e92bfda09ac65f03a964e8bf9b8e4f77",
+  "patch_sha256": "cea78392e980a2889c223e506352404ade3e68b052e9d67a6902bcd775a93344",
   "files": [
     "CMakeLists.txt",
     "Makefile.am",

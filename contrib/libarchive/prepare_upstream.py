@@ -248,6 +248,10 @@ for name in sorted(changed):
 target = work / "libarchive-3.8.11-uc2-review.patch"
 target.write_text("".join(patch))
 metadata = {"base": "libarchive 3.8.11", "submitted": False,
+            "upstream_pr": "https://github.com/libarchive/libarchive/pull/3832",
+            "note": "Release-based reproduction; the submitted PR targets upstream master",
+            "upstream_base": "eb57ffefe20e98eb7ba05829ee1c23b90e589a71",
+            "upstream_head": "5ad7e3d7",
             "format_id": "0x110000 (proposed, not allocated)",
             "decoder": "optional shared libuc2read; existing LGPL-3.0-only sources",
             "adapter_license": "BSD-2-Clause option",

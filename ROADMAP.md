@@ -2,8 +2,8 @@
 
 ## Recommended next priorities (2026-11-07)
 
-Alpha10 implements snapshot retention/replica repair/packing, direct native
-SAS/UC2SEA reads and tar ingestion with named files. The next priorities are:
+Alpha11 adds optional shared chunks across named files and versions. The
+libarchive contribution is submitted; the next priorities are:
 
 1. [ ] **Take the Total Commander and Midnight Commander proposals upstream.**
    Review the [TC catalog draft](contrib/totalcommander/CATALOG-DRAFT.md) and
@@ -11,10 +11,11 @@ SAS/UC2SEA reads and tar ingestion with named files. The next priorities are:
    contact/submission. Confirm MC's DCO sign-off. No external contact yet.
    Tracking: 4b7fbd1.
 
-2. [ ] **Take the bounded libarchive patch through upstream review.**
-   The [review patch](contrib/libarchive/upstream/REVIEW.md) includes Turbo and
-   resource limits. Obtain maintainer agreement on the optional LGPL dependency,
-   defaults and format ID. Submission remains unsent. Tracking: 7bbb6b6.
+2. [ ] **Respond to libarchive review and settle the dependency/format ID.**
+   [PR #3832](https://github.com/libarchive/libarchive/pull/3832) proposes the
+   default-off shared LGPL reader. Submission is complete; maintainer review,
+   dependency acceptance and the proposed format ID remain pending.
+   Tracking: 7bbb6b6.
 
 3. [ ] **Complete the project-wide task-qa + task-at audit.**
    Audit the remaining core and maintained documentation. Release-scoped panels
@@ -27,10 +28,27 @@ SAS/UC2SEA reads and tar ingestion with named files. The next priorities are:
    a writable, exclusively locked repository. [Contract](docs/snapshots.md).
    Tracking: a3bcfb4.
 
-5. [ ] **Extend chunk sharing inside named archive entries.**
-   Tar entries now preserve individual files and reuse identical-file payloads
-   plus CDC-derived dictionaries. General chunk references across partially
-   changed files remain a separate format/writer task. Tracking: 2b91541.
+5. [ ] **Tune shared-chunk compression and mode selection.**
+   Chunk reuse substantially reduces the measured edited-binary collections,
+   but the public-source case is 9.1% larger than dictionary mode. Compare
+   adaptive boundaries/dictionaries and automatic mode selection while retaining
+   the existing default and limits. [Measurements](docs/benchmarks/2026-11-07-chunk-sharing.md).
+   Tracking: 3fdd442.
+
+### Implemented for 3.0.0a11
+
+- [x] Opt-in `--chunked` / `UC2Writer(chunked=True)` shares independently stored
+  chunks across partly changed named files and stored versions. Tar entries
+  remain individually recoverable; opaque ingestion uses one `data` entry.
+- [x] Backward direct references, chunk/recipe/file SHA-256, historical checksums,
+  strict compressed-word bounds and bounded metadata. Old readers reject the
+  extension; default archives and old ingestion formats remain supported.
+- [x] Repeated-name metadata uses a 64 MiB absolute ceiling, replacing a ratio
+  heuristic that rejected valid archives with many stored versions.
+- [x] Submitted the optional legacy libarchive reader, with full upstream suite,
+  CMake enabled/disabled, Autotools, real bsdtar and quota validation.
+- Evidence: [alpha11 verification](docs/releases/3.0.0a11-qa.md),
+  [format and compatibility](docs/chunk-sharing.md).
 
 ### Implemented for 3.0.0a10
 
