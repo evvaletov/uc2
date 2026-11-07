@@ -15,6 +15,10 @@ For collections, ``uc2-preserve`` inventories and migrates UC2 archives to
 verified ZIP/tar exports. See the `preservation guide
 <https://github.com/evvaletov/uc2/blob/main/docs/preservation.md>`_.
 
+``uc2 snapshot`` in the Python package creates incremental directory versions
+with shared chunks and verified restores. See the `snapshot guide
+<https://github.com/evvaletov/uc2/blob/main/docs/snapshots.md>`_.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents

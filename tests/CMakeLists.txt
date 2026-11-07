@@ -28,6 +28,11 @@ target_include_directories(test_roundtrip PRIVATE "${PROJECT_BINARY_DIR}/lib")
 target_compile_features(test_roundtrip PRIVATE c_std_99)
 add_test(NAME roundtrip COMMAND test_roundtrip)
 
+add_executable(test_turbo src/test_turbo.c)
+target_link_libraries(test_turbo PRIVATE uc2)
+target_compile_features(test_turbo PRIVATE c_std_99)
+add_test(NAME turbo COMMAND test_turbo)
+
 # CLI create/extract round-trip test
 add_test(NAME cli_create
     COMMAND ${CMAKE_COMMAND}

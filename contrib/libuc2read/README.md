@@ -1,8 +1,8 @@
 # UC2 legacy shared reader
 
 `libuc2read` builds the existing LGPL decoder as a separate shared library.
-It reads the supported historical Huffman and delta methods. UC2 v3 rANS
-(method 10), Turbo (method 80), and archive creation are unavailable.
+It reads the supported historical Huffman, delta and Turbo (method 80) streams.
+UC2 v3 rANS (method 10) and archive creation are unavailable.
 Use the full UC2 package when you need rANS or the compressor.
 
 ```sh

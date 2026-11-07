@@ -90,6 +90,22 @@ IF(ENABLE_UC2READ)
   IF(NOT UC2READ_INCLUDE_DIR OR NOT UC2READ_LIBRARY)
     MESSAGE(FATAL_ERROR "ENABLE_UC2READ requires the external libuc2read shared reader")
   ENDIF()
+  IF(UC2READ_LIBRARY MATCHES "[.]a$")
+    MESSAGE(FATAL_ERROR "UC2 requires a shared libuc2read, not a static archive")
+  ENDIF()
+  INCLUDE(CheckCSourceCompiles)
+  SET(CMAKE_REQUIRED_INCLUDES ${UC2READ_INCLUDE_DIR})
+  SET(CMAKE_REQUIRED_LIBRARIES ${UC2READ_LIBRARY})
+  SET(CMAKE_REQUIRED_DEFINITIONS -DUC2_SHARED -DUC2_HUFFMAN_ONLY)
+  UNSET(UC2READ_LINKS CACHE)
+  CHECK_C_SOURCE_COMPILES("#include <uc2/libuc2.h>
+int main(void) { struct uc2_io io = {0}; uc2_handle h = uc2_open(&io, 0); uc2_close(h); return 0; }" UC2READ_LINKS)
+  UNSET(CMAKE_REQUIRED_INCLUDES)
+  UNSET(CMAKE_REQUIRED_LIBRARIES)
+  UNSET(CMAKE_REQUIRED_DEFINITIONS)
+  IF(NOT UC2READ_LINKS)
+    MESSAGE(FATAL_ERROR "libuc2read headers and required reader symbols do not link")
+  ENDIF()
   SET(HAVE_LIBUC2READ 1)
   INCLUDE_DIRECTORIES(${UC2READ_INCLUDE_DIR})
   ADD_DEFINITIONS(-DUC2_SHARED -DUC2_HUFFMAN_ONLY)
@@ -104,6 +120,9 @@ if test "x$with_uc2read" = "xyes"; then
   PKG_CHECK_MODULES(UC2READ, [libuc2read >= 3.0.0])
   CPPFLAGS="${CPPFLAGS} ${UC2READ_CFLAGS}"
   LIBS="${LIBS} ${UC2READ_LIBS}"
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <uc2/libuc2.h>]],
+    [[struct uc2_io io = {0}; uc2_handle h = uc2_open(&io, 0); uc2_close(h);]])],
+    [], [AC_MSG_ERROR([libuc2read reader API does not link])])
   LIBSREQUIRED="$LIBSREQUIRED${LIBSREQUIRED:+ }libuc2read"
   AC_DEFINE(HAVE_LIBUC2READ, [1], [Define to 1 for the optional LGPL UC2 reader.])
 fi
@@ -114,14 +133,17 @@ fixtures = work / "fixtures"
 fixtures.mkdir()
 (fixtures / "fixture.txt").write_bytes(b"UC2 optional reader\n" * 100)
 os.utime(fixtures / "fixture.txt", (946684800, 946684800))
-for level in (4, 6):
+for level in (4, 6, 80):
     name = f"test_read_format_uc2_{level}.uc2"
     archive = fixtures / name
-    subprocess.run([str(args.uc2.resolve()), "-qw", "-L", str(level), str(archive), "fixture.txt"],
-                   cwd=fixtures, check=True)
+    if level == 80:
+        shutil.copyfile(repo / "tests/archives/turbo0.uc2", archive)
+    else:
+        subprocess.run([str(args.uc2.resolve()), "-qw", "-L", str(level), str(archive), "fixture.txt"],
+                       cwd=fixtures, check=True)
     data = archive.read_bytes()
     encoded = b"begin 644 " + name.encode() + b"\n"
-    encoded += b"".join(binascii.b2a_uu(data[i:i+45]) for i in range(0, len(data), 45))
+    encoded += b"".join(binascii.b2a_uu(data[i:i+45], backtick=True) for i in range(0, len(data), 45))
     encoded += b"`\nend\n"
     write("libarchive/test/" + name + ".uu", encoded.decode())
 
@@ -152,6 +174,38 @@ DEFINE_TEST(test_read_format_uc2)
     assertEqualIntA(a, ARCHIVE_EOF, archive_read_next_header(a, &e));
     assertEqualInt(ARCHIVE_OK, archive_read_free(a));
 
+    const char *limits[] = {"uc2:memory-limit=1", "uc2:input-limit=20", "uc2:entry-limit=1999", "uc2:total-limit=1999"};
+    for (unsigned k = 0; k < sizeof limits / sizeof *limits; k++) {
+        a = archive_read_new();
+        assertEqualInt(ARCHIVE_OK, archive_read_support_format_uc2(a));
+        assertEqualIntA(a, ARCHIVE_OK, archive_read_set_options(a, limits[k]));
+        assertEqualIntA(a, ARCHIVE_OK, archive_read_open_filename(a, "test_read_format_uc2_4.uc2", 7));
+        if (k < 2) assertEqualIntA(a, ARCHIVE_FATAL, archive_read_next_header(a, &e));
+        else {
+            assertEqualIntA(a, ARCHIVE_OK, archive_read_next_header(a, &e));
+            assertEqualIntA(a, ARCHIVE_FATAL, archive_read_data(a, data, sizeof data));
+        }
+        assertEqualInt(ARCHIVE_OK, archive_read_free(a));
+    }
+    a = archive_read_new();
+    assertEqualInt(ARCHIVE_OK, archive_read_support_format_uc2(a));
+    extract_reference_file("test_read_format_uc2_80.uc2");
+    assertEqualIntA(a, ARCHIVE_OK, archive_read_open_filename(a, "test_read_format_uc2_80.uc2", 7));
+    assertEqualIntA(a, ARCHIVE_OK, archive_read_next_header(a, &e));
+    assertEqualInt(70001, archive_entry_size(e));
+    unsigned char *turbo = malloc(70001);
+    assert(turbo != NULL);
+    if (turbo) {
+        assertEqualIntA(a, 70001, archive_read_data(a, turbo, 70001));
+        unsigned x = 80;
+        for (unsigned i = 0; i < 70001; i++) {
+            x = x * 1664525u + 1013904223u;
+            assertEqualInt(i < 30000 ? (unsigned char)(x >> 24) : (unsigned char)(i % 251), turbo[i]);
+        }
+        free(turbo);
+    }
+    assertEqualInt(ARCHIVE_OK, archive_read_free(a));
+
     a = archive_read_new();
     assertEqualInt(ARCHIVE_OK, archive_read_support_format_by_code(a, ARCHIVE_FORMAT_UC2));
     extract_reference_file("test_read_format_uc2_6.uc2");
@@ -169,6 +223,7 @@ replace("Makefile.am", "\tlibarchive/test/test_read_format_lha.c \\",
 write("Makefile.am", (source / "Makefile.am").read_text() + '''
 EXTRA_DIST += libarchive/test/test_read_format_uc2_4.uc2.uu \\
              libarchive/test/test_read_format_uc2_6.uc2.uu \\
+             libarchive/test/test_read_format_uc2_80.uc2.uu \\
              doc/uc2-reader.md
 ''')
 write("doc/uc2-reader.md", (repo / "contrib/libarchive/upstream/REVIEW.md").read_text())

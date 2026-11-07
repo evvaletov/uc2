@@ -7,7 +7,7 @@ or compiler is needed when a wheel is available.
 
 This is an alpha release. It supports the implemented legacy Huffman methods,
 master dictionaries, directories, stored versions, and UC2 v3 rANS entries.
-Turbo/method 80 and multi-volume archives remain unsupported. Use `UC2File` for reading and `UC2Writer` for creation.
+Turbo/method 80 is supported for reading. Multi-volume sets require reassembly. Use `UC2File` for reading and `UC2Writer` for creation.
 
 ## Install and read
 
@@ -203,3 +203,7 @@ The distribution contains GPL-3.0-or-later and LGPL-3.0-only code. Independently
 written Python integration code also has a BSD-2-Clause option. This does not
 change the licenses of the bundled core or third-party code. License texts,
 credits, and the per-file audit are included in the distribution.
+
+Incremental directory versions are available through `uc2 snapshot` in the
+Python package, with shared SHA-256-addressed UC2 chunks and verified restores.
+See [the snapshot guide](https://github.com/evvaletov/uc2/blob/main/docs/snapshots.md).

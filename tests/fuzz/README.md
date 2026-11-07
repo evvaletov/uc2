@@ -55,3 +55,7 @@ Two layers run automatically:
   libFuzzer + ASan, replays the committed artifacts, then runs a bounded
   coverage-guided session over each path. A crash, OOM, or slow input
   fails the job and uploads the artifact.
+
+`regressions/turbo-empty-checksum.uc2` is a generated method80 archive with
+a zero-length file and deliberately wrong file checksum. Libarchive must
+verify the stream even when the declared file size is zero.

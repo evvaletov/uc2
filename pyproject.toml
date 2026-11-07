@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "uc2"
-version = "3.0.0a7"
+version = "3.0.0a8"
 description = "Read and create UltraCompressor II archives in Python, with a bundled native CLI"
 readme = "python/README.md"
 requires-python = ">=3.10"
@@ -32,6 +32,7 @@ Issues = "https://github.com/evvaletov/uc2/issues"
 uc2 = "uc2._cli:main"
 uc2-mount = "uc2._mount:main"
 uc2-preserve = "uc2.preserve:main"
+uc2-snapshot = "uc2.snapshot:main"
 
 [project.optional-dependencies]
 mount = ["fusepy==3.0.1; sys_platform == 'linux'"]
@@ -49,7 +50,7 @@ UC2_BUILD_PYTHON = "ON"
 UC2_BUILD_TESTS = "OFF"
 UC2_BUILD_LIBARCHIVE_PLUGIN = "OFF"
 UC2_BUILD_WCX = "OFF"
-UC2_VERSION_LABEL = "3.0.0a7"
+UC2_VERSION_LABEL = "3.0.0a8"
 
 [tool.cibuildwheel]
 build = "cp3{10,11,12,13,14}-*"

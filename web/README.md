@@ -18,8 +18,7 @@ results remain available after a timeout. Cancel terminates the worker and
 clears the archive. Reopen after cancellation or a timeout. Use `uc2-preserve`
 for larger collections.
 
-Legacy Huffman and v3 rANS are supported. Turbo/method 80 is reported as
-unsupported. Filenames are rendered as text, and download names are reduced
+Legacy Huffman, Turbo/method 80 and v3 rANS are supported. Filenames are rendered as text, and download names are reduced
 to safe leaf names. The browser inventory includes raw timestamps and DOS
 attributes, but does not contain arbitrary tags or original compressed data.
 Unverified entries are explicitly marked.

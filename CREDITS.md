@@ -44,6 +44,15 @@ de Vries's 1992 binaries.
 - Website: <http://torinak.com/~jb/unuc2/>
 - Original source preserved in `original/unuc2-0.6/`
 
+## Turbo and compatibility comparisons
+
+The method 80 reader follows Danny Bezemer's `COMP_TT.CPP/H` from AIP's
+LGPL source release, with bounds checks and callback-based I/O. Klaus Post's
+independent [Go UC2 reader](https://github.com/klauspost/uc2), pinned at
+`53622f89ada1cf0d4a69f91b653bdd44ec5b0f92`, supplied a second decoder and
+historical sample references. Generated Turbo fixtures were also restored
+with the original DOS executable. The C decoder remains LGPL-3.0-only.
+
 ## Additional Contributors
 
 - **Danny Bezemer**: co-authored UC2 with de Vries during the

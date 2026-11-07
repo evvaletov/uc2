@@ -11,6 +11,9 @@ def executable() -> Path:
 
 
 def main() -> int:
+    if sys.argv[1:2] == ["snapshot"]:
+        from .snapshot import main as snapshot_main
+        return snapshot_main(sys.argv[2:])
     binary = executable()
     if os.name == "posix":
         os.execv(str(binary), [str(binary), *sys.argv[1:]])

@@ -279,6 +279,25 @@ static int module_clear(PyObject *module)
     Py_CLEAR(state->bad_archive); Py_CLEAR(state->resource_limit); return 0;
 }
 int uc2_python_writer_init(PyObject *module);
+/* A bounded buffer contains at least a maximum-sized chunk unless it is
+ * the final buffer. Reuse the archive ingestion Gear boundaries exactly. */
+#include "uc2/uc2_cdc.h"
+static PyObject *chunk_length(PyObject *module, PyObject *args)
+{
+    (void)module;
+    const char *data;
+    Py_ssize_t length;
+    if (!PyArg_ParseTuple(args, "y#", &data, &length)) return NULL;
+    struct uc2_chunker chunker;
+    size_t offset, size;
+    uc2_chunker_init(&chunker, 13, 0, 0);
+    uc2_chunker_next(&chunker, (const uint8_t *)data, (size_t)length, &offset, &size);
+    return PyLong_FromSize_t(size);
+}
+static PyMethodDef module_methods[] = {
+    {"chunk_length", chunk_length, METH_VARARGS, "First Gear chunk length (8 KiB target)."},
+    {NULL, NULL, 0, NULL}
+};
 static int module_exec(PyObject *module)
 {
     struct module_state *state = PyModule_GetState(module);
@@ -295,7 +314,7 @@ static int module_exec(PyObject *module)
 }
 static PyModuleDef_Slot module_slots[] = { {Py_mod_exec, module_exec}, {0, NULL} };
 static struct PyModuleDef module_def = {
-    PyModuleDef_HEAD_INIT, "_native", NULL, sizeof(struct module_state), NULL,
+    PyModuleDef_HEAD_INIT, "_native", NULL, sizeof(struct module_state), module_methods,
     module_slots, module_traverse, module_clear, NULL
 };
 PyMODINIT_FUNC PyInit__native(void) { return PyModuleDef_Init(&module_def); }

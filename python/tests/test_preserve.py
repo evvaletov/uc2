@@ -76,7 +76,8 @@ def test_migration_retains_versions_metadata_and_bytes(collection, tmp_path, for
 
 @pytest.mark.parametrize('format', ['zip', 'tar'])
 def test_original_encoder_corpus(tmp_path, format):
-    report = preserve([ROOT / 'tests/archives'], tmp_path / format, format=format)
+    report = preserve([ROOT / 'tests/archives' / item['path'] for item in
+                       json.loads((ROOT / 'tests/archives/manifest.json').read_text())['archives']], tmp_path / format, format=format)
     assert report['status'] == 'ok'
     assert len(report['archives']) == 5
     for record in report['archives']:

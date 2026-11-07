@@ -5,11 +5,11 @@ Nico de Vries (1992-1996). UC2 used shared compression dictionaries
 ("master blocks") and file versioning.
 
 UC2 v3 is under development in portable C99. The current alpha is
-[3.0.0a7](https://pypi.org/project/uc2/3.0.0a7/).
+[3.0.0a8](https://pypi.org/project/uc2/3.0.0a8/).
 Compression levels 2-5 use the original Huffman format; levels 6-9 require the
 new rANS reader. Original-format compatibility is
-covered by DOSBox-X fixtures, but some legacy methods, including Turbo/method
-80, remain unsupported.
+covered by DOSBox-X fixtures, including Turbo/method 80 reads. Multi-volume
+sets still require reassembly before use.
 
 ## Features
 
@@ -187,3 +187,7 @@ The libarchive adapter and independently written integration glue are available
 under `GPL-3.0-or-later OR BSD-2-Clause`. The Total Commander adapter retains
 Bobrowski's LGPL license. See [LICENSE](LICENSE), [CREDITS.md](CREDITS.md), and
 the [per-file license audit](docs/license-audit.md).
+
+Incremental directory versions are available through `uc2 snapshot` in the
+Python package, with shared SHA-256-addressed UC2 chunks and verified restores.
+See [the snapshot guide](https://github.com/evvaletov/uc2/blob/main/docs/snapshots.md).

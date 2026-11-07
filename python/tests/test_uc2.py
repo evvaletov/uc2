@@ -60,7 +60,10 @@ def test_read_versions_and_roundtrip(archive, tmp_path):
 
 
 def test_reference_archives():
-    for path in (ROOT / "tests/archives").glob("*.uc2"):
+    import json
+    corpus = json.loads((ROOT / "tests/archives/manifest.json").read_text())
+    for item in corpus["archives"]:
+        path = ROOT / "tests/archives" / item["path"]
         with uc2.UC2File(path) as reader:
             reader.verify()
             for info in reader.infolist():

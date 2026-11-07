@@ -292,12 +292,16 @@ static int buf_write(void *context, const void *ptr, unsigned size)
 struct user_write_ctx {
 	int (*write)(void *context, const void *ptr, unsigned len);
 	void *context;
+	unsigned remaining;
 };
 
 static int user_write(void *context, const void *buffer, unsigned size)
 {
 	struct user_write_ctx *uc = context;
-	return uc->write(uc->context, buffer, size) < 0 ? UC2_UserFault : 0;
+	if (size > uc->remaining) return UC2_Damaged;
+	if (uc->write(uc->context, buffer, size) < 0) return UC2_UserFault;
+	uc->remaining -= size;
+	return 0;
 }
 
 static void *range_get(struct range *r, unsigned n)
@@ -1048,10 +1052,11 @@ int uc2_extract(
 
 	struct archive_ctx ar = {.offset=xi->offset, .uc2 = uc2};
 	struct reader rd = {.read = archive_read, .context = &ar};
-	struct user_write_ctx uw_ctx = {.write=write, .context=context};
+	struct user_write_ctx uw_ctx = {.write=write, .context=context, .remaining=size};
 	struct writer wr = {.write = user_write, .context = &uw_ctx};
-	u16 csum;
+	u16 csum = 0;
 	ret = decompressor(uc2, xi->method, &rd, &wr, xi->master, size, &csum);
+	if (ret >= 0 && uw_ctx.remaining) ret = UC2_Truncated;
 	diag("decompressor ret:%d csum:%04X (expected:%04X)\n", ret, csum, xi->csum);
 	if (ret >= 0 && csum != xi->csum)
 		ret = UC2_Damaged;
@@ -1061,6 +1066,7 @@ int uc2_extract(
 /* decompress */
 
 static int decompressor_ultra(struct uc2_context *uc2, unsigned master, unsigned delta, struct reader *rd, struct writer *wr, unsigned limit, u16 *csum);
+static int decompressor_turbo(struct uc2_context *uc2, unsigned master, struct reader *rd, struct writer *wr, unsigned limit, u16 *csum);
 #ifndef UC2_HUFFMAN_ONLY
 static int decompressor_rans(struct uc2_context *uc2, unsigned master_id, struct reader *rd, struct writer *wr, unsigned limit, u16 *csum);
 #endif
@@ -1093,10 +1099,79 @@ ultra:
 		ret = decompressor_rans(uc2, master, rd, wr, len, csum);
 #endif
 	} else if (method == 80) {
-		uc2->message = "Turbo compression not implemented";
-		ret = UC2_Unimplemented;
+		ret = decompressor_turbo(uc2, master, rd, wr, len, csum);
 	}
 	diag("Decompressor end\n");
+	return ret;
+}
+
+/* Method 80: Danny Bezemer's order-2 predictor in COMP_TT.CPP/H
+ * (AIP's LGPL source release). Cross-checked with klauspost/uc2's
+ * LGPL TurboReader at 53622f89. Unlike the original DOS implementation,
+ * validate every literal, block size and output bound before writing. */
+static int turbo_read(struct reader *rd, u8 *buf, unsigned size)
+{
+	while (size) {
+		int n = rd->read(rd->context, buf, size);
+		if (n <= 0) return n < 0 ? n : UC2_Truncated;
+		if ((unsigned)n > size) return UC2_UserFault;
+		buf += n;
+		size -= n;
+	}
+	return 0;
+}
+
+static int decompressor_turbo(struct uc2_context *uc2, unsigned master,
+    struct reader *rd, struct writer *wr, unsigned limit, u16 *csum)
+{
+	struct turbo_buffers {
+		u8 table[32768], dict[65535], input[28125], output[25000];
+	} *t = u_alloc(uc2, sizeof *t);
+	struct csum cs;
+	unsigned prev = 0, prevprev = 0;
+	int ret = UC2_UserFault;
+	if (!t) return ret;
+	memset(t->table, 0, sizeof t->table);
+	int n = use_master(uc2, t->dict, master);
+	for (int i = 0; i + 10 < n; i++)
+		t->table[((unsigned)t->dict[i] << 7) ^ t->dict[i+1]] = t->dict[i+2];
+	csum_init(&cs);
+	for (;;) {
+		u8 header[2];
+		ret = turbo_read(rd, header, 2);
+		if (ret < 0) break;
+		unsigned count = header[0] | (unsigned)header[1] << 8;
+		if (!count) { *csum = csum_get(&cs); break; }
+		if (count > sizeof t->input) { ret = UC2_Damaged; break; }
+		ret = turbo_read(rd, t->input, count);
+		if (ret < 0) break;
+		unsigned pos = 0, out = 0;
+		while (pos < count) {
+			u8 control = t->input[pos++];
+			for (int bit = 0; bit < 8 && (pos < count || control); bit++) {
+				unsigned h = (prevprev << 7) ^ prev;
+				u8 c = t->table[h];
+				if (!(control & 0x80)) {
+					if (pos == count) { ret = UC2_Damaged; goto done; }
+					c = t->table[h] = t->input[pos++];
+				}
+				if (out == sizeof t->output || out == limit) {
+					ret = UC2_Damaged; goto done;
+				}
+				t->output[out++] = c;
+				prevprev = prev;
+				prev = c;
+				control <<= 1;
+			}
+		}
+		if (!out) { ret = UC2_Damaged; break; }
+		csum_update(&cs, t->output, out);
+		ret = wr->write(wr->context, t->output, out);
+		if (ret < 0) break;
+		limit -= out;
+	}
+done:
+	u_free(uc2, t);
 	return ret;
 }
 
@@ -1677,6 +1752,10 @@ static int start_read(struct uc2_context *uc2)
 	if (ret < 0)
 		return ret;
 
+	if (get32(h.fhead.head) == 0x0f021445) {
+		uc2->message = "SAS split archive: reassemble all .pNN parts before reading";
+		return UC2_Unimplemented;
+	}
 	if (!uc2_identify(&h, sizeof h)) {
 not_uc2:
 		uc2->message = "Not an UC2 archive";

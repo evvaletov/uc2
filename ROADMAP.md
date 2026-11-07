@@ -2,41 +2,62 @@
 
 ## Recommended next priorities (2026-11-07)
 
-The browser reader and preservation toolkit from the previous top two are
-published in alpha7. The next five priorities are below. The separate
-project-wide task-qa + task-at audit remains open (c9edf0b).
+The alpha8 candidate implements the previous top three: incremental directory
+snapshots, Turbo reads with a broader corpus, and bounded libarchive review
+preparation. The separate project-wide task-qa + task-at audit remains open
+(c9edf0b). The next five priorities are below.
 
-1. [ ] **Incremental collection snapshots.**
-   Turn the existing CDC and block store into two restorable snapshots of a
-   directory, with portable file/version metadata and shared chunks. Measure
-   second-snapshot growth, restore cost, metadata overhead and corruption
-   recovery against tar ingestion. Tracking: 0013121, bd13adb.
+1. [ ] **Fix Total Commander 32-bit native `.uc2` routing.**
+   Replace the `.u2r` copy workaround with a tested native `.uc2` path. Check
+   the host's external-archiver interface and WCX dispatch with exact version
+   and fixture evidence. Tracking: 81c0c8a.
 
-2. [ ] **Turbo/method 80 and broader historical compatibility.**
-   Obtain a pinned Turbo fixture and compare its decoded bytes with the original
-   executable and the independent [Go UC2 implementation](https://github.com/klauspost/uc2).
-   That project reports Turbo support and provides historical sample references;
-   it is a useful comparison target, not proof of our decoder's compatibility.
-   Extend the new corpus with explicit provenance, multi-volume cases and
-   independent expected hashes. Tracking: b3e413f, 2b65f0a.
+2. [ ] **Browser bulk export and offline use.**
+   Add verified ZIP download for selected files/versions and offline use.
+   Preserve worker cancellation and resource limits; test Firefox and WebKit
+   alongside Chromium. Tracking: 5332dc5.
 
-3. [ ] **Prepare the libarchive reader for upstream review.**
-   Bound metadata and dictionary growth in the [prepared reader](contrib/libarchive/upstream/REVIEW.md),
-   complete dependency and format-ID checks, and produce a reviewable patch.
-   Maintainer contact/submission remains a separate step; none has been made.
-   The optional LGPL reader handles legacy Huffman; the full UC2 package also
-   handles rANS. Tracking: 7bbb6b6.
+3. [ ] **Scale and maintain snapshot repositories.**
+   Add explicit retention/pruning with reachability checks, safer recovery
+   tooling and larger-collection measurements. Reduce per-chunk archive and
+   full-manifest overhead. The initial SHA-256 store has no automatic pruning
+   or redundancy and caps entries/references. [Current contract](docs/snapshots.md).
 
-4. [ ] **Fix Total Commander 32-bit native `.uc2` routing.**
-   Replace the `.u2r` copy workaround with a tested route for ordinary `.uc2`
-   archives. Check the native host's external-archiver interface as well as WCX
-   dispatch, and record exact application versions and fixtures. Tracking: 81c0c8a.
+4. [ ] **Read SAS/UC2SEA multi-volume collections directly.**
+   The corpus now includes original SAS 2.3 split parts and verified original
+   reassembly. Automatic reassembly, missing/mixed-part diagnostics and UC2SEA
+   coverage remain open. True multi-volume support is not implied by Turbo
+   support. Tracking: 2b65f0a. Tar-entry ingestion also remains open (bd13adb).
 
-5. [ ] **Browser bulk export and offline use.**
-   Add a verified ZIP download for selected files/versions and an installable
-   offline reader. Preserve the worker's resource limits and cancellation;
-   test Firefox and WebKit alongside Chromium before broadening browser claims.
-   Tracking: 5332dc5.
+5. [ ] **Take the bounded libarchive patch through upstream review.**
+   The [review patch](contrib/libarchive/upstream/REVIEW.md) now covers metadata,
+   dictionaries, spool and decoded-output limits, plus Turbo. Obtain maintainer
+   agreement on the optional LGPL dependency, resource defaults and proposed
+   format ID. External contact/submission requires authorization; none has been
+   made. Tracking: 7bbb6b6.
+
+### Implemented for 3.0.0a8
+
+- [x] Python `uc2 snapshot` / `uc2-snapshot`: independent directory versions,
+  shared SHA-256-addressed UC2 chunks, portable manifests and verified staged
+  restores. Reuses the native Gear chunker. Source changes, unsafe names,
+  corruption, limits and existing destinations fail explicitly.
+- [x] Two-version benchmark: version two added 42,782 bytes (two new chunks
+  plus its manifest), versus 1,104,851 bytes for its separate tar ingest.
+  Both versions restored correctly. Corruption was detected and recovery from
+  an intact copy verified. [Measurements and limits](docs/benchmarks/2026-11-07-snapshots.md).
+- [x] Turbo/method 80 decoder, with SuperMaster/NoMaster fixtures verified by
+  the original DOS executable and an independent Go decoder. Eighteen
+  length/master cases and malformed-stream tests exercise the new code.
+- [x] Optional corpus expanded to 39 archives and 684 entries: 13 historical
+  collections, four unarc-rs fixtures and 22 original-encoder oracle archives.
+  Every file size/hash agrees with Go; ZIP and tar migrations pass. Three SAS
+  parts have pinned hashes and verified original reassembly.
+- [x] libarchive variable-memory budget covers metadata and cached masters;
+  entry-count/input/entry-output/total-output quotas are configurable. Directory
+  IDs use a sorted index. The opt-in LGPL reader includes Turbo; rANS stays in
+  the full package. CMake dependency checks and Autotools link checks are in
+  the prepared patch. No upstream submission has been made.
 
 ### Delivered in 3.0.0a7: browser reader and preservation toolkit
 

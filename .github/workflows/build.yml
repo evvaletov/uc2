@@ -76,6 +76,9 @@ jobs:
       - name: Test actual bsdtar, pipes and bounded payload RAM
         run: python3 tests/scripts/check_bsdtar.py build/cli/uc2 build-bsdtar/build/bin/bsdtar
 
+      - name: Verify format resource limits
+        run: python3 tests/scripts/check_bsdtar_limits.py build/cli/uc2 build-bsdtar/build/bin/bsdtar
+
   libarchive-review:
     runs-on: ubuntu-latest
     name: Optional LGPL reader and libarchive proposal
@@ -103,6 +106,8 @@ jobs:
           cmake --build review/build --target bsdtar libarchive_test -j 4
           review/build/bin/libarchive_test -r "$PWD/review/libarchive/libarchive/test" test_read_format_uc2
           python3 tests/scripts/check_bsdtar.py build/cli/uc2 review/build/bin/bsdtar --legacy-only
+      - name: Verify optional-reader resource limits
+        run: python3 tests/scripts/check_bsdtar_limits.py build/cli/uc2 review/build/bin/bsdtar
       - name: Verify the default build has no reader dependency
         run: |
           cmake -S review/libarchive -B review/build -DENABLE_UC2READ=OFF

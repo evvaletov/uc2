@@ -5,10 +5,2936 @@
   "checked_utc": "2026-11-07",
   "archives": [
     {
+      "name": "1661651138_WARLORDS.UC2",
+      "url": "https://sembiance.com/fileFormatSamples/archive/ultraCompressor2/1661651138_WARLORDS.UC2",
+      "sha256": "4f8724b54f2e400eb87f457ed7d8cba67eef673356eed89c924d947d9de3c5ed",
+      "size": 320229,
+      "expected_entries": [
+        {
+          "path": "alpha.mp1",
+          "version": 0,
+          "kind": "file",
+          "size": 1566,
+          "dos_time": 490276960,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "691cbd6a4d213cc914f1119f8f49e71f5e121c84f124d587252eadba32e0ad32"
+        },
+        {
+          "path": "alpha.mp2",
+          "version": 0,
+          "kind": "file",
+          "size": 1566,
+          "dos_time": 490276960,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "66d9a61f7febb3c7d2e470ec61d784700c6d1ce0a370f0356adbcd85aebdc6eb"
+        },
+        {
+          "path": "alpha.mp3",
+          "version": 0,
+          "kind": "file",
+          "size": 1566,
+          "dos_time": 490276960,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "fbba6f52896d565eaaddf801db317387de260b35aa869071fd24cb8c81ea2bdd"
+        },
+        {
+          "path": "alpha.mp4",
+          "version": 0,
+          "kind": "file",
+          "size": 1566,
+          "dos_time": 490276960,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "18a2a77fe8a7d2c25374b0036a6d0563d437109617b66f6b8fa117afa1913436"
+        },
+        {
+          "path": "edit-wl.tpg",
+          "version": 0,
+          "kind": "file",
+          "size": 159381,
+          "dos_time": 490276960,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "c1392a88b93063bbf510e2e14ad26ab9814c282255534bd04584b09d4510a12b"
+        },
+        {
+          "path": "edithome.wl",
+          "version": 0,
+          "kind": "file",
+          "size": 509,
+          "dos_time": 490276960,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "310fcc98e7c1e7dadf3ad93f4be40d4a9afd035aca2703182801b16f2e12eb57"
+        },
+        {
+          "path": "info.wl",
+          "version": 0,
+          "kind": "file",
+          "size": 34133,
+          "dos_time": 490276960,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "09f0eb2bbb0f3984e95835bb4208d65849bab04b56f38567d12f2a348a03606b"
+        },
+        {
+          "path": "load-wl.tpg",
+          "version": 0,
+          "kind": "file",
+          "size": 6170,
+          "dos_time": 490276960,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f1e7840740191c6793656195ef1c050cf3af8ed517f98713303cac2cdd3e382d"
+        },
+        {
+          "path": "maint-wl.tpg",
+          "version": 0,
+          "kind": "file",
+          "size": 96028,
+          "dos_time": 490276960,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "83289074fe37de05d45631efb5ca47af49ccc9d29eea8dae1097649d9a8b6b17"
+        },
+        {
+          "path": "monster.wl",
+          "version": 0,
+          "kind": "file",
+          "size": 49720,
+          "dos_time": 490276960,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "11865f11b49db78f28af69b2d6c20a6bd1afeff87f09a29e4813c4a0590eb679"
+        },
+        {
+          "path": "screens.wl",
+          "version": 0,
+          "kind": "file",
+          "size": 18716,
+          "dos_time": 490276960,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "3b15f1840764d7e15adf6b21068f8c1603c02f0b34933a7572d2cba20427e671"
+        },
+        {
+          "path": "slayl.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 158,
+          "dos_time": 490276960,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "95b56cae942b5ccd6a350c1d757372b172a926adaa68633fb9390687a1a79369"
+        },
+        {
+          "path": "stock.wl",
+          "version": 0,
+          "kind": "file",
+          "size": 1331,
+          "dos_time": 490276960,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f46498a4152dac643206ccf6bbef7d6f81cf4a6eb292197a4cdc3d02e678dca8"
+        },
+        {
+          "path": "upgrade.exe",
+          "version": 0,
+          "kind": "file",
+          "size": 232448,
+          "dos_time": 490276960,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "52f622ea2bf67de3a29efc33cb7eb856fc2a3b15739d99145f627e6a9522de87"
+        },
+        {
+          "path": "warlords.doc",
+          "version": 0,
+          "kind": "file",
+          "size": 28462,
+          "dos_time": 490276960,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "1d11d978baed4c4e65b7f7de62cfeb44f6e0fa9c2a8991605dc6b743cb439afe"
+        },
+        {
+          "path": "warlords.tpg",
+          "version": 0,
+          "kind": "file",
+          "size": 506218,
+          "dos_time": 490276960,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f60b3de0daeb768748de692814275de6096b028bccf1e269c6eda0bc823f2e68"
+        },
+        {
+          "path": "u$~nobas.lck",
+          "version": 0,
+          "kind": "file",
+          "size": 4,
+          "dos_time": 490310662,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f3e9606ed397afbee050e773208d3e9c96e2c05aa46c5809c19c6220b573ac48"
+        },
+        {
+          "path": "u$~nodel.lck",
+          "version": 0,
+          "kind": "file",
+          "size": 4,
+          "dos_time": 490310662,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f3e9606ed397afbee050e773208d3e9c96e2c05aa46c5809c19c6220b573ac48"
+        },
+        {
+          "path": "u$~noadd.lck",
+          "version": 0,
+          "kind": "file",
+          "size": 4,
+          "dos_time": 490310662,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f3e9606ed397afbee050e773208d3e9c96e2c05aa46c5809c19c6220b573ac48"
+        },
+        {
+          "path": "u$~noopt.lck",
+          "version": 0,
+          "kind": "file",
+          "size": 4,
+          "dos_time": 490310662,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f3e9606ed397afbee050e773208d3e9c96e2c05aa46c5809c19c6220b573ac48"
+        },
+        {
+          "path": "u$~nounp.lck",
+          "version": 0,
+          "kind": "file",
+          "size": 4,
+          "dos_time": 490310662,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f3e9606ed397afbee050e773208d3e9c96e2c05aa46c5809c19c6220b573ac48"
+        },
+        {
+          "path": "u$~norev.lck",
+          "version": 0,
+          "kind": "file",
+          "size": 4,
+          "dos_time": 490310662,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f3e9606ed397afbee050e773208d3e9c96e2c05aa46c5809c19c6220b573ac48"
+        }
+      ]
+    },
+    {
+      "name": "BLDRIP.UC2",
+      "url": "https://sembiance.com/fileFormatSamples/archive/ultraCompressor2/BLDRIP.UC2",
+      "sha256": "c52d6c13ed674f689e5ef5be7e9676f987dd69297c7abf80aac9c4ba318c43d0",
+      "size": 72946,
+      "expected_entries": [
+        {
+          "path": "192.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 5522,
+          "dos_time": 522878060,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "037cdd8b740c8bc72f0b9aa0864fce1595af01cfc40116e8fb4b1cc9ec6d5c6c"
+        },
+        {
+          "path": "224.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 2062,
+          "dos_time": 512531878,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "8c777cf2390612e823a1fac44327545cde38cd1fb9271bc5d2d103951527b55e"
+        },
+        {
+          "path": "250.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 9892,
+          "dos_time": 516948785,
+          "dos_attributes": 32,
+          "method": 43,
+          "sha256": "5fa248b2ef77b29354711afe4a65525c0ae4e0ec9fd9260abe130a7c650f016d"
+        },
+        {
+          "path": "239.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 10720,
+          "dos_time": 522960058,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "7b8e074852ec32843e80c51c1a63c18eb6aa249cd6f4d74a4dfd14fdc18c2439"
+        },
+        {
+          "path": "268.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 638,
+          "dos_time": 522679571,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "b9006c9a94ed77fbc4f4088d12ba060e1f1adacf954073c9f070cae19c896223"
+        },
+        {
+          "path": "267.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 645,
+          "dos_time": 522683179,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "67bb76e945590cc4d621c7c6b5c4c37bee6aa1de0e9dabd0815c10dd6e88c532"
+        },
+        {
+          "path": "266.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 554,
+          "dos_time": 522683177,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "159eac4270611778eef9f46fa5c34d7b0c743cc7331339587b7ec1aa27317fbc"
+        },
+        {
+          "path": "265.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 127,
+          "dos_time": 522418251,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "61c3f76b75e3933893d8caea5499490087074539c211181dea7c2976c6f47e74"
+        },
+        {
+          "path": "264.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 651,
+          "dos_time": 522426011,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "cf54f9373760bef8dcb4fa9ad9e5ff295e1c000a47b674a38f2b038e01f5aa3b"
+        },
+        {
+          "path": "263.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 642,
+          "dos_time": 521405180,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "5dfc586bad18c599c7689bf68e05349d7c01d745261a34bad9897f566facdd60"
+        },
+        {
+          "path": "262.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 739,
+          "dos_time": 521490748,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "135d1ff87f8e00cd8e0bfa1892aa2cad0fc9ee5a0bd6197359de55a44f001f8c"
+        },
+        {
+          "path": "261.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 759,
+          "dos_time": 521435341,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "d72c99c1cabd5629fb47af433a6da1ffb1221e76cd6d306d60fb1a18812539e8"
+        },
+        {
+          "path": "242.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 702,
+          "dos_time": 515719527,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "13be426c546696a7510beb4e8f21c1908bf454459daf72eb257f9f97400c207b"
+        },
+        {
+          "path": "241.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 553,
+          "dos_time": 515715256,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "51a5fbe31e32c302b2c9074049c50e6a2543019330b45eda3cd4bb32ef92ae49"
+        },
+        {
+          "path": "238.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 387,
+          "dos_time": 514089834,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "761267f7bca50a14819bc84fab219dabb4df603dbf2aa454e2b5ce137e179bcf"
+        },
+        {
+          "path": "237.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 729,
+          "dos_time": 513972229,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "30e5e8849ba020877f6bd72de2c9e76750dddeef47f3a7ee05164a9e336d745c"
+        },
+        {
+          "path": "236.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 546,
+          "dos_time": 513974498,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "1ec9632e73f40bea1a1dc3304c57d230eda0361e060667bbc8bff8bcb9008891"
+        },
+        {
+          "path": "177.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 794,
+          "dos_time": 512531847,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "41caffeb2de48dcd54ed0b2df2762eaf4fe583cf9698611b3926b1b4b3af9472"
+        },
+        {
+          "path": "219.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 477,
+          "dos_time": 512531884,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "bc2daac081b122949da46af3d8cbe66c0f49ff918dd5f8f6ab8c894a1629c7b4"
+        },
+        {
+          "path": "218.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 527,
+          "dos_time": 512832948,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f07f46fa62f4141095cbe1ac85807503a15c6fc4f13b1c34106d215644c56fc8"
+        },
+        {
+          "path": "217.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 574,
+          "dos_time": 512531884,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "1be0ab91a585cc44da42bd44d56481ed14d1c734586de7b73759a7ae78bed02e"
+        },
+        {
+          "path": "216.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 865,
+          "dos_time": 512531884,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "fbf44e42c3eaf30a5064e10f738112841b90211cbf54fc2c1bb36beedaa4cad0"
+        },
+        {
+          "path": "215.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 1134,
+          "dos_time": 521429016,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "ccc47af74c77a8bb2fef00710834bb4861db8a15555d016bebe0d99be1c783ec"
+        },
+        {
+          "path": "214.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 466,
+          "dos_time": 522682989,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "0fd3f673701e082da04a7ad658c1d9a7606f5ebbe04c63ec25bdc8b81b32f7be"
+        },
+        {
+          "path": "213.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 598,
+          "dos_time": 522682988,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "32c2158dd216d73bbbe228ffd7dc053416685fb2d2c4c9c6b04318511919d2a0"
+        },
+        {
+          "path": "212.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 608,
+          "dos_time": 522682987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "70b2cdace48499d1efb2b53e16a6476a9d6d0db65901d034128992343bb63a3c"
+        },
+        {
+          "path": "211.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 569,
+          "dos_time": 522685069,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "7eb03b229b21e9a63e5c649df13e3cb379473850fe938ee85921a4a23adf446b"
+        },
+        {
+          "path": "210.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 778,
+          "dos_time": 522678570,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f3335dbe2dd5b3d572f46c39cc091481ffc0ef0f1a00a53fe9dbcf2cfcbf2b5c"
+        },
+        {
+          "path": "209.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 682,
+          "dos_time": 512531882,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "3182eaa40bf9d26bbf65e0b34f718c644cb98b6bf58d37fa3fb4fda0a313a550"
+        },
+        {
+          "path": "208.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 509,
+          "dos_time": 522942100,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "d1ad1cb1ae1e2faa42bc32f05564a61d6effdc4e684a4034710b6efa9a31afe8"
+        },
+        {
+          "path": "207.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 750,
+          "dos_time": 512531882,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "e9c6202c5810edbe8a117deb69385609432bfe44f43a92776e31cd3b2e7975bd"
+        },
+        {
+          "path": "206.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 236,
+          "dos_time": 512531882,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "e7dcb6e6af1ca0e5c25c1006b71efbc63c7706a569265a3ba481217d1f27ca3c"
+        },
+        {
+          "path": "205.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 192,
+          "dos_time": 512531882,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "542c6fdaa06705cd457d49eabd40d475b945a36127f70568d9085058d7c8d32e"
+        },
+        {
+          "path": "204.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 498,
+          "dos_time": 512531882,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "58190d97878757fb7cbcdadd292231a027b951e57b0e60950fb4b85abbbb6a68"
+        },
+        {
+          "path": "203.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 617,
+          "dos_time": 512531881,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "cb1699c8ba780f47fc99ad8f3082173be8831b81b2cebd7d530ceded8fea760f"
+        },
+        {
+          "path": "202.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 390,
+          "dos_time": 512531881,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "28382cfe9105f6c9a4dfe19b17f821d319ec8c8cf348d5648a4beb0174e0c9b3"
+        },
+        {
+          "path": "201.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 666,
+          "dos_time": 512531881,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "418cb44c9bdcd7fbd161898499035f6b83c6a055ebff696327fc8ce9d2861953"
+        },
+        {
+          "path": "200.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 389,
+          "dos_time": 512531866,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "4b3a0fb669b39331bf53fe73fd048cf66ca66efe5e627fe769f22c8a9e21c45a"
+        },
+        {
+          "path": "199.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 781,
+          "dos_time": 512531844,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "507c24c45987de12c51c56be16dee70de32d5f558248f08b2dc745299fb9beaa"
+        },
+        {
+          "path": "96.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 390,
+          "dos_time": 512531851,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "e27607146a3937a7cd480a401b34fefac14e137bbb913e8e45f52f413d6a9a52"
+        },
+        {
+          "path": "1.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 561,
+          "dos_time": 522942082,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "9bb988b14b1409e756f9bb0c2ea1e2021068d7cf52949ad373e7e202ec8b526c"
+        },
+        {
+          "path": "10.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 429,
+          "dos_time": 512531880,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "603793edbc764068733c0516bcd769b4a6197ea1d1b86b7ef520e98385b47510"
+        },
+        {
+          "path": "100.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 778,
+          "dos_time": 513898020,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "b56f70491fd540103aa0d4994044582c12d03258e2c77f2f8afd4fddde9ce5b4"
+        },
+        {
+          "path": "101.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 1044,
+          "dos_time": 521429016,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "735703527a44614fa1d09201c2d2d674a99bc5c814d02bd5afcf57038d95d44b"
+        },
+        {
+          "path": "102.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 816,
+          "dos_time": 512531880,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "98e2fd617ab164cfbad3034971e9a5e1cc691bd946e6cba0ddf0b6488a45d741"
+        },
+        {
+          "path": "103.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 517,
+          "dos_time": 512531885,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "e8a9015252bcb77df0c93f068827c61ce2c2f5e4e6c5c5aae1ebf15f1bb36f95"
+        },
+        {
+          "path": "104.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 1042,
+          "dos_time": 521429017,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "af1186cb4217e4a38c56f9d4edc416d0b060d8fc42a8bee6de038246dc6ac8c6"
+        },
+        {
+          "path": "105.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 477,
+          "dos_time": 512531880,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "c172f441a6105a5abf4323022003338c71f0bb40bdec6186ad22813bd0448116"
+        },
+        {
+          "path": "106.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 547,
+          "dos_time": 512531880,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "6366d6975a36f7c559625b7b1769c99d3f563a6df560b3a3e6e94b656b1312a7"
+        },
+        {
+          "path": "107.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 566,
+          "dos_time": 512531879,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "ac805ec5f6601f43ae019e91295803d965e430e7b08b76d803c542c948f1e254"
+        },
+        {
+          "path": "108.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 479,
+          "dos_time": 512531879,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "e487cdda7a9e6977d2f65396bdefcb6c44f11870ff2ebae7549c985ed97cd274"
+        },
+        {
+          "path": "109.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 483,
+          "dos_time": 512531879,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "04c96b72dfb24a7937b241d4284ca58bca06fa5690c06be2b7ae4e7a9eabeac5"
+        },
+        {
+          "path": "11.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 512,
+          "dos_time": 512531879,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "ceb2746da0abfdc6d53f66e3ad98dace72aa044b934db22aa90b86de19f65f8b"
+        },
+        {
+          "path": "110.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 538,
+          "dos_time": 512536227,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "d233e6f6173eab85e65a96e36adf8ea8c5fb152723bafc58c99a4e3425fecd70"
+        },
+        {
+          "path": "111.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 494,
+          "dos_time": 513573781,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "59730b4b7a0afab211662f53cf96dfb756c40ee3012bba6ccb4bc6d0e949b12c"
+        },
+        {
+          "path": "112.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 549,
+          "dos_time": 512531877,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "3a443e62b869e6ca56d91e7f6133fcef46137a59788d287cff78686ef5c5d830"
+        },
+        {
+          "path": "113.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 539,
+          "dos_time": 512574633,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "b77de9672bcaa6419ba39ff58772856a8f7b37e260f30a34fa362e353b987f47"
+        },
+        {
+          "path": "114.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 670,
+          "dos_time": 512531878,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "c71cee41e7b8d99d6c0f8c6d46fefc0cd02cd57c5f596cb83ffb6130bffa1519"
+        },
+        {
+          "path": "115.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 1262,
+          "dos_time": 515774906,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "a5452e915cf5a711c3a8267e60b344a68c305049a0740a329e921db0ebc8990f"
+        },
+        {
+          "path": "116.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 419,
+          "dos_time": 512531877,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "11c56fa638f33778d8141a16b90a1c0e7cb9d46d582cf383765c82e3a88e872d"
+        },
+        {
+          "path": "117.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 9,
+          "dos_time": 512531877,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "52f481fce813393af09ce3b6051b283f8f79430c06bf947d9918bc9e30d41589"
+        },
+        {
+          "path": "118.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 618,
+          "dos_time": 522676038,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "fa742f14cb18b92d008542c1fecba30425290e9ba4b6758db4130780beb1110f"
+        },
+        {
+          "path": "119.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 440,
+          "dos_time": 512531876,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "a267093a5e184e19dd405544d7a03185c6b55e4d28b467fffcf77c227b5cf67c"
+        },
+        {
+          "path": "12.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 785,
+          "dos_time": 512531876,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "7da49413a5fb6edd2cd9faec5d3512b84195a5827d698bfa4a8e0465e96b4639"
+        },
+        {
+          "path": "121.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 805,
+          "dos_time": 512531876,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "ee3c8b4175dd0943888a8b7830444795fbfcf220d903bf31a73e195083b1b77b"
+        },
+        {
+          "path": "122.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 482,
+          "dos_time": 512531876,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "b3449a506f1c35929b990a0a3dd36a2ed9b25017e0789ee37e5e066b60726310"
+        },
+        {
+          "path": "123.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 9,
+          "dos_time": 512531876,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "6d4abeed1ba5f1fa7d0633132bd38ad9b0ad2f999897ddfc6e7d16d09507d628"
+        },
+        {
+          "path": "124.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 1063,
+          "dos_time": 513554209,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "7515c7381a0d58d4e7c54bbae73df2807bb65ee23f4e790e83ef23becb748bed"
+        },
+        {
+          "path": "125.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 1756,
+          "dos_time": 512531875,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "d549a7612e78ac4f2e60d9c154e825d3b2505eba3fb19b94d05a545ef7f4d0cd"
+        },
+        {
+          "path": "126.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 57,
+          "dos_time": 512531875,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "cd064bb0fe3061e30961d284ee4d132de5f41c204d4c844cc3db236856a6f2b0"
+        },
+        {
+          "path": "127.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 591,
+          "dos_time": 512531875,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "d43bb399275760b2bb982d3008c550332d75e631df583c85186128af7547f234"
+        },
+        {
+          "path": "128.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 9,
+          "dos_time": 522677436,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "52f481fce813393af09ce3b6051b283f8f79430c06bf947d9918bc9e30d41589"
+        },
+        {
+          "path": "129.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 488,
+          "dos_time": 512531886,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "15d7219877d356386c3bc13f78c545dcc6b3ff64fa51c2d919997ce4a69c7290"
+        },
+        {
+          "path": "13.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 1128,
+          "dos_time": 521429017,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "1f8afed868e73cdff3129f092e9ab504df9677150538d4220c2815cbe168ca6e"
+        },
+        {
+          "path": "130.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 490,
+          "dos_time": 512531874,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "9338ccd76f177502f92ffa43805e9b89262c58309710f802796dfac70a5dd7ac"
+        },
+        {
+          "path": "131.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 561,
+          "dos_time": 512531874,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "b06d5b9af80a7f0bab8610935ee0cecd1b15f386960e026389ad55a919f71d7d"
+        },
+        {
+          "path": "133.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 9,
+          "dos_time": 512531874,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "6d4abeed1ba5f1fa7d0633132bd38ad9b0ad2f999897ddfc6e7d16d09507d628"
+        },
+        {
+          "path": "134.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 378,
+          "dos_time": 512531874,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "39f34ba06b838730bc36fcb461b577e0c0d31cf96e12b54d70b68a9042ab6fa2"
+        },
+        {
+          "path": "135.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 606,
+          "dos_time": 512531873,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "31281ad1d53fdcbdcabb95b98d5939ff62445db561793fa9983b9e151c0c07b2"
+        },
+        {
+          "path": "136.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 488,
+          "dos_time": 512531873,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "a6b8819b577213a554361a44090b1700761c9c9e80e623d23f1431f0ae2ffe4e"
+        },
+        {
+          "path": "137.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 509,
+          "dos_time": 512531873,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "4e146c6209ca0f28332ae1608556ab6773e1db3c1bed54d56bc2590f67b312fd"
+        },
+        {
+          "path": "138.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 691,
+          "dos_time": 512531873,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "45cd386fa7839f77e3dc8f0fe4e4c6282f52d5bba5f19e8dc8a039a0eff380a6"
+        },
+        {
+          "path": "139.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 1024,
+          "dos_time": 521429018,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "47476b317b01ffd5ccec8af56906b2bba4db34092fe5defcda0d465b59f4ae53"
+        },
+        {
+          "path": "14.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 386,
+          "dos_time": 512531872,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f24ce8d45e424f621ca0d48a621884d60f29f70d96c10edec228b223177521b6"
+        },
+        {
+          "path": "140.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 529,
+          "dos_time": 515535818,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "2068ad8e2a6da46476c116803e1130e5e10a3dd042329f02c41194dffbd1f58e"
+        },
+        {
+          "path": "141.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 197,
+          "dos_time": 515535819,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f04875a81679a19677059a1f1cc93bcd0266a658fab135a143da6830100c7a00"
+        },
+        {
+          "path": "142.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 611,
+          "dos_time": 513115952,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "86abf6d8ead0703f5eb576498d3187507a5037d76b11f4ad844bfa980bda8948"
+        },
+        {
+          "path": "143.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 440,
+          "dos_time": 512531872,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "979f07d59bf18d4d2f6e71fe9ba166666a3966d918717d34a420b649fac641c5"
+        },
+        {
+          "path": "144.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 753,
+          "dos_time": 517884700,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "b4e9d5c67a76c14fa8786e85f2c331d04645479fff9c859c7092dd4360f7f986"
+        },
+        {
+          "path": "145.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 467,
+          "dos_time": 512531869,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "0c8f9a59ad45012ab916cba402c78083be6490d002f37f2171452d86dc891518"
+        },
+        {
+          "path": "146.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 463,
+          "dos_time": 512531869,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "5675c61f36f8960c1a0ff26da985d89dddc668866fbb88797c2d802c82fc1690"
+        },
+        {
+          "path": "147.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 84,
+          "dos_time": 512531869,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "999b69bf2ad1e013ceab4ca7c2002a12452d9786a641565164612498095024cf"
+        },
+        {
+          "path": "148.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 628,
+          "dos_time": 517358385,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "3670cb26b2d00ae08303b996eccf746df5313424f6e686d15e87ebb1d76387c3"
+        },
+        {
+          "path": "149.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 574,
+          "dos_time": 512531868,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "7c25b24c94e5525e10bd715c8c138bf6ce501fd1b56cf3ba684a037fd919b0a4"
+        },
+        {
+          "path": "15.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 445,
+          "dos_time": 512531868,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "58815cb429b97a2e422ddc2d6e150cf6e874b6da2bfd936e49026b692e2b443e"
+        },
+        {
+          "path": "150.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 658,
+          "dos_time": 513446628,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "c0297f8183abf8b1b72b19885b7485fd4de71bedf5c4feb610150efc52150747"
+        },
+        {
+          "path": "151.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 522,
+          "dos_time": 512531869,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "91fb0cfd5550509d73b01897a6d16c2757066f0a91e4b04a079ef053ab558b98"
+        },
+        {
+          "path": "152.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 602,
+          "dos_time": 522457701,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "287949b05d8ffd5d0ae2c4a62f0f9ea073750cd860a220933f14d3501ca401fa"
+        },
+        {
+          "path": "153.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 485,
+          "dos_time": 512531868,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "692f2ee239798cd6112bd3a4404dacd8062c1bc8f5b59ebab61fb75e944d50e8"
+        },
+        {
+          "path": "154.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 399,
+          "dos_time": 512531867,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "358fb11cdd35cc6d8fa28b191e6068bc2f68ec051ad576283b05485a7ee8e243"
+        },
+        {
+          "path": "16.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 885,
+          "dos_time": 512531850,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "1b39afcc2ef2b9c648a6b7bbe7a824853870c7161ce7aa0ef832514f8ec2e599"
+        },
+        {
+          "path": "17.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 755,
+          "dos_time": 512531848,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "6496dd38b1737223c80b69a715daecccfabc7fe2679610d1cb75955fa9544e51"
+        },
+        {
+          "path": "18.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 708,
+          "dos_time": 513367411,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "9f3e4b5484c0d537c989edb6c993a4aa4a1f92b134245e83ad378674171b60fe"
+        },
+        {
+          "path": "19.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 607,
+          "dos_time": 512531886,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "14470e48c528b4c37a9016d592b3eff68f304b9cadde7c1101cfe3e98bffce25"
+        },
+        {
+          "path": "2.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 630,
+          "dos_time": 513549619,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "adfe56a3f09f6c0200cdafaa7425c3f3e40367c5414f7bab7375f630974a6042"
+        },
+        {
+          "path": "20.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 484,
+          "dos_time": 512531881,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "77c33ebdd772bc28a84ab0e6428f502da9a91dc7a85a86e23e18e5a830467503"
+        },
+        {
+          "path": "21.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 418,
+          "dos_time": 512531866,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "73d238e2ddc040028ddf5e5b98db5ddce8cff52f3101e2a25a769a658df5bfc7"
+        },
+        {
+          "path": "22.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 484,
+          "dos_time": 512531885,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "0c47c7145c30df8c3f03d0ab18805e3d45f32e89cd11c0dc9659ff16b63d520e"
+        },
+        {
+          "path": "23.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 953,
+          "dos_time": 512531841,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "edebdea5ba23573991c2a365983b6da5834028996a4fb60fa7c21dd5d252166a"
+        },
+        {
+          "path": "24.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 551,
+          "dos_time": 513081742,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "52d597b6b350abec6fc3dcfc35a7152516d9bb287b78e197c5dfe77ead369c23"
+        },
+        {
+          "path": "25.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 723,
+          "dos_time": 512970155,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "cb77690f9485b4af4601693da5e00ead905677580b57f3fa214c645f7bba42a2"
+        },
+        {
+          "path": "26.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 1155,
+          "dos_time": 512531887,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "332446a173a6681d7ba1b9dec9ffa9d8e35a81efb23bbdd004f19c27d9573e8c"
+        },
+        {
+          "path": "27.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 636,
+          "dos_time": 512531887,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "d65e17fe192a390f5606b97bdb6d2f85278e2f1804885c413e5ee5cb83a1bb95"
+        },
+        {
+          "path": "28.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 531,
+          "dos_time": 515576450,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "89605929e091af0aa99c9022303249ead5b3279c14ccbec85d6768c57743d707"
+        },
+        {
+          "path": "29.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 464,
+          "dos_time": 512531864,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "788b4b7e86133d40aa58310cf0e00707b49df8674789bfebb36250387f1e699d"
+        },
+        {
+          "path": "3.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 367,
+          "dos_time": 512531864,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "fd825d3e63256687d8df8c906b4d616152f5923213c7117985e5c83cb7e22ced"
+        },
+        {
+          "path": "31.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 620,
+          "dos_time": 512925094,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "22c2d7b234cf330244f68503c9b3548dd3ff3f901d8c261f0af815cafd4a8234"
+        },
+        {
+          "path": "32.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 578,
+          "dos_time": 522789260,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "462ed706cd7764b4180ea2a5838be774924f954ca5fc88cf46beaf4648d1d7d0"
+        },
+        {
+          "path": "33.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 451,
+          "dos_time": 512531863,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "46c39eb3bcbeb01e1c088b2670b0fb41a6216706421930a8ae04cf1b4fbff65f"
+        },
+        {
+          "path": "35.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 447,
+          "dos_time": 512531850,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "4a7745d099db833fbf47ee5664ed07bc4231865588a2c55dccad193e85e8b187"
+        },
+        {
+          "path": "36.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 626,
+          "dos_time": 512531887,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "c6d7cf344123a7e7a1ed6471c8e365657a2464cdd95666f869d02fc6a67a693d"
+        },
+        {
+          "path": "37.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 9,
+          "dos_time": 512531863,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "6d4abeed1ba5f1fa7d0633132bd38ad9b0ad2f999897ddfc6e7d16d09507d628"
+        },
+        {
+          "path": "38.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 559,
+          "dos_time": 512531887,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "1eebd02ae53f5f9fae4798949d55895b27aae771673a74cd384cfc7315cdb846"
+        },
+        {
+          "path": "39.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 561,
+          "dos_time": 512531863,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "9ffa419c5115635d8095682c6f9aa669871ccab29e41b2b540ed961fec092ce9"
+        },
+        {
+          "path": "4.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 604,
+          "dos_time": 512927040,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "2ca62eec924a322020cf14fa078a84cabe82db4b7ed828e25ffca9ff103cbaa7"
+        },
+        {
+          "path": "40.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 597,
+          "dos_time": 512531863,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "8d08599b5c13bb025fdea7b6b11d3c59da2bc1fc99c88d647e1c3d135123cb44"
+        },
+        {
+          "path": "41.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 530,
+          "dos_time": 512531862,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "6a06116bd8c9af154f05eb10f030dc0b13465254a2809333597da1ba7661df13"
+        },
+        {
+          "path": "42.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 824,
+          "dos_time": 521429018,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "99cc418555c158e3f234947e5c4df46524903a9903eb4aa2985de04a6259b391"
+        },
+        {
+          "path": "43.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 461,
+          "dos_time": 512531862,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "a0ceba1c3bd23aac81356e30727a8884de041c826368f13fcfb4a20a905133ab"
+        },
+        {
+          "path": "44.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 597,
+          "dos_time": 512927030,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "b4bee132c840718c8483ac1d84df01146ed3933637077c4260add273b88a29d7"
+        },
+        {
+          "path": "45.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 735,
+          "dos_time": 512531862,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "e182620025eb4b039f75c56f670c5befd5ec2511f001a944735b890d51809c10"
+        },
+        {
+          "path": "46.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 811,
+          "dos_time": 521429018,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "115e08a6141e6dfff66351d54f054105a73533af00544b83bdaa3e22ebdca7c6"
+        },
+        {
+          "path": "47.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 731,
+          "dos_time": 512531861,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "288b551682e6ba9b67349c4073b0c65d6dfd1bfd7d47ea76baf1aaa5d6f19a13"
+        },
+        {
+          "path": "48.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 81,
+          "dos_time": 512531860,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "017e3eb01a10b6dda7bf6814f6300ce668228e599ca1aea632c7d72d90be9c75"
+        },
+        {
+          "path": "49.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 464,
+          "dos_time": 512531860,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "174cb449aa7933977ed1f0aae3a94fe0380cf82ed68e50cad465b37e88adb04a"
+        },
+        {
+          "path": "5.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 759,
+          "dos_time": 512531861,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "5769c10bd85d4e74b94a7353b286cf7adda4abd592e9d9d182d623eec38bb974"
+        },
+        {
+          "path": "50.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 593,
+          "dos_time": 512531861,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "9cc74b88b4902c39948a02899e68670ae7a7fd105f86caddfa2aea292ac1e947"
+        },
+        {
+          "path": "51.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 514,
+          "dos_time": 512531860,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "a6ad913f60491cce12dca430592bdef6a36ca4be049849e31a64bc8748066d44"
+        },
+        {
+          "path": "52.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 754,
+          "dos_time": 512925207,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "5766143592bc603038daee20fd8e864ca1e6df056dd970eb52a55dc533111ed2"
+        },
+        {
+          "path": "53.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 383,
+          "dos_time": 512531859,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "313d9a4fe5e5ed57ccc253d4569ce696f4ce9300253accbfe6ea51555b52c05d"
+        },
+        {
+          "path": "54.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 498,
+          "dos_time": 512531860,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "420ea1f55bba29e05d5248736a110dbf15b544e08d0f6babf92cc2411df51ed6"
+        },
+        {
+          "path": "55.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 972,
+          "dos_time": 512531860,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "5fd363a15e5469263571ce152abbabb9c187e8392f0e0b371cba50e0d375bcbc"
+        },
+        {
+          "path": "56.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 798,
+          "dos_time": 521429019,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "7e6dfcda6593c3fa49fd80d679417807f6266381f8db527e7d1e0d5c63457911"
+        },
+        {
+          "path": "57.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 489,
+          "dos_time": 512531859,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "bf4fc13742d32edcc088d979a56ae098f658513005a2fb7dce4800ba79245777"
+        },
+        {
+          "path": "58.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 865,
+          "dos_time": 513390990,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "5482211de2f9c310fe8103bb3632a64414c83a1946fa0da7f35caeb6b9873223"
+        },
+        {
+          "path": "59.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 372,
+          "dos_time": 512531859,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "e507331aa233c90e931629e1c08e3712c36563489169d422b0ac61e765276e20"
+        },
+        {
+          "path": "6.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 879,
+          "dos_time": 512531858,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "730251ba435246b24a4af7c636deb3e6395c25217f73980ef63ad681d9038d40"
+        },
+        {
+          "path": "60.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 473,
+          "dos_time": 512531858,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "35ff8206c8fa1876d719c5aa9a471af281627929a8d977a6d7eb1d1483ba294b"
+        },
+        {
+          "path": "61.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 492,
+          "dos_time": 512531858,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "7c0a337c8b0411e905a8478fde81201e6b25feddf30edb2be9e8d695f8b64062"
+        },
+        {
+          "path": "62.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 332,
+          "dos_time": 512531858,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "3ef7f6fc5eea2b1acc752b0ab04e3eac12bfadda4cf28c95804e0f8546878a71"
+        },
+        {
+          "path": "63.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 500,
+          "dos_time": 512531858,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "63d1fc2776a5289b5cb35a3caa3d43c390f8d949f3a684cd553d56d6ad86d364"
+        },
+        {
+          "path": "64.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 500,
+          "dos_time": 512531857,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "63d1fc2776a5289b5cb35a3caa3d43c390f8d949f3a684cd553d56d6ad86d364"
+        },
+        {
+          "path": "65.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 813,
+          "dos_time": 521429019,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "2e96462103fb10e7adb0516680d0e60e5d859734802827dccbda39decff9124e"
+        },
+        {
+          "path": "66.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 642,
+          "dos_time": 512921661,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "7fac3e64781fd596186eeedaa00ef9503618d64d81fd66e2866f41a6f113411c"
+        },
+        {
+          "path": "67.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 574,
+          "dos_time": 512917962,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "d0108dc10f26ead712d0cc17fb0cf4641d1f61233897862fda2903b2e876f7e4"
+        },
+        {
+          "path": "68.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 924,
+          "dos_time": 512894433,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "bd687400eaac0c88bfcdb9e0d4c122b1b9efc470976092bdcfe06e49c6ab22d8"
+        },
+        {
+          "path": "69.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 443,
+          "dos_time": 512531857,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "3491ec345380c00285d3e8eda2c47f303932db3725eb0fdf4322a3fa7e366a91"
+        },
+        {
+          "path": "7.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 758,
+          "dos_time": 512531857,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "69e3cef802872fdbbc8f78ea601fa7cfc99280a71be6f461c3dc961aff49b4b9"
+        },
+        {
+          "path": "70.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 522,
+          "dos_time": 512531856,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "e9162f10a1a9889814cb32cab3fd50c18857875a2bfdb089d14226ecd607af4f"
+        },
+        {
+          "path": "71.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 519,
+          "dos_time": 512531856,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "7c5a7bb9a360ce8ed3757122f2a0c3d8426e9ea3013f80d15db967f0834ceedf"
+        },
+        {
+          "path": "72.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 576,
+          "dos_time": 512531856,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "4a1acb4eb815b157ff69a37d26c0739b637a36bf3ff3cd0b641ca8ff016559e3"
+        },
+        {
+          "path": "73.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 602,
+          "dos_time": 513549621,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "29a4d0c96d020ec0d8de82669d6416cfabb566ae6bb41b839755ba9419a17729"
+        },
+        {
+          "path": "74.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 507,
+          "dos_time": 512531856,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "9d054048b9fde8636e22dfb733b17303ecf95a66434e774663f677d18f67fbf6"
+        },
+        {
+          "path": "75.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 571,
+          "dos_time": 512531855,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "d123dd19122dce58a7252caad540fda287c0e1483ca9982b09dcaee20f312722"
+        },
+        {
+          "path": "76.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 511,
+          "dos_time": 512531855,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "ba4cfa15109521a65ca0e69a826c4bf85dd820efa1aca618efe25815e2756977"
+        },
+        {
+          "path": "77.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 534,
+          "dos_time": 512531855,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "d73151d87ef4287386ef29ca543d1a9f56c3d20a97318b63cd41728bf1fe6737"
+        },
+        {
+          "path": "78.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 705,
+          "dos_time": 512922433,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "833324baa9707e1192bc0c353dcbb31167f685080349f865a5dca63d04c3c832"
+        },
+        {
+          "path": "79.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 618,
+          "dos_time": 512923950,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "9b0298d8a401b332f6e919374d0b8cf45a2f5ae231783efd29b59c0a9325d867"
+        },
+        {
+          "path": "8.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 837,
+          "dos_time": 516446937,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "0f3fbf45f5b10e594a5c2e0c29cf7c76d4d16f0ead4186aa098ba85323166e2b"
+        },
+        {
+          "path": "80.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 907,
+          "dos_time": 512856227,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f1ab95b263449e19f163d7c30072684fc680044d54bc5011e3f07fde3146a3c1"
+        },
+        {
+          "path": "81.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 810,
+          "dos_time": 513573525,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "022d4207236ae2b143ce18ed528b934d6ecb253c67adac5b489a5013819e38cc"
+        },
+        {
+          "path": "82.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 574,
+          "dos_time": 512531854,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "8b684ad2212c32a41e8fcca18e974cdd624aae278df6b0c795239b6448793ec7"
+        },
+        {
+          "path": "83.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 487,
+          "dos_time": 512849431,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "c300a41b2ae9e8fbfda91beb2e65d974e2610346d8c52f33681fdf9381e1ab35"
+        },
+        {
+          "path": "84.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 646,
+          "dos_time": 512735900,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "acea5549f4f267dde8496fd813bfa7879b36b349f7c5b6e67fbefaef71409a10"
+        },
+        {
+          "path": "85.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 517,
+          "dos_time": 512531854,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f06bbd1be8682b06dad2a5575ccd33d5c0ff05359268bbfe648e6aa0f15cee79"
+        },
+        {
+          "path": "86.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 989,
+          "dos_time": 517350726,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "a7a0589e898ea1bf55860f5093c6f389f338cde0193eb1e279ab55ef3dc9d866"
+        },
+        {
+          "path": "87.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 869,
+          "dos_time": 512531853,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "3322d0060ccefce959c1b558bbb4d28681c5a911e533dcf290b0be7678683a1c"
+        },
+        {
+          "path": "88.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 864,
+          "dos_time": 512531853,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "653e1b0c82cc4aec753d904dbf4a44c50b0ebe4a5a08071f0b3c75627c044759"
+        },
+        {
+          "path": "89.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 759,
+          "dos_time": 512531852,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "4fae21a9ccdd09352447ed5c25f86a53131ff213b9c04d1ebccda2a0a5783122"
+        },
+        {
+          "path": "9.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 811,
+          "dos_time": 516446938,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "80a64f48db1d8742d38f9a171c61536238c6b548d6ac986799e75f3d7250fb2e"
+        },
+        {
+          "path": "90.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 669,
+          "dos_time": 512735900,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "5c93754012bb214d22d621aaca14e5f848d1934057c533447446f517d1779897"
+        },
+        {
+          "path": "91.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 671,
+          "dos_time": 512735900,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "182fd10875d080167b07d5532b1643be57d34b29f8b19ef4f40df9ec727404fc"
+        },
+        {
+          "path": "92.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 562,
+          "dos_time": 512531852,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "439f198638b3beb18cde0966f80128bfa3575d84af463ce4231233e740077603"
+        },
+        {
+          "path": "93.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 451,
+          "dos_time": 513573778,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "0e5f7fdabbe824b83c436e5bc7e1f82b42780ffe29ffa186f4052401cb4be97f"
+        },
+        {
+          "path": "94.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 485,
+          "dos_time": 512531853,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "9eaea66dce432991e60e810e2584b764b1e2e8777947863226e9614bc8c2ea16"
+        },
+        {
+          "path": "95.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 580,
+          "dos_time": 512531851,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "15a6ee5be3ce48480a358f25e3b30ba0c8e0a02f7f2841b15201dacf71a5ead8"
+        },
+        {
+          "path": "97.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 472,
+          "dos_time": 512531881,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "3753d7b8b6d701f73b40f58ed3e64d1ec0427bb13c4f4e6cbdfb7c0910cc5690"
+        },
+        {
+          "path": "98.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 443,
+          "dos_time": 512531851,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "99756d65c7fc014237f6b8f6a75f3a03fd9c17d12d4c38a1171abef0fe850e64"
+        },
+        {
+          "path": "99.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 798,
+          "dos_time": 512531851,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "c0327fde97da812adb540ecab4a2abedf25900937364d3f86b5cbdb7e8f22773"
+        },
+        {
+          "path": "30.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 547,
+          "dos_time": 512531864,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "235f78123493275850cef2fa30fe18a4b1c6c49c1764abe32bd8d8f116f6d891"
+        },
+        {
+          "path": "155.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 432,
+          "dos_time": 512531867,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "5890fb9e738678605b74c9cd6cc39098dbd877f4b3bac2f7fd7be982b59cc99a"
+        },
+        {
+          "path": "156.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 713,
+          "dos_time": 512531850,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f20e3c0162780b2e75bd5017f7ef966dd087deddbebcdbeb033f93561b2dab61"
+        },
+        {
+          "path": "157.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 593,
+          "dos_time": 512531850,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "5540c6dd79528c12882da637b5547569064b1191d31687a29f8bf92979915803"
+        },
+        {
+          "path": "158.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 264,
+          "dos_time": 512531850,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "b70923461bbc8144159e666f40e90da7bb390a3f0c48320832b5ed3f308737bd"
+        },
+        {
+          "path": "159.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 866,
+          "dos_time": 512531850,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "a87416ebd21457798d69e999232378c995a67a25f8cffb6e21bd3318afe454ba"
+        },
+        {
+          "path": "160.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 147,
+          "dos_time": 512531849,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "e2aacba51439daaf197f0028cb965420b35128b1092fa23fd9a667426cd75b19"
+        },
+        {
+          "path": "161.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 309,
+          "dos_time": 512531849,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "3972fa1ee8974d05456bf83af3fc93b9cea5426071abd2832c16bfb343ce4124"
+        },
+        {
+          "path": "162.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 227,
+          "dos_time": 512531849,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "c09c6dfa2384f231ee5a52208d7b54649ebc0f83d15549db84f7b41ed7d448c2"
+        },
+        {
+          "path": "164.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 694,
+          "dos_time": 512922429,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "3a3fa500b4d1a2db7569038767ea2bc95d3c59d8a89790269b31a97e721dc144"
+        },
+        {
+          "path": "163.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 420,
+          "dos_time": 512646397,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "666cce422e0c3292e26b8ede370913827cdd399d2ba8532552e5b84f5e9c106b"
+        },
+        {
+          "path": "165.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 588,
+          "dos_time": 512531867,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "ecabc3066dd0deb99e45f5d3c6a389c946395ee7f3e0f949135cdce5dc6e7de1"
+        },
+        {
+          "path": "166.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 626,
+          "dos_time": 512531848,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f4521be635a4559a467d5920b58888315cf5d5283885e5f9097fa6d4b90f321c"
+        },
+        {
+          "path": "167.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 427,
+          "dos_time": 512531848,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "36496375be1933f4febe82bc641dab601225f2d7e4d0805bcafb13a5eca7ecfc"
+        },
+        {
+          "path": "168.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 392,
+          "dos_time": 512531848,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "b94fac69fc7f178ef5f25c759813a53f641f1af0957a29a739081ae826938fad"
+        },
+        {
+          "path": "169.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 508,
+          "dos_time": 512531848,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "6f53fffe1914a731c0bdb5a13101bb34b3f8885edc4e4d7e0a196d553e870bca"
+        },
+        {
+          "path": "170.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 674,
+          "dos_time": 512531867,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "9d608fe804af220e7191dff117f3bb8e3b6c4e6e6323895fe0478ea00302af46"
+        },
+        {
+          "path": "171.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 588,
+          "dos_time": 512531847,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "9fae81f0f6776db5950fe8073404f47b5ec1bd13c6c20bbd2bc098e72be03a0a"
+        },
+        {
+          "path": "172.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 803,
+          "dos_time": 513885764,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "6c356580c4a04dc3744ac00b39310ce7f6249ce979f2b52790fb703ca44eae1d"
+        },
+        {
+          "path": "173.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 278,
+          "dos_time": 512531847,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "57af3cf4172f741913ecbdbe7d4af7c8ad753aa5d953c7591dfa9eb38fd04286"
+        },
+        {
+          "path": "174.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 533,
+          "dos_time": 522942087,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "ac9825eb11b9ae731cc04523af6eaef2f68377506eefb5fa11be2079408cd13b"
+        },
+        {
+          "path": "175.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 507,
+          "dos_time": 512531847,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "2c7d1382a524958e76f4f027765ac7023e38ea6e5157a6ba17a83dc368766298"
+        },
+        {
+          "path": "176.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 542,
+          "dos_time": 512531847,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "ec7d1443179c9f7a01e866d55abf014511a4c5c67ba50b18b1d868a63afd875f"
+        },
+        {
+          "path": "178.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 453,
+          "dos_time": 512576604,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "cd3de401c56478333b45c19a9a8c0c698814616f3536ac48cdc6c08774a00531"
+        },
+        {
+          "path": "179.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 1023,
+          "dos_time": 512536229,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "1a6645b512ef6f583f09c77b5d915983f9f5db0f39a262566b33ddf944986118"
+        },
+        {
+          "path": "180.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 834,
+          "dos_time": 521429019,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "9bbdc05d2c3478fd8c297bba90ffed129eb7b5cfdba15af1c91150d3c4da5b7d"
+        },
+        {
+          "path": "181.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 513,
+          "dos_time": 512531885,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "8f85df51456708ecfdf330763942746ab993235ff3256ac35e2fd6d9f7d12114"
+        },
+        {
+          "path": "182.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 83,
+          "dos_time": 512531846,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "efd162b4b25acc6fc8dddc664115aba564e00f4abccac0b01b3a198a4c628a0f"
+        },
+        {
+          "path": "183.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 807,
+          "dos_time": 521429020,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "91bc487690a33f1e4ff00c32dd8fe92aa7965415a6a3d941b5433f7be2139899"
+        },
+        {
+          "path": "184.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 1729,
+          "dos_time": 512531846,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "a6992cf97bae9052d00b832e0069218c4ff04030eebcc07e0326696de040b0eb"
+        },
+        {
+          "path": "185.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 474,
+          "dos_time": 512531846,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "411e278816559ccc58b60b57c3d08c87fa1151ef679407666ef0b571b3362a86"
+        },
+        {
+          "path": "186.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 578,
+          "dos_time": 512531845,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f62f61c69d93d37658280da6c18f6ae5932138545cfa2c8511801a4cd6487306"
+        },
+        {
+          "path": "187.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 579,
+          "dos_time": 512531845,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "3d0176f2d6c06de0a5f3c69b71f86c10a5ee662f5ebea9967bf426e7863c4775"
+        },
+        {
+          "path": "188.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 587,
+          "dos_time": 512531845,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "be1708357fa1d27398f39346486c74a1c71600aba72dac80ae040b716708aef1"
+        },
+        {
+          "path": "189.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 1804,
+          "dos_time": 521430151,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "43fb054ff7de6c822a73af7d75a4d7edda09bae11cd74b723dc1f11caf3ee6ba"
+        },
+        {
+          "path": "190.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 735,
+          "dos_time": 512531886,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "88019bda4e30515ff4397b788b9a095e2d5bee3855046fdc86f247a2578a718b"
+        },
+        {
+          "path": "191.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 537,
+          "dos_time": 522942093,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "c3e581fd54276a1e7cee34ca356aefc032ecd2fd7447c29531a38fbd9462f665"
+        },
+        {
+          "path": "193.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 769,
+          "dos_time": 522956217,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "49afb73648b37c0f594f750d5bf2c3886a7ae6118f86a045e49dfa91f18fb144"
+        },
+        {
+          "path": "194.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 519,
+          "dos_time": 512531844,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "5cb85a05f887adcaed6367c4fdc06f1839657078a8a419b5edd3bffb08e86d9a"
+        },
+        {
+          "path": "195.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 916,
+          "dos_time": 512531844,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "b34742cacf11a5f771cf941510b301cb520093d583cd2e641f471fafc7d25438"
+        },
+        {
+          "path": "196.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 940,
+          "dos_time": 512531844,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "203276824ed893b8b36535148cd7452ed179a2129ba7cce4bb04bcf52b9427e3"
+        },
+        {
+          "path": "197.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 588,
+          "dos_time": 516567156,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "6749ee07974100d420364b1de021b1010abee576cfc4810c61753b1e5367c877"
+        },
+        {
+          "path": "198.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 473,
+          "dos_time": 517151234,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "c845c5bbdfd71f7e8dd924954183fe0482c280948e97e94d1ee2def6e8216d8b"
+        },
+        {
+          "path": "120.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 495,
+          "dos_time": 512531843,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "593ae84738bf4e989149bfb13f3d80786934f67d2dff9e04ac46077dc154f3f1"
+        },
+        {
+          "path": "132.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 449,
+          "dos_time": 512531874,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "80e18131c1ea9d3b487e98e9c6174e79bd699ccaee562253550475dce9584676"
+        },
+        {
+          "path": "34.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 457,
+          "dos_time": 512531864,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "043262415ab612e0a216cf3aca735c2868b63d09fae46a6917ed8c5f4dc07a33"
+        },
+        {
+          "path": "220.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 491,
+          "dos_time": 512531865,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "e6d5a12b62f6f8419a289acdb1a09094c5f6a8b012b17da4f0f0f8eeb1672f71"
+        },
+        {
+          "path": "221.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 712,
+          "dos_time": 512531842,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "2d35bb516dae7708c8ca1f74cd485f01aa926141a5f1e8c1a3c735c53882816b"
+        },
+        {
+          "path": "222.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 638,
+          "dos_time": 512531842,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "fa4f8cec6a6c15812407dcc7ebc42d8cbbd35621e351eec6a6a2f64294fececc"
+        },
+        {
+          "path": "223.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 510,
+          "dos_time": 512531844,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "997b8aa0285aea24e6c0a5c85eb0cf288130963fbafe12d9dd8dadc8a0b26201"
+        },
+        {
+          "path": "225.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 880,
+          "dos_time": 512531842,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "1cbedc685c202e0e06f53f057fcdabf51e947b212c1e8b2f1468a42798b0c601"
+        },
+        {
+          "path": "226.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 456,
+          "dos_time": 512531842,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "d3db7c48c7c50eb2c5e2f349e625c7f8b3ca22ad2a975d83abe68c1aa5fcc6b0"
+        },
+        {
+          "path": "227.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 455,
+          "dos_time": 512531842,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "a0f7d306768d57369e3a72966baa18e0ba75a40a68cc8615582577bf4cf1ed36"
+        },
+        {
+          "path": "228.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 545,
+          "dos_time": 522942099,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "fb44ea875776c16d7594751f20b2a94fe2fcffa07a80770d558d08699528a8fa"
+        },
+        {
+          "path": "229.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 278,
+          "dos_time": 512531842,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "5321bd002e61c0a771c452f645458b62eeda69bde6804a9cb323f828c8676f40"
+        },
+        {
+          "path": "230.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 94,
+          "dos_time": 512531841,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "c0f1f60201a78e90f76ddb8f4814c99dc66c91ac7029b9fbbe8f09709ab2211f"
+        },
+        {
+          "path": "231.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 652,
+          "dos_time": 515714486,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "38a518e8de6aebd804bc2096ea5e0c1cecfbff0c2d6ae4a15d7241ab383b63ee"
+        },
+        {
+          "path": "232.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 490,
+          "dos_time": 512531841,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "31a04935c4c12e5349dd962ffdded81ef25ce24d022749bd762c0853ec152fdf"
+        },
+        {
+          "path": "233.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 501,
+          "dos_time": 512531851,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "207aa0c26c3eb2fff05ef4cc4395f9f8b7eef9376fdfe5fbd97e4870ac7c68ae"
+        },
+        {
+          "path": "234.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 476,
+          "dos_time": 512531843,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "435c4e5806c60ce91a594b0b930ff0ebb0b0bae663f429d8c79623d29a70cf61"
+        },
+        {
+          "path": "235.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 650,
+          "dos_time": 512531843,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "4fb750e65b1c914939fd6455e44a7145b88d4bc4465fb499d8b31887d0466e09"
+        },
+        {
+          "path": "240.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 784,
+          "dos_time": 514890063,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "1c1310204ee91bf8d8bf9cfada41c4c7bcbd8c9dd7f319f5d0260277a227761b"
+        },
+        {
+          "path": "243.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 519,
+          "dos_time": 516336705,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "97b017711977800d730ddd61c3f89f113935608ff95fcde9071a0ca484223512"
+        },
+        {
+          "path": "244.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 565,
+          "dos_time": 516367797,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "04ab5c5b23a2b3fe5c98b72e8b1285eb081bac15532fcd0a4488d803aae5d391"
+        },
+        {
+          "path": "245.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 774,
+          "dos_time": 521429021,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "73d5580118d35f77df7ab5f1daf7f9e8eefc5313ccbc3f0bc2328450089df5d0"
+        },
+        {
+          "path": "246.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 654,
+          "dos_time": 516975972,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "27a04fbb9ec46839efe3dbb991cac16f9f049819ac899cdfafe847d4623deb71"
+        },
+        {
+          "path": "247.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 674,
+          "dos_time": 516975975,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f5e0e5e72f6056498aa05b0fd27dd45928b82518ad0053b8a071d119e97425f7"
+        },
+        {
+          "path": "248.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 758,
+          "dos_time": 516975974,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "dceab2c0b3354aa8dd0db0d397c61096bed50de96f6c22cc038c31a31f2931a2"
+        },
+        {
+          "path": "249.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 671,
+          "dos_time": 516975975,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "c9ae1c8f754c880e54f054de75dc2e83f70d334fc1bc25eb22af57cf4bc62621"
+        },
+        {
+          "path": "251.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 683,
+          "dos_time": 516976994,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "6466a0ee52362b95de5d592bdc80e9cc43913bf6ae2fb58cd76d9b643e961806"
+        },
+        {
+          "path": "252.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 531,
+          "dos_time": 517085816,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "81d7ba53f37502edbd45770b734656104dce993b9af74038f4f342ed4f5d6425"
+        },
+        {
+          "path": "253.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 508,
+          "dos_time": 517085818,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "184bf546da1b9550b88c2069d65b6d82c3d9c013396f17b5297fa628bb8019cf"
+        },
+        {
+          "path": "254.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 556,
+          "dos_time": 517085820,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "186cc06eec01fdcf205f4934e714ab254f1c098edfefa4565bc7c47516a2249d"
+        },
+        {
+          "path": "255.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 690,
+          "dos_time": 517157422,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "67225a794d574064881b42f56a26ec22cfb4e856f33ba038f06af43e4cc1f695"
+        },
+        {
+          "path": "256.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 426,
+          "dos_time": 517156275,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "a27bee5cb6f1d50a741570d6bf7012cf9cea1256482482faf43e800a4c9f066f"
+        },
+        {
+          "path": "257.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 872,
+          "dos_time": 517374057,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "921377a607d3aa1e89e44619bacc239e05b8ab94b9c1c7d5a4fc1a1e4f2ac264"
+        },
+        {
+          "path": "258.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 841,
+          "dos_time": 517710199,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "d5fcefa4a128280a2bae51b06e81f49c499872bd528e89d4b22312205da1c588"
+        },
+        {
+          "path": "259.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 558,
+          "dos_time": 517712455,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "3227514c94f07de3a43547af9910a17cc404f46a71a97d5004bb32851bfd7384"
+        },
+        {
+          "path": "260.xlt",
+          "version": 0,
+          "kind": "file",
+          "size": 664,
+          "dos_time": 517827977,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "6c0ac3915024c0d66bfddb23819a312ebec5fd705107c3835d74cf2858d30645"
+        },
+        {
+          "path": "bldrip.exe",
+          "version": 0,
+          "kind": "file",
+          "size": 6988,
+          "dos_time": 457664105,
+          "dos_attributes": 0,
+          "method": 5,
+          "sha256": "07297c92c41c51ed1df10055ea9c3ca4f53d07970ef328a9e9c69f1b342bd26b"
+        }
+      ]
+    },
+    {
       "name": "BLKTXT.UC2",
       "url": "https://sembiance.com/fileFormatSamples/archive/ultraCompressor2/BLKTXT.UC2",
-      "size": 25808,
       "sha256": "5637a25f00a9e4dea3c14978dffa5e485a3532694b0d9dad9299fe14898d176e",
+      "size": 25808,
       "expected_entries": [
         {
           "path": "block.exe",
@@ -863,10 +3789,194 @@
       ]
     },
     {
+      "name": "CRYSAF.UC2",
+      "url": "https://sembiance.com/fileFormatSamples/archive/ultraCompressor2/CRYSAF.UC2",
+      "sha256": "854f55bfbc6dffafcc7cfb8f3446de5b11dd0ba984b3519641922952bf5d37d8",
+      "size": 51454,
+      "expected_entries": [
+        {
+          "path": "readme.doc",
+          "version": 0,
+          "kind": "file",
+          "size": 14778,
+          "dos_time": 471928832,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "c49c59bf501cfc090249c29d6c2207ec90616cd993769806a6c5aceb3ebad962"
+        },
+        {
+          "path": "license.doc",
+          "version": 0,
+          "kind": "file",
+          "size": 9780,
+          "dos_time": 471928832,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "66ed08e0e8683155126fcbf0b7e784fc450611a412f146dce7e326ca3bf69c54"
+        },
+        {
+          "path": "useal.frm",
+          "version": 0,
+          "kind": "file",
+          "size": 2467,
+          "dos_time": 471928832,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "4d67cdad233f11624b6c9f3ffb7efb2eac0cb08efcacd6eaeba8c4f9dca30eb2"
+        },
+        {
+          "path": "order.frm",
+          "version": 0,
+          "kind": "file",
+          "size": 3246,
+          "dos_time": 471928832,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "7a7b0a2cd4c86cb787f9d257b106076c596efd2e425b7eaea2ad38cdbb1f6524"
+        },
+        {
+          "path": "sysop.frm",
+          "version": 0,
+          "kind": "file",
+          "size": 1669,
+          "dos_time": 471928832,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "b171f3f9810b913198172edb130c221c17687c82ac335fa1a603c63bebf00bf8"
+        },
+        {
+          "path": "usafe.doc",
+          "version": 0,
+          "kind": "file",
+          "size": 3106,
+          "dos_time": 471928832,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "9d2fb73e5c55dfdc445c26041d7a79772fd93d253b79781d7a03a9d162c4f631"
+        },
+        {
+          "path": "ucrypt.doc",
+          "version": 0,
+          "kind": "file",
+          "size": 5299,
+          "dos_time": 471928832,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "978d329625af8692c9a72854b94dfce714b85f818c243ae0808395154850eca5"
+        },
+        {
+          "path": "file_id.diz",
+          "version": 0,
+          "kind": "file",
+          "size": 256,
+          "dos_time": 471928832,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "2d3493adb2d5a9140dd4d4216e6cf5ddbd885da1f680755d0651e2d3764f6e72"
+        },
+        {
+          "path": "usafe.exe",
+          "version": 0,
+          "kind": "file",
+          "size": 19314,
+          "dos_time": 471928832,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "30537b75b1eadc61a61ca192134ec7670119e8616f6e010db58d4522c1fcd924"
+        },
+        {
+          "path": "ucrypt.exe",
+          "version": 0,
+          "kind": "file",
+          "size": 24134,
+          "dos_time": 471928832,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "b06720a4f16da8b91968b739879be4c9df34fbc10449527737a2420becd16a24"
+        }
+      ]
+    },
+    {
+      "name": "DRS.UC2",
+      "url": "https://sembiance.com/fileFormatSamples/archive/ultraCompressor2/DRS.UC2",
+      "sha256": "4f67caab2af9c9d604ac8f36a1aa5afd9f17c4f6e36fcb6cfd85966beea68592",
+      "size": 1680,
+      "expected_entries": [
+        {
+          "path": "test.dat",
+          "version": 0,
+          "kind": "file",
+          "size": 551,
+          "dos_time": 495398423,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "b3b26517bbe0819e682318a38cfcbebaff42588f5f8b3e3714cb075fb72ec4ba"
+        },
+        {
+          "path": "menu.rip",
+          "version": 0,
+          "kind": "file",
+          "size": 571,
+          "dos_time": 495417146,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "3c55ad402f5f3fd6a76755f7e70b0c068943411f7b93e5197d1bfcb3add022fc"
+        },
+        {
+          "path": "menu.ans",
+          "version": 0,
+          "kind": "file",
+          "size": 1259,
+          "dos_time": 495392438,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "81b2897ee0385277348e9315accc3a5e34544cb9e6e46d79fad37153050bc825"
+        },
+        {
+          "path": "search.ans",
+          "version": 0,
+          "kind": "file",
+          "size": 942,
+          "dos_time": 495392985,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "9ace74e071f1e9315013d05572555ff7c3e2b896ffc95a05d2e82544b2b7910d"
+        }
+      ]
+    },
+    {
+      "name": "HARDCOPY.UC2",
+      "url": "https://sembiance.com/fileFormatSamples/archive/ultraCompressor2/HARDCOPY.UC2",
+      "sha256": "1422ff9f1850d9b2c406f5c9a9c2679feb96d81aadeb71a62d6c3c677f4e3ec5",
+      "size": 9368,
+      "expected_entries": [
+        {
+          "path": "hardcopy.doc",
+          "version": 0,
+          "kind": "file",
+          "size": 979,
+          "dos_time": 515684642,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "ceafe65b08591287cac693708ebfd7faa5598ee1319de01a80b6a026542f050b"
+        },
+        {
+          "path": "hardcopy.exe",
+          "version": 0,
+          "kind": "file",
+          "size": 9145,
+          "dos_time": 515684016,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "e474889ac4ee5970bbf1a0975b8ffd12e1f1e5cb3cd3cef8a398b6fedd1bf616"
+        }
+      ]
+    },
+    {
       "name": "MKMSG.UC2",
       "url": "https://sembiance.com/fileFormatSamples/archive/ultraCompressor2/MKMSG.UC2",
-      "size": 10228,
       "sha256": "125ca4e1278811d36afbbf3bb58a013209883a1dbef1eec7e778706f896ace36",
+      "size": 10228,
       "expected_entries": [
         {
           "path": "mkmsg.man",
@@ -891,10 +4001,48 @@
       ]
     },
     {
+      "name": "STORE.UC2",
+      "url": "https://sembiance.com/fileFormatSamples/archive/ultraCompressor2/STORE.UC2",
+      "sha256": "6fe469ed174d0b4aa7ad905fb4fe7398a5c30242c7c49c0d5700613a685e6857",
+      "size": 42984,
+      "expected_entries": [
+        {
+          "path": "order.scr",
+          "version": 0,
+          "kind": "file",
+          "size": 6906,
+          "dos_time": 445949405,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "240b53f380420401573116ae5c9ae3b471547276baa6d455bb9fc7d7d53dfde6"
+        },
+        {
+          "path": "help.mmu",
+          "version": 0,
+          "kind": "file",
+          "size": 2648,
+          "dos_time": 445954181,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "30a3efc3b341b109c63be217cc8780a95d7ea59461043e3a6f566149fea6d870"
+        },
+        {
+          "path": "dbedit.exe",
+          "version": 0,
+          "kind": "file",
+          "size": 41236,
+          "dos_time": 421135855,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "78dac8218ad65a0c3803bb5c104e134f759d7f7253d88873886b88354c3525a2"
+        }
+      ]
+    },
+    {
       "name": "UC2INFO.UC2",
       "url": "https://sembiance.com/fileFormatSamples/archive/ultraCompressor2/UC2INFO.UC2",
-      "size": 4498,
       "sha256": "9331c44c0707235e3ddc46d8c2c54598a2eb1582a6ca3f30d37ec04303b4ab80",
+      "size": 4498,
       "expected_entries": [
         {
           "path": "uinfo.txt",
@@ -907,6 +4055,3106 @@
           "sha256": "998f6ddfe60a4da9944baa510918478e080fc312f94b0f09c8a6542f91e5524f"
         }
       ]
+    },
+    {
+      "name": "USERTRAK.UC2",
+      "url": "https://sembiance.com/fileFormatSamples/archive/ultraCompressor2/USERTRAK.UC2",
+      "sha256": "a1c944933196b41e9672a86c873d50d602106d124e2a76a4056c06cd13b57997",
+      "size": 17678,
+      "expected_entries": [
+        {
+          "path": "trakl.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 340,
+          "dos_time": 496175456,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "1e750e103112c492a66276713c1af70b7dd6729cd341940268f7f935ef614316"
+        },
+        {
+          "path": "usertrak.doc",
+          "version": 0,
+          "kind": "file",
+          "size": 18846,
+          "dos_time": 496175456,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "30194bf9554b2b9b99de98ea53c09ec584808c1fc8b0fb57d779af336dd19b06"
+        },
+        {
+          "path": "usertrak.tpg",
+          "version": 0,
+          "kind": "file",
+          "size": 40571,
+          "dos_time": 496175456,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "2aa7ea337e4a75653232bc309cd2ce3743945f8ca2573b70af74eee13e569060"
+        },
+        {
+          "path": "u$~nobas.lck",
+          "version": 0,
+          "kind": "file",
+          "size": 4,
+          "dos_time": 496219468,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f3e9606ed397afbee050e773208d3e9c96e2c05aa46c5809c19c6220b573ac48"
+        },
+        {
+          "path": "u$~nodel.lck",
+          "version": 0,
+          "kind": "file",
+          "size": 4,
+          "dos_time": 496219469,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f3e9606ed397afbee050e773208d3e9c96e2c05aa46c5809c19c6220b573ac48"
+        },
+        {
+          "path": "u$~noadd.lck",
+          "version": 0,
+          "kind": "file",
+          "size": 4,
+          "dos_time": 496219469,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f3e9606ed397afbee050e773208d3e9c96e2c05aa46c5809c19c6220b573ac48"
+        },
+        {
+          "path": "u$~noopt.lck",
+          "version": 0,
+          "kind": "file",
+          "size": 4,
+          "dos_time": 496219469,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f3e9606ed397afbee050e773208d3e9c96e2c05aa46c5809c19c6220b573ac48"
+        },
+        {
+          "path": "u$~nounp.lck",
+          "version": 0,
+          "kind": "file",
+          "size": 4,
+          "dos_time": 496219469,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f3e9606ed397afbee050e773208d3e9c96e2c05aa46c5809c19c6220b573ac48"
+        },
+        {
+          "path": "u$~norev.lck",
+          "version": 0,
+          "kind": "file",
+          "size": 4,
+          "dos_time": 496219469,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f3e9606ed397afbee050e773208d3e9c96e2c05aa46c5809c19c6220b573ac48"
+        }
+      ]
+    },
+    {
+      "name": "VFC1_3.UC2",
+      "url": "https://sembiance.com/fileFormatSamples/archive/ultraCompressor2/VFC1_3.UC2",
+      "sha256": "d19c609f50c66e05f4294a786620d1bb04c73ed84e8c2b1d0a65eba3530adfb7",
+      "size": 54646,
+      "expected_entries": [
+        {
+          "path": "vfast.exe",
+          "version": 0,
+          "kind": "file",
+          "size": 49510,
+          "dos_time": 477473328,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "a1ead5109fe4721f39d2e3d4866cc69396e5235f8d552b9467765f754b24a921"
+        },
+        {
+          "path": "vfast.doc",
+          "version": 0,
+          "kind": "file",
+          "size": 8957,
+          "dos_time": 477516790,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "1a20e5e659940e03314a73fd6fdffdee93bb546dede7f61c755fb8f5216b2df2"
+        },
+        {
+          "path": "xlt.nws",
+          "version": 0,
+          "kind": "file",
+          "size": 7402,
+          "dos_time": 461804580,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "a49a4a6d8e174bfec7000a7c0d76bc5b3da452d172f2fce597b899ff9bdf2f10"
+        },
+        {
+          "path": "history.doc",
+          "version": 0,
+          "kind": "file",
+          "size": 419,
+          "dos_time": 477516687,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "9f51d751886703b39aa112af90aaaae26fbe4482a53bb3b7ea0f8f5cc69a04f6"
+        }
+      ]
+    },
+    {
+      "name": "WARLORDS.UC2",
+      "url": "https://sembiance.com/fileFormatSamples/archive/ultraCompressor2/WARLORDS.UC2",
+      "sha256": "86bdb14ec909c66ba229052700df9764a1ec35e0ca814b641067881050407a86",
+      "size": 322774,
+      "expected_entries": [
+        {
+          "path": "alpha.mp1",
+          "version": 0,
+          "kind": "file",
+          "size": 1566,
+          "dos_time": 495519872,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "691cbd6a4d213cc914f1119f8f49e71f5e121c84f124d587252eadba32e0ad32"
+        },
+        {
+          "path": "alpha.mp2",
+          "version": 0,
+          "kind": "file",
+          "size": 1566,
+          "dos_time": 495519872,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "66d9a61f7febb3c7d2e470ec61d784700c6d1ce0a370f0356adbcd85aebdc6eb"
+        },
+        {
+          "path": "alpha.mp3",
+          "version": 0,
+          "kind": "file",
+          "size": 1566,
+          "dos_time": 495519872,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "fbba6f52896d565eaaddf801db317387de260b35aa869071fd24cb8c81ea2bdd"
+        },
+        {
+          "path": "alpha.mp4",
+          "version": 0,
+          "kind": "file",
+          "size": 1566,
+          "dos_time": 495519872,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "18a2a77fe8a7d2c25374b0036a6d0563d437109617b66f6b8fa117afa1913436"
+        },
+        {
+          "path": "edit-wl.tpg",
+          "version": 0,
+          "kind": "file",
+          "size": 165806,
+          "dos_time": 495519872,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "3c8561702f05908320d6b5061abc98f41f3f45273a29dd45bbcc9de0bb4fc761"
+        },
+        {
+          "path": "edithome.wl",
+          "version": 0,
+          "kind": "file",
+          "size": 509,
+          "dos_time": 495519872,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "310fcc98e7c1e7dadf3ad93f4be40d4a9afd035aca2703182801b16f2e12eb57"
+        },
+        {
+          "path": "info.wl",
+          "version": 0,
+          "kind": "file",
+          "size": 34133,
+          "dos_time": 495519872,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "09f0eb2bbb0f3984e95835bb4208d65849bab04b56f38567d12f2a348a03606b"
+        },
+        {
+          "path": "load-wl.tpg",
+          "version": 0,
+          "kind": "file",
+          "size": 6170,
+          "dos_time": 495519872,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f1e7840740191c6793656195ef1c050cf3af8ed517f98713303cac2cdd3e382d"
+        },
+        {
+          "path": "maint-wl.tpg",
+          "version": 0,
+          "kind": "file",
+          "size": 100283,
+          "dos_time": 495519872,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "5a2638c705241d59fada949a94c6eeed7641dfe5a5b962a59ca4a7e19af3963f"
+        },
+        {
+          "path": "monster.wl",
+          "version": 0,
+          "kind": "file",
+          "size": 49720,
+          "dos_time": 495519872,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "11865f11b49db78f28af69b2d6c20a6bd1afeff87f09a29e4813c4a0590eb679"
+        },
+        {
+          "path": "screens.wl",
+          "version": 0,
+          "kind": "file",
+          "size": 18716,
+          "dos_time": 495519872,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "3b15f1840764d7e15adf6b21068f8c1603c02f0b34933a7572d2cba20427e671"
+        },
+        {
+          "path": "slayl.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 158,
+          "dos_time": 495519872,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "95b56cae942b5ccd6a350c1d757372b172a926adaa68633fb9390687a1a79369"
+        },
+        {
+          "path": "stock.wl",
+          "version": 0,
+          "kind": "file",
+          "size": 1331,
+          "dos_time": 495519872,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f46498a4152dac643206ccf6bbef7d6f81cf4a6eb292197a4cdc3d02e678dca8"
+        },
+        {
+          "path": "upgrade.exe",
+          "version": 0,
+          "kind": "file",
+          "size": 237568,
+          "dos_time": 495544448,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "863924d112cbf87ccf96b5d5ff1aef035d8f513609a1a5ce26c5cba748cf7959"
+        },
+        {
+          "path": "warlords.doc",
+          "version": 0,
+          "kind": "file",
+          "size": 30677,
+          "dos_time": 495519872,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "91227ef3213fd86fe2a030bc51dd5c3b2de36766c869ce844efa2fd13eb88e65"
+        },
+        {
+          "path": "warlords.tpg",
+          "version": 0,
+          "kind": "file",
+          "size": 509658,
+          "dos_time": 495519872,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "0ba206fa2f10c1b281dc69749dcbe3a221662b8edf1e5e91f101457551113994"
+        },
+        {
+          "path": "u$~nobas.lck",
+          "version": 0,
+          "kind": "file",
+          "size": 4,
+          "dos_time": 495541364,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f3e9606ed397afbee050e773208d3e9c96e2c05aa46c5809c19c6220b573ac48"
+        },
+        {
+          "path": "u$~nodel.lck",
+          "version": 0,
+          "kind": "file",
+          "size": 4,
+          "dos_time": 495541364,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f3e9606ed397afbee050e773208d3e9c96e2c05aa46c5809c19c6220b573ac48"
+        },
+        {
+          "path": "u$~noadd.lck",
+          "version": 0,
+          "kind": "file",
+          "size": 4,
+          "dos_time": 495541364,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f3e9606ed397afbee050e773208d3e9c96e2c05aa46c5809c19c6220b573ac48"
+        },
+        {
+          "path": "u$~noopt.lck",
+          "version": 0,
+          "kind": "file",
+          "size": 4,
+          "dos_time": 495541364,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f3e9606ed397afbee050e773208d3e9c96e2c05aa46c5809c19c6220b573ac48"
+        },
+        {
+          "path": "u$~nounp.lck",
+          "version": 0,
+          "kind": "file",
+          "size": 4,
+          "dos_time": 495541364,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f3e9606ed397afbee050e773208d3e9c96e2c05aa46c5809c19c6220b573ac48"
+        },
+        {
+          "path": "u$~norev.lck",
+          "version": 0,
+          "kind": "file",
+          "size": 4,
+          "dos_time": 495541364,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f3e9606ed397afbee050e773208d3e9c96e2c05aa46c5809c19c6220b573ac48"
+        }
+      ]
+    },
+    {
+      "name": "chaos100.uc2",
+      "url": "https://sembiance.com/fileFormatSamples/archive/ultraCompressor2/chaos100.uc2",
+      "sha256": "0f37aeaabda11cc0d6249f3cd9cabe325e683f0e4fba7739221ef61793dc8371",
+      "size": 5153,
+      "expected_entries": [
+        {
+          "path": "file_id.diz",
+          "version": 0,
+          "kind": "file",
+          "size": 163,
+          "dos_time": 490311151,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f6f9a6da5b894403686e73c86cb436dd8024758faa7b35bf35b0758b7f0b43a5"
+        },
+        {
+          "path": "chaos.tpg",
+          "version": 0,
+          "kind": "file",
+          "size": 11936,
+          "dos_time": 490308786,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "477e2eb8932df4e6d5aa9a8a20af8fe9a22d7fe52194b8a2b29312ec916cea8b"
+        },
+        {
+          "path": "chaos.doc",
+          "version": 0,
+          "kind": "file",
+          "size": 875,
+          "dos_time": 490311459,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "5e9f78a7f0126a8afc1ffb692dbb10f8f924a4f54cf3de8e273f3397e7ab6f6d"
+        }
+      ]
+    },
+    {
+      "name": "unarc-fast.uc2",
+      "url": "https://raw.githubusercontent.com/mkrueger/unarc-rs/main/crates/unarc-rs/tests/uc2/fast.uc2",
+      "sha256": "a0d0169138d59fcd49c058715bb49628cbe988cd594923c7c9ffa51470c0ebbd",
+      "size": 4030,
+      "expected_entries": [
+        {
+          "path": "license",
+          "version": 0,
+          "kind": "file",
+          "size": 11357,
+          "dos_time": 1487976717,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        }
+      ]
+    },
+    {
+      "name": "unarc-normal.uc2",
+      "url": "https://raw.githubusercontent.com/mkrueger/unarc-rs/main/crates/unarc-rs/tests/uc2/normal.uc2",
+      "sha256": "ad341656c3447f9425756794d42be72cdcfad104d406e697bd8a21dad24a45b9",
+      "size": 3892,
+      "expected_entries": [
+        {
+          "path": "license",
+          "version": 0,
+          "kind": "file",
+          "size": 11357,
+          "dos_time": 1487976717,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        }
+      ]
+    },
+    {
+      "name": "unarc-tight.uc2",
+      "url": "https://raw.githubusercontent.com/mkrueger/unarc-rs/main/crates/unarc-rs/tests/uc2/tight.uc2",
+      "sha256": "19d34d9a60f75af5dbd6335715bcd7e52e6d8e9928b6cf91682faab980621f1a",
+      "size": 3874,
+      "expected_entries": [
+        {
+          "path": "license",
+          "version": 0,
+          "kind": "file",
+          "size": 11357,
+          "dos_time": 1487976717,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        }
+      ]
+    },
+    {
+      "name": "unarc-stight.uc2",
+      "url": "https://raw.githubusercontent.com/mkrueger/unarc-rs/main/crates/unarc-rs/tests/uc2/stight.uc2",
+      "sha256": "7ba0ee0a90f46f5e3d4769450e032d4418eba1b2b21f557f2a0a343a6cfabd68",
+      "size": 3888,
+      "expected_entries": [
+        {
+          "path": "license",
+          "version": 0,
+          "kind": "file",
+          "size": 11357,
+          "dos_time": 1487976717,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        }
+      ]
+    },
+    {
+      "name": "oracle_r2_def.uc2",
+      "size": 8100,
+      "sha256": "387a9fb56cb9a1b3de5b9f6e746554491277ad04e1da514b81704c0f546d38c4",
+      "url": "https://raw.githubusercontent.com/klauspost/uc2/53622f89ada1cf0d4a69f91b653bdd44ec5b0f92/testdata/oracle/r2_def.uc2",
+      "expected_entries": [
+        {
+          "path": "allbytes.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 256,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+        },
+        {
+          "path": "binary.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 2048,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "7def5a7e066a3a2eecc66e69ab3da6e4a7b0e9866e31dbe716ae34c2f9b0a28f"
+        },
+        {
+          "path": "empty.dat",
+          "version": 0,
+          "kind": "file",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "hello.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 28,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "fe698381b5867e9a7514c60a61d6082beadb91a4d9e35fcb4f5942da86c817dd"
+        },
+        {
+          "path": "random.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 1024,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "ce7d9ba00521670a8ddd5c922ac27b5cd34a7e9c1045631edda357a8eac01a48"
+        },
+        {
+          "path": "sound.wav",
+          "version": 0,
+          "kind": "file",
+          "size": 4044,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "c2e59f96175d054a86508d7407556724a61e282d8d9fcb7186ed9917c961bcb3"
+        },
+        {
+          "path": "source.c",
+          "version": 0,
+          "kind": "file",
+          "size": 1558,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "6ac9c2f2f37dffedabc96aaa1c58215fda481f84f179c30dcd81de541f411e5b"
+        },
+        {
+          "path": "text.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 2036,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "55e7449bfafaeb29cdebf537781a453f6db3cb9c0fd26c60577574d6d9dbbe03"
+        },
+        {
+          "path": "zeros.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 8192,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+        }
+      ]
+    },
+    {
+      "name": "oracle_r2_prot.uc2",
+      "size": 8751,
+      "sha256": "456db70e85415bd8585a860eb2102e1ebb07bd3a722d6e0d2c828759bfc43cdc",
+      "url": "https://raw.githubusercontent.com/klauspost/uc2/53622f89ada1cf0d4a69f91b653bdd44ec5b0f92/testdata/oracle/r2_prot.uc2",
+      "expected_entries": [
+        {
+          "path": "sub",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "allbytes.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 256,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+        },
+        {
+          "path": "binary.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 2048,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "7def5a7e066a3a2eecc66e69ab3da6e4a7b0e9866e31dbe716ae34c2f9b0a28f"
+        },
+        {
+          "path": "empty.dat",
+          "version": 0,
+          "kind": "file",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "hello.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 28,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "fe698381b5867e9a7514c60a61d6082beadb91a4d9e35fcb4f5942da86c817dd"
+        },
+        {
+          "path": "random.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 1024,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "ce7d9ba00521670a8ddd5c922ac27b5cd34a7e9c1045631edda357a8eac01a48"
+        },
+        {
+          "path": "sound.wav",
+          "version": 0,
+          "kind": "file",
+          "size": 4044,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "c2e59f96175d054a86508d7407556724a61e282d8d9fcb7186ed9917c961bcb3"
+        },
+        {
+          "path": "source.c",
+          "version": 0,
+          "kind": "file",
+          "size": 1558,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "6ac9c2f2f37dffedabc96aaa1c58215fda481f84f179c30dcd81de541f411e5b"
+        },
+        {
+          "path": "text.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 2036,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "55e7449bfafaeb29cdebf537781a453f6db3cb9c0fd26c60577574d6d9dbbe03"
+        },
+        {
+          "path": "zeros.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 8192,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+        },
+        {
+          "path": "sub/deep",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "sub/nested.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 13,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "c99fcad02327e45f287554ab7707b55186adab9b94a686e979de890ec80d993a"
+        },
+        {
+          "path": "sub/deep/deeper.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 350,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "f146e9b5474872cce51082c23d4ff87f9d4bebbe239fc918ec2b8c217ba96430"
+        }
+      ]
+    },
+    {
+      "name": "oracle_r2_rev.uc2",
+      "size": 286,
+      "sha256": "eea6708e4e9413c62d81149196b88c8eb65fa3483ce624f0c50539e417156cd5",
+      "url": "https://raw.githubusercontent.com/klauspost/uc2/53622f89ada1cf0d4a69f91b653bdd44ec5b0f92/testdata/oracle/r2_rev.uc2",
+      "expected_entries": [
+        {
+          "path": "vers.txt",
+          "version": 2,
+          "kind": "file",
+          "size": 211,
+          "dos_time": 1512188035,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "fbdf08b036b1d798e77c497a3459daaebf0030486dd1ea61ab36d332f8191276"
+        },
+        {
+          "path": "vers.txt",
+          "version": 1,
+          "kind": "file",
+          "size": 411,
+          "dos_time": 1512190083,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "304d27f074f1fb6609fb88fa622a31bb2807bca8522f89aff838e2ef9b5314cb"
+        },
+        {
+          "path": "vers.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 611,
+          "dos_time": 1512192131,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "aa08feae8030e6d7076a80fcd3ea5b75d52aa9ff581d4b919ba5e3b883cdccb2"
+        },
+        {
+          "path": "\u00e9t\u00e9.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 23,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "b024953a6dc0f1d083a96712e2332c0904d44509bb1332f14d220da37a1fd3b2"
+        },
+        {
+          "path": "new.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 13,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "f3adfa173b453df190a2a7f03a2f4bd32730d0e495e4973fb9d620e9cd89304b"
+        }
+      ]
+    },
+    {
+      "name": "oracle_r2_tf.uc2",
+      "size": 8196,
+      "sha256": "87b71f590afd5d486c011ebf616e9993ee2009efd6711e4fa0507374909c24c4",
+      "url": "https://raw.githubusercontent.com/klauspost/uc2/53622f89ada1cf0d4a69f91b653bdd44ec5b0f92/testdata/oracle/r2_tf.uc2",
+      "expected_entries": [
+        {
+          "path": "sub",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "allbytes.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 256,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+        },
+        {
+          "path": "binary.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 2048,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "7def5a7e066a3a2eecc66e69ab3da6e4a7b0e9866e31dbe716ae34c2f9b0a28f"
+        },
+        {
+          "path": "empty.dat",
+          "version": 0,
+          "kind": "file",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "hello.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 28,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "fe698381b5867e9a7514c60a61d6082beadb91a4d9e35fcb4f5942da86c817dd"
+        },
+        {
+          "path": "random.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 1024,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "ce7d9ba00521670a8ddd5c922ac27b5cd34a7e9c1045631edda357a8eac01a48"
+        },
+        {
+          "path": "sound.wav",
+          "version": 0,
+          "kind": "file",
+          "size": 4044,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "c2e59f96175d054a86508d7407556724a61e282d8d9fcb7186ed9917c961bcb3"
+        },
+        {
+          "path": "source.c",
+          "version": 0,
+          "kind": "file",
+          "size": 1558,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "6ac9c2f2f37dffedabc96aaa1c58215fda481f84f179c30dcd81de541f411e5b"
+        },
+        {
+          "path": "text.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 2036,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "55e7449bfafaeb29cdebf537781a453f6db3cb9c0fd26c60577574d6d9dbbe03"
+        },
+        {
+          "path": "zeros.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 8192,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+        },
+        {
+          "path": "sub/deep",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "sub/nested.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 13,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "c99fcad02327e45f287554ab7707b55186adab9b94a686e979de890ec80d993a"
+        },
+        {
+          "path": "sub/deep/deeper.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 350,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "f146e9b5474872cce51082c23d4ff87f9d4bebbe239fc918ec2b8c217ba96430"
+        }
+      ]
+    },
+    {
+      "name": "oracle_r2_tn.uc2",
+      "size": 8190,
+      "sha256": "821b03f4cd28d884ed8871da515055a373c5978e9a87d585dcd2a88fb1914d1f",
+      "url": "https://raw.githubusercontent.com/klauspost/uc2/53622f89ada1cf0d4a69f91b653bdd44ec5b0f92/testdata/oracle/r2_tn.uc2",
+      "expected_entries": [
+        {
+          "path": "sub",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "allbytes.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 256,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+        },
+        {
+          "path": "binary.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 2048,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "7def5a7e066a3a2eecc66e69ab3da6e4a7b0e9866e31dbe716ae34c2f9b0a28f"
+        },
+        {
+          "path": "empty.dat",
+          "version": 0,
+          "kind": "file",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "hello.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 28,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "fe698381b5867e9a7514c60a61d6082beadb91a4d9e35fcb4f5942da86c817dd"
+        },
+        {
+          "path": "random.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 1024,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "ce7d9ba00521670a8ddd5c922ac27b5cd34a7e9c1045631edda357a8eac01a48"
+        },
+        {
+          "path": "sound.wav",
+          "version": 0,
+          "kind": "file",
+          "size": 4044,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "c2e59f96175d054a86508d7407556724a61e282d8d9fcb7186ed9917c961bcb3"
+        },
+        {
+          "path": "source.c",
+          "version": 0,
+          "kind": "file",
+          "size": 1558,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "6ac9c2f2f37dffedabc96aaa1c58215fda481f84f179c30dcd81de541f411e5b"
+        },
+        {
+          "path": "text.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 2036,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "55e7449bfafaeb29cdebf537781a453f6db3cb9c0fd26c60577574d6d9dbbe03"
+        },
+        {
+          "path": "zeros.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 8192,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+        },
+        {
+          "path": "sub/deep",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "sub/nested.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 13,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "c99fcad02327e45f287554ab7707b55186adab9b94a686e979de890ec80d993a"
+        },
+        {
+          "path": "sub/deep/deeper.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 350,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "f146e9b5474872cce51082c23d4ff87f9d4bebbe239fc918ec2b8c217ba96430"
+        }
+      ]
+    },
+    {
+      "name": "oracle_r2_tst.uc2",
+      "size": 8078,
+      "sha256": "5ce4a5affa2a2fd8cdf587bc5114d5028e42a003f33912667c5745e0874ea25f",
+      "url": "https://raw.githubusercontent.com/klauspost/uc2/53622f89ada1cf0d4a69f91b653bdd44ec5b0f92/testdata/oracle/r2_tst.uc2",
+      "expected_entries": [
+        {
+          "path": "sub",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "allbytes.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 256,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+        },
+        {
+          "path": "binary.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 2048,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "7def5a7e066a3a2eecc66e69ab3da6e4a7b0e9866e31dbe716ae34c2f9b0a28f"
+        },
+        {
+          "path": "empty.dat",
+          "version": 0,
+          "kind": "file",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "hello.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 28,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "fe698381b5867e9a7514c60a61d6082beadb91a4d9e35fcb4f5942da86c817dd"
+        },
+        {
+          "path": "random.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 1024,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "ce7d9ba00521670a8ddd5c922ac27b5cd34a7e9c1045631edda357a8eac01a48"
+        },
+        {
+          "path": "sound.wav",
+          "version": 0,
+          "kind": "file",
+          "size": 4044,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 41,
+          "sha256": "c2e59f96175d054a86508d7407556724a61e282d8d9fcb7186ed9917c961bcb3"
+        },
+        {
+          "path": "source.c",
+          "version": 0,
+          "kind": "file",
+          "size": 1558,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "6ac9c2f2f37dffedabc96aaa1c58215fda481f84f179c30dcd81de541f411e5b"
+        },
+        {
+          "path": "text.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 2036,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "55e7449bfafaeb29cdebf537781a453f6db3cb9c0fd26c60577574d6d9dbbe03"
+        },
+        {
+          "path": "zeros.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 8192,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 40,
+          "sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+        },
+        {
+          "path": "sub/deep",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "sub/nested.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 13,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "c99fcad02327e45f287554ab7707b55186adab9b94a686e979de890ec80d993a"
+        },
+        {
+          "path": "sub/deep/deeper.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 350,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f146e9b5474872cce51082c23d4ff87f9d4bebbe239fc918ec2b8c217ba96430"
+        }
+      ]
+    },
+    {
+      "name": "oracle_r2_tt.uc2",
+      "size": 8090,
+      "sha256": "1ec6bbb6e06787c2923b4a1f6f2e226532177e6e57a49d52bebb62ae852107d7",
+      "url": "https://raw.githubusercontent.com/klauspost/uc2/53622f89ada1cf0d4a69f91b653bdd44ec5b0f92/testdata/oracle/r2_tt.uc2",
+      "expected_entries": [
+        {
+          "path": "sub",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "allbytes.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 256,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+        },
+        {
+          "path": "binary.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 2048,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "7def5a7e066a3a2eecc66e69ab3da6e4a7b0e9866e31dbe716ae34c2f9b0a28f"
+        },
+        {
+          "path": "empty.dat",
+          "version": 0,
+          "kind": "file",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "hello.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 28,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "fe698381b5867e9a7514c60a61d6082beadb91a4d9e35fcb4f5942da86c817dd"
+        },
+        {
+          "path": "random.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 1024,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "ce7d9ba00521670a8ddd5c922ac27b5cd34a7e9c1045631edda357a8eac01a48"
+        },
+        {
+          "path": "sound.wav",
+          "version": 0,
+          "kind": "file",
+          "size": 4044,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 31,
+          "sha256": "c2e59f96175d054a86508d7407556724a61e282d8d9fcb7186ed9917c961bcb3"
+        },
+        {
+          "path": "source.c",
+          "version": 0,
+          "kind": "file",
+          "size": 1558,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "6ac9c2f2f37dffedabc96aaa1c58215fda481f84f179c30dcd81de541f411e5b"
+        },
+        {
+          "path": "text.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 2036,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "55e7449bfafaeb29cdebf537781a453f6db3cb9c0fd26c60577574d6d9dbbe03"
+        },
+        {
+          "path": "zeros.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 8192,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 30,
+          "sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+        },
+        {
+          "path": "sub/deep",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "sub/nested.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 13,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "c99fcad02327e45f287554ab7707b55186adab9b94a686e979de890ec80d993a"
+        },
+        {
+          "path": "sub/deep/deeper.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 350,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "f146e9b5474872cce51082c23d4ff87f9d4bebbe239fc918ec2b8c217ba96430"
+        }
+      ]
+    },
+    {
+      "name": "oracle_v237b_def.uc2",
+      "size": 8104,
+      "sha256": "a8254950168b0da2760cbe4879f2d3fb20379f4399b3955bc313426e447bdd6a",
+      "url": "https://raw.githubusercontent.com/klauspost/uc2/53622f89ada1cf0d4a69f91b653bdd44ec5b0f92/testdata/oracle/v237b_def.uc2",
+      "expected_entries": [
+        {
+          "path": "allbytes.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 256,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+        },
+        {
+          "path": "binary.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 2048,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "7def5a7e066a3a2eecc66e69ab3da6e4a7b0e9866e31dbe716ae34c2f9b0a28f"
+        },
+        {
+          "path": "empty.dat",
+          "version": 0,
+          "kind": "file",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "hello.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 28,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "fe698381b5867e9a7514c60a61d6082beadb91a4d9e35fcb4f5942da86c817dd"
+        },
+        {
+          "path": "random.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 1024,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "ce7d9ba00521670a8ddd5c922ac27b5cd34a7e9c1045631edda357a8eac01a48"
+        },
+        {
+          "path": "sound.wav",
+          "version": 0,
+          "kind": "file",
+          "size": 4044,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "c2e59f96175d054a86508d7407556724a61e282d8d9fcb7186ed9917c961bcb3"
+        },
+        {
+          "path": "source.c",
+          "version": 0,
+          "kind": "file",
+          "size": 1558,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "6ac9c2f2f37dffedabc96aaa1c58215fda481f84f179c30dcd81de541f411e5b"
+        },
+        {
+          "path": "text.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 2036,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "55e7449bfafaeb29cdebf537781a453f6db3cb9c0fd26c60577574d6d9dbbe03"
+        },
+        {
+          "path": "zeros.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 8192,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+        }
+      ]
+    },
+    {
+      "name": "oracle_v237b_lfn.uc2",
+      "size": 544,
+      "sha256": "4701f7728ae312bb2695102dbe3d15e90c0ba61964f82452f46b356b62194448",
+      "url": "https://raw.githubusercontent.com/klauspost/uc2/53622f89ada1cf0d4a69f91b653bdd44ec5b0f92/testdata/oracle/v237b_lfn.uc2",
+      "expected_entries": [
+        {
+          "path": "Long Directory Name",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "A long file name.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 11,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "45657ab604a2607f164669ddada08cb0ac53b547bc64c52afcfa6c6fecde5341"
+        },
+        {
+          "path": "Caf\u00e9 cr\u00e8me.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 17,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "a23caf9bd14c14ee4190f14caf6b1e2c4a7d581eda03ef3f42edca33cd60dd27"
+        },
+        {
+          "path": "lower.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 21,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "5e0449c363c3edd16d5d103b3ccacd67b7fc59fd99d2371e92a22d31b08ecd15"
+        },
+        {
+          "path": "multi.part.name.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 6,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "bbe2f841ea9788d92e5afcb03151e36c2b667d068c8bb7555bd9d25a7df126dc"
+        },
+        {
+          "path": "upper.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 16,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "52b46cae40507d13fa9ead9d54ea87e651dd4644de8983c2f8e399b5abb05fb1"
+        },
+        {
+          "path": "Long Directory Name/Another Long Name.dat",
+          "version": 0,
+          "kind": "file",
+          "size": 25,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "dcadeab3cdface01def72efdf7d0661c6e7eef6c998fec89321ff28337a2f076"
+        }
+      ]
+    },
+    {
+      "name": "oracle_v237b_prot.uc2",
+      "size": 8751,
+      "sha256": "ab5476a69c0ee144f01b9a5a4f899fae21ed9bd3a46ad1a4c1437763dbb3d222",
+      "url": "https://raw.githubusercontent.com/klauspost/uc2/53622f89ada1cf0d4a69f91b653bdd44ec5b0f92/testdata/oracle/v237b_prot.uc2",
+      "expected_entries": [
+        {
+          "path": "sub",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "allbytes.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 256,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+        },
+        {
+          "path": "binary.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 2048,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "7def5a7e066a3a2eecc66e69ab3da6e4a7b0e9866e31dbe716ae34c2f9b0a28f"
+        },
+        {
+          "path": "empty.dat",
+          "version": 0,
+          "kind": "file",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "hello.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 28,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "fe698381b5867e9a7514c60a61d6082beadb91a4d9e35fcb4f5942da86c817dd"
+        },
+        {
+          "path": "random.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 1024,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "ce7d9ba00521670a8ddd5c922ac27b5cd34a7e9c1045631edda357a8eac01a48"
+        },
+        {
+          "path": "sound.wav",
+          "version": 0,
+          "kind": "file",
+          "size": 4044,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "c2e59f96175d054a86508d7407556724a61e282d8d9fcb7186ed9917c961bcb3"
+        },
+        {
+          "path": "source.c",
+          "version": 0,
+          "kind": "file",
+          "size": 1558,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "6ac9c2f2f37dffedabc96aaa1c58215fda481f84f179c30dcd81de541f411e5b"
+        },
+        {
+          "path": "text.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 2036,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "55e7449bfafaeb29cdebf537781a453f6db3cb9c0fd26c60577574d6d9dbbe03"
+        },
+        {
+          "path": "zeros.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 8192,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+        },
+        {
+          "path": "sub/deep",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "sub/nested.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 13,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "c99fcad02327e45f287554ab7707b55186adab9b94a686e979de890ec80d993a"
+        },
+        {
+          "path": "sub/deep/deeper.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 350,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "f146e9b5474872cce51082c23d4ff87f9d4bebbe239fc918ec2b8c217ba96430"
+        }
+      ]
+    },
+    {
+      "name": "oracle_v237b_rev.uc2",
+      "size": 286,
+      "sha256": "73e86fc42e2d591e8fe7dbf24c7c7cb92cd62b560ed7321504e1ff15a6087c30",
+      "url": "https://raw.githubusercontent.com/klauspost/uc2/53622f89ada1cf0d4a69f91b653bdd44ec5b0f92/testdata/oracle/v237b_rev.uc2",
+      "expected_entries": [
+        {
+          "path": "vers.txt",
+          "version": 2,
+          "kind": "file",
+          "size": 211,
+          "dos_time": 1512188035,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "fbdf08b036b1d798e77c497a3459daaebf0030486dd1ea61ab36d332f8191276"
+        },
+        {
+          "path": "vers.txt",
+          "version": 1,
+          "kind": "file",
+          "size": 411,
+          "dos_time": 1512190083,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "304d27f074f1fb6609fb88fa622a31bb2807bca8522f89aff838e2ef9b5314cb"
+        },
+        {
+          "path": "vers.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 611,
+          "dos_time": 1512192131,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "aa08feae8030e6d7076a80fcd3ea5b75d52aa9ff581d4b919ba5e3b883cdccb2"
+        },
+        {
+          "path": "\u00e9t\u00e9.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 23,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "b024953a6dc0f1d083a96712e2332c0904d44509bb1332f14d220da37a1fd3b2"
+        },
+        {
+          "path": "new.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 13,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "f3adfa173b453df190a2a7f03a2f4bd32730d0e495e4973fb9d620e9cd89304b"
+        }
+      ]
+    },
+    {
+      "name": "oracle_v237b_tf.uc2",
+      "size": 8196,
+      "sha256": "ee03f0faac771b643958c0512a05e1597174a0079462dc1ee54c1fb036937639",
+      "url": "https://raw.githubusercontent.com/klauspost/uc2/53622f89ada1cf0d4a69f91b653bdd44ec5b0f92/testdata/oracle/v237b_tf.uc2",
+      "expected_entries": [
+        {
+          "path": "sub",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "allbytes.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 256,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+        },
+        {
+          "path": "binary.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 2048,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "7def5a7e066a3a2eecc66e69ab3da6e4a7b0e9866e31dbe716ae34c2f9b0a28f"
+        },
+        {
+          "path": "empty.dat",
+          "version": 0,
+          "kind": "file",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "hello.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 28,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "fe698381b5867e9a7514c60a61d6082beadb91a4d9e35fcb4f5942da86c817dd"
+        },
+        {
+          "path": "random.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 1024,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "ce7d9ba00521670a8ddd5c922ac27b5cd34a7e9c1045631edda357a8eac01a48"
+        },
+        {
+          "path": "sound.wav",
+          "version": 0,
+          "kind": "file",
+          "size": 4044,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "c2e59f96175d054a86508d7407556724a61e282d8d9fcb7186ed9917c961bcb3"
+        },
+        {
+          "path": "source.c",
+          "version": 0,
+          "kind": "file",
+          "size": 1558,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "6ac9c2f2f37dffedabc96aaa1c58215fda481f84f179c30dcd81de541f411e5b"
+        },
+        {
+          "path": "text.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 2036,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "55e7449bfafaeb29cdebf537781a453f6db3cb9c0fd26c60577574d6d9dbbe03"
+        },
+        {
+          "path": "zeros.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 8192,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+        },
+        {
+          "path": "sub/deep",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "sub/nested.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 13,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "c99fcad02327e45f287554ab7707b55186adab9b94a686e979de890ec80d993a"
+        },
+        {
+          "path": "sub/deep/deeper.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 350,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "f146e9b5474872cce51082c23d4ff87f9d4bebbe239fc918ec2b8c217ba96430"
+        }
+      ]
+    },
+    {
+      "name": "oracle_v237b_tn.uc2",
+      "size": 8192,
+      "sha256": "4a3a288319818708df5d11eda185f97a4cd4e687bd82a6f8deaee0184c895703",
+      "url": "https://raw.githubusercontent.com/klauspost/uc2/53622f89ada1cf0d4a69f91b653bdd44ec5b0f92/testdata/oracle/v237b_tn.uc2",
+      "expected_entries": [
+        {
+          "path": "sub",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "allbytes.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 256,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+        },
+        {
+          "path": "binary.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 2048,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "7def5a7e066a3a2eecc66e69ab3da6e4a7b0e9866e31dbe716ae34c2f9b0a28f"
+        },
+        {
+          "path": "empty.dat",
+          "version": 0,
+          "kind": "file",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "hello.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 28,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "fe698381b5867e9a7514c60a61d6082beadb91a4d9e35fcb4f5942da86c817dd"
+        },
+        {
+          "path": "random.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 1024,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "ce7d9ba00521670a8ddd5c922ac27b5cd34a7e9c1045631edda357a8eac01a48"
+        },
+        {
+          "path": "sound.wav",
+          "version": 0,
+          "kind": "file",
+          "size": 4044,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "c2e59f96175d054a86508d7407556724a61e282d8d9fcb7186ed9917c961bcb3"
+        },
+        {
+          "path": "source.c",
+          "version": 0,
+          "kind": "file",
+          "size": 1558,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "6ac9c2f2f37dffedabc96aaa1c58215fda481f84f179c30dcd81de541f411e5b"
+        },
+        {
+          "path": "text.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 2036,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "55e7449bfafaeb29cdebf537781a453f6db3cb9c0fd26c60577574d6d9dbbe03"
+        },
+        {
+          "path": "zeros.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 8192,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+        },
+        {
+          "path": "sub/deep",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "sub/nested.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 13,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "c99fcad02327e45f287554ab7707b55186adab9b94a686e979de890ec80d993a"
+        },
+        {
+          "path": "sub/deep/deeper.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 350,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "f146e9b5474872cce51082c23d4ff87f9d4bebbe239fc918ec2b8c217ba96430"
+        }
+      ]
+    },
+    {
+      "name": "oracle_v237b_tst.uc2",
+      "size": 8074,
+      "sha256": "bebcdd9a0d01874049f9768e5f85677948aa954299a93f8d1fc4e193ecfd5485",
+      "url": "https://raw.githubusercontent.com/klauspost/uc2/53622f89ada1cf0d4a69f91b653bdd44ec5b0f92/testdata/oracle/v237b_tst.uc2",
+      "expected_entries": [
+        {
+          "path": "sub",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "allbytes.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 256,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+        },
+        {
+          "path": "binary.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 2048,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "7def5a7e066a3a2eecc66e69ab3da6e4a7b0e9866e31dbe716ae34c2f9b0a28f"
+        },
+        {
+          "path": "empty.dat",
+          "version": 0,
+          "kind": "file",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "hello.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 28,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "fe698381b5867e9a7514c60a61d6082beadb91a4d9e35fcb4f5942da86c817dd"
+        },
+        {
+          "path": "random.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 1024,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "ce7d9ba00521670a8ddd5c922ac27b5cd34a7e9c1045631edda357a8eac01a48"
+        },
+        {
+          "path": "sound.wav",
+          "version": 0,
+          "kind": "file",
+          "size": 4044,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 41,
+          "sha256": "c2e59f96175d054a86508d7407556724a61e282d8d9fcb7186ed9917c961bcb3"
+        },
+        {
+          "path": "source.c",
+          "version": 0,
+          "kind": "file",
+          "size": 1558,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "6ac9c2f2f37dffedabc96aaa1c58215fda481f84f179c30dcd81de541f411e5b"
+        },
+        {
+          "path": "text.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 2036,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "55e7449bfafaeb29cdebf537781a453f6db3cb9c0fd26c60577574d6d9dbbe03"
+        },
+        {
+          "path": "zeros.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 8192,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 40,
+          "sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+        },
+        {
+          "path": "sub/deep",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "sub/nested.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 13,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "c99fcad02327e45f287554ab7707b55186adab9b94a686e979de890ec80d993a"
+        },
+        {
+          "path": "sub/deep/deeper.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 350,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f146e9b5474872cce51082c23d4ff87f9d4bebbe239fc918ec2b8c217ba96430"
+        }
+      ]
+    },
+    {
+      "name": "oracle_v237b_tt.uc2",
+      "size": 8088,
+      "sha256": "ad6b02fcd005380024c02f06d60232dc5a9e3a310fe9c62b8840de347b07c3c5",
+      "url": "https://raw.githubusercontent.com/klauspost/uc2/53622f89ada1cf0d4a69f91b653bdd44ec5b0f92/testdata/oracle/v237b_tt.uc2",
+      "expected_entries": [
+        {
+          "path": "sub",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "allbytes.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 256,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+        },
+        {
+          "path": "binary.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 2048,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "7def5a7e066a3a2eecc66e69ab3da6e4a7b0e9866e31dbe716ae34c2f9b0a28f"
+        },
+        {
+          "path": "empty.dat",
+          "version": 0,
+          "kind": "file",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "hello.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 28,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "fe698381b5867e9a7514c60a61d6082beadb91a4d9e35fcb4f5942da86c817dd"
+        },
+        {
+          "path": "random.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 1024,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "ce7d9ba00521670a8ddd5c922ac27b5cd34a7e9c1045631edda357a8eac01a48"
+        },
+        {
+          "path": "sound.wav",
+          "version": 0,
+          "kind": "file",
+          "size": 4044,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 31,
+          "sha256": "c2e59f96175d054a86508d7407556724a61e282d8d9fcb7186ed9917c961bcb3"
+        },
+        {
+          "path": "source.c",
+          "version": 0,
+          "kind": "file",
+          "size": 1558,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "6ac9c2f2f37dffedabc96aaa1c58215fda481f84f179c30dcd81de541f411e5b"
+        },
+        {
+          "path": "text.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 2036,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "55e7449bfafaeb29cdebf537781a453f6db3cb9c0fd26c60577574d6d9dbbe03"
+        },
+        {
+          "path": "zeros.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 8192,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 30,
+          "sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+        },
+        {
+          "path": "sub/deep",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "sub/nested.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 13,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "c99fcad02327e45f287554ab7707b55186adab9b94a686e979de890ec80d993a"
+        },
+        {
+          "path": "sub/deep/deeper.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 350,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "f146e9b5474872cce51082c23d4ff87f9d4bebbe239fc918ec2b8c217ba96430"
+        }
+      ]
+    },
+    {
+      "name": "oracle_v23_def.uc2",
+      "size": 8104,
+      "sha256": "a8254950168b0da2760cbe4879f2d3fb20379f4399b3955bc313426e447bdd6a",
+      "url": "https://raw.githubusercontent.com/klauspost/uc2/53622f89ada1cf0d4a69f91b653bdd44ec5b0f92/testdata/oracle/v23_def.uc2",
+      "expected_entries": [
+        {
+          "path": "allbytes.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 256,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+        },
+        {
+          "path": "binary.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 2048,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "7def5a7e066a3a2eecc66e69ab3da6e4a7b0e9866e31dbe716ae34c2f9b0a28f"
+        },
+        {
+          "path": "empty.dat",
+          "version": 0,
+          "kind": "file",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "hello.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 28,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "fe698381b5867e9a7514c60a61d6082beadb91a4d9e35fcb4f5942da86c817dd"
+        },
+        {
+          "path": "random.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 1024,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "ce7d9ba00521670a8ddd5c922ac27b5cd34a7e9c1045631edda357a8eac01a48"
+        },
+        {
+          "path": "sound.wav",
+          "version": 0,
+          "kind": "file",
+          "size": 4044,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "c2e59f96175d054a86508d7407556724a61e282d8d9fcb7186ed9917c961bcb3"
+        },
+        {
+          "path": "source.c",
+          "version": 0,
+          "kind": "file",
+          "size": 1558,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "6ac9c2f2f37dffedabc96aaa1c58215fda481f84f179c30dcd81de541f411e5b"
+        },
+        {
+          "path": "text.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 2036,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "55e7449bfafaeb29cdebf537781a453f6db3cb9c0fd26c60577574d6d9dbbe03"
+        },
+        {
+          "path": "zeros.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 8192,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+        }
+      ]
+    },
+    {
+      "name": "oracle_v23_prot.uc2",
+      "size": 8751,
+      "sha256": "ab5476a69c0ee144f01b9a5a4f899fae21ed9bd3a46ad1a4c1437763dbb3d222",
+      "url": "https://raw.githubusercontent.com/klauspost/uc2/53622f89ada1cf0d4a69f91b653bdd44ec5b0f92/testdata/oracle/v23_prot.uc2",
+      "expected_entries": [
+        {
+          "path": "sub",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "allbytes.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 256,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+        },
+        {
+          "path": "binary.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 2048,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "7def5a7e066a3a2eecc66e69ab3da6e4a7b0e9866e31dbe716ae34c2f9b0a28f"
+        },
+        {
+          "path": "empty.dat",
+          "version": 0,
+          "kind": "file",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "hello.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 28,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "fe698381b5867e9a7514c60a61d6082beadb91a4d9e35fcb4f5942da86c817dd"
+        },
+        {
+          "path": "random.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 1024,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "ce7d9ba00521670a8ddd5c922ac27b5cd34a7e9c1045631edda357a8eac01a48"
+        },
+        {
+          "path": "sound.wav",
+          "version": 0,
+          "kind": "file",
+          "size": 4044,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "c2e59f96175d054a86508d7407556724a61e282d8d9fcb7186ed9917c961bcb3"
+        },
+        {
+          "path": "source.c",
+          "version": 0,
+          "kind": "file",
+          "size": 1558,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "6ac9c2f2f37dffedabc96aaa1c58215fda481f84f179c30dcd81de541f411e5b"
+        },
+        {
+          "path": "text.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 2036,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "55e7449bfafaeb29cdebf537781a453f6db3cb9c0fd26c60577574d6d9dbbe03"
+        },
+        {
+          "path": "zeros.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 8192,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+        },
+        {
+          "path": "sub/deep",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "sub/nested.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 13,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "c99fcad02327e45f287554ab7707b55186adab9b94a686e979de890ec80d993a"
+        },
+        {
+          "path": "sub/deep/deeper.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 350,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "f146e9b5474872cce51082c23d4ff87f9d4bebbe239fc918ec2b8c217ba96430"
+        }
+      ]
+    },
+    {
+      "name": "oracle_v23_rev.uc2",
+      "size": 286,
+      "sha256": "73e86fc42e2d591e8fe7dbf24c7c7cb92cd62b560ed7321504e1ff15a6087c30",
+      "url": "https://raw.githubusercontent.com/klauspost/uc2/53622f89ada1cf0d4a69f91b653bdd44ec5b0f92/testdata/oracle/v23_rev.uc2",
+      "expected_entries": [
+        {
+          "path": "vers.txt",
+          "version": 2,
+          "kind": "file",
+          "size": 211,
+          "dos_time": 1512188035,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "fbdf08b036b1d798e77c497a3459daaebf0030486dd1ea61ab36d332f8191276"
+        },
+        {
+          "path": "vers.txt",
+          "version": 1,
+          "kind": "file",
+          "size": 411,
+          "dos_time": 1512190083,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "304d27f074f1fb6609fb88fa622a31bb2807bca8522f89aff838e2ef9b5314cb"
+        },
+        {
+          "path": "vers.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 611,
+          "dos_time": 1512192131,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "aa08feae8030e6d7076a80fcd3ea5b75d52aa9ff581d4b919ba5e3b883cdccb2"
+        },
+        {
+          "path": "\u00e9t\u00e9.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 23,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "b024953a6dc0f1d083a96712e2332c0904d44509bb1332f14d220da37a1fd3b2"
+        },
+        {
+          "path": "new.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 13,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "f3adfa173b453df190a2a7f03a2f4bd32730d0e495e4973fb9d620e9cd89304b"
+        }
+      ]
+    },
+    {
+      "name": "oracle_v23_tf.uc2",
+      "size": 8196,
+      "sha256": "ee03f0faac771b643958c0512a05e1597174a0079462dc1ee54c1fb036937639",
+      "url": "https://raw.githubusercontent.com/klauspost/uc2/53622f89ada1cf0d4a69f91b653bdd44ec5b0f92/testdata/oracle/v23_tf.uc2",
+      "expected_entries": [
+        {
+          "path": "sub",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "allbytes.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 256,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+        },
+        {
+          "path": "binary.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 2048,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "7def5a7e066a3a2eecc66e69ab3da6e4a7b0e9866e31dbe716ae34c2f9b0a28f"
+        },
+        {
+          "path": "empty.dat",
+          "version": 0,
+          "kind": "file",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "hello.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 28,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "fe698381b5867e9a7514c60a61d6082beadb91a4d9e35fcb4f5942da86c817dd"
+        },
+        {
+          "path": "random.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 1024,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "ce7d9ba00521670a8ddd5c922ac27b5cd34a7e9c1045631edda357a8eac01a48"
+        },
+        {
+          "path": "sound.wav",
+          "version": 0,
+          "kind": "file",
+          "size": 4044,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "c2e59f96175d054a86508d7407556724a61e282d8d9fcb7186ed9917c961bcb3"
+        },
+        {
+          "path": "source.c",
+          "version": 0,
+          "kind": "file",
+          "size": 1558,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "6ac9c2f2f37dffedabc96aaa1c58215fda481f84f179c30dcd81de541f411e5b"
+        },
+        {
+          "path": "text.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 2036,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "55e7449bfafaeb29cdebf537781a453f6db3cb9c0fd26c60577574d6d9dbbe03"
+        },
+        {
+          "path": "zeros.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 8192,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+        },
+        {
+          "path": "sub/deep",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "sub/nested.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 13,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "c99fcad02327e45f287554ab7707b55186adab9b94a686e979de890ec80d993a"
+        },
+        {
+          "path": "sub/deep/deeper.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 350,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 2,
+          "sha256": "f146e9b5474872cce51082c23d4ff87f9d4bebbe239fc918ec2b8c217ba96430"
+        }
+      ]
+    },
+    {
+      "name": "oracle_v23_tn.uc2",
+      "size": 8192,
+      "sha256": "4a3a288319818708df5d11eda185f97a4cd4e687bd82a6f8deaee0184c895703",
+      "url": "https://raw.githubusercontent.com/klauspost/uc2/53622f89ada1cf0d4a69f91b653bdd44ec5b0f92/testdata/oracle/v23_tn.uc2",
+      "expected_entries": [
+        {
+          "path": "sub",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "allbytes.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 256,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+        },
+        {
+          "path": "binary.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 2048,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "7def5a7e066a3a2eecc66e69ab3da6e4a7b0e9866e31dbe716ae34c2f9b0a28f"
+        },
+        {
+          "path": "empty.dat",
+          "version": 0,
+          "kind": "file",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "hello.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 28,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "fe698381b5867e9a7514c60a61d6082beadb91a4d9e35fcb4f5942da86c817dd"
+        },
+        {
+          "path": "random.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 1024,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "ce7d9ba00521670a8ddd5c922ac27b5cd34a7e9c1045631edda357a8eac01a48"
+        },
+        {
+          "path": "sound.wav",
+          "version": 0,
+          "kind": "file",
+          "size": 4044,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "c2e59f96175d054a86508d7407556724a61e282d8d9fcb7186ed9917c961bcb3"
+        },
+        {
+          "path": "source.c",
+          "version": 0,
+          "kind": "file",
+          "size": 1558,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "6ac9c2f2f37dffedabc96aaa1c58215fda481f84f179c30dcd81de541f411e5b"
+        },
+        {
+          "path": "text.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 2036,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "55e7449bfafaeb29cdebf537781a453f6db3cb9c0fd26c60577574d6d9dbbe03"
+        },
+        {
+          "path": "zeros.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 8192,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+        },
+        {
+          "path": "sub/deep",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "sub/nested.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 13,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "c99fcad02327e45f287554ab7707b55186adab9b94a686e979de890ec80d993a"
+        },
+        {
+          "path": "sub/deep/deeper.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 350,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 3,
+          "sha256": "f146e9b5474872cce51082c23d4ff87f9d4bebbe239fc918ec2b8c217ba96430"
+        }
+      ]
+    },
+    {
+      "name": "oracle_v23_tst.uc2",
+      "size": 8074,
+      "sha256": "bebcdd9a0d01874049f9768e5f85677948aa954299a93f8d1fc4e193ecfd5485",
+      "url": "https://raw.githubusercontent.com/klauspost/uc2/53622f89ada1cf0d4a69f91b653bdd44ec5b0f92/testdata/oracle/v23_tst.uc2",
+      "expected_entries": [
+        {
+          "path": "sub",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "allbytes.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 256,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+        },
+        {
+          "path": "binary.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 2048,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "7def5a7e066a3a2eecc66e69ab3da6e4a7b0e9866e31dbe716ae34c2f9b0a28f"
+        },
+        {
+          "path": "empty.dat",
+          "version": 0,
+          "kind": "file",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "hello.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 28,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "fe698381b5867e9a7514c60a61d6082beadb91a4d9e35fcb4f5942da86c817dd"
+        },
+        {
+          "path": "random.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 1024,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "ce7d9ba00521670a8ddd5c922ac27b5cd34a7e9c1045631edda357a8eac01a48"
+        },
+        {
+          "path": "sound.wav",
+          "version": 0,
+          "kind": "file",
+          "size": 4044,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 41,
+          "sha256": "c2e59f96175d054a86508d7407556724a61e282d8d9fcb7186ed9917c961bcb3"
+        },
+        {
+          "path": "source.c",
+          "version": 0,
+          "kind": "file",
+          "size": 1558,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "6ac9c2f2f37dffedabc96aaa1c58215fda481f84f179c30dcd81de541f411e5b"
+        },
+        {
+          "path": "text.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 2036,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "55e7449bfafaeb29cdebf537781a453f6db3cb9c0fd26c60577574d6d9dbbe03"
+        },
+        {
+          "path": "zeros.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 8192,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 40,
+          "sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+        },
+        {
+          "path": "sub/deep",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "sub/nested.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 13,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "c99fcad02327e45f287554ab7707b55186adab9b94a686e979de890ec80d993a"
+        },
+        {
+          "path": "sub/deep/deeper.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 350,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 5,
+          "sha256": "f146e9b5474872cce51082c23d4ff87f9d4bebbe239fc918ec2b8c217ba96430"
+        }
+      ]
+    },
+    {
+      "name": "oracle_v23_tt.uc2",
+      "size": 8088,
+      "sha256": "ad6b02fcd005380024c02f06d60232dc5a9e3a310fe9c62b8840de347b07c3c5",
+      "url": "https://raw.githubusercontent.com/klauspost/uc2/53622f89ada1cf0d4a69f91b653bdd44ec5b0f92/testdata/oracle/v23_tt.uc2",
+      "expected_entries": [
+        {
+          "path": "sub",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "allbytes.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 256,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+        },
+        {
+          "path": "binary.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 2048,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "7def5a7e066a3a2eecc66e69ab3da6e4a7b0e9866e31dbe716ae34c2f9b0a28f"
+        },
+        {
+          "path": "empty.dat",
+          "version": 0,
+          "kind": "file",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "hello.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 28,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "fe698381b5867e9a7514c60a61d6082beadb91a4d9e35fcb4f5942da86c817dd"
+        },
+        {
+          "path": "random.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 1024,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "ce7d9ba00521670a8ddd5c922ac27b5cd34a7e9c1045631edda357a8eac01a48"
+        },
+        {
+          "path": "sound.wav",
+          "version": 0,
+          "kind": "file",
+          "size": 4044,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 31,
+          "sha256": "c2e59f96175d054a86508d7407556724a61e282d8d9fcb7186ed9917c961bcb3"
+        },
+        {
+          "path": "source.c",
+          "version": 0,
+          "kind": "file",
+          "size": 1558,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "6ac9c2f2f37dffedabc96aaa1c58215fda481f84f179c30dcd81de541f411e5b"
+        },
+        {
+          "path": "text.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 2036,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "55e7449bfafaeb29cdebf537781a453f6db3cb9c0fd26c60577574d6d9dbbe03"
+        },
+        {
+          "path": "zeros.bin",
+          "version": 0,
+          "kind": "file",
+          "size": 8192,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 30,
+          "sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+        },
+        {
+          "path": "sub/deep",
+          "version": 0,
+          "kind": "directory",
+          "size": 0,
+          "dos_time": 1512185987,
+          "dos_attributes": 16,
+          "method": 0,
+          "sha256": null
+        },
+        {
+          "path": "sub/nested.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 13,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "c99fcad02327e45f287554ab7707b55186adab9b94a686e979de890ec80d993a"
+        },
+        {
+          "path": "sub/deep/deeper.txt",
+          "version": 0,
+          "kind": "file",
+          "size": 350,
+          "dos_time": 1512185987,
+          "dos_attributes": 32,
+          "method": 4,
+          "sha256": "f146e9b5474872cce51082c23d4ff87f9d4bebbe239fc918ec2b8c217ba96430"
+        }
+      ]
     }
   ],
   "independent_decode": {
@@ -914,5 +7162,17 @@
     "commit": "53622f89ada1cf0d4a69f91b653bdd44ec5b0f92",
     "matched_files": 88,
     "comparison": "SHA-256 and size for every decoded file/version; ASCII path case normalized; CP850 reader option."
+  },
+  "comparison": {
+    "decoder": "github.com/klauspost/uc2",
+    "commit": "53622f89ada1cf0d4a69f91b653bdd44ec5b0f92",
+    "entries_including_directories": 684,
+    "archives": 39,
+    "all_file_sizes_and_sha256_agree": true
+  },
+  "provenance_groups": {
+    "historical_collections": 13,
+    "unarc_rs_test_archives": 4,
+    "original_encoder_oracles_from_go_project": 22
   }
 }

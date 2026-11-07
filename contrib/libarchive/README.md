@@ -13,8 +13,8 @@ runtime plugin into an unmodified system libarchive. Stored versions are
 returned as repeated pathnames; normal bsdtar extraction leaves the last one.
 
 Input and each decoded file are spooled to anonymous temporary files. Payload
-RAM is bounded by the read/decode buffers; directory metadata and the decoder's
-master cache still scale with archive contents. Temporary disk space can reach
+RAM for the decoder, directory metadata and cached dictionaries shares a
+configurable 64 MiB budget. Temporary disk space can reach
 the compressed archive size plus the largest decoded entry. A file is decoded
 and checked before its first data block is returned. Pipes and filter input
 work, but this is not low-latency incremental decompression.
@@ -73,3 +73,9 @@ accept a compatible external dependency arrangement or an independently
 licensed decoder. It also needs to assign an official format number; this
 prototype uses `0xC0FF0000`. The distribution recipe and tests are ready for
 review. No upstream acceptance or submission is implied.
+
+Resource limits are configurable through `--options uc2:memory-limit=BYTES`
+and the `input-limit`, `entries-limit`, `entry-limit`, and `total-limit` keys.
+Defaults and the optional-reader review patch are documented in
+[the upstream preparation notes](upstream/REVIEW.md). Turbo/method 80 is
+available in both the full adapter and the LGPL-only reader.

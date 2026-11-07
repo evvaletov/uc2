@@ -1,0 +1,42 @@
+{
+  "corpus": "seed20261107: two identical1MiB random files,1MiB repeated text,40small files; then insert4369bytes,rename,delete,add",
+  "versions": [
+    {
+      "snapshot": "0bb92bf9a8bf91b533d34e4f52c5807c31bca167e61016b8ff2aa86141347fff",
+      "files": 43,
+      "total_size": 3149898,
+      "new_chunks": 131,
+      "new_chunk_bytes": 1096689,
+      "manifest_bytes": 26704,
+      "growth_bytes": 1123393,
+      "create_seconds": 9.041046390018892,
+      "restore_seconds": 1.3585168200079352,
+      "tar_ingest_create_seconds": 0.6624078569875564,
+      "tar_bytes": 3246080,
+      "tar_ingest_bytes": 1089347,
+      "tar_ingest_restore_and_verify_seconds": 0.1231474399974104,
+      "manifest_overhead_percent": 0.8477734834588294,
+      "version": 1
+    },
+    {
+      "snapshot": "55ec93766453a3e46fa8de68e1c028d7a1312d23568baf6b1821a2cf6b5bf6f9",
+      "files": 43,
+      "total_size": 3154196,
+      "new_chunks": 2,
+      "new_chunk_bytes": 16082,
+      "manifest_bytes": 26700,
+      "growth_bytes": 42782,
+      "create_seconds": 0.807615567027824,
+      "restore_seconds": 1.2417878650012426,
+      "tar_ingest_create_seconds": 1.0987374990072567,
+      "tar_bytes": 3246080,
+      "tar_ingest_bytes": 1104851,
+      "tar_ingest_restore_and_verify_seconds": 0.17443531099706888,
+      "manifest_overhead_percent": 0.846491467239195,
+      "version": 2
+    }
+  ],
+  "corruption_detected": true,
+  "recovered_and_verified": true,
+  "notes": "Single local run. Snapshot restore includes file creation and SHA256 checks. Tar restore timing includes stream decode and member hashing; it does not write individual files. No automatic corruption repair or pruning."
+}

@@ -1,0 +1,24 @@
+{
+  "provenance": "Original SAS 2.3 from UC2 Pro distribution split the generated turbo0.uc2 fixture with SAS S SPLIT 16. Original SAS B SPLIT reassembled byte-for-byte. These are original-splitter fixtures, not historical collected volumes.",
+  "distribution_sha256": "db5fd20ff3895bd6fea91869e8769e24549fe921a696dc5afcc205227622145b",
+  "source": "../turbo0.uc2",
+  "source_sha256": "4045daa70c303d844a1c4040dccb8aaa249d162eba92cdc34964a2c9285e0281",
+  "parts": [
+    {
+      "path": "SPLIT.P01",
+      "size": 16384,
+      "sha256": "ca466036db0f4e8a2804bba73114f9d46a43a5f86a95e4e5c078c1b24d4883be"
+    },
+    {
+      "path": "SPLIT.P02",
+      "size": 16384,
+      "sha256": "400369ed1f19104f5e3f6383e3fc613ff1f6ed5b6f5e8990aaefa00cdc1bd799"
+    },
+    {
+      "path": "SPLIT.P03",
+      "size": 6244,
+      "sha256": "bb08ec353821cc706b3a10566354375401485d9beaca7157f7cf89ae28f2ac0a"
+    }
+  ],
+  "native_support": "Explicitly refused until reassembled; automatic SAS and UC2SEA multi-volume input remain unsupported."
+}

@@ -43,3 +43,21 @@ python tests/scripts/check_historical.py --cache /tmp/uc2-historical
 ```
 
 The five bundled original-encoder archives remain the offline CI corpus.
+
+Turbo fixtures `turbo0.uc2` and `turbo1.uc2` are generated format fixtures,
+with SuperMaster and NoMaster respectively. Their original-DOS and independent
+Go output checks are pinned in `turbo.json`. They are not historical captures
+or original-encoder output. `test_turbo` covers 18 length/master combinations
+and malformed block/literal/terminator/output-bound cases.
+
+The optional `historical.json` corpus now covers 39 archives and 684 entries:
+13 historical collections, four unarc-rs test archives, and 22 original-DOS
+encoder oracle archives from the pinned Go repository (revisions 2, 2.3 and
+2.37b; long names, revisions, delta methods and damage protection). All file
+sizes and SHA-256 hashes agree with that independent decoder. External bytes
+are fetched separately; only provenance and expected metadata/hashes ship here.
+
+`sas/` contains three original SAS 2.3 split parts of the
+generated Turbo fixture. The original `SAS B SPLIT` tool reassembled them
+byte for byte. Their manifest records hashes and provenance. Native reads
+refuse each part explicitly; automatic SAS and UC2SEA reassembly remain open.

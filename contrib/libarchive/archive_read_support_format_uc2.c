@@ -4,8 +4,8 @@
 /* libarchive read handler for UC2 v3 archives.
  *
  * Input and decompressed entries are spooled to anonymous temporary
- * files. Payload RAM is bounded; directory metadata and libuc2's master
- * cache still scale with the archive. This also handles pipes/filters.
+ * files. Decoder allocations, cached masters, metadata and paths share a
+ * memory budget. Input, entry count and decoded output have separate limits.
  *
  * Built against libarchive's internal API
  * (archive_read_private.h, __archive_read_ahead,
@@ -35,10 +35,23 @@
 #define ARCHIVE_FORMAT_UC2  0xC0FF0000  /* local plugin ID, not an upstream allocation */
 #endif
 
+union uc2_allocation {
+    size_t size;
+    long double alignment;
+    void *pointer_alignment;
+};
+struct uc2_directory { unsigned id; int index; };
+
 struct uc2_la_state {
 	FILE *input;
 	uint64_t len;
 	int prepared;
+	uint64_t memory_used, memory_limit, input_limit, entry_limit, total_limit;
+	uint64_t total_decoded;
+	unsigned entries_limit;
+	int memory_refused, allocation_failed;
+	struct uc2_directory *directories;
+	int n_directories;
 
 	/* libuc2 */
 	uc2_handle handle;
@@ -86,17 +99,48 @@ slurp_read(void *ctx, unsigned pos, void *buf, unsigned len)
 }
 
 static void *
+budget_alloc(struct uc2_la_state *st, size_t size)
+{
+    union uc2_allocation *allocation;
+    if (size > SIZE_MAX - sizeof *allocation ||
+        (uint64_t)size + sizeof *allocation > st->memory_limit - st->memory_used) {
+        st->memory_refused = 1;
+        return NULL;
+    }
+    allocation = malloc(sizeof *allocation + size);
+    if (!allocation) { st->allocation_failed = 1; return NULL; }
+    allocation->size = size + sizeof *allocation;
+    st->memory_used += allocation->size;
+    return allocation + 1;
+}
+
+static void *
 slurp_alloc(void *ctx, unsigned size)
 {
-	(void)ctx;
-	return malloc(size);
+    return budget_alloc(ctx, size);
 }
 
 static void
 slurp_free(void *ctx, void *ptr)
 {
-	(void)ctx;
-	free(ptr);
+    struct uc2_la_state *st = ctx;
+    if (ptr) {
+        union uc2_allocation *allocation = (union uc2_allocation *)ptr - 1;
+        st->memory_used -= allocation->size;
+        free(allocation);
+    }
+}
+
+static void *
+budget_resize(struct uc2_la_state *st, void *old, size_t size)
+{
+    void *next = budget_alloc(st, size);
+    if (next && old) {
+        size_t previous = ((union uc2_allocation *)old - 1)->size - sizeof(union uc2_allocation);
+        memcpy(next, old, previous < size ? previous : size);
+        slurp_free(st, old);
+    }
+    return next;
 }
 
 static struct uc2_io slurp_io = {
@@ -122,30 +166,32 @@ extract_write(void *ctx, const void *p, unsigned len)
 	return 0;
 }
 
-/* DOS date/time -> Unix time_t (UTC; DOS times are local but we treat
- * them as UTC since timezone info is not present in the archive). */
+/* DOS timestamps carry no timezone. Use a timezone-independent UTC mapping
+ * without timegm extensions or modifying process-global TZ. Invalid/unrepresentable
+ * times map to zero; no permission/attribute decision depends on them. */
 static time_t
 dos_to_unix_time(unsigned dos_time)
 {
-	struct tm tm;
-	memset(&tm, 0, sizeof tm);
-	tm.tm_sec  = (dos_time & 0x1f) * 2;
-	tm.tm_min  = (dos_time >> 5)  & 0x3f;
-	tm.tm_hour = (dos_time >> 11) & 0x1f;
-	tm.tm_mday = (dos_time >> 16) & 0x1f;
-	tm.tm_mon  = ((dos_time >> 21) & 0x0f) - 1;
-	tm.tm_year = ((dos_time >> 25) & 0x7f) + 80;
-#if defined(_WIN32)
-	return _mkgmtime(&tm);
-#elif defined(__GLIBC__) || defined(__APPLE__) || defined(__FreeBSD__) || \
-      defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
-	return timegm(&tm);
-#else
-	return mktime(&tm);
-#endif
+    static const unsigned month_days[] = {31,28,31,30,31,30,31,31,30,31,30,31};
+    unsigned year = 1980 + (dos_time >> 25), month = (dos_time >> 21) & 15;
+    unsigned day = (dos_time >> 16) & 31, hour = (dos_time >> 11) & 31;
+    unsigned minute = (dos_time >> 5) & 63, second = (dos_time & 31) * 2;
+    int leap = (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
+    if (month < 1 || month > 12 || day < 1 ||
+        day > month_days[month-1] + (month == 2 && leap) ||
+        hour > 23 || minute > 59 || second > 59) return 0;
+    int64_t days = 0;
+    for (unsigned y = 1970; y < year; y++)
+        days += 365 + (y % 4 == 0 && (y % 100 != 0 || y % 400 == 0));
+    for (unsigned m = 1; m < month; m++)
+        days += month_days[m-1] + (m == 2 && leap);
+    int64_t seconds = (days + day - 1) * 86400 + hour * 3600 + minute * 60 + second;
+    time_t result = (time_t)seconds;
+    return (int64_t)result == seconds ? result : 0;
 }
 
 static int  uc2_la_bid(struct archive_read *, int);
+static int  uc2_la_options(struct archive_read *, const char *, const char *);
 static int  uc2_la_read_header(struct archive_read *, struct archive_entry *);
 static int  uc2_la_read_data(struct archive_read *, const void **,
                              size_t *, int64_t *);
@@ -169,11 +215,16 @@ archive_read_support_format_uc2(struct archive *_a)
 		return (ARCHIVE_FATAL);
 	}
 
+	state->memory_limit = 64ULL * 1024 * 1024;
+	state->input_limit = UINT32_MAX;
+	state->entry_limit = 1024ULL * 1024 * 1024;
+	state->total_limit = 8ULL * 1024 * 1024 * 1024;
+	state->entries_limit = 100000;
 	r = __archive_read_register_format(a,
 	    state,
 	    "uc2",
 	    uc2_la_bid,
-	    NULL,
+	    uc2_la_options,
 	    uc2_la_read_header,
 	    uc2_la_read_data,
 	    uc2_la_read_data_skip,
@@ -185,6 +236,38 @@ archive_read_support_format_uc2(struct archive *_a)
 	if (r != ARCHIVE_OK)
 		free(state);
 	return (r);
+}
+
+/* Decimal byte/count values. Zero and signed values never disable a limit. */
+static int
+uc2_la_options(struct archive_read *a, const char *key, const char *value)
+{
+    struct uc2_la_state *st = a->format->data;
+    uint64_t *target = NULL, maximum = UINT64_MAX, number = 0;
+    if (strcmp(key, "memory-limit") == 0) {
+        target = &st->memory_limit; maximum = SIZE_MAX;
+    } else if (strcmp(key, "input-limit") == 0) {
+        target = &st->input_limit; maximum = UINT32_MAX;
+    } else if (strcmp(key, "entry-limit") == 0) {
+        target = &st->entry_limit; maximum = UINT32_MAX;
+    } else if (strcmp(key, "total-limit") == 0) {
+        target = &st->total_limit;
+    } else if (strcmp(key, "entries-limit") == 0) {
+        maximum = INT_MAX;
+    } else return ARCHIVE_WARN;
+    if (!value || !*value || st->prepared) goto invalid;
+    for (const char *p = value; *p; p++) {
+        if (*p < '0' || *p > '9' || number > (maximum - (*p - '0')) / 10)
+            goto invalid;
+        number = number * 10 + (*p - '0');
+    }
+    if (!number) goto invalid;
+    if (target) *target = number;
+    else st->entries_limit = (unsigned)number;
+    return ARCHIVE_OK;
+invalid:
+    archive_set_error(&a->archive, EINVAL, "UC2: invalid %s (positive decimal value required before reading)", key);
+    return ARCHIVE_FAILED;
 }
 
 static int
@@ -227,8 +310,8 @@ slurp_archive(struct archive_read *a, struct uc2_la_state *st)
 			break;
 
 		if (avail > 65536) avail = 65536;
-		if ((uint64_t)avail > UINT32_MAX - st->len) {
-			archive_set_error(&a->archive, EFBIG, "UC2: archive exceeds 4 GiB format limit");
+		if ((uint64_t)avail > st->input_limit - st->len) {
+			archive_set_error(&a->archive, EFBIG, "UC2: input-limit exceeded (at most 4 GiB)");
 			return ARCHIVE_FATAL;
 		}
 		if (fwrite(p, 1, (size_t)avail, st->input) != (size_t)avail ||
@@ -252,41 +335,40 @@ collect_entries(struct archive_read *a, struct uc2_la_state *st)
 {
 	st->handle = uc2_open(&slurp_io, st);
 	if (st->handle == NULL) {
-		archive_set_error(&a->archive, EINVAL,
-		    "UC2: uc2_open failed");
+		archive_set_error(&a->archive, ENOMEM,
+		    "UC2: uc2_open failed (memory-limit or allocation failure)");
 		return (ARCHIVE_FATAL);
 	}
 
 	for (;;) {
-		if (st->n_entries >= st->n_capacity) {
-			if (st->n_capacity > INT_MAX / 2 ||
-			    (size_t)(st->n_capacity ? st->n_capacity : 16) >
-			    SIZE_MAX / (2 * sizeof *st->entries)) {
-				archive_set_error(&a->archive, ENOMEM, "UC2: too many entries");
-				return ARCHIVE_FATAL;
-			}
-			int ncap = st->n_capacity ? st->n_capacity * 2 : 32;
-			struct uc2_entry *ne = (struct uc2_entry *)realloc(
-			    st->entries, (size_t)ncap * sizeof *ne);
-			if (!ne) {
-				archive_set_error(&a->archive, ENOMEM,
-				    "UC2: out of memory collecting entries");
-				return (ARCHIVE_FATAL);
-			}
-			st->entries = ne;
-			st->n_capacity = ncap;
-		}
-
-		struct uc2_entry *e = &st->entries[st->n_entries];
-		int ret = uc2_read_cdir(st->handle, e);
-		if (ret == UC2_End)
-			break;
-		if (ret < 0) {
-			archive_set_error(&a->archive, EINVAL,
-			    "UC2: uc2_read_cdir failed: %s",
-			    uc2_message(st->handle, ret));
-			return (ARCHIVE_FATAL);
-		}
+        struct uc2_entry entry, *e = &entry;
+        int ret = uc2_read_cdir(st->handle, e);
+        if (ret == UC2_End) break;
+        if (ret < 0) {
+            archive_set_error(&a->archive, (st->memory_refused || st->allocation_failed) ? ENOMEM : EINVAL,
+                "UC2: directory read failed: %s", st->memory_refused ?
+                "memory-limit exceeded" : uc2_message(st->handle, ret));
+            return ARCHIVE_FATAL;
+        }
+        if ((unsigned)st->n_entries >= st->entries_limit) {
+            archive_set_error(&a->archive, EFBIG, "UC2: entries-limit exceeded");
+            return ARCHIVE_FATAL;
+        }
+        if (st->n_entries == st->n_capacity) {
+            unsigned ncap = st->n_capacity ? (unsigned)st->n_capacity * 2 : 32;
+            if (ncap > st->entries_limit) ncap = st->entries_limit;
+            if ((uint64_t)ncap * sizeof *st->entries > SIZE_MAX) {
+                archive_set_error(&a->archive, ENOMEM, "UC2: entry allocation size overflow");
+                return ARCHIVE_FATAL;
+            }
+            void *next = budget_resize(st, st->entries, (size_t)ncap * sizeof *st->entries);
+            if (!next) {
+                archive_set_error(&a->archive, ENOMEM, "UC2: memory-limit or allocation failure collecting entries");
+                return ARCHIVE_FATAL;
+            }
+            st->entries = next;
+            st->n_capacity = (int)ncap;
+        }
 
 		while (ret == UC2_TaggedEntry) {
 			char *tag;
@@ -294,14 +376,14 @@ collect_entries(struct archive_read *a, struct uc2_la_state *st)
 			unsigned size;
 			ret = uc2_get_tag(st->handle, e, &tag, &data, &size);
 			if (ret < 0) {
-				archive_set_error(&a->archive, EINVAL,
+				archive_set_error(&a->archive, (st->memory_refused || st->allocation_failed) ? ENOMEM : EINVAL,
 				    "UC2: uc2_get_tag failed: %s",
-				    uc2_message(st->handle, ret));
+				    st->memory_refused ? "memory-limit exceeded" : uc2_message(st->handle, ret));
 				return (ARCHIVE_FATAL);
 			}
 		}
 
-		st->n_entries++;
+		st->entries[st->n_entries++] = entry;
 	}
 
 	if (uc2_finish_cdir(st->handle, st->label) < 0) {
@@ -309,6 +391,14 @@ collect_entries(struct archive_read *a, struct uc2_la_state *st)
 		return ARCHIVE_FATAL;
 	}
 	return (ARCHIVE_OK);
+}
+
+static int
+compare_directory(const void *left, const void *right)
+{
+    unsigned a = ((const struct uc2_directory *)left)->id;
+    unsigned b = ((const struct uc2_directory *)right)->id;
+    return (a > b) - (a < b);
 }
 
 /* Append the full path of directory `id` (with a trailing slash) to
@@ -319,15 +409,16 @@ static int
 build_dir_path(struct uc2_la_state *st, unsigned id,
                char *buf, size_t cap, int depth)
 {
-	int i;
-
 	if (id == 0)
 		return (0);
 	if (depth > 64)
 		return (-1); /* cyclic or pathologically deep: corrupt cdir */
-	for (i = 0; i < st->n_entries; i++) {
-		struct uc2_entry *d = &st->entries[i];
-		if (d->is_dir && d->id == id) {
+    struct uc2_directory key = {id, 0};
+    struct uc2_directory *found = st->n_directories ? bsearch(&key, st->directories,
+        (size_t)st->n_directories, sizeof key, compare_directory) : NULL;
+    if (found) {
+        struct uc2_entry *d = &st->entries[found->index];
+        {
 			int off = build_dir_path(st, d->dirid, buf, cap,
 			                         depth + 1);
 			int n;
@@ -349,11 +440,29 @@ compose_paths(struct archive_read *a, struct uc2_la_state *st)
 {
 	int i;
 
-	st->paths = (char **)calloc((size_t)st->n_entries,
-	                            sizeof *st->paths);
+    for (i = 0; i < st->n_entries; i++)
+        st->n_directories += st->entries[i].is_dir;
+    if (st->n_directories) {
+        st->directories = budget_alloc(st, (size_t)st->n_directories * sizeof *st->directories);
+        if (!st->directories) goto memory_error;
+        int n = 0;
+        for (i = 0; i < st->n_entries; i++)
+            if (st->entries[i].is_dir)
+                st->directories[n++] = (struct uc2_directory){st->entries[i].id, i};
+        qsort(st->directories, (size_t)n, sizeof *st->directories, compare_directory);
+        for (i = 0; i < n; i++) {
+            if (!st->directories[i].id || (i && st->directories[i-1].id == st->directories[i].id)) {
+                archive_set_error(&a->archive, EINVAL, "UC2: duplicate or zero directory ID");
+                return ARCHIVE_FATAL;
+            }
+        }
+    }
+	st->paths = budget_alloc(st, (size_t)st->n_entries * sizeof *st->paths);
+    if (st->paths) memset(st->paths, 0, (size_t)st->n_entries * sizeof *st->paths);
 	if (st->paths == NULL && st->n_entries > 0) {
+memory_error:
 		archive_set_error(&a->archive, ENOMEM,
-		    "UC2: out of memory composing paths");
+		    "UC2: memory-limit or allocation failure composing paths");
 		return (ARCHIVE_FATAL);
 	}
 
@@ -374,12 +483,13 @@ compose_paths(struct archive_read *a, struct uc2_la_state *st)
 			    "UC2: entry path too long");
 			return (ARCHIVE_FATAL);
 		}
-		st->paths[i] = strdup(buf);
+		st->paths[i] = budget_alloc(st, strlen(buf) + 1);
 		if (st->paths[i] == NULL) {
 			archive_set_error(&a->archive, ENOMEM,
-			    "UC2: out of memory composing paths");
+			    "UC2: memory-limit or allocation failure composing paths");
 			return (ARCHIVE_FATAL);
 		}
+        strcpy(st->paths[i], buf);
 	}
 	return (ARCHIVE_OK);
 }
@@ -404,8 +514,11 @@ uc2_la_read_header(struct archive_read *a, struct archive_entry *entry)
 		if (r != ARCHIVE_OK) return r;
 	}
 
-	if (st->next_entry >= st->n_entries)
+	if (st->next_entry >= st->n_entries) {
+        if (st->entry_file) fclose(st->entry_file);
+        st->entry_file = NULL;
 		return (ARCHIVE_EOF);
+    }
 
 	struct uc2_entry *e = &st->entries[st->next_entry++];
 
@@ -446,7 +559,7 @@ uc2_la_read_data(struct archive_read *a,
 	}
 
 	struct uc2_entry *e = &st->entries[st->next_entry - 1];
-	if (e->is_dir || e->size == 0) {
+	if (e->is_dir) {
 		st->entry_yielded = 1;
 		*buff = NULL;
 		*size = 0;
@@ -455,6 +568,11 @@ uc2_la_read_data(struct archive_read *a,
 	}
 
 	if (!st->entry_ready) {
+        if (e->size > st->entry_limit || e->size > st->total_limit - st->total_decoded) {
+            archive_set_error(&a->archive, EFBIG, "UC2: entry-limit or total-limit exceeded");
+            return ARCHIVE_FATAL;
+        }
+        st->total_decoded += e->size;
 		st->entry_file = tmpfile();
 		if (!st->entry_file) {
 			archive_set_error(&a->archive, errno, "UC2: cannot create entry spool");
@@ -464,7 +582,7 @@ uc2_la_read_data(struct archive_read *a,
 		int ret = uc2_extract(st->handle, &e->xi, e->size, extract_write, &eb);
 		if (ret < 0 || eb.len != e->size || fflush(st->entry_file) != 0 ||
 		    seek_file(st->entry_file, 0) != 0) {
-			archive_set_error(&a->archive, EIO, "UC2: extraction or entry spool failed (%d)", ret);
+			archive_set_error(&a->archive, (st->memory_refused || st->allocation_failed) ? ENOMEM : EIO, "UC2: extraction or entry spool failed (%d): %s", ret, st->memory_refused ? "memory-limit exceeded" : ret < 0 ? uc2_message(st->handle, ret) : "entry spool I/O failure");
 			return ARCHIVE_FATAL;
 		}
 		st->entry_ready = 1;
@@ -503,12 +621,13 @@ uc2_la_cleanup(struct archive_read *a)
 	if (st->paths) {
 		int i;
 		for (i = 0; i < st->n_entries; i++)
-			free(st->paths[i]);
-		free(st->paths);
+			slurp_free(st, st->paths[i]);
+		slurp_free(st, st->paths);
 	}
 	if (st->input) fclose(st->input);
 	if (st->entry_file) fclose(st->entry_file);
-	free(st->entries);
+	slurp_free(st, st->entries);
+	slurp_free(st, st->directories);
 	free(st);
 	a->format->data = NULL;
 	return (ARCHIVE_OK);

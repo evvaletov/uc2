@@ -90,7 +90,7 @@ function select(row) {
   const pairs = [
     ['Kind', row.directory ? 'Directory' : 'File'], ['Version', row.version === 0 ? '0 (newest)' : String(row.version)],
     ['Size', size(row.size)], ['Compressed', size(row.compressedSize)],
-    ['Method', row.directory ? 'n/a' : String(row.method) + (row.method === 80 ? ' (Turbo; unsupported)' : '')],
+    ['Method', row.directory ? 'n/a' : String(row.method) + (row.method === 80 ? ' (Turbo)' : '')],
     ['Timestamp', dosDate(row.dosTime)], ['DOS attributes', '0x' + row.attributes.toString(16).padStart(2, '0')],
     ['Check', checks.get(row.index)?.error || (checks.get(row.index)?.verified ? 'UC2 checksum verified' : 'Unchecked')],
   ];
