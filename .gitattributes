@@ -8,3 +8,5 @@ original/UC2_source/**/*.PRJ binary
 # Test corpus and archives must be byte-exact
 tests/corpus/** binary
 tests/archives/** binary
+tests/archives/*.md text eol=lf diff
+tests/archives/*.json text eol=lf diff

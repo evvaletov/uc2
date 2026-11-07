@@ -2,55 +2,62 @@
 
 ## Recommended next priorities (2026-11-07)
 
-The Python reader/writer, native CLI, mount, and integration packages are implemented.
-These are the next five priorities. The phases below remain the longer-term feature inventory;
-the additional project-wide task-qa + task-at audit remains open.
-The order was checked against alpha6, GitHub main, and the open tracker on
-November 7. All five items still need work.
+The browser reader and preservation toolkit from the previous top two are
+implemented for alpha7. The next five priorities are below. The separate
+project-wide task-qa + task-at audit remains open (c9edf0b).
 
-1. [ ] **Build a browser-only UC2 reader and inspector.**
-   Let someone drop an old archive onto a page, inspect entries and versions,
-   verify supported content, and download extracted files. Process archive bytes
-   locally, with no upload. Compile the C reader using
-   [Emscripten](https://emscripten.org/docs/porting/connecting_cpp_and_javascript/Interacting-with-code.html)
-   and run it in a worker with resource limits. First prove listing and reading
-   one fixture; use the existing generated-C approach for the SuperMaster data
-   instead of assuming the native assembly embedding works in WebAssembly.
-   This would give preservation users a useful first experience without an
-   installation and provide a concrete demo to share.
+1. [ ] **Incremental collection snapshots.**
+   Turn the existing CDC and block store into two restorable snapshots of a
+   directory, with portable file/version metadata and shared chunks. Measure
+   second-snapshot growth, restore cost, metadata overhead and corruption
+   recovery against tar ingestion. Tracking: 0013121, bd13adb.
 
-2. [ ] **Make UC2 a preservation and migration toolkit.**
-   Add batch inventory and migration to ZIP or tar, with a machine-readable
-   manifest of original paths, versions, timestamps, attributes, and verified
-   file hashes. Preserve the source archive and report metadata that cannot be
-   represented in the destination. Reuse existing output-format libraries.
-   Build a redistributable compatibility corpus from real old archives and use
-   it to prioritize missing methods, especially Turbo/method 80 (b3e413f).
-   Start with one directory-to-manifest migration and verify every restored
-   file. The product hypothesis is that rescuing old collections is a clearer
-   reason to adopt UC2 than general compression claims.
+2. [ ] **Turbo/method 80 and broader historical compatibility.**
+   Obtain a pinned Turbo fixture and compare its decoded bytes with the original
+   executable and the independent [Go UC2 implementation](https://github.com/klauspost/uc2).
+   That project reports Turbo support and provides historical sample references;
+   it is a useful comparison target, not proof of our decoder's compatibility.
+   Extend the new corpus with explicit provenance, multi-volume cases and
+   independent expected hashes. Tracking: b3e413f, 2b65f0a.
 
-3. [ ] **Turn stream deduplication into incremental collection snapshots.**
-   Start with two snapshots of a source tree and a portable manifest that maps
-   files and versions to shared chunks. Measure the second snapshot's added
-   bytes, restore cost, metadata overhead, and corruption recovery against the
-   current tar-ingest baseline. Connect the existing CDC and block-store modules
-   only where those measurements support the design. Tracking: 0013121, bd13adb.
+3. [ ] **Prepare the libarchive reader for upstream review.**
+   Bound metadata and dictionary growth in the [prepared reader](contrib/libarchive/upstream/REVIEW.md),
+   complete dependency and format-ID checks, and produce a reviewable patch.
+   Maintainer contact/submission remains a separate step; none has been made.
+   The optional LGPL reader handles legacy Huffman; the full UC2 package also
+   handles rANS. Tracking: 7bbb6b6.
 
-4. [ ] **Advance the prepared libarchive reader toward upstream acceptance.**
-   The [review patch](contrib/libarchive/upstream/REVIEW.md) now has an optional
-   external LGPL reader, BSD adapter, CMake/Autotools wiring, and fixtures.
-   Bound metadata and dictionary growth, then seek maintainer agreement on the
-   dependency and format ID. Submission is a separate step; none has been made.
-   The proposed reader supports legacy Huffman methods; the full UC2 package
-   also supports rANS. Tracking: 7bbb6b6.
+4. [ ] **Fix Total Commander 32-bit native `.uc2` routing.**
+   Replace the `.u2r` copy workaround with a tested route for ordinary `.uc2`
+   archives. Check the native host's external-archiver interface as well as WCX
+   dispatch, and record exact application versions and fixtures. Tracking: 81c0c8a.
 
-5. [ ] **Broaden compatibility with historical archives and desktop readers.**
-   Assemble redistributable examples of Turbo/method 80, implement its decoder,
-   and verify against the original executable. Resolve Total Commander 32-bit
-   native `.uc2` extraction routing so users can retire the `.u2r` copy workaround.
-   Keep exact fixture hashes and application-version evidence. Tracking:
-   b3e413f, 81c0c8a.
+5. [ ] **Browser bulk export and offline use.**
+   Add a verified ZIP download for selected files/versions and an installable
+   offline reader. Preserve the worker's resource limits and cancellation;
+   test Firefox and WebKit alongside Chromium before broadening browser claims.
+
+### Delivered in 3.0.0a7: browser reader and preservation toolkit
+
+- [x] Local-only [browser reader](https://evvaletov.github.io/uc2/reader/):
+  inspect/search paths and versions, verify supported files, download decoded
+  files, and save an inventory. A WebAssembly worker bounds input, decoder
+  memory, output and elapsed time; cancellation terminates decoding. No archive
+  upload is used. [Build instructions and limits](web/README.md).
+- [x] `uc2-preserve`: recursive collection inventory and ZIP/tar migration with
+  source and decoded SHA-256 hashes, all file versions, original paths, raw DOS
+  timestamps and attributes. Each output container is reopened and verified.
+  Originals remain in place, existing destinations are refused, source failures
+  produce explicit partial results, and output failures abort staged batches.
+  [Preservation guide](docs/preservation.md).
+- [x] Five bundled original-encoder fixtures with pinned hashes, plus optional
+  checks for three historical archives containing 88 entries. ZIP/tar migration
+  passes and all 88 decoded hashes/sizes agree with an independent Go decoder.
+  Third-party archive bytes are fetched separately; only URLs, hashes and
+  metadata are redistributed. [Corpus provenance](tests/archives/README.md).
+- [ ] Turbo/method 80 and multi-volume decoding remain compatibility work;
+  neither is implied by this release. Chromium is the browser tested so far.
+- Release and scoped review evidence: [alpha7 verification](docs/releases/3.0.0a7-qa.md).
 
 ### Delivered in 3.0.0a6: writer APIs and audit repairs
 

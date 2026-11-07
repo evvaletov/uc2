@@ -15,7 +15,31 @@ archives, compare each file hash to its known payload, then reopen both ZIP
 and tar exports and compare their contents. Browser tests use the same
 archives and compare downloaded files with the native reader.
 
-Turbo/method 80, multi-volume archives, and independently sourced historical
-collections remain gaps. `tests/scripts/create_archives.sh` documents the
+Turbo/method 80 and multi-volume archives remain gaps.
+`tests/scripts/create_archives.sh` documents the
 original fixture-generation procedure; regeneration changes archive timestamps
 and requires reviewing and updating the pinned hashes.
+
+## Historical collections
+
+`historical.json` pins three independently sourced archives from the
+[Sembiance format samples](https://sembiance.com/fileFormatSamples/archive/ultraCompressor2/):
+BLKTXT.UC2, MKMSG.UC2 and UC2INFO.UC2. Their 88 entries carry DOS timestamps
+from 1993-1995. Both ZIP and tar migrations passed on November 7, 2026.
+All decoded file sizes and SHA-256 hashes also match the independent
+[Go decoder](https://github.com/klauspost/uc2) at commit
+`53622f89ada1cf0d4a69f91b653bdd44ec5b0f92`, with ASCII filename case normalized.
+
+The repository distributes URLs, hashes and expected metadata for these
+archives. Their third-party payloads are downloaded separately because their
+redistribution permissions have not been established. Nothing from these
+archives is executed. The Go project's pinned sample list supplied the URLs;
+the JSON records exact provenance and hashes.
+
+Run the optional network check with an installed UC2 package:
+
+```sh
+python tests/scripts/check_historical.py --cache /tmp/uc2-historical
+```
+
+The five bundled original-encoder archives remain the offline CI corpus.

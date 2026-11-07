@@ -95,8 +95,12 @@ def main():
             assert downloaded.value.suggested_filename == 'entry-CON.txt'
             page.locator('#search').fill('café')
             expect(page.locator('#entries tr')).to_have_count(2)
-            page.set_viewport_size({'width': 390, 'height': 844})
-            assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+            for font in ('system-ui', 'Arial', 'monospace'):
+                page.evaluate('(font) => document.documentElement.style.fontFamily = font', font)
+                for width in (320, 390, 800):
+                    page.set_viewport_size({'width': width, 'height': 844})
+                    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), (font, width)
+            page.evaluate("document.documentElement.style.fontFamily = ''")
 
             # A stalled worker times out without a false checksum failure or a
             # fresh empty worker claiming successful verification of stale rows.

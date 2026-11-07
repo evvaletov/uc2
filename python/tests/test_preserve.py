@@ -182,7 +182,7 @@ def test_special_file_is_rejected_without_waiting(tmp_path):
     assert 'regular file' in manifest.read_text()
 
 
-@pytest.mark.parametrize('failure', ['spool', 'member', 'manifest'])
+@pytest.mark.parametrize('failure', ['spool', 'member', 'manifest', 'export-hash', 'bad-zip', 'bad-tar'])
 def test_output_failure_aborts_without_publishing(tmp_path, monkeypatch, failure):
     import importlib
     module = importlib.import_module('uc2.preserve')
@@ -192,8 +192,15 @@ def test_output_failure_aborts_without_publishing(tmp_path, monkeypatch, failure
         monkeypatch.setattr(module._HashedWriter, 'write', lambda self, data: module._output_call(fail))
     elif failure == 'member':
         monkeypatch.setattr(module, '_write_member', fail)
-    else:
+    elif failure == 'manifest':
         monkeypatch.setattr(Path, 'write_text', fail)
+    elif failure == 'export-hash':
+        monkeypatch.setattr(module, '_hash_path', fail)
+    else:
+        def bad(*args, **kwargs):
+            error = zipfile.BadZipFile if failure == 'bad-zip' else tarfile.ReadError
+            raise error('simulated destination corruption')
+        monkeypatch.setattr(module, '_verify_export', bad)
     with pytest.raises(OSError, match='simulated destination'):
         preserve([ROOT / 'tests/archives/single.uc2'], tmp_path / 'out', format='zip')
     assert list(tmp_path.iterdir()) == []
@@ -212,3 +219,30 @@ def test_publish_does_not_replace_concurrently_created_directory(tmp_path, monke
     assert (tmp_path / 'out').is_dir()
     assert list((tmp_path / 'out').iterdir()) == []
     assert list(tmp_path.iterdir()) == [tmp_path / 'out']
+
+
+def test_walk_error_is_not_silently_skipped(tmp_path, monkeypatch):
+    def broken_walk(path, *, followlinks, onerror):
+        onerror(PermissionError('unreadable archive directory'))
+        return iter(())
+    monkeypatch.setattr(os, 'walk', broken_walk)
+    with pytest.raises(PermissionError, match='unreadable'):
+        preserve([tmp_path], tmp_path / 'out')
+    assert not (tmp_path / 'out').exists()
+
+
+def test_source_change_invalidates_manifest_hashes(tmp_path, monkeypatch):
+    path = tmp_path / 'changing.uc2'
+    path.write_bytes((ROOT / 'tests/archives/single.uc2').read_bytes())
+    copy = UC2File.copy_to
+    def changing(self, *args, **kwargs):
+        result = copy(self, *args, **kwargs)
+        with path.open('ab') as source:
+            source.write(b'changed')
+        return result
+    monkeypatch.setattr(UC2File, 'copy_to', changing)
+    report = preserve([path], tmp_path / 'out', format='zip')
+    manifest = json.loads((tmp_path / 'out' / report['archives'][0]['manifest']).read_text())
+    assert report['status'] == 'partial'
+    assert manifest['status'] == 'error' and manifest['export'] is None
+    assert all(e['sha256'] is None and e['status'] == 'error' for e in manifest['entries'])

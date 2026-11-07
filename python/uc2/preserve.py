@@ -16,6 +16,7 @@ import sys
 import tarfile
 import tempfile
 import zipfile
+import zlib
 
 from . import UC2File, ResourceLimitError, __version__
 
@@ -30,7 +31,7 @@ class _OutputError(OSError):
 def _output_call(function, *args, **kwargs):
     try:
         return function(*args, **kwargs)
-    except (OSError, ValueError, RuntimeError) as error:
+    except (OSError, ValueError, RuntimeError, EOFError, zipfile.BadZipFile, tarfile.TarError, zlib.error) as error:
         raise _OutputError(str(error)) from error
 
 
@@ -48,6 +49,11 @@ def _hash(source):
     for block in iter(lambda: source.read(BLOCK), b""):
         digest.update(block)
     return digest.hexdigest()
+
+
+def _hash_path(path):
+    with path.open('rb') as source:
+        return _hash(source)
 
 
 def _leaf(name):
@@ -203,9 +209,8 @@ def _one(path, output, format, limits):
                     _output_call(container.close)
                     container = None
                     _output_call(_verify_export, export, manifest['entries'], format)
-                    with export.open('rb') as content:
-                        manifest['export'] = {'path': export.name, 'format': format,
-                                              'sha256': _hash(content), 'verified': True}
+                    manifest['export'] = {'path': export.name, 'format': format,
+                                          'sha256': _output_call(_hash_path, export), 'verified': True}
                 source.seek(0)
                 if _hash(source) != manifest['source']['sha256']:
                     raise OSError('source archive changed during the operation')
@@ -215,11 +220,18 @@ def _one(path, output, format, limits):
         raise
     except (OSError, ValueError, RuntimeError) as error:
         manifest['errors'].append(str(error))
+        if container:
+            _output_call(container.close)
+            container = None
         if export and export.exists():
-            export.unlink()
+            _output_call(export.unlink)
         manifest['export'] = None
         for entry in manifest['entries']:
             entry['export_path'] = None
+            if entry['kind'] == 'file':
+                entry['status'] = 'error'
+                entry['sha256'] = None
+                entry['error'] = 'Archive-level failure; decoded result discarded'
     finally:
         if container:
             _output_call(container.close)
@@ -228,13 +240,16 @@ def _one(path, output, format, limits):
 
 
 def _sources(inputs):
+    def fail(error):
+        raise error
+
     result = []
     seen = set()
     for item in inputs:
         path = Path(item)
         if path.is_dir() and not path.is_symlink():
             candidates = []
-            for parent, directories, files in os.walk(path, followlinks=False):
+            for parent, directories, files in os.walk(path, followlinks=False, onerror=fail):
                 directories[:] = sorted(d for d in directories if not (Path(parent) / d).is_symlink())
                 candidates.extend(Path(parent) / f for f in sorted(files)
                                   if f.lower().endswith('.uc2') and not (Path(parent) / f).is_symlink())
