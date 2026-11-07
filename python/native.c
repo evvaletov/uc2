@@ -319,39 +319,28 @@ static PyObject *open_path_impl(PyObject *module, const char *path)
     /* The wheel uses a static CRT, whose descriptor table differs from
        CPython's CRT. Transfer a duplicated OS handle through Python's msvcrt. */
     PyObject *crt=PyImport_ImportModule("msvcrt");
-    PyObject *os=crt ? PyImport_ImportModule("os") : NULL;
-    if (!os) { Py_XDECREF(crt);fclose(stream);return NULL; }
+    if (!crt) { fclose(stream);return NULL; }
     HANDLE duplicate=NULL;
     BOOL copied=DuplicateHandle(GetCurrentProcess(),(HANDLE)_get_osfhandle(_fileno(stream)),
                                 GetCurrentProcess(),&duplicate,0,FALSE,DUPLICATE_SAME_ACCESS);
     DWORD error_code=copied ? 0 : GetLastError();
     fclose(stream);
-    if (!copied) { Py_DECREF(crt);Py_DECREF(os);return PyErr_SetFromWindowsErr(error_code); }
+    if (!copied) { Py_DECREF(crt);return PyErr_SetFromWindowsErr(error_code); }
     PyObject *handle=PyLong_FromVoidPtr(duplicate);
     PyObject *descriptor=handle ? PyObject_CallMethod(crt,"open_osfhandle","Oi",handle,
                                       _O_RDONLY|_O_BINARY|_O_NOINHERIT) : NULL;
     Py_XDECREF(handle);Py_DECREF(crt);
-    if (!descriptor) { CloseHandle(duplicate);Py_DECREF(os);return NULL; }
-    int fd=(int)PyLong_AsLong(descriptor);
-    Py_DECREF(descriptor);
-    PyObject *result=PyFile_FromFd(fd,path,"rb",-1,NULL,NULL,NULL,1);
-    if (!result) {
-        PyObject *kind,*value,*traceback;
-        PyErr_Fetch(&kind,&value,&traceback);
-        PyObject *closed=PyObject_CallMethod(os,"close","i",fd);
-        Py_XDECREF(closed);
-        PyErr_Restore(kind,value,traceback);
-    }
-    Py_DECREF(os);
+    if (!descriptor) CloseHandle(duplicate);
+    return descriptor; /* Caller owns a CPython-CRT descriptor. */
 #else
     int fd=dup(fileno(stream));
     int saved_errno=errno;
     fclose(stream);
     if (fd<0) { errno=saved_errno;return PyErr_SetFromErrno(PyExc_OSError); }
-    PyObject *result=PyFile_FromFd(fd,path,"rb",-1,NULL,NULL,NULL,1);
+    PyObject *result=PyLong_FromLong(fd);
     if (!result) close(fd);
-#endif
     return result;
+#endif
 }
 static PyObject *open_path(PyObject *module, PyObject *args)
 {
@@ -370,7 +359,7 @@ static PyObject *open_path(PyObject *module, PyObject *args)
 #endif
 }
 static PyMethodDef module_methods[] = {
-    {"open_path", open_path, METH_VARARGS, "Open/reassemble SAS or UC2SEA input without executing it."},
+    {"open_path", open_path, METH_VARARGS, "Return an owned OS/CPython-CRT descriptor for data-only archive input."},
     {"chunk_length", chunk_length, METH_VARARGS, "First Gear chunk length (8 KiB target)."},
     {NULL, NULL, 0, NULL}
 };

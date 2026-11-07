@@ -121,9 +121,15 @@ print('handles preserved')
 
 @pytest.mark.skipif(__import__('os').name == 'nt', reason='POSIX byte filenames')
 def test_non_utf8_volume_path(tmp_path):
+    import errno
     import os
     directory=tmp_path/os.fsdecode(b'volume-\xff')
-    directory.mkdir()
+    try:
+        directory.mkdir()
+    except OSError as exc:
+        if exc.errno == errno.EILSEQ:
+            pytest.skip('filesystem requires valid UTF-8 filenames')
+        raise
     first=directory/'MORE.EXE'
     shutil.copyfile(FIXTURES/'sea'/'MORE.EXE', first)
     with UC2File(os.fsencode(first)) as archive:

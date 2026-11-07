@@ -52,6 +52,24 @@ def _date(value: int) -> datetime | None:
         return None
 
 
+
+def _volume_source(path):
+    # open(opener=...) accepts descriptor ownership only when it calls opener.
+    # This avoids a double close if BufferedReader construction later fails.
+    fd = _native.open_path(path)
+    transferred = False
+    def opener(_path, _flags):
+        nonlocal transferred
+        transferred = True
+        return fd
+    try:
+        return open(path, "rb", opener=opener)
+    except BaseException:
+        if not transferred:
+            os.close(fd)
+        raise
+
+
 class UC2File:
     """Read a path or seekable binary file. Caller-owned files stay open.
 
@@ -87,7 +105,7 @@ class UC2File:
                 if (magic == b"\x45\x14\x02\x0f" or magic[:2] == b"MZ" or
                         (numbered and magic != b"UC2\x1a")):
                     self._source.close()
-                    self._source = _native.open_path(os.fsdecode(file))
+                    self._source = _volume_source(os.fsdecode(file))
             except BaseException:
                 self.close()
                 raise
