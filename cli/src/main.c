@@ -1338,9 +1338,7 @@ static int create_archive(int nargs, char **args)
     }
     FILE *out = stage_output(opt.archive);
     int result = uc2_writer_finish(writer, fwrite_cb, out);
-    int closed = fclose(out);
     writer_check(writer, result, opt.archive);
-    if (closed != 0) err(EXIT_FAILURE, "%s: output close failed", opt.archive);
     commit_staged_output(opt.archive);
     struct uc2_writer_stats stats;
     uc2_writer_get_stats(writer, &stats);
@@ -1628,35 +1626,58 @@ static int ing_map_grow(struct ing_map *m)
 }
 
 static char *staged_path;
+static FILE *staged_stream;
+
+static int close_staged_output(void)
+{
+	FILE *stream = staged_stream;
+	staged_stream = NULL;
+	return stream ? fclose(stream) : 0;
+}
 
 static void discard_staged_output(void)
 {
-	if (staged_path) unlink(staged_path);
+	close_staged_output();
+	if (staged_path) {
+		unlink(staged_path);
+		free(staged_path);
+		staged_path = NULL;
+	}
 }
 
 static FILE *stage_output(const char *path)
 {
-	staged_path = malloc(strlen(path) + 96);
-	if (!staged_path) err(EXIT_FAILURE, "malloc");
+	char *candidate = malloc(strlen(path) + 96);
+	if (!candidate) err(EXIT_FAILURE, "malloc");
 	for (unsigned i = 0; i < 128; i++) {
-		sprintf(staged_path, "%s.tmp-%lu-%lu-%u", path,
+		sprintf(candidate, "%s.tmp-%lu-%lu-%u", path,
 		        (unsigned long)getpid(), (unsigned long)time(NULL), i);
 #ifdef _WIN32
 		wchar_t wide[32768];
-		if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, staged_path, -1,
+		if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, candidate, -1,
 		                        wide, sizeof wide / sizeof *wide))
 			errx(EXIT_FAILURE, "invalid output path");
 		int fd = _wopen(wide, _O_CREAT | _O_EXCL | _O_RDWR | _O_BINARY, 0600);
 #else
-		int fd = open(staged_path, O_CREAT | O_EXCL | O_RDWR | O_BINARY, 0600);
+		int fd = open(candidate, O_CREAT | O_EXCL | O_RDWR | O_BINARY, 0600);
 #endif
 		if (fd >= 0) {
-			atexit(discard_staged_output);
-			FILE *f = fdopen(fd, "w+b");
-			if (!f) { close(fd); err(EXIT_FAILURE, "fdopen"); }
-			return f;
+			staged_path = candidate;
+			if (atexit(discard_staged_output) != 0) {
+				close(fd);
+				discard_staged_output();
+				errx(EXIT_FAILURE, "cannot register output cleanup");
+			}
+			staged_stream = fdopen(fd, "w+b");
+			if (!staged_stream) {
+				int error = errno;
+				close(fd);
+				errno = error;
+				err(EXIT_FAILURE, "fdopen");
+			}
+			return staged_stream;
 		}
-		if (errno != EEXIST) err(EXIT_FAILURE, "%s", staged_path);
+		if (errno != EEXIST) err(EXIT_FAILURE, "%s", candidate);
 	}
 	errx(EXIT_FAILURE, "cannot create temporary output for %s", path);
 	return NULL;
@@ -1664,6 +1685,8 @@ static FILE *stage_output(const char *path)
 
 static void commit_staged_output(const char *path)
 {
+	if (close_staged_output() != 0)
+		err(EXIT_FAILURE, "%s: output close failed", path);
 #ifdef _WIN32
 	int na = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, staged_path, -1, NULL, 0);
 	int nb = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path, -1, NULL, 0);
@@ -1899,8 +1922,6 @@ static int ingest_write_v3(const char *archive_path,
 
 	free(occ_uniq);
 	free(uniq);
-	if (fclose(out) != 0)
-		err(EXIT_FAILURE, "%s", archive_path);
 	commit_staged_output(archive_path);
 
 	if (stats) {
@@ -1993,9 +2014,7 @@ static int cmd_ingest_tar(const char *archive_path)
     if (uc2_tar_read(writer,stdin,error,sizeof error)<0) errx(EXIT_FAILURE,"%s",error);
     FILE *out=stage_output(archive_path);
     int result=uc2_writer_finish(writer,fwrite_cb,out);
-    int closed=fclose(out);
     writer_check(writer,result,archive_path);
-    if (closed!=0) err(EXIT_FAILURE,"output close failed");
     commit_staged_output(archive_path);
     struct uc2_writer_stats stats;
     uc2_writer_get_stats(writer,&stats);
@@ -2017,9 +2036,8 @@ static int cmd_ingest_write(const char *archive_path)
         writer_check(writer,uc2_writer_add_file(writer,0,"data",0,0x20,UC2_WRITER_UNKNOWN_SIZE,
                                               fread_cb,stdin),archive_path);
         FILE *out=stage_output(archive_path);
-        int result=uc2_writer_finish(writer,fwrite_cb,out), closed=fclose(out);
+        int result=uc2_writer_finish(writer,fwrite_cb,out);
         writer_check(writer,result,archive_path);
-        if (closed!=0) err(EXIT_FAILURE,"output close failed");
         commit_staged_output(archive_path);
         struct uc2_writer_stats stats; uc2_writer_get_stats(writer,&stats); uc2_writer_free(writer);
         uc2_say(stderr,"Ingested stream: %u unique chunks, %u references, %llu payload bytes reused\n",
