@@ -118,6 +118,28 @@ with tempfile.TemporaryDirectory(prefix='uc2-cli-extraction-') as temporary:
                   for p in destination.rglob('*') if p.is_file()}
         assert actual == {'a/sub/first': b'first'}, actual
 
+    # Negated bracket sets must select the same entries on POSIX, Windows
+    # and DOS, including ranges, a literal first ']', and literal hyphens.
+    pattern_source = root / 'patterns'
+    pattern_source.mkdir()
+    pattern_names = ('a.txt', 'b.txt', 'c.txt', 'z.txt', '!.txt', '].txt', '-.txt', '[.txt')
+    for name in pattern_names:
+        (pattern_source / name).write_bytes(name.encode())
+    pattern_archive = root / 'patterns.uc2'
+    run('-qw', '--', pattern_archive, *pattern_names, cwd=pattern_source)
+    for pattern, selected in (
+            ('[!a].txt', set(pattern_names) - {'a.txt'}),
+            ('[!a-c].txt', set(pattern_names) - {'a.txt', 'b.txt', 'c.txt'}),
+            ('[a-c].txt', {'a.txt', 'b.txt', 'c.txt'}),
+            ('[]a].txt', {'].txt', 'a.txt'}),
+            ('[!]].txt', set(pattern_names) - {'].txt'}),
+            ('[-a].txt', {'-.txt', 'a.txt'}),
+            ('[[]' + '.txt', {'[.txt'}),
+            (r'[\]a].txt', {'].txt', 'a.txt'})):
+        result = run('-qlT', pattern_archive, pattern, cwd=root)
+        names = {line.rsplit(b'\t', 1)[-1].decode() for line in result.stdout.splitlines()}
+        assert names == selected, (pattern, names, selected)
+
     # Recursive scans obtain UTF-8 names from readdir on Windows. Metadata
     # lookup must use the same path encoding and retain dates beyond 2038.
     unicode_tree = source / 'unicode-tree'

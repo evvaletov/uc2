@@ -144,71 +144,7 @@ void setlinebuf(FILE *f)
 #endif
 
 #ifdef g_fnmatch
-#include "fnmatch.h"
-
-enum {
-	Match = 0,
-	NoMatch = FNM_NOMATCH
-};
-
-int fnmatch(const char *pattern, const char *string, int flags)
-{
-	for (;;) {
-		char c = *pattern++;
-		switch (c) {
-		case '\\':
-			if (*pattern && !(flags & FNM_NOESCAPE))
-				c = *pattern++;
-		default:
-			if (c != *string++)
-				return NoMatch;
-			if (!c)
-				return Match;
-			continue;
-		case '?':
-			c = *string++;
-			if (!c || (flags & FNM_PATHNAME && c == '/'))
-				return NoMatch;
-			continue;
-		case '*':
-			do {
-				if (fnmatch(pattern, string, flags) == Match)
-					return Match;
-				if (flags & FNM_PATHNAME && *string == '/')
-					return NoMatch;
-			} while (*string++);
-			return NoMatch;
-		case '[':;
-			const char *p = pattern;
-			if (!*pattern++)
-				return NoMatch;
-			for (;;) {
-				c = *pattern;
-				if (c == ']')
-					break;
-				if (!c)
-					return NoMatch;
-				pattern++;
-			}
-			c = *string++;
-			if (flags & FNM_PATHNAME && c == '/')
-				return NoMatch;
-			for (;;) {
-				if (c == *p++)
-					break;
-				if (*p == '-' && p+1 < pattern) {
-					if (p[-1] <= c && c <= p[1])
-						break;
-					p++;
-				}
-				if (p == pattern)
-					return NoMatch;
-			}
-			pattern++;
-			continue;
-		}
-	}
-}
+#include "fnmatch_impl.h"
 #endif
 
 #ifdef _WIN32

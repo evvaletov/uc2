@@ -160,8 +160,8 @@ glue; its installed package still bundles the existing GPL/LGPL core.
 
 ## Relicensing rationale
 
-The composite project links Bobrowski's LGPL-3.0 library (`lib/`) into
-a GPL-3.0-or-later executable (`cli/`).  This combination is permitted
+The composite project links Bobrowski's LGPL reader subset with GPL compression
+and writer modules into a GPL-3.0-or-later executable (`cli/`). This combination is permitted
 by LGPL-3.0 sec. 4 (Combined Works): the LGPL library may be used in
 GPL-licensed work without requiring the library itself to be relicensed.
 
@@ -171,9 +171,10 @@ is unnecessary here: the LGPL files remain LGPL, the GPL files remain
 GPL, and the combined work is distributable under GPL-3.0-or-later (as
 recorded in the project root `LICENSE` file).
 
-If a downstream user wishes to redistribute `lib/` standalone under
-LGPL-3.0, the LGPL-3.0 files are individually identifiable via their
-SPDX-License-Identifier headers.
+The standalone LGPL reader subset is built by `contrib/libuc2read`; its source
+files are identified by their SPDX-License-Identifier headers. The complete
+`lib/` directory also contains GPL-3.0-or-later modules and is not offered under
+LGPL alone.
 
 ## SPDX policy
 
@@ -210,7 +211,7 @@ authors shipped them with.
 - [x] LICENSE-HISTORY summary published as this file
       (`docs/license-audit.md`)
 - [x] No silent LGPL-to-GPL upgrade: every Bobrowski-origin file
-      retains LGPL-3.0-only
+      retains its upstream licence
 
 ## References
 

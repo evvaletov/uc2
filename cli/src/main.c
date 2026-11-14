@@ -109,6 +109,8 @@ struct options {
 	char *ots_path;
 } opt = {.sep = ' ', .level = 4};
 
+static const char short_options[] = "xlatfd:C:cpDTh?wL:qB";
+
 static const char *level_name(int level)
 {
 	switch (level) {
@@ -1483,68 +1485,81 @@ static int run_benchmark(int nfiles, char **files)
 	return EXIT_SUCCESS;
 }
 
-/* Pre-parse for ingest long options: --ingest, --ingest-restore.
- * Both take a single path argument, accepted as either
- *   --ingest <path>   (separate argv entry; rejected if path starts with '-')
- *   --ingest=<path>   (inline). */
-static int extract_ingest_long_opts(int *argcp, char **argv, char **out_path)
+/* Keep each short option's operand together while removing long options.
+ * An attached value consumes the rest of its short-option cluster. */
+static int short_option_span(const char *arg)
 {
-	int argc = *argcp;
-	int mode = INGEST_MODE_NONE;
-	*out_path = NULL;
-	for (int i = 1; i < argc; ) {
-		const char *a = argv[i];
-		if (!strcmp(a,"--")) break;
-		if (!strcmp(a,"--chunked")) {
-			opt.chunked=true;
-			for (int j=i; j+1<argc; ++j) argv[j]=argv[j+1];
-			--argc; continue;
-		}
-		int matched_args = 0;
-		int new_mode = INGEST_MODE_NONE;
-		const char *inline_value = NULL;
-
-        if (strcmp(a, "--ingest-tar") == 0) {
-            new_mode = INGEST_MODE_TAR;
-            matched_args = 1;
-        } else if (strncmp(a, "--ingest-tar=", 13) == 0) {
-            new_mode = INGEST_MODE_TAR;
-            matched_args = 1;
-            inline_value = a + 13;
-        } else if (strcmp(a, "--ingest") == 0) {
-			new_mode = INGEST_MODE_WRITE;
-			matched_args = 1;
-		} else if (strncmp(a, "--ingest=", 9) == 0) {
-			new_mode = INGEST_MODE_WRITE;
-			matched_args = 1;
-			inline_value = a + 9;
-		} else if (strcmp(a, "--ingest-restore") == 0) {
-			new_mode = INGEST_MODE_RESTORE;
-			matched_args = 1;
-		} else if (strncmp(a, "--ingest-restore=", 17) == 0) {
-			new_mode = INGEST_MODE_RESTORE;
-			matched_args = 1;
-			inline_value = a + 17;
-		}
-
-		if (!matched_args) { i++; continue; }
-
-		mode = new_mode;
-		if (inline_value) {
-			*out_path = (char *)inline_value;
-		} else {
-			if (i + 1 >= argc || argv[i + 1][0] == '-')
-				errx(EXIT_FAILURE,
-				     "%s requires a path argument", a);
-			*out_path = argv[i + 1];
-			matched_args = 2;
-		}
-		for (int j = i; j + matched_args < argc; j++)
-			argv[j] = argv[j + matched_args];
-		argc -= matched_args;
+	if (arg[0] != '-' || arg[1] == '-') return 1;
+	for (const char *p = arg + 1; *p; p++) {
+		const char *option = strchr(short_options, *p);
+		if (!option || *p == ':') break;
+		if (option[1] == ':') return p[1] ? 1 : 2;
 	}
-	*argcp = argc;
-	return mode;
+	return 1;
+}
+
+/* A single pass owns both long-option operands and short-option operands.
+ * getopt receives the retained arguments with their original grouping. */
+static void extract_long_options(int *argcp, char **argv, char **ingest_path)
+{
+	static const struct {
+		const char *name;
+		int ingest, ots;
+		bool takes_path;
+	} options[] = {
+		{"--ingest", INGEST_MODE_WRITE, 0, true},
+		{"--ingest-tar", INGEST_MODE_TAR, 0, true},
+		{"--ingest-restore", INGEST_MODE_RESTORE, 0, true},
+		{"--ots-attach", 0, OTS_MODE_ATTACH, true},
+		{"--ots-extract", 0, OTS_MODE_EXTRACT, false},
+		{"--ots-info", 0, OTS_MODE_INFO, false}
+	};
+	int argc = *argcp, kept = 1;
+	for (int i = 1; i < argc; ) {
+		const char *arg = argv[i];
+		if (!strcmp(arg, "--")) {
+			while (i < argc) argv[kept++] = argv[i++];
+			break;
+		}
+		if (!strcmp(arg, "--chunked")) {
+			opt.chunked = true;
+			i++;
+			continue;
+		}
+		unsigned index;
+		for (index = 0; index < sizeof options / sizeof *options; index++) {
+			size_t n = strlen(options[index].name);
+			if (!strncmp(arg, options[index].name, n)
+			    && (!arg[n] || (options[index].takes_path && arg[n] == '=')))
+				break;
+		}
+		if (index == sizeof options / sizeof *options) {
+			int count = short_option_span(arg);
+			while (count-- && i < argc) argv[kept++] = argv[i++];
+			continue;
+		}
+		if (opt.ingest_mode || opt.ots_mode)
+			errx(EXIT_FAILURE, "only one ingestion or OTS operation may be specified");
+		opt.ingest_mode = options[index].ingest;
+		opt.ots_mode = options[index].ots;
+		i++;
+		if (options[index].takes_path) {
+			char *value;
+			const char *equals = strchr(arg, '=');
+			if (equals) value = (char *)equals + 1;
+			else {
+				if (i == argc || argv[i][0] == '-')
+					errx(EXIT_FAILURE, "%s requires a path (use %s=<path> for a leading '-')",
+					     options[index].name, options[index].name);
+				value = argv[i++];
+			}
+			if (!*value) errx(EXIT_FAILURE, "%s requires a nonempty path", options[index].name);
+			if (options[index].ingest) *ingest_path = value;
+			else opt.ots_path = value;
+		}
+	}
+	argv[kept] = NULL;
+	*argcp = kept;
 }
 
 /* --- ingest v3: real UC2 archive output (git-bug 59bec0d, approach A) ---
@@ -2049,60 +2064,6 @@ static int cmd_ingest_restore(const char *archive_path)
 	return EXIT_SUCCESS;
 }
 
-/* Pre-parse for OTS long options: --ots-attach, --ots-extract, --ots-info.
- * Removes matched arguments from argv in place so the existing getopt loop
- * doesn't see them.  --ots-attach takes a value, accepted as either
- *   --ots-attach <path>     (separate argv entry; rejected if path starts with '-')
- *   --ots-attach=<path>     (inline). */
-static int extract_ots_long_opts(int *argcp, char **argv, char **out_value)
-{
-	int argc = *argcp;
-	int mode = OTS_MODE_NONE;
-	*out_value = NULL;
-	for (int i = 1; i < argc; ) {
-		const char *a = argv[i];
-		if (!strcmp(a, "--")) break;
-		int matched_args = 0;
-		int new_mode = OTS_MODE_NONE;
-		const char *inline_value = NULL;
-
-		if (strcmp(a, "--ots-attach") == 0) {
-			new_mode = OTS_MODE_ATTACH;
-			matched_args = 1;
-		} else if (strncmp(a, "--ots-attach=", 13) == 0) {
-			new_mode = OTS_MODE_ATTACH;
-			matched_args = 1;
-			inline_value = a + 13;
-		} else if (strcmp(a, "--ots-extract") == 0) {
-			new_mode = OTS_MODE_EXTRACT;
-			matched_args = 1;
-		} else if (strcmp(a, "--ots-info") == 0) {
-			new_mode = OTS_MODE_INFO;
-			matched_args = 1;
-		}
-
-		if (!matched_args) { i++; continue; }
-
-		mode = new_mode;
-		if (new_mode == OTS_MODE_ATTACH) {
-			if (inline_value) {
-				*out_value = (char *)inline_value;
-			} else {
-				if (i + 1 >= argc || argv[i + 1][0] == '-')
-					errx(EXIT_FAILURE,
-					     "--ots-attach requires a path argument "
-					     "(use --ots-attach=<path> if your path starts with '-')");
-				*out_value = argv[i + 1];
-				matched_args = 2;
-			}
-		}
-		for (int j = i; j + matched_args < argc; j++)
-			argv[j] = argv[j + matched_args];
-		argc -= matched_args;
-	}
-	*argcp = argc;
-	return mode;
-}
 
 int main(int argc, char *argv[])
 {
@@ -2114,9 +2075,12 @@ int main(int argc, char *argv[])
 
 	{
 		char *ingest_path = NULL;
-		opt.ingest_mode = extract_ingest_long_opts(&argc, argv, &ingest_path);
-		if (opt.ingest_mode != INGEST_MODE_NONE)
+		extract_long_options(&argc, argv, &ingest_path);
+		if (opt.ingest_mode != INGEST_MODE_NONE) {
+			if (argc != 1 && !(argc == 2 && !strcmp(argv[1], "--")))
+				errx(EXIT_FAILURE, "ingestion modes do not accept short options or extra operands");
 			opt.archive = ingest_path;
+		}
 		if (opt.ingest_mode == INGEST_MODE_TAR)
 			return cmd_ingest_tar(ingest_path);
 		if (opt.ingest_mode == INGEST_MODE_WRITE)
@@ -2127,10 +2091,9 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	opt.ots_mode = extract_ots_long_opts(&argc, argv, &opt.ots_path);
 
 	for (;;) {
-		int o = getopt(argc, argv, "xlatfd:C:cpDTh?wL:qB");
+		int o = getopt(argc, argv, short_options);
 		if (o == -1)
 			break;
 		switch (o) {

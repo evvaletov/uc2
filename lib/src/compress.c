@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <limits.h>
 
 #include "uc2/libuc2.h"
 #include "uc2/uc2_rans.h"
@@ -934,8 +935,11 @@ struct count_writer {
 static int count_write(void *ctx, const void *ptr, unsigned len)
 {
 	struct count_writer *cw = ctx;
+	if (len > UINT_MAX - *cw->count) return UC2_UserFault;
+	int ret = cw->write(cw->ctx, ptr, len);
+	if (ret < 0) return ret;
 	*cw->count += len;
-	return cw->write(cw->ctx, ptr, len);
+	return ret;
 }
 
 int uc2_compress_ex(

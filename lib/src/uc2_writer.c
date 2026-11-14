@@ -36,6 +36,9 @@ struct uc2_writer {
     FILE *input, *output;
     struct entry *entries;
     unsigned count, capacity;
+    /* One entry index + 1 per distinct (parent, encoded name); entries own
+     * names and retain insertion order, including repeated file versions. */
+    unsigned *name_slots, name_count, name_capacity;
     struct master *masters;
     unsigned master_count;
     struct chunk *chunks;
@@ -153,12 +156,46 @@ void uc2_writer_free(uc2_writer *w)
     if (!w) return;
     if (w->input) fclose(w->input);
     if (w->output) fclose(w->output);
-    free(w->entries); free(w->masters); free(w->chunks); free(w);
+    free(w->entries); free(w->name_slots); free(w->masters); free(w->chunks); free(w);
 }
 const char *uc2_writer_error(const uc2_writer *w)
 { return w ? (w->error ? w->message : "writer is closed or already finalized") : "invalid writer"; }
 void uc2_writer_get_stats(const uc2_writer *w, struct uc2_writer_stats *s)
 { if (w && s) *s=w->stats; }
+static unsigned name_hash(unsigned parent, const char *name)
+{
+    uint32_t hash=2166136261u^parent;
+    for (; *name; ++name) hash=(hash^(unsigned char)*name)*16777619u;
+    return hash;
+}
+static unsigned name_slot(const uc2_writer *w, unsigned parent, const char *name)
+{
+    if (!w->name_capacity) return 0;
+    unsigned slot=name_hash(parent,name)&(w->name_capacity-1);
+    while (w->name_slots[slot]) {
+        const struct entry *e=&w->entries[w->name_slots[slot]-1];
+        if (e->parent==parent && !strcmp(e->name,name)) break;
+        slot=(slot+1)&(w->name_capacity-1);
+    }
+    return slot;
+}
+static int grow_names(uc2_writer *w)
+{
+    if ((w->name_count+1)*2<=w->name_capacity) return 0;
+    /* max_entries <= 1000000 bounds the power-of-two table at 2097152. */
+    unsigned capacity=w->name_capacity ? w->name_capacity*2 : 32;
+    unsigned *slots=calloc(capacity,sizeof *slots);
+    if (!slots) return fail(w,UC2_UserFault,"cannot allocate entry name index");
+    for (unsigned i=0; i<w->name_capacity; ++i) if (w->name_slots[i]) {
+        unsigned index=w->name_slots[i];
+        const struct entry *e=&w->entries[index-1];
+        unsigned slot=name_hash(e->parent,e->name)&(capacity-1);
+        while (slots[slot]) slot=(slot+1)&(capacity-1);
+        slots[slot]=index;
+    }
+    free(w->name_slots); w->name_slots=slots; w->name_capacity=capacity;
+    return 0;
+}
 static int add_entry(uc2_writer *w, unsigned parent, const char *name,
                      unsigned time, unsigned attr, int directory, struct entry **result)
 {
@@ -173,10 +210,10 @@ static int add_entry(uc2_writer *w, unsigned parent, const char *name,
         e.depth=w->entries[parent-1].depth;
     }
     if (directory && ++e.depth>64) return fail(w,UC2_WRITER_LIMIT,"directory nesting exceeds 64");
-    for (unsigned i=0; i<w->count; ++i)
-        if (w->entries[i].parent==parent && !strcmp(w->entries[i].name,e.name) &&
-            (directory || w->entries[i].id))
-            return fail(w,UC2_WRITER_INVALID,"conflicting directory or file name");
+    unsigned slot=name_slot(w,parent,e.name);
+    unsigned existing=w->name_capacity ? w->name_slots[slot] : 0;
+    if (existing && (directory || w->entries[existing-1].id))
+        return fail(w,UC2_WRITER_INVALID,"conflicting directory or file name");
     if (w->count==w->options.max_entries) return fail(w,UC2_WRITER_LIMIT,"entry limit exceeded");
     if (w->count==w->capacity) {
         unsigned cap=w->capacity ? w->capacity*2 : 32;
@@ -185,10 +222,15 @@ static int add_entry(uc2_writer *w, unsigned parent, const char *name,
         if (!p) return fail(w,UC2_UserFault,"cannot allocate entry metadata");
         w->entries=p; w->capacity=cap;
     }
+    if (!existing) {
+        if (grow_names(w)<0) return w->error;
+        slot=name_slot(w,parent,e.name);
+    }
     e.parent=parent; e.time=time; e.attr=attr|(directory ? 0x10u : 0);
     e.id=directory ? w->count+1 : 0;
     w->entries[w->count]=e;
     *result=&w->entries[w->count++];
+    if (!existing) { w->name_slots[slot]=w->count; ++w->name_count; }
     if (directory) ++w->stats.directories; else ++w->stats.files;
     return 0;
 }

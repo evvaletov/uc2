@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
-/* Inject allocator failures in the real rANS implementation; the static
- * library supplies the compressor and the remaining decoder dependencies. */
+/* Inject allocator failures in the real rANS implementation and exercise
+ * the compressor's output counter without writing a multi-GiB fixture. */
 #include <assert.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -15,6 +15,28 @@ static void *test_realloc(void *p,size_t n) { return ++calls==fail_at ? NULL : r
 #include "../../lib/src/uc2_rans.c"
 #undef malloc
 #undef realloc
+#include "../../lib/src/compress.c"
+static unsigned output_calls;
+static int output_status;
+static int counted_output(void *ctx,const void *p,unsigned n)
+{
+    output_calls++;
+    return output_status;
+}
+static void output_size_boundary(void)
+{
+    const char data[4]={0};
+    unsigned count=UINT_MAX-4;
+    struct count_writer cw={counted_output,NULL,&count};
+    output_calls=0; output_status=0;
+    int rc=count_write(&cw,data,4);
+    assert(rc==0 && count==UINT_MAX && output_calls==1);
+    rc=count_write(&cw,data,1);
+    assert(rc<0 && count==UINT_MAX && output_calls==1);
+    count=10; output_status=-77;
+    rc=count_write(&cw,data,4);
+    assert(rc==-77 && count==10 && output_calls==2);
+}
 static unsigned position;
 static int input(void *ctx,void *p,unsigned n)
 {
@@ -41,6 +63,7 @@ static void standalone(unsigned failure)
 }
 int main(void)
 {
+    output_size_boundary();
     standalone(0);
     unsigned total=calls;
     for (unsigned f=1;f<=total;f++) standalone(f);

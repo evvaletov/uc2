@@ -68,9 +68,10 @@ Modes
 ``uc2 --ingest-restore archive.uc2``
    Reassemble an opaque ingested stream and write it to standard output.
 
-The ingestion modes use the current directory and default compression level;
-short options such as ``-C``, ``-L``
-and ``-q`` have no effect. ``--chunked`` is accepted by the two creation modes.
+The ingestion modes use the current directory and default compression level.
+They reject short options and extra operands before opening the archive;
+``--chunked`` is accepted by the two creation modes. Change directory in the
+shell when needed. Ingestion and OTS operation options cannot be combined.
 
 Options
 -------
@@ -97,7 +98,7 @@ Options
    * - ``-d path``
      - Extract to specified directory
    * - ``-C path``
-     - Change working directory (except in ingestion modes)
+     - Change working directory (rejected in ingestion modes)
    * - ``-f``
      - Overwrite existing files
    * - ``-p``
@@ -107,15 +108,22 @@ Options
    * - ``-T``
      - Tab-separated output (for scripting)
    * - ``-q``
-     - Suppress status messages (except in ingestion modes)
+     - Suppress status messages (rejected in ingestion modes)
    * - ``-B``
      - Benchmark compression methods without writing an archive
+
+Put short options before positional arguments for portability. Values of
+``-d``, ``-C`` and ``-L`` belong to that option even when they begin with ``-``.
+Use ``--`` before option-like archive or input filenames, for example
+``uc2 -w -- output.uc2 --ots-info``. Long options that take a path accept
+``--option=path``; use this form when the path begins with ``-``.
 
 Pattern Matching
 ----------------
 
-File patterns use glob syntax.  Only files matching the pattern are
-listed or extracted:
+File patterns use glob syntax, including ``*``, ``?``, bracket ranges and
+negated sets such as ``[!a]``. Only files matching the pattern are listed or
+extracted:
 
 .. code-block:: sh
 

@@ -100,6 +100,8 @@ UC2_API const char *uc2_message(uc2_handle, int ret);
    6-9 are the corresponding rANS levels in the full build.
    read() should return bytes read (0 at EOF, <0 on error).
    write() should return <0 on error.
+   Compressed output is limited to UINT_MAX bytes. Failure can occur after
+   output callbacks have received a prefix; callers discard it on error.
    Returns 0 on success, negative UC2_* error code on failure. */
 UC2_API int uc2_compress(
 	int level,

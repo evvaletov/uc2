@@ -93,7 +93,7 @@ a comparison table; no archive is written.
 Change to
 .Ar directory
 before reading or writing any files.
-Has no effect in ingestion modes.
+Rejected in ingestion modes.
 .It Fl c , Fl p
 Write extracted data to standard output instead of creating files.
 .It Fl D
@@ -118,7 +118,7 @@ Huffman methods, or 6 through 9 for rANS.
 List the archive contents.
 .It Fl q
 Quiet operation; suppress status messages.
-Has no effect in ingestion modes.
+Rejected in ingestion modes.
 .It Fl T
 Separate listing columns with tabs instead of spaces.
 .It Fl t
@@ -192,13 +192,27 @@ versions (a sidecar block store or self-contained blob) are still
 recognised and restored.
 .El
 .Pp
-The ingestion modes use the current directory and default compression level;
-short options such as
-.Fl C ,
-.Fl L
+The ingestion modes use the current directory and default compression level.
+They reject short options and extra operands before opening the archive;
+.Fl -chunked
+is accepted by the two creation modes.
+Change directory in the shell before invoking them when needed.
+Ingestion and OTS operation options cannot be combined.
+.Pp
+Put short options before positional arguments for portability.
+Values of
+.Fl d ,
+.Fl C
 and
-.Fl q
-have no effect. Change directory in the shell before invoking them when needed.
+.Fl L
+belong to that option even when they begin with a hyphen.
+Use
+.Ql --
+before option-like archive or input filenames, for example
+.Ql uc2 -w -- output.uc2 --ots-info .
+Long options that take a path accept
+.Ql --option=path ;
+use this form when the path begins with a hyphen.
 .Sh EXIT STATUS
 .Ex -std
 .Sh EXAMPLES

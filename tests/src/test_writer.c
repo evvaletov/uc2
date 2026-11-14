@@ -1,9 +1,26 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
+#ifndef _WIN32
+#define _POSIX_C_SOURCE 200809L
+#define _FILE_OFFSET_BITS 64
+#endif
 #include <uc2/uc2_writer.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+/* Exercise allocation failures in the real writer without production hooks.
+ * These definitions replace the archive's writer object for this test only. */
+static unsigned writer_allocations, writer_fail_allocation;
+static void *writer_calloc(size_t count,size_t size)
+{ return ++writer_allocations==writer_fail_allocation ? NULL : calloc(count,size); }
+static void *writer_realloc(void *p,size_t size)
+{ return ++writer_allocations==writer_fail_allocation ? NULL : realloc(p,size); }
+#define calloc writer_calloc
+#define realloc writer_realloc
+#include "../../lib/src/uc2_writer.c"
+#undef calloc
+#undef realloc
 
 /* Evaluate API calls even if this test is compiled with NDEBUG externally. */
 #define CHECK(expr) do { int ok = !!(expr); assert(ok); (void)ok; } while (0)
@@ -124,6 +141,107 @@ static void directory_metadata_errors(void)
     CHECK(uc2_writer_set_directory_metadata(w,0,0,0)==UC2_WRITER_INVALID);
     uc2_writer_free(w);
 }
+static void indexed_names(void)
+{
+    uc2_writer *w=uc2_writer_create(NULL); CHECK(w);
+    /* These distinct names have the same 32-bit FNV-1a hash at the root. */
+    const char *prefix[]={"costarring","liquid","same","same","Case","case",
+                          "caf\xc3\xa9","caf\xc3\xa9"};
+    unsigned parents[]={0,0,1,2,0,0,0,0};
+    unsigned id;
+    CHECK(uc2_writer_add_directory(w,0,prefix[0],0,0,&id)==0 && id==1);
+    CHECK(uc2_writer_add_directory(w,0,prefix[1],0,0,&id)==0 && id==2);
+    unsigned char bytes[]={1,2,3};
+    struct buffer in={0},out={0};
+    for (unsigned i=2; i<8; ++i) {
+        in=(struct buffer){bytes+(i%3),i>=6 ? 1 : 0,0};
+        CHECK(uc2_writer_add_file(w,parents[i],prefix[i],i,0x20,in.size,input,&in)==0);
+    }
+    for (unsigned i=0; i<4096; ++i) {
+        char name[32]; snprintf(name,sizeof name,"file-%04u",i);
+        in=(struct buffer){0};
+        CHECK(uc2_writer_add_file(w,0,name,0,0x20,0,input,&in)==0);
+    }
+    in=(struct buffer){bytes,1,0};
+    CHECK(uc2_writer_add_file(w,0,"file-0000",0,0x20,1,input,&in)==0);
+    CHECK(uc2_writer_finish(w,output,&out)==0);
+    struct uc2_writer_stats stats; uc2_writer_get_stats(w,&stats);
+    CHECK(stats.directories==2 && stats.files==4103);
+    uc2_writer_free(w);
+    uc2_handle h=uc2_open(&io,&out); CHECK(h);
+    unsigned count=0, stored_count=0;
+    struct uc2_entry stored[3];
+    for (;;) {
+        struct uc2_entry e={0}; int r=uc2_read_cdir(h,&e);
+        if (r==UC2_End) break;
+        CHECK(r>0);
+        while (r==UC2_TaggedEntry) r=uc2_get_tag(h,&e,NULL,NULL,NULL);
+        CHECK(r>=0 && count<4105);
+        if (count<8) {
+            CHECK(!strcmp(e.name,prefix[count]) && e.dirid==parents[count]);
+            CHECK(e.is_dir==(count<2));
+            if (count<2) CHECK(e.id==count+1);
+        } else {
+            char name[32]; snprintf(name,sizeof name,"file-%04u",count==4104 ? 0 : count-8);
+            CHECK(!strcmp(e.name,name) && !e.is_dir && e.dirid==0);
+        }
+        if (count==6 || count==7 || count==4104) {
+            CHECK(e.size==1 && stored_count<3);
+            stored[stored_count++]=e;
+        } else if (!e.is_dir) CHECK(e.size==0);
+        ++count;
+    }
+    CHECK(count==4105 && uc2_finish_cdir(h,NULL)==0);
+    CHECK(stored_count==3);
+    for (unsigned i=0; i<stored_count; ++i) {
+        struct buffer decoded={0};
+        CHECK(uc2_extract(h,&stored[i].xi,stored[i].size,output,&decoded)>=0);
+        CHECK(decoded.size==1 && decoded.data[0]==bytes[i==2 ? 0 : i]);
+        free(decoded.data);
+    }
+    uc2_close(h); free(out.data);
+
+    for (int first_dir=0; first_dir<2; ++first_dir) for (int second_dir=0; second_dir<2; ++second_dir) {
+        if (!first_dir && !second_dir) continue; /* File versions tested above. */
+        w=uc2_writer_create(NULL); CHECK(w); in=(struct buffer){0};
+        CHECK((first_dir ? uc2_writer_add_directory(w,0,"caf\xc3\xa9",0,0,&id) :
+               uc2_writer_add_file(w,0,"caf\xc3\xa9",0,0,0,input,&in))==0);
+        for (unsigned i=0; i<128; ++i) {
+            char name[32]; snprintf(name,sizeof name,"grow-%u",i);
+            CHECK(uc2_writer_add_file(w,0,name,0,0,0,input,&in)==0);
+        }
+        CHECK((second_dir ? uc2_writer_add_directory(w,0,"caf\xc3\xa9",0,0,&id) :
+               uc2_writer_add_file(w,0,"caf\xc3\xa9",0,0,0,fail_read,NULL))==UC2_WRITER_INVALID);
+        out=(struct buffer){0};
+        CHECK(uc2_writer_finish(w,output,&out)==UC2_WRITER_INVALID && out.size==0);
+        uc2_writer_free(w);
+    }
+}
+static unsigned insertion_allocations(unsigned failure)
+{
+    writer_allocations=0; writer_fail_allocation=failure;
+    uc2_writer *w=uc2_writer_create(NULL);
+    if (!w) { CHECK(failure==1); writer_fail_allocation=0; return writer_allocations; }
+    unsigned inserted=0;
+    struct buffer in={0},out={0};
+    for (unsigned i=0; i<300; ++i) {
+        char name[32]; snprintf(name,sizeof name,"entry-%u",i);
+        int r=uc2_writer_add_file(w,0,name,0,0,0,input,&in);
+        if (r<0) {
+            CHECK(failure && writer_allocations==failure && r==UC2_UserFault);
+            struct uc2_writer_stats stats; uc2_writer_get_stats(w,&stats);
+            CHECK(stats.files==inserted && stats.directories==0);
+            CHECK(uc2_writer_add_file(w,0,"retry",0,0,0,input,&in)==UC2_UserFault);
+            CHECK(uc2_writer_finish(w,output,&out)==UC2_UserFault && !out.size);
+            break;
+        }
+        ++inserted;
+    }
+    CHECK(failure ? inserted<300 : inserted==300);
+    unsigned allocations=writer_allocations;
+    writer_fail_allocation=0; uc2_writer_free(w);
+    return allocations;
+}
 static void errors(void)
 {
     unsigned char bytes[]={1,2,3}; struct buffer in={bytes,3,0},out={0}; unsigned id;
@@ -167,5 +285,9 @@ int main(void)
         roundtrip(level,0); roundtrip(level,1);
     }
     directory_metadata_errors();
+    indexed_names();
+    unsigned allocations=insertion_allocations(0);
+    CHECK(allocations>4);
+    for (unsigned failure=1; failure<=allocations; ++failure) insertion_allocations(failure);
     errors(); puts("writer: all levels, versions, directories, streams and failures passed"); return 0;
 }
