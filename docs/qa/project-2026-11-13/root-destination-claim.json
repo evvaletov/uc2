@@ -1,0 +1,10 @@
+{
+  "returncode": 0,
+  "stdout": "",
+  "stderr": "",
+  "selection": "__absent_member__",
+  "known_members": [
+    "known.txt"
+  ],
+  "conclusion": "assert(n) runs before slash stripping; -d / succeeds without an extraction callback"
+}

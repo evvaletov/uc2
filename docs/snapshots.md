@@ -1,6 +1,6 @@
 # Incremental directory snapshots
 
-Install the Python package (`pip install uc2`) to use `uc2 snapshot` or the
+Install the Python package (`python -m pip install --pre uc2`) to use `uc2 snapshot` or the
 identical `uc2-snapshot` command:
 
 ```sh

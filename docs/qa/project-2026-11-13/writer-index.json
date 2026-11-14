@@ -1,0 +1,33 @@
+{
+  "measurement": "single-run CLOCK_MONOTONIC wall time for actual public uc2_writer_add_file calls; distinct empty root files; finalisation excluded",
+  "flags": "cc -O2 -DNDEBUG -I lib/include",
+  "baseline_source": "before.c, copied from worktree HEAD 2f5f31d before index edit",
+  "indexed_source": "after.c, copied from final worktree implementation",
+  "before": [
+    {"entries": 10000, "insertion_seconds": 2.295002067},
+    {"entries": 50000, "insertion_seconds": 95.714546450}
+  ],
+  "after": [
+    {"entries": 10000, "insertion_seconds": 0.020250335},
+    {"entries": 50000, "insertion_seconds": 0.150997532},
+    {"entries": 100000, "insertion_seconds": 0.288822020}
+  ],
+  "baseline_100000": "stopped intentionally; 10k and 50k provide same-size comparisons",
+  "archive_equivalence": {
+    "entries": 4206,
+    "directories": 2,
+    "files": 4204,
+    "coverage": "4096 unique files, two parents, 100 versions, equal names in separate directories, case-sensitive and CP850 names, metadata setter",
+    "cmp": "identical before.uc2 and after.uc2",
+    "sha256": "d65c10cbd2fc9191f883edcbfbb5c44ddf5e332a7fb5ba9b9793e2de1bac24fe"
+  },
+  "validation": [
+    "Debug test_writer passed",
+    "Clang ASan+UBSan test_writer passed",
+    "Full check_tar_ingest.py passed with Debug CLI",
+    "Full check_tar_ingest.py passed with ASan+UBSan CLI",
+    "check_assert_side_effects.py passed",
+    "git diff --check passed"
+  ],
+  "limitation": "Local single-run timings on a shared machine; no native Windows run in this scope. The deterministic FNV index resolves collisions by complete key comparisons but is not an adversarial-complexity guarantee."
+}

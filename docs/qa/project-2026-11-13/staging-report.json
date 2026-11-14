@@ -1,0 +1,86 @@
+{
+  "role": "Supplemental repair and validation of the confirmed interfaces-r5 staging finding; not an independent review seat.",
+  "source_commit": "b1fa52a",
+  "source_frozen": true,
+  "files": {
+    "cli/src/main.c": "81c86a4e904addb1212209f6b609a21aca94d062952c3660661971a45d1868c2",
+    "tests/scripts/check_cli_staging.py": "ad214d11057a52312d64d9b2ee313c0ce6cd7a6fe6e2a7bff82913dac33c9453"
+  },
+  "registration": "Root added cli_staging to tests/CMakeLists.txt with a 90-second timeout.",
+  "fix": "Staging owns both FILE and pathname. Commit and exit cleanup share an idempotent close step that clears stream ownership before fclose. Cleanup closes before unlink; commit checks close errors before installing output. All four staging callers use it. Candidate paths become owned only after exclusive creation.",
+  "evidence": {
+    "before": {
+      "result": "FAIL: temporary output remains after the real stdin read error when unlink refuses open descriptors",
+      "log": "cli-staging-before.log",
+      "log_sha256": "e01c4ad9b2ee17288566fadcac25b00116f207cd4066314ec3bb756a725c119f",
+      "log_tail": [
+        "Traceback (most recent call last):",
+        "  File \"/home/evaletov/DOS/UC2/tests/scripts/check_cli_staging.py\", line 67, in <module>",
+        "    assert not list(root.glob('protected.uc2.tmp-*'))",
+        "           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+        "AssertionError"
+      ]
+    },
+    "after": {
+      "result": "PASS: same fault-injected actual CLI removes temporary output and preserves destination",
+      "log": "cli-staging-fault-final.log",
+      "log_sha256": "75e2f769f2e7f1a9c55c5d9eb02e49bbe6785c00f258cc57b57a6e5e50fb83e3",
+      "log_tail": [
+        "CLI staged output checks passed"
+      ]
+    },
+    "shim": {
+      "source": "staging-fault.c",
+      "library": "staging-fault.so",
+      "scope": "Local Linux LD_PRELOAD harness simulates Windows open-file deletion refusal; it is not a native Windows run."
+    },
+    "asan_ubsan": {
+      "result": "PASS",
+      "log": "cli-staging-asan.log",
+      "log_sha256": "75e2f769f2e7f1a9c55c5d9eb02e49bbe6785c00f258cc57b57a6e5e50fb83e3",
+      "log_tail": [
+        "CLI staged output checks passed"
+      ]
+    },
+    "close_failure": {
+      "result": "PASS: injected real fclose followed by EOF/EIO reports failure, preserves destination and leaves no temporary file",
+      "record": "cli-staging-close-error.json"
+    },
+    "native_focused": {
+      "result": "12/12 passed",
+      "log": "cli-staging-ctest.log",
+      "log_sha256": "db8141d3e6b96649c9d8dc3161e9c227b9a4d16577d73aaf31deaea50689c704",
+      "log_tail": [
+        "      Start 27: cli_options",
+        " 9/12 Test #27: cli_options ......................   Passed    0.99 sec",
+        "      Start 28: cli_staging",
+        "10/12 Test #28: cli_staging ......................   Passed    0.20 sec",
+        "      Start 29: integrations",
+        "11/12 Test #29: integrations .....................   Passed   15.23 sec",
+        "      Start 30: ots_cross_check",
+        "12/12 Test #30: ots_cross_check ..................   Passed    0.19 sec",
+        "",
+        "100% tests passed, 0 tests failed out of 12",
+        "",
+        "Label Time Summary:",
+        "optional    =   0.19 sec*proc (1 test)",
+        "",
+        "Total Test time (real) =  18.78 sec"
+      ]
+    },
+    "root_full_native": {
+      "result": "35/35 passed",
+      "source": "Parent reported final root build result; not rerun by this agent."
+    },
+    "windows_regression": "Permanent test passes a directory HANDLE through stdin and requires the read failure after output staging; also tests success and failed installation for regular creation, opaque ingestion, chunked ingestion and tar ingestion.",
+    "root_destination_claim": {
+      "decision": "Rejected; no source change",
+      "result": "-qx -d / on a known one-file archive with an unmatched selection returns 0 without extracting a file. assert(n) precedes trailing-slash removal.",
+      "record": "root-destination-claim.json"
+    }
+  },
+  "limits": [
+    "The final source Windows/macOS/Linux CI jobs passed; native Windows cli_staging and 35/35 results are captured in validation.json.",
+    "No prose edits, commits, pushes or maintainer messages by this agent."
+  ]
+}

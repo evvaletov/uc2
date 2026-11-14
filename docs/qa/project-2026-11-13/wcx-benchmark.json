@@ -1,0 +1,85 @@
+{
+  "small-benchmark-results.json": {
+    "baseline": {
+      "entries": 10064,
+      "open_result": 0,
+      "seconds": 2.617844,
+      "string_comparisons": 50055384,
+      "reallocations": 10064
+    },
+    "current": {
+      "entries": 10064,
+      "open_result": 0,
+      "seconds": 0.109374,
+      "string_comparisons": 180842,
+      "reallocations": 11
+    }
+  },
+  "current-large-result.json": {
+    "entries": 50064,
+    "open_result": 0,
+    "seconds": 0.958059,
+    "string_comparisons": 1014966,
+    "reallocations": 13
+  },
+  "baseline-large-timeout.json": {
+    "entries": 50064,
+    "timeout_seconds": 120,
+    "completed": false,
+    "stdout_before_timeout": "",
+    "command": [
+      "/tmp/uc2-interface-audit-20261113/wcx-benchmark/baseline",
+      "/tmp/uc2-interface-audit-20261113/wcx-benchmark/metadata.uc2",
+      "--list"
+    ],
+    "note": "subprocess.TimeoutExpired observed; no completed baseline timing is claimed"
+  },
+  "functional-results.json": {
+    "baseline": {
+      "versions": {
+        "entries": 8,
+        "open_result": 0,
+        "seconds": 0.00052,
+        "string_comparisons": 63,
+        "reallocations": 8
+      },
+      "case-collision": {
+        "entries": 0,
+        "open_result": 13,
+        "seconds": 0.000315,
+        "string_comparisons": 13,
+        "reallocations": 2
+      },
+      "literal-collision": {
+        "entries": 0,
+        "open_result": 13,
+        "seconds": 0.000353,
+        "string_comparisons": 21,
+        "reallocations": 3
+      }
+    },
+    "current": {
+      "versions": {
+        "entries": 8,
+        "open_result": 0,
+        "seconds": 0.00033,
+        "string_comparisons": 70,
+        "reallocations": 1
+      },
+      "case-collision": {
+        "entries": 0,
+        "open_result": 13,
+        "seconds": 0.000311,
+        "string_comparisons": 14,
+        "reallocations": 1
+      },
+      "literal-collision": {
+        "entries": 0,
+        "open_result": 13,
+        "seconds": 0.000306,
+        "string_comparisons": 22,
+        "reallocations": 1
+      }
+    }
+  }
+}

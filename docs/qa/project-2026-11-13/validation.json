@@ -1,0 +1,293 @@
+{
+  "baseline": "18da0843955da9ee04294c44b382df7dc318862d",
+  "status": "Complete for the documented scope; source b1fa52a passes all four CI workflows.",
+  "source_commits": [
+    "95c1fbca49e518cfeb0389b1b6509b46e6e1cc80",
+    "2f5f31d4a798c81ec374c41b100c2a4adb66b649",
+    "bc6f9042f3275e18d0a1d3051bd70b4480bc7464",
+    "b1fa52a8c3d5e76eea7c64e64ca098934a5c9ee5"
+  ],
+  "executed": {
+    "native_33": {
+      "log_sha256": "dd8e9b67a3991db670cf8a159ef3d327241c2c4965febb31e6c50c86ec1139e0",
+      "tail": [
+        "      Start 32: chunk_corruption",
+        "32/33 Test #32: chunk_corruption .................   Passed    3.85 sec",
+        "      Start 33: sea",
+        "33/33 Test #33: sea ..............................   Passed    0.34 sec",
+        "",
+        "100% tests passed, 0 tests failed out of 33",
+        "",
+        "Label Time Summary:",
+        "dosbox      =  23.30 sec*proc (1 test)",
+        "optional    =   0.55 sec*proc (1 test)",
+        "",
+        "Total Test time (real) =  83.36 sec"
+      ]
+    },
+    "python_final_239": {
+      "log_sha256": "32fa97e2886f2da69727adb53cef0ebb91d476b837c51ab56466ba0b3b611ab4",
+      "tail": [
+        "........................................................................ [ 29%]",
+        "..................................ss.................................... [ 59%]",
+        "........................................................................ [ 89%]",
+        ".........................                                                [100%]",
+        "239 passed, 2 skipped in 17.69s"
+      ]
+    },
+    "historical_after_strict_output": {
+      "log_sha256": "d8b1925f1efdb972012a3cbb7f40e7ea09d9c721158ec5ce896d2248f512dc70",
+      "tail": [
+        "zip: 39 historical archives, 684 entries verified",
+        "tar: 39 historical archives, 684 entries verified"
+      ]
+    },
+    "optional_bsdtar_after_strict_output": {
+      "log_sha256": "a0d49395179f03bba08036eecf0e27284c0bc78db3f19113f032864d48fa3288",
+      "tail": [
+        "128 MiB entry restored under a 96 MiB address-space limit",
+        "Actual bsdtar: listing, supported methods, file/stdin/pipe policy, directories, empty entries, selective extraction passed",
+        "libarchive: five quotas, exact boundaries, overrides, stdin and invalid options passed"
+      ]
+    },
+    "libarchive_all_969": {
+      "log_sha256": "b078259b19da83bc3ca40249bc5069b58441c55fbb66685636aeb73faee28587",
+      "tail": [
+        "965: test_zip_filename_encoding_EUCJP                                ok",
+        "966: test_zip_filename_encoding_CP932                                skipped",
+        "967: test_zip_filename_encoding_UTF16_win                            skipped",
+        "968: test_zip_filename_encoding_fail_UTF16_win                       skipped",
+        "",
+        "Totals:",
+        "  Tests run:              969",
+        "  Tests failed:             0",
+        "  Assertions checked:33477818",
+        "  Assertions failed:        0",
+        "  Skips reported:          83",
+        "969 tests passed, no failures"
+      ]
+    },
+    "libarchive_autotools": {
+      "log_sha256": "ab79fdf693275821d09bb739bb0a6f7727e8ed943bb321ff6659749f198c58a5",
+      "tail": [
+        "Reference files will be read from: /tmp/uc2-alpha11-libarchive/libarchive/test",
+        "Exercising: libarchive 3.9.0dev zlib/1.3.1.zlib-ng liblzma/5.6.2 bz2lib/1.0.8 liblz4/1.9.4 libzstd/1.5.5 libxml2/2.12.5 openssl/3.5.8 libb2/bundled",
+        "610: test_read_format_uc2                                            ok",
+        "585: test_read_format_raw                                            ok",
+        "",
+        "Totals:",
+        "  Tests run:                2",
+        "  Tests failed:             0",
+        "  Assertions checked:  130717",
+        "  Assertions failed:        0",
+        "  Skips reported:           0",
+        "2 tests passed, no failures"
+      ]
+    },
+    "libarchive_disabled_debug_werror": {
+      "log_sha256": "bbfeb5e89d29dafc2f6a66734096cf6283ad32ba37379471cfd64bd3f488d22f",
+      "tail": [
+        "Reference files will be read from: /tmp/uc2-alpha11-libarchive/libarchive/test",
+        "Exercising: libarchive 3.9.0dev zlib/1.3.1 liblzma/5.6.2 bz2lib/1.0.8 liblz4/1.9.4 libzstd/1.5.5 libxml2/2.12.5 openssl/3.5.8 libb2/bundled",
+        "424: test_read_format_uc2                                            ok",
+        "569: test_read_format_raw                                            ok",
+        "",
+        "Totals:",
+        "  Tests run:                2",
+        "  Tests failed:             0",
+        "  Assertions checked:    5626",
+        "  Assertions failed:        0",
+        "  Skips reported:           0",
+        "2 tests passed, no failures"
+      ]
+    },
+    "compressed_size": {
+      "log_sha256": "c402919eb9eeb341d77d7b424b2c1271dab4e18a28408a1fd951d3533c34423d",
+      "tail": [
+        "Test project /tmp/uc2-project-20261113/build",
+        "    Start  3: roundtrip",
+        "1/2 Test  #3: roundtrip ........................   Passed    0.74 sec",
+        "    Start 17: codec_failures",
+        "2/2 Test #17: codec_failures ...................   Passed    0.03 sec",
+        "",
+        "100% tests passed, 0 tests failed out of 2",
+        "",
+        "Total Test time (real) =   0.84 sec"
+      ]
+    },
+    "compressed_size_asan": {
+      "log_sha256": "178c59532119a394cf86664a4c89cd301d3538cb56daee214c33d75a9a24932e",
+      "tail": [
+        "Test project /tmp/uc2-project-20261113/asan",
+        "    Start 17: codec_failures",
+        "1/1 Test #17: codec_failures ...................   Passed    0.11 sec",
+        "",
+        "100% tests passed, 0 tests failed out of 1",
+        "",
+        "Total Test time (real) =   0.13 sec"
+      ]
+    },
+    "decoder_bounds_asan": {
+      "log_sha256": "67993044bf36827217569a1348487970a82f01a811b5251fb475ba86a176bfbf",
+      "tail": [
+        "Test project /tmp/uc2-project-20261113/asan",
+        "    Start  3: roundtrip",
+        "1/3 Test  #3: roundtrip ........................   Passed    5.17 sec",
+        "    Start  4: turbo",
+        "2/3 Test  #4: turbo ............................   Passed    2.71 sec",
+        "    Start 24: ingest",
+        "3/3 Test #24: ingest ...........................   Passed    0.22 sec",
+        "",
+        "100% tests passed, 0 tests failed out of 3",
+        "",
+        "Total Test time (real) =   8.12 sec"
+      ]
+    },
+    "native_final_34": {
+      "log_sha256": "19ca2edb98089444636ccc49a2dd016efac16c2b8fc15f052d23c054049e64a1",
+      "tail": [
+        "32/34 Test #32: writer ...........................   Passed    0.88 sec",
+        "      Start 33: chunk_corruption",
+        "33/34 Test #33: chunk_corruption .................   Passed    3.02 sec",
+        "      Start 34: sea",
+        "34/34 Test #34: sea ..............................   Passed    0.29 sec",
+        "",
+        "100% tests passed, 0 tests failed out of 34",
+        "",
+        "Label Time Summary:",
+        "dosbox      =  11.19 sec*proc (1 test)",
+        "optional    =   0.43 sec*proc (1 test)",
+        "",
+        "Total Test time (real) =  56.94 sec"
+      ]
+    },
+    "native_final_35": {
+      "log_sha256": "14094c2137274dd8dc8ed430429474da6b87fdb7fc0b0b2c4629ca7d3b02730c",
+      "tail": [
+        "28/35 Test  #3: roundtrip ........................   Passed    0.83 sec",
+        "29/35 Test #16: rans .............................   Passed    0.01 sec",
+        "30/35 Test #23: ots ..............................   Passed    0.01 sec",
+        "31/35 Test #26: cli_extraction ...................   Passed    3.25 sec",
+        "32/35 Test #34: chunk_corruption .................   Passed    4.15 sec",
+        "33/35 Test #21: blake3 ...........................   Passed    8.90 sec",
+        "34/35 Test #31: roundtrip_dosbox .................   Passed   10.19 sec",
+        "35/35 Test #29: integrations .....................   Passed   18.78 sec",
+        "",
+        "100% tests passed, 0 tests failed out of 35",
+        "",
+        "Label Time Summary:",
+        "dosbox      =  10.19 sec*proc (1 test)",
+        "optional    =   0.35 sec*proc (1 test)",
+        "",
+        "Total Test time (real) =  18.79 sec"
+      ]
+    }
+  },
+  "ci": [
+    {
+      "commit": "2f5f31d",
+      "workflow": "Build",
+      "run": 43544038832,
+      "result": "success"
+    },
+    {
+      "commit": "2f5f31d",
+      "workflow": "Distributions",
+      "run": 43544038828,
+      "result": "success"
+    },
+    {
+      "commit": "2f5f31d",
+      "workflow": "Docs",
+      "run": 43544038815,
+      "result": "success"
+    },
+    {
+      "commit": "2f5f31d",
+      "workflow": "Integration releases",
+      "run": 43544038845,
+      "result": "success"
+    },
+    {
+      "commit": "bc6f904",
+      "workflow": "Build",
+      "run": 43545891593,
+      "result": "success"
+    },
+    {
+      "commit": "bc6f904",
+      "workflow": "Distributions",
+      "run": 43545891541,
+      "result": "success"
+    },
+    {
+      "commit": "bc6f904",
+      "workflow": "Docs",
+      "run": 43545891557,
+      "result": "success"
+    },
+    {
+      "commit": "bc6f904",
+      "workflow": "Integration releases",
+      "run": 43545891755,
+      "result": "success"
+    },
+    {
+      "commit": "b1fa52a8c3d5e76eea7c64e64ca098934a5c9ee5",
+      "workflow": "Docs",
+      "run": 43547917083,
+      "result": "success"
+    },
+    {
+      "commit": "b1fa52a8c3d5e76eea7c64e64ca098934a5c9ee5",
+      "workflow": "Integration releases",
+      "run": 43547917204,
+      "result": "success"
+    },
+    {
+      "commit": "b1fa52a8c3d5e76eea7c64e64ca098934a5c9ee5",
+      "workflow": "Distributions",
+      "run": 43547917149,
+      "result": "success"
+    },
+    {
+      "commit": "b1fa52a8c3d5e76eea7c64e64ca098934a5c9ee5",
+      "workflow": "Build",
+      "run": 43547917100,
+      "result": "success"
+    }
+  ],
+  "limitations": [
+    "A release-mode disabled build with GCC 14 and -Werror stopped in unchanged libarchive RAR/RAR5 stringop-overflow diagnostics; the Debug disabled build with warnings as errors passed. No warning suppression or unrelated source patch was applied.",
+    "The first source commit failed one CLI test on Windows/macOS because its delimiter position relied on GNU getopt permutation; corrected test passed in all jobs at 2f5f31d.",
+    "No new package or binary release is implied.",
+    "Bounded fuzzing and static reviews do not establish absence of all defects."
+  ],
+  "browser_ci": {
+    "commit": "2f5f31d",
+    "run": "https://github.com/evvaletov/uc2/actions/runs/43544038815",
+    "engines": [
+      "chromium 156.0.8078.4",
+      "firefox 157.0",
+      "webkit 27.2"
+    ],
+    "result": "All three passed the full reader/export/offline suite, including terminated-worker timeout recovery."
+  },
+  "windows_wheel_tests": [
+    "2026-11-14T02:24:26.3456317Z 227 passed, 14 skipped in 13.77s",
+    "2026-11-14T02:25:33.8809844Z 227 passed, 14 skipped in 22.20s",
+    "2026-11-14T02:26:36.7508071Z 227 passed, 14 skipped in 16.06s",
+    "2026-11-14T02:27:38.3354699Z 227 passed, 14 skipped in 19.47s",
+    "2026-11-14T02:28:30.1080864Z 227 passed, 14 skipped in 14.45s"
+  ],
+  "windows_staging": {
+    "run": 43547917100,
+    "commit": "b1fa52a",
+    "log_sha256": "49a14e0a472ac1f7dee6c2be2a94a3961fdb8a5d3dfab826bc563cb51a4489f4",
+    "test_lines": [
+      "Windows (MSVC)\tTest\t2026-11-14T02:44:48.6576028Z       Start 28: cli_staging",
+      "Windows (MSVC)\tTest\t2026-11-14T02:44:48.8603908Z 28/35 Test #28: cli_staging ......................   Passed    0.20 sec",
+      "Windows (MSVC)\tTest\t2026-11-14T02:44:50.7159965Z 100% tests passed out of 35"
+    ]
+  }
+}

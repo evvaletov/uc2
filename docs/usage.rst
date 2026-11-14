@@ -73,6 +73,13 @@ They reject short options and extra operands before opening the archive;
 ``--chunked`` is accepted by the two creation modes. Change directory in the
 shell when needed. Ingestion and OTS operation options cannot be combined.
 
+CLI extraction writes each file directly to its final path. A corruption or
+output error can leave a partial file; with ``-f``, the previous file has already
+been removed. OTS attachment also modifies the archive in place and can leave a
+partial trailer on an output failure. Keep a copy when the existing output must
+survive failure. Archive creation and ingestion publish their staged output only
+after successful assembly and close.
+
 Options
 -------
 

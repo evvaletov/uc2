@@ -1,0 +1,33 @@
+{
+  "prose-r1-grok": {
+    "disposition": "Reply clean. Historical-record rewrites declined; each describes its release/date. Authentication wording retained because an unkeyed SHA-256 integrity hash does not authenticate the author. Full-adapter pipe scope clarified in the current build guide; tar maximum made exact. The SAS example uses -x correctly for extraction."
+  },
+  "prose-r2-grok": {
+    "disposition": "Reply clean. Claimed lack of optional-reader memory evidence was contradicted by executed check_bsdtar.py --legacy-only --seekable-only: a 128 MiB entry restored under 96 MiB. Repeated after the strict-output fix. Current optional bsdtar validation is in validation.json."
+  },
+  "prose-r2-astra": {
+    "disposition": "Corrected the standalone LGPL statement to the contrib/libuc2read subset, and the checklist to retain each upstream licence rather than claiming every Bobrowski file is LGPL."
+  },
+  "interfaces-r1-grok-preservation": {
+    "disposition": "Direct multipart reopen declined: preserve intentionally hashes one ordinary container; complete provenance for a SAS/SEA set needs an explicit design. Current support boundary documented."
+  },
+  "native-r2-grok-v2-hash": {
+    "disposition": "Fixed distinct zero-key state and pre-open chunk-count validation. Recomputing legacy FNV on restore retained as a separate follow-up; not claimed fixed."
+  },
+  "native-r6-astra": {
+    "disposition": "Compressed-size overflow fixed with pre-callback bound and failure-count regression. Writer conflict index preserves key comparisons, versions and order, with byte-identical fixture, allocation failures and measured insertion improvements; fresh complete native rounds 7 and 8 found no remaining substantive issues in these repairs."
+  },
+  "interfaces-r4-astra": {
+    "disposition": "Fixed option-operand ownership and shared Windows/DJGPP wildcard negation, ranges and bracket literals in bc6f904. CLI, compatibility-matcher and sanitizer regressions pass; all four source CI workflows pass."
+  },
+  "integrations-r4-grok": {
+    "disposition": "Rejected after checking the HTML Worker algorithm and the completed three-engine browser suite in CI. The existing tests terminate workers and require timeout recovery; Chromium, Firefox and WebKit passed. No terminated-worker InvalidStateError requirement appears in the cited Worker algorithm. Local standalone probes were unavailable because Playwright browser binaries were absent; their receipt is not a passing test. No speculative source change was made.",
+    "evidence": "worker-termination-probe.json",
+    "specification": "https://html.spec.whatwg.org/multipage/workers.html#dom-worker-postmessage",
+    "scope": "The Worker algorithm delegates to its outside MessagePort; it does not state the reported terminated-worker exception.",
+    "ci": "https://github.com/evvaletov/uc2/actions/runs/43544038815"
+  },
+  "interfaces-r5-grok": {
+    "disposition": "Confirmed Windows named-temp cleanup: atexit runs before stdio closure and an open stream prevents unlink. Fixed with shared staged-stream ownership; commit and exit cleanup both close before rename/unlink. The new cli_staging regression covers actual stdin read failure, preserved destinations, and success/commit failure for all four staging callers. Fresh complete interface rounds 6 and 7 found no remaining substantive issues. Native CI passes on Windows, macOS and Linux; Windows explicitly reports 35/35 tests passed. See validation.json. Root-destination assertion claim rejected: assert(n) precedes slash removal; an actual debug invocation with -d / and unmatched selection exited 0 without extraction."
+  }
+}

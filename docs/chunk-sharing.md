@@ -57,8 +57,9 @@ the archive's disk size. Use the actual file size or writer `archive_size`.
 
 Each chunk, the ordered recipe and the complete decoded file have SHA-256
 checks. The historical UC2 XOR checksum is checked too. These detect corruption;
-they do not authenticate the author. Python/CLI extraction stages output before
-publication. C extraction callbacks can receive earlier verified chunks before
+they do not authenticate the author. Python extraction stages each file before
+publication. CLI extraction writes directly to the final path and can leave a
+partial file after a corruption or output error. C extraction callbacks can receive earlier verified chunks before
 a later corruption or output error, so callers must stage output when needed.
 
 ## Method 11 wire format

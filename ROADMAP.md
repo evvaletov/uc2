@@ -1,39 +1,44 @@
 # UC2 Roadmap
 
-## Recommended next priorities (2026-11-07)
+## Recommended next priorities (2026-11-13)
 
-Alpha11 adds optional shared chunks across named files and versions. The
-libarchive contribution is submitted; the next priorities are:
+The project-wide QA, prose and elegance audit is complete. The libarchive
+revision uses seekable input and has a reviewed maintainer response. The source
+repairs are ready for the next alpha release; alpha11 remains the published version.
 
-1. [ ] **Take the Total Commander and Midnight Commander proposals upstream.**
+1. [ ] **Release the reviewed repairs as alpha12.** Build and verify the release
+   artifacts, publish them, and check a clean installation. The audit includes
+   decoder, Windows, CLI, snapshot and tar fixes, plus faster writer and WCX
+   metadata handling. [Audit](docs/qa/project-2026-11-13.md). Tracking: 7c2d531.
+2. [ ] **Submit the prepared Total Commander and Midnight Commander proposals.**
    Review the [TC catalog draft](contrib/totalcommander/CATALOG-DRAFT.md) and
-   [MC extfs patch](contrib/mc/upstream/REVIEW.md), then authorize the first
-   contact/submission. Confirm MC's DCO sign-off. No external contact yet.
-   Tracking: 4b7fbd1.
-
-2. [ ] **Respond to libarchive review and settle the dependency/format ID.**
-   [PR #3832](https://github.com/libarchive/libarchive/pull/3832) proposes the
-   default-off shared LGPL reader. Submission is complete; maintainer review,
-   dependency acceptance and the proposed format ID remain pending.
+   [MC patch](contrib/mc/upstream/REVIEW.md); obtain the first-contact authority
+   and MC DCO acknowledgement recorded in 4b7fbd1. Neither was sent in this task.
+3. [ ] **Measure multi-gigabyte snapshots and interruption recovery.** Exercise
+   reference/manifest caps, process-kill and low-disk boundaries, temporary space
+   and recovery. The 2 GiB single-entry tests do not establish snapshot scale.
+   Include the remaining CLI metadata lookup cost. Tracking: a3bcfb4 / 380e7de.
+4. [ ] **Tune shared-chunk compression and mode selection.** Investigate the
+   measured 9.1% public-source regression while preserving edited-binary reuse
+   gains, format compatibility and current defaults. Tracking: 3fdd442.
+5. [ ] **Resolve the remaining libarchive design decisions with maintainers.**
+   [PR #3832](https://github.com/libarchive/libarchive/pull/3832) now removes
+   whole-input spooling from the optional reader. Dependency acceptance, format
+   ID allocation and whether the decoded-entry spool fits upstream remain open.
    Tracking: 7bbb6b6.
 
-3. [ ] **Complete the project-wide task-qa + task-at audit.**
-   Audit the remaining core and maintained documentation. Release-scoped panels
-   do not close this task. Tracking: c9edf0b.
+### Completed in the 13 November audit
 
-4. [ ] **Measure and harden multi-gigabyte snapshot collections.**
-   Alpha10's 1,045-file, 13 MiB measurement verifies restore and storage savings.
-   Measure near the reference/manifest caps, test process-kill and low-disk
-   recovery, and assess read-only/concurrent readers. Current operations require
-   a writable, exclusively locked repository. [Contract](docs/snapshots.md).
-   Tracking: a3bcfb4.
-
-5. [ ] **Tune shared-chunk compression and mode selection.**
-   Chunk reuse substantially reduces the measured edited-binary collections,
-   but the public-source case is 9.1% larger than dictionary mode. Compare
-   adaptive boundaries/dictionaries and automatic mode selection while retaining
-   the existing default and limits. [Measurements](docs/benchmarks/2026-11-07-chunk-sharing.md).
-   Tracking: 3fdd442.
+- [x] Project-wide task-qa, task-at and task-elegance, with independent Kimi,
+  GPT-6 Astra and Grok reviews. Final code areas have two consecutive rounds
+  without confirmed substantive issues; incomplete calls are recorded separately.
+- [x] Addressed the maintainer's input-spool concern, verified the existing
+  unuc2 CLI's pipe behaviour, and documented format references and limited demand
+  evidence. [Maintainer response](https://github.com/libarchive/libarchive/pull/3832#issuecomment-6870870080).
+- [x] Source tests, sanitizers, historical compatibility, native platform CI,
+  distributions and browser/integration checks. See the [audit record](docs/qa/project-2026-11-13.md).
+- [x] Recorded remaining CLI scaling/transactional-output work separately from
+  the completed fixes. Tracking: 380e7de. No new binary release was published.
 
 ### Implemented for 3.0.0a11
 
@@ -144,9 +149,9 @@ adds direct SAS/UC2SEA path input.
 - [x] Published [alpha6 on PyPI](https://pypi.org/project/uc2/3.0.0a6/) and
   [GitHub](https://github.com/evvaletov/uc2/releases/tag/v3.0.0-alpha.6), with
   twenty wheels, four native CLI packages, integration packages, and source.
-- [ ] Complete the independent three-reviewer audit panel. Subscription/access
-  failures, exhausted quota/credit, and timeouts prevented completed reviews.
-  Local fixes are complete; this item remains open. Release validation is in
+- [x] The independent project-wide audit was completed on 13 November 2026;
+  see [the audit record](docs/qa/project-2026-11-13.md). The alpha6 panel was
+  incomplete because of access, credit and timeout failures, as recorded in
   [the alpha6 audit notes](docs/releases/3.0.0a6-qa.md).
 
 ### Delivered: previous priorities 3-5 (3.0.0a5)
@@ -212,18 +217,11 @@ adds direct SAS/UC2SEA path input.
 
 ### Additional TODO requested by the user: task-qa + task-at
 
-- [ ] Complete the project-wide **task-qa + task-at** audit. Tracked in
-  git-bug **c9edf0b**. This is an additional task alongside the five priorities.
-  Alpha6 completed the local project audit and repairs, including maintained
-  prose and auxiliary codecs. Independent review remains incomplete: Claude
-  subscription access is disabled, Gemini ran out of quota, Grok timed out,
-  and paid fallbacks had no credit at that time. Alpha7 adds completed Gemini
-  and Kimi reviews of the new browser/preservation code; Grok has not returned
-  a code verdict. Those scoped reviews do not complete this project-wide task.
-  Misses are not counted as approval.
-  The shared workflows are at
-  `/home/evaletov/.claude-skills-shared/task-qa/SKILL.md` and
-  `/home/evaletov/.claude-skills-shared/task-at/SKILL.md`.
+- [x] Completed the project-wide **task-qa + task-at** audit, plus the requested
+  task-elegance review, on 13 November 2026. Tracking: c9edf0b. The earlier
+  release-scoped attempts remained incomplete; their dated records are retained.
+  The completed scope, repairs, reviewer receipts, rejected findings and
+  limitations are in [the project audit](docs/qa/project-2026-11-13.md).
 - [x] Fixed the confirmed BLAKE3 correctness gap: an independent check against
   the [official vectors](https://github.com/BLAKE3-team/BLAKE3/blob/master/test_vectors/test_vectors.json)
   originally matched 11 of 35 cases and failed 24. The repaired implementation

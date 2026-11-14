@@ -1,0 +1,12 @@
+{
+  "pr": "https://github.com/libarchive/libarchive/pull/3832",
+  "head": "8442770ce9a92b4a56aee8680d470070de6da2a6",
+  "state": "OPEN",
+  "review_decision": "CHANGES_REQUESTED",
+  "reply": "https://github.com/libarchive/libarchive/pull/3832#issuecomment-6870870080",
+  "comment_id": 6870870080,
+  "created_at": "2026-11-14T03:20:18Z",
+  "author": "evvaletov",
+  "reply_sha256": "956ab6f2e510f511e5f64c406538b91f780831e014001caf5ad69848d307c755",
+  "body_matches_reviewed_draft": true
+}

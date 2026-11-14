@@ -1,0 +1,17 @@
+[
+  {
+    "engine": "chromium",
+    "status": "unavailable",
+    "reason": "BrowserType.launch: Executable doesn't exist at /home/evaletov/.cache/ms-playwright/chromium_headless_shell-1223/chrome-headless-shell-linux64/chrome-headless-shell"
+  },
+  {
+    "engine": "firefox",
+    "status": "unavailable",
+    "reason": "BrowserType.launch: Executable doesn't exist at /home/evaletov/.cache/ms-playwright/firefox-1522/firefox/firefox"
+  },
+  {
+    "engine": "webkit",
+    "status": "unavailable",
+    "reason": "BrowserType.launch: Executable doesn't exist at /home/evaletov/.cache/ms-playwright/webkit-2287/pw_run.sh"
+  }
+]

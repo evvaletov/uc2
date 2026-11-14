@@ -1,10 +1,11 @@
 # Proposed UC2 reader for libarchive
 
 Submitted as [libarchive/libarchive#3832](https://github.com/libarchive/libarchive/pull/3832)
-on 2026-11-07, from `evvaletov:uc2-optional-reader` at `5ad7e3d7`, based on
+on 2026-11-07, from `evvaletov:uc2-optional-reader`, initially at `5ad7e3d7`, based on
 upstream `eb57ffefe20e98eb7ba05829ee1c23b90e589a71`. Maintainers requested
 design clarification on 8 November; the 13 November
-revision removes whole-input spooling from the optional reader. Acceptance is
+revision (`8442770ce9a92b4a56aee8680d470070de6da2a6`) removes whole-input
+spooling from the optional reader. Acceptance is
 pending.
 `0x110000` remains proposed, not assigned. The local full-feature adapter keeps
 its private ID until acceptance.
@@ -94,9 +95,10 @@ only when running bsdtar is insufficient. This validation built bsdtar with
 `--disable-shared --without-xml2 --without-expat` and restored the legacy fixture
 byte for byte; it does not establish support for every optional dependency.
 
-Current-master validation: all 969 libarchive tests pass. Focused enabled CMake
-and Autotools tests pass 130,390 assertions; disabled CMake tests also pass with
-warnings as errors. Full-suite testing caught and fixed format-slot exhaustion
+Current-master validation: the 969-test suite reports zero failures and 83 skips.
+Focused enabled CMake and Autotools tests pass 130,717 assertions each. The
+disabled CMake Debug build passes 5,626 assertions with warnings as errors.
+Full-suite testing caught and fixed format-slot exhaustion
 when registering the raw fallback after all formats. Resource-limit and actual
 bsdtar tests pass. The PR is submitted; acceptance and any review revisions
 remain open under 7bbb6b6.

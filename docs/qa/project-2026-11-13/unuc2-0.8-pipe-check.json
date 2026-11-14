@@ -1,0 +1,30 @@
+[
+  {
+    "case": "regular file",
+    "returncode": 0,
+    "stdout_bytes": 265,
+    "stderr": "",
+    "stdout_sha256": "4261192c782562c7292bfdafd58b027dbae3220e267a490d5eef1ea57c639374"
+  },
+  {
+    "case": "stdin dash",
+    "returncode": 1,
+    "stdout_bytes": 0,
+    "stderr": "unuc2: -: No such file or directory\n",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "case": "stdin device",
+    "returncode": 1,
+    "stdout_bytes": 0,
+    "stderr": "unuc2: fseek: Illegal seek\n",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "case": "stdout extraction",
+    "returncode": 0,
+    "stdout_bytes": 68550,
+    "stderr": "",
+    "stdout_sha256": "dc33f5a7936880f6d47e37eb7165862b68a58479b4599633f55b2b1cf77427cb"
+  }
+]

@@ -1,0 +1,7 @@
+{
+  "returncode": 1,
+  "stderr": "uc2: /tmp/uc2-close-fault-f2tplb7y/protected.uc2: output close failed: Input/output error\n",
+  "archive_preserved": true,
+  "temporary_files_remaining": 0,
+  "scope": "Inject a real fclose followed by EOF/EIO for the staged output; the stream must not be closed again and output must not be installed."
+}

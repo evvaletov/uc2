@@ -1,0 +1,176 @@
+{
+  "files": {
+    "CREDITS.md": {
+      "sha256": "cb21a68008aa692fc1b36026d6b4e720bbf4cd2dfa37b73dad93a64bee823bdc",
+      "words": 492
+    },
+    "README.md": {
+      "sha256": "36d4124a9035521db3e406e219d0b3dba716cf9fdba43cabd9586d6214608535",
+      "words": 1068
+    },
+    "cli/uc2.1": {
+      "sha256": "5ad35489af5a2b1a95e316a3725d7d7a08ab544114a938f7f78ee0ba2d36e6f5",
+      "words": 1234
+    },
+    "cmake/README-djgpp.md": {
+      "sha256": "87a22674f19c6781116fc4dc86ca65a60eecd7822b46c9211d65fcdb49e5b022",
+      "words": 380
+    },
+    "contrib/libarchive/README.md": {
+      "sha256": "afcf98f15f189df2534f7b0f1b229b0d31d094d0ad02bd307dd12c28b3fe2725",
+      "words": 511
+    },
+    "contrib/libuc2read/README.md": {
+      "sha256": "8aa3719c1b5d29d8f53bf7dab0d5ffecbe31920c824437eb1f21ac72382e9559",
+      "words": 199
+    },
+    "contrib/mc/README.md": {
+      "sha256": "32e555041c60cf9c1e83f06a7a2f2df636241f37a3eafc8b019ae388fb4a43f5",
+      "words": 284
+    },
+    "contrib/totalcommander/README.md": {
+      "sha256": "6cba27c7882a8afd25dc1836debe87382c8b4e4d995e8e0c78fec265a6c629ea",
+      "words": 619
+    },
+    "docs/building.rst": {
+      "sha256": "e6e78251cf3daed79a6f14db15aca5bf8bb20862ebf21612924ac9e3caea8a5a",
+      "words": 486
+    },
+    "docs/chunk-sharing.md": {
+      "sha256": "6d62898e14df7202fef4024ef43223e604ee1a07805e4ab0dd22b9cd329f0449",
+      "words": 851
+    },
+    "docs/format.rst": {
+      "sha256": "104722e68730d4ddc3d07daab3dc65d6825ebe74e4cad89a836206673ce78051",
+      "words": 907
+    },
+    "docs/history.rst": {
+      "sha256": "3328401dcd97728a1ca9bac766fb026e508061209c3daa09b0e28c0bd34122c6",
+      "words": 137
+    },
+    "docs/index.rst": {
+      "sha256": "a197d9b9348b32455ec8a0ea8627953b28b7ab88f08d7e6e1c18efb9584bba6f",
+      "words": 179
+    },
+    "docs/library.rst": {
+      "sha256": "2d1c6d426ee114ce44bc1260924b1e23632b6c779c1ecb62619fecd972e759fa",
+      "words": 1160
+    },
+    "docs/license-audit.md": {
+      "sha256": "7be1978235146f8e0df9dc24143082d4d57e8ab11d448df33a2fb3f0b0caf6a4",
+      "words": 1676
+    },
+    "docs/mount.md": {
+      "sha256": "089f3f43c03c88c6567baa571ccfaf0a268559d284858e450644e2859847555f",
+      "words": 471
+    },
+    "docs/preservation.md": {
+      "sha256": "a7ea8a15a3f7f5b43dad2626a9c8b4c08ea7c07f4fb6aa6b6a6af89e8c87c7f0",
+      "words": 564
+    },
+    "docs/quickstart.rst": {
+      "sha256": "8daa8cf221bf043afa60534e0a2df8105f3fb71c92a50036ea982120f14d6576",
+      "words": 110
+    },
+    "docs/snapshots.md": {
+      "sha256": "0fbc7a085874ac36e1905da5c84f632e0f3efcd41197400aa0570146315ca9f1",
+      "words": 1080
+    },
+    "docs/tar-ingestion.md": {
+      "sha256": "0ecf63fb97b40e5c52143b34db8652bf559d2adde6a87040072a69e9f41feadd",
+      "words": 320
+    },
+    "docs/usage.rst": {
+      "sha256": "083c6d1deb4ee79cc9511946ef1d25d7862fc4c9939504aed303eb6c57c0f2aa",
+      "words": 758
+    },
+    "docs/volumes.md": {
+      "sha256": "e53cff55bcd530e66d00adf24b60e2d3807ae0f7bc48f80ba3a992f35a10bb03",
+      "words": 407
+    },
+    "python/README.md": {
+      "sha256": "745522ae514a95f7ac04745c30a936f8fbb9279058cc8806cb5e4064ef7f9a6e",
+      "words": 1417
+    },
+    "tests/archives/README.md": {
+      "sha256": "72683c35109135b4b8a5c2dc8aa007beb7d72fbdf4b6e271a7c98d34cd198f83",
+      "words": 462
+    },
+    "tests/fuzz/README.md": {
+      "sha256": "2b634b2cefcee9fb0fabe0a459974002e9961e88f45609d0ac96248c62f5aae0",
+      "words": 434
+    },
+    "web/README.md": {
+      "sha256": "5fef75976872674dff16d87fc91189a8669098126a8f52a3b21c61e65cf6a28a",
+      "words": 676
+    },
+    "contrib/libarchive/upstream/REVIEW.md": {
+      "sha256": "f6ddef73fae730c9e3d58eaf969f3caf7183930065b79d2a061c384a00ee5c57",
+      "words": 811
+    },
+    "contrib/libarchive/upstream/response-2026-11-13.md": {
+      "sha256": "956ab6f2e510f511e5f64c406538b91f780831e014001caf5ad69848d307c755",
+      "words": 337
+    },
+    "contrib/libarchive/upstream/pr-description-2026-11-13.md": {
+      "sha256": "dd911f1bfa552f387f45ba43d923319694f6e84f9d3e47348ef200a40ce1e62a",
+      "words": 302
+    },
+    "docs/qa/project-2026-11-13.md": {
+      "sha256": "fb4107f279d256f058f4ae65defc8534875b42dcd3d7892e5c98ca4a6b373b74",
+      "words": 1675
+    }
+  },
+  "hits": [
+    {
+      "path": "cli/uc2.1",
+      "line": 88,
+      "pattern": "stock_or_promotional",
+      "text": "Process all stored versions of each file, not only the most recent."
+    },
+    {
+      "path": "docs/chunk-sharing.md",
+      "line": 81,
+      "pattern": "dash_or_curly_quote",
+      "text": "| 56 | 32 | SHA-256 of header bytes 0–55 followed by the ordered record table |"
+    },
+    {
+      "path": "docs/chunk-sharing.md",
+      "line": 87,
+      "pattern": "dash_or_curly_quote",
+      "text": "| 8 | 4 | Decoded length, 1–32,768 |"
+    },
+    {
+      "path": "docs/chunk-sharing.md",
+      "line": 88,
+      "pattern": "dash_or_curly_quote",
+      "text": "| 12 | 2 | Method: 0 raw, 1–9 Huffman without a master/delta, 10 rANS |"
+    },
+    {
+      "path": "docs/snapshots.md",
+      "line": 58,
+      "pattern": "dash_or_curly_quote",
+      "text": "random data normally reaches the reference limit around 4–5 GiB. The byte"
+    },
+    {
+      "path": "docs/usage.rst",
+      "line": 104,
+      "pattern": "stock_or_promotional",
+      "text": "- Include all file versions (not just latest)"
+    },
+    {
+      "path": "docs/volumes.md",
+      "line": 20,
+      "pattern": "dash_or_curly_quote",
+      "text": "… (or uppercase `.P01`); indices 100–999 use three digits. UC2SEA uses a first"
+    }
+  ],
+  "categories": [
+    "dash_or_curly_quote",
+    "stock_or_promotional",
+    "canned_transition",
+    "draft_placeholder"
+  ],
+  "disposition": "Final contextual read complete, including closure status/counts and the verified upstream posting receipt. Five numeric ranges retain en dashes; two version-selection descriptions use not only/not just to explain exact option behaviour. No canned-transition or placeholder hits. The 337-word maintainer reply has no scan hits and matches the three-seat prose-r4 snapshot. Three local rescans followed the initial recorded scan; the final text needs no further prose edits.",
+  "scan_iteration": 4
+}
