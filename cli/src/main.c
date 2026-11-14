@@ -237,7 +237,10 @@ struct node {
 	struct list on_sel;
 	struct list children; // head
 	struct node *parent;
-	int version;
+	struct node *name_group;
+	struct node *first_version; /* owned by the name group's first node */
+	unsigned file_count;
+	unsigned version;
 	bool visit:1;
 	bool marked:1;
 	bool expanded:1;
@@ -249,40 +252,116 @@ struct node root = {
 	.children = {.prev = &root.children, .next = &root.children}
 };
 
+/* These indexes exist only while reading the directory. Lists still own the
+ * traversal order, including old versions and duplicate directory IDs. */
+struct node_index {
+	struct node **slots;
+	size_t capacity, count;
+};
+
+static struct node_index directory_index, name_index;
+
+static uint64_t node_hash(const struct node *ne, bool by_id)
+{
+	uint64_t hash = by_id ? ne->entry.id : ne->parent->entry.id;
+	if (!by_id)
+		for (unsigned i = 0; i < ne->entry.name_len; i++)
+			hash = (hash ^ (unsigned char)ne->entry.name[i]) * UINT64_C(1099511628211);
+	/* Mix directory IDs as well as names before masking to a power of two. */
+	hash ^= hash >> 30;
+	hash *= UINT64_C(0xbf58476d1ce4e5b9);
+	hash ^= hash >> 27;
+	hash *= UINT64_C(0x94d049bb133111eb);
+	return hash ^ (hash >> 31);
+}
+
+static struct node **node_slot(struct node_index *index, const struct node *key, bool by_id)
+{
+	if (index->count >= index->capacity / 2) {
+		size_t capacity = index->capacity ? index->capacity * 2 : 256;
+		if (capacity <= index->capacity || capacity > SIZE_MAX / sizeof *index->slots)
+			errx(EXIT_FAILURE, "Too many archive entries");
+		struct node **slots = calloc(capacity, sizeof *slots);
+		if (!slots) err(EXIT_FAILURE, 0);
+		for (size_t i = 0; i < index->capacity; i++) {
+			struct node *ne = index->slots[i];
+			if (!ne) continue;
+			size_t at = node_hash(ne, by_id) & (capacity - 1);
+			while (slots[at]) at = (at + 1) & (capacity - 1);
+			slots[at] = ne;
+		}
+		free(index->slots);
+		index->slots = slots;
+		index->capacity = capacity;
+	}
+	size_t at = node_hash(key, by_id) & (index->capacity - 1);
+	while (index->slots[at]) {
+		struct node *ne = index->slots[at];
+		if (by_id ? ne->entry.id == key->entry.id :
+		    ne->parent == key->parent && ne->entry.name_len == key->entry.name_len &&
+		    memcmp(ne->entry.name, key->entry.name, key->entry.name_len) == 0)
+			break;
+		at = (at + 1) & (index->capacity - 1);
+	}
+	return &index->slots[at];
+}
+
 static void new_entry(struct node *ne)
 {
 	struct uc2_entry *e = &ne->entry;
 	struct node *dir = &root;
 	if (e->dirid) {
-		for (struct list *l = dirs.next;; l = l->next) {
-			if (l == &dirs)
-				errx(EXIT_FAILURE, "%s: missing parent directory for %s",
-				     opt.archive, e->name);
-			dir = list_item(l, struct node, by_type);
-			if (dir->entry.id == ne->entry.dirid)
-				break;
-		}
+		struct node key = {.entry = {.id = e->dirid}};
+		dir = *node_slot(&directory_index, &key, true);
+		if (!dir)
+			errx(EXIT_FAILURE, "%s: missing parent directory for %s",
+			     opt.archive, e->name);
 	}
 	ne->parent = dir;
+	struct node **slot = node_slot(&name_index, ne, false);
+	if (!*slot) {
+		*slot = ne;
+		name_index.count++;
+		ne->first_version = ne;
+		ne->file_count = 0;
+	}
+	struct node *group = ne->name_group = *slot;
 	struct list *at = 0;
 	if (!e->is_dir) {
-		for (struct list *l = dir->children.next; l != &dir->children; l = l->next) {
-			struct node *fe = list_item(l, struct node, on_dir);
-			if (fe->entry.name_len == ne->entry.name_len
-			 && memcmp(fe->entry.name, ne->entry.name, ne->entry.name_len) == 0) {
-				fe->version++;
-				if (!at) at = &fe->on_dir;
-			}
+		if (group->file_count == UINT_MAX)
+			errx(EXIT_FAILURE, "Too many versions of %s", e->name);
+		group->file_count++;
+		if (group->first_version != ne) at = &group->first_version->on_dir;
+		group->first_version = ne;
+	} else {
+		slot = node_slot(&directory_index, ne, true);
+		if (!*slot) {
+			*slot = ne; /* The first directory with this ID wins, as before. */
+			directory_index.count++;
 		}
 	}
 	list_append(at ? at : &dir->children, &ne->on_dir);
 	list_append(e->is_dir ? &dirs : &files, &ne->by_type);
 	list_init(&ne->children);
 	list_init(&ne->on_sel);
-	ne->version = 0;
+	/* Resolve versions once after reading: every later file of this name
+	 * increments the version, including for a same-named directory. */
+	ne->version = group->file_count;
 	ne->visit = false;
 	ne->marked = false;
 	ne->expanded = false;
+}
+
+static void finish_entries(void)
+{
+	struct list *heads[] = {&files, &dirs};
+	for (unsigned i = 0; i < sizeof heads / sizeof *heads; i++)
+		for (struct list *l = heads[i]->next; l != heads[i]; l = l->next) {
+			struct node *ne = list_item(l, struct node, by_type);
+			ne->version = ne->name_group->file_count - ne->version;
+		}
+	free(directory_index.slots);
+	free(name_index.slots);
 }
 
 static void print_dir_path(struct node *ne)
@@ -2278,6 +2357,7 @@ usage:
 	}
 
 	char label[12];
+	finish_entries();
 	int ret = uc2_finish_cdir(uc2, label);
 	if (ret < 0) {
 		uc2err(uc2, ret, 0);

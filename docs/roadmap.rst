@@ -1,21 +1,25 @@
 Roadmap
 =======
 
-The project-wide QA, prose and elegance audit is complete. The reviewed source
-repairs are ready for the next alpha release; alpha11 remains published.
-The libarchive input revision and maintainer response are in `PR #3832
-<https://github.com/libarchive/libarchive/pull/3832>`_. The next priorities are:
+Alpha12 includes the project audit repairs, CLI metadata indexes and expanded
+snapshot scale/recovery validation. See the `release record
+<https://github.com/evvaletov/uc2/blob/main/docs/releases/3.0.0a12-qa.md>`_
+and `measurements
+<https://github.com/evvaletov/uc2/blob/main/docs/benchmarks/2026-11-14-scale-recovery.md>`_.
 
-1. Release and verify alpha12 with the reviewed repairs.
-2. Submit the prepared Total Commander and Midnight Commander proposals after
-   the user's authority for those contacts; confirm MC's DCO sign-off.
-3. Measure multi-gigabyte snapshot collections, interruption recovery and the
-   remaining CLI metadata cost.
-4. Tune shared-chunk compression and mode selection against the documented
-   public-source regression and edited-binary gains.
-5. Resolve libarchive's optional dependency, format ID and decoded-entry spool
+The next priorities are:
+
+1. Submit the prepared Total Commander and Midnight Commander proposals once
+   the user has authorised those contacts; confirm MC's DCO sign-off.
+2. Tune shared-chunk compression against the documented public-source regression
+   while preserving edited-binary gains and compatibility.
+3. Resolve libarchive's optional dependency, format ID and decoded-entry spool
    decisions with the maintainers.
+4. Add transactional CLI extraction and OTS attachment, preserving existing
+   outputs on failure.
+5. Design snapshot growth beyond the fixed reference and manifest caps; assess
+   read-only/concurrent access separately from the current exclusive lock.
 
 See `ROADMAP.md on GitHub
 <https://github.com/evvaletov/uc2/blob/main/ROADMAP.md>`_ for evidence, completed
-work and tracking references.
+work and tracking references. TC and MC submissions remain pending.

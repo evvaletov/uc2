@@ -1,0 +1,80 @@
+{
+  "source_revision": "97e355c5f3be0e53627b9bd611c58559c7125700",
+  "snapshot_sha256": "13ea9bddf6424dd585182250095518bfee33e67078b2818598b87f06efa38b6c",
+  "harness_sha256": "ef5da74822ae047b4cd6a67309937a7bd1cba17827c76bd8c5f86f1f6f052086",
+  "platform": "Linux x86_64",
+  "cases": [
+    {
+      "case": "create-v1",
+      "killed": true,
+      "removed_owned_locks": [
+        "repo"
+      ],
+      "recovered": true
+    },
+    {
+      "case": "create-v2",
+      "killed": true,
+      "removed_owned_locks": [
+        "repo"
+      ],
+      "recovered": true
+    },
+    {
+      "case": "compact-before-config",
+      "killed": true,
+      "removed_owned_locks": [
+        "repo"
+      ],
+      "recovered": true
+    },
+    {
+      "case": "compact-after-config",
+      "killed": true,
+      "removed_owned_locks": [
+        "repo"
+      ],
+      "recovered": true
+    },
+    {
+      "case": "prune-v1",
+      "killed": true,
+      "removed_owned_locks": [
+        "repo"
+      ],
+      "recovered": true
+    },
+    {
+      "case": "prune-v2",
+      "killed": true,
+      "removed_owned_locks": [
+        "repo"
+      ],
+      "recovered": true
+    },
+    {
+      "case": "repair-v2",
+      "killed": true,
+      "removed_owned_locks": [
+        "repo"
+      ],
+      "recovered": true
+    },
+    {
+      "case": "restore-before-publish",
+      "killed": true,
+      "removed_owned_locks": [
+        "repo"
+      ],
+      "recovered": true
+    },
+    {
+      "case": "restore-after-publish",
+      "killed": true,
+      "removed_owned_locks": [
+        "repo"
+      ],
+      "recovered": true
+    }
+  ]
+}

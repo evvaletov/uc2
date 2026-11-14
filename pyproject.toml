@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "uc2"
-version = "3.0.0a11"
+version = "3.0.0a12"
 description = "Read and create UltraCompressor II archives in Python, with a bundled native CLI"
 readme = "python/README.md"
 requires-python = ">=3.10"
@@ -50,7 +50,7 @@ UC2_BUILD_PYTHON = "ON"
 UC2_BUILD_TESTS = "OFF"
 UC2_BUILD_LIBARCHIVE_PLUGIN = "OFF"
 UC2_BUILD_WCX = "OFF"
-UC2_VERSION_LABEL = "3.0.0a11"
+UC2_VERSION_LABEL = "3.0.0a12"
 
 [tool.cibuildwheel]
 build = "cp3{10,11,12,13,14}-*"

@@ -112,7 +112,8 @@ writable repository and take the same exclusive `.writer-lock`. Stop older
 clients before maintenance. Remove a leftover lock only after confirming that
 no operation is running. An interrupted migration can leave loose backups or
 hidden temporary files; resume `compact`, or inspect abandoned temporary files
-with all clients stopped. No operation guesses that another process is dead.
+with all clients stopped. Snapshot commands refuse to proceed while
+`.writer-lock` exists.
 
 The per-operation decoded-chunk cache is limited to 8 MiB. Existing per-snapshot
 entry, reference and manifest limits still apply; maintenance also caps all inventoried chunks (including orphans) at two million
@@ -121,3 +122,41 @@ require splitting or a later storage format before maintenance. These limits are
 the optional logical-byte ceiling. Packing reduces filesystem overhead and
 manifest storage; it does not make the repository unbounded. See the
 [1,045-file measurement](benchmarks/2026-11-07-snapshot-maintenance.md).
+
+## Recovering an interrupted operation
+
+Stop all clients before inspecting an interrupted repository. Read the PID in
+`.writer-lock` and confirm that the owning operation has stopped on the machine
+that ran it. A PID can be reused, and a repository may have moved between
+machines; a failed local PID lookup alone does not establish ownership. Remove
+`.writer-lock` only after confirming that its owning operation has stopped.
+There is no automatic lock
+expiry or lock-stealing command.
+
+Keep `config.json` and every SQLite file, including a rollback journal, together.
+Run `uc2 snapshot list REPOSITORY` so SQLite can recover an interrupted
+transaction and you can inspect the committed history. Do not delete a journal or change the format marker to
+try to repair a failed migration. `config.json` selects the authoritative store:
+before the migration switch it is the loose objects; afterward it is the packed
+database. Once verification succeeds, rerun `compact` to finish cleanup.
+
+After a failed create, list the history and verify the intended committed IDs.
+A loose repository can contain orphan chunks; an explicit `prune --apply` can
+remove them after the retained history verifies. Packed create, prune and repair
+commit their changes as transactions. Rerun the intended operation after fixing
+the failure and checking the history. For a full filesystem, make space for the
+operation's temporary files as well as its final output.
+
+A killed restore can leave a `.uc2-restore-*` staging directory. On POSIX it can
+also leave an empty destination reserved immediately before publication. Inspect
+these paths with the process stopped; preserve them if you cannot confirm that
+the stopped restore created them. Restore again to a different, new destination, or remove only a
+confirmed abandoned empty reservation before retrying. A completed destination
+can already exist when a final directory sync reports an error; check it before
+retrying. Keep the repository and original source until the restored data has
+been checked.
+
+The [alpha12 scale and recovery record](benchmarks/2026-11-14-scale-recovery.md)
+reports a multi-GiB collection, actual default-limit boundaries, process-kill
+checkpoints and disk-full tests. Process interruption tests do not establish
+durability under power loss or storage-controller failure.

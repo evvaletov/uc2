@@ -1,31 +1,100 @@
 # UC2 Roadmap
 
-## Recommended next priorities (2026-11-13)
+## Recommended next priorities (2026-11-14)
 
-The project-wide QA, prose and elegance audit is complete. The libarchive
-revision uses seekable input and has a reviewed maintainer response. The source
-repairs are ready for the next alpha release; alpha11 remains the published version.
+Alpha12 includes the project audit repairs and the CLI metadata indexes.
+The [release record](docs/releases/3.0.0a12-qa.md) and
+[scale/recovery measurements](docs/benchmarks/2026-11-14-scale-recovery.md)
+cover the implementation, validation and remaining limits. SDF mirrors the
+source and release tags.
 
-1. [ ] **Release the reviewed repairs as alpha12.** Build and verify the release
-   artifacts, publish them, and check a clean installation. The audit includes
-   decoder, Windows, CLI, snapshot and tar fixes, plus faster writer and WCX
-   metadata handling. [Audit](docs/qa/project-2026-11-13.md). Tracking: 7c2d531.
-2. [ ] **Submit the prepared Total Commander and Midnight Commander proposals.**
-   Review the [TC catalog draft](contrib/totalcommander/CATALOG-DRAFT.md) and
-   [MC patch](contrib/mc/upstream/REVIEW.md); obtain the first-contact authority
-   and MC DCO acknowledgement recorded in 4b7fbd1. Neither was sent in this task.
-3. [ ] **Measure multi-gigabyte snapshots and interruption recovery.** Exercise
-   reference/manifest caps, process-kill and low-disk boundaries, temporary space
-   and recovery. The 2 GiB single-entry tests do not establish snapshot scale.
-   Include the remaining CLI metadata lookup cost. Tracking: a3bcfb4 / 380e7de.
-4. [ ] **Tune shared-chunk compression and mode selection.** Investigate the
+1. [ ] **Submit the prepared Total Commander and Midnight Commander proposals.**
+   Review the [TC catalogue draft](contrib/totalcommander/CATALOG-DRAFT.md) and
+   [MC patch](contrib/mc/upstream/REVIEW.md), confirm current upstream requirements
+   and the MC DCO acknowledgement, then obtain the first-contact authority
+   recorded in 4b7fbd1. Submission remains pending.
+2. [ ] **Tune shared-chunk compression and mode selection.** Investigate the
    measured 9.1% public-source regression while preserving edited-binary reuse
    gains, format compatibility and current defaults. Tracking: 3fdd442.
-5. [ ] **Resolve the remaining libarchive design decisions with maintainers.**
-   [PR #3832](https://github.com/libarchive/libarchive/pull/3832) now removes
+3. [ ] **Resolve the remaining libarchive design decisions with maintainers.**
+   [PR #3832](https://github.com/libarchive/libarchive/pull/3832) removes
    whole-input spooling from the optional reader. Dependency acceptance, format
-   ID allocation and whether the decoded-entry spool fits upstream remain open.
-   Tracking: 7bbb6b6.
+   ID allocation and the decoded-entry spool remain open. Tracking: 7bbb6b6.
+4. [ ] **Make CLI extraction and OTS attachment transactional.** Preserve
+   existing outputs when decoding, writing or final publication fails. The CLI
+   metadata-scaling part of 380e7de is complete; direct-output behaviour remains
+   documented pending this separate change.
+5. [ ] **Design snapshot growth beyond the fixed reference and manifest caps.**
+   Use the measured boundaries to decide on repository partitioning or a larger
+   packed format. Keep v1/v2 compatibility and verified publication; assess
+   read-only/concurrent readers separately from the current exclusive lock.
+
+### Distribution and visibility TODOs (14 November 2026)
+
+Tracking: `655345a`; SDF mirror work also relates to `176dc48`. Public package
+submissions, mailing-list messages and announcements remain pending. The TC/MC
+proposals above remain a separate task.
+
+- [ ] Reconcile the current alpha release across GitHub assets, PyPI metadata,
+  installation commands and the release record before outreach. Preserve the
+  active alpha12 release work; existing binary and Python distribution is a
+  foundation to extend, not a source-only installation problem.
+- [ ] Prepare and validate a FreeDOS ZIP/LSM package, current official repository/
+  ibiblio submission requirements and FDIMPLES/FDNPKG installation; draft the
+  relevant freedos-devel/freedos-user notices. Confirm the third-party route and
+  disclose AI assistance; official/default-package acceptance is not established.
+- [ ] Prepare a project Homebrew tap and AUR packaging, with clean install tests;
+  assess distribution-maintained Linux packages and Winget requirements. Defer
+  Homebrew core submission until stable-release and platform criteria are met.
+  UC2 already has PyPI wheels and Linux/macOS/Windows CLI downloads; add a
+  separately tested DJGPP DOS bundle if the release inventory still lacks one.
+- [ ] Prepare a technical article on the revival, compression design and measured
+  round trips with original DOS UC2. Default levels 2-5 without `--chunked` use
+  historical Huffman; levels 6-9 require the new rANS reader, and `--chunked`
+  requires a current revival reader at every level. BLAKE3 is a standalone tested
+  module outside the archive read/write hash path.
+- [ ] Keep HN publication deferred under the current owner preference; eventual
+  HN text must be owner-written and manually submitted. Lobsters needs an
+  invitation and account eligibility, including the 70-day self-promotion limit.
+  A technical article can be prepared without either announcement being posted.
+- [ ] Assess a Hackaday tip on DOS preservation and demonstrated round trips,
+  using an available release and a short visual example; coverage is editorial.
+- [ ] Prepare appropriate retrocomputing/DOS/C community posts, including
+  relevant subreddits, VOGONS and VCFED, after checking rules and posting authority.
+- [ ] Assess lzbench first: define a fair in-memory codec adapter and separate its
+  measurements from whole-archive/master-block results. Check licensing and
+  maintainer acceptance before integration. Squash is a lower-priority candidate
+  pending a maintenance check; its public repository last push was in April 2020
+  at the 14 November check. Check Just Solve the File Format Wiki for an existing
+  entry, then propose accurate current implementation/format links.
+- [ ] Add a reproducible Linux-to-original-DOS/DOSBox-X round-trip demo to the
+  README/docs, with a short GIF/screenshot, text alternative and exact commands.
+- [ ] Keep GitHub topics, README and releases current. Make SDF source/tag/git-bug
+  mirroring repeatable or automate it with failure reporting and minimal credentials.
+
+Use existing releases as the starting point. Search ranking, indexing and
+community traffic are outcomes to measure, not guarantees.
+
+Route references: [Homebrew taps](https://docs.brew.sh/How-to-Create-and-Maintain-a-Tap),
+[Homebrew core criteria](https://docs.brew.sh/Acceptable-Formulae),
+[WinGet submissions](https://learn.microsoft.com/en-us/windows/package-manager/package/),
+[FreeDOS policy](https://www.freedos.org/about/devel/),
+[lzbench](https://github.com/inikep/lzbench),
+[Squash](https://github.com/quixdb/squash) and
+[Hackaday tips](https://hackaday.com/submit-a-tip/).
+
+### Implemented for 3.0.0a12
+
+- [x] Project audit fixes for decoding, storage/allocation failures, Windows I/O,
+  CLI selection and publication, tar metadata and snapshot input validation.
+- [x] CLI parent/name indexes and deferred version counts, preserving listing
+  and selection semantics. The 100,000-file listing took 0.50 s on the test host;
+  the previous implementation exceeded 120 s.
+- [x] Actual default-limit tests, process-kill recovery and real ENOSPC checks,
+  plus a multi-GiB create/restore/maintenance workload. The existing limits and
+  explicit manual lock-recovery policy remain in force.
+- Evidence: [alpha12 release record](docs/releases/3.0.0a12-qa.md),
+  [measurements and recovery](docs/benchmarks/2026-11-14-scale-recovery.md).
 
 ### Completed in the 13 November audit
 

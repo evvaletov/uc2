@@ -1,0 +1,54 @@
+{
+  "scope": "Release notes, snapshot recovery guide and public roadmap",
+  "rounds": [
+    {
+      "round": 1,
+      "result": "wording findings applied",
+      "triage": "prose-r1-triage.json"
+    },
+    {
+      "round": 2,
+      "result": "no confirmed AI tells; two PASS, Grok NIT preferences only",
+      "notes": "Kept the conditional migration paragraph: its context is explicitly the config switch; this does not make compact a required recovery command for unrelated failures. Kept explicit lock-stop warning. Public roadmap refers to the actual project user/maintainer; no extra approval gate added."
+    }
+  ],
+  "source_hashes": {
+    "docs/releases/3.0.0a12-qa.md": "6a4247e8faa566551492bd594b0239f33b64a04c2ed09423ce52d9a35a39da92",
+    "docs/snapshots.md": "156053ae55a6c4d340c1db8a12465452955d919a00b3a1f3a89f2ec67b91b6d2",
+    "docs/roadmap.rst": "7c47a0a25d727abc7c6088680f7e0585ca86e0e098b352d9a0b713de03151a7f"
+  },
+  "reviewers": {
+    "astra": {
+      "status": {
+        "seat": "astra",
+        "exit_code": 0,
+        "seconds": 693.9,
+        "prompt_sha256": "9f107a8ff0ef404a4f189ac9ec232b17a2e16ef006062b4aebef191be69ebb47",
+        "log": "/home/evaletov/DOS/UC2/.git/alpha12-20261114/prose-r2-astra.log"
+      },
+      "verdict": "Read the entire frozen bundle: the alpha12 release notes, complete snapshot guide and roadmap, with particular attention to the new recovery section.\n\nNO ISSUES. The prose is direct and appropriately technical. Recovery instructions clearly retain the ownership checks before lock removal, journal preservation, migration authority, restore-path precautions and durability limitations. Repeated cautions serve their local operational context. The release notes distinguish source mirrors from binary downloads, and the roadmap clearly leaves TC/MC contacts pending.\n\nScope: wording, redundancy and operational clarity within the supplied texts. I did not inspect implementation, linked evidence, release assets or other reviewers; run tests; assess publication authority; or modify files.\n\nPASS"
+    },
+    "grok": {
+      "status": {
+        "seat": "grok",
+        "exit_code": 0,
+        "seconds": 111.8,
+        "prompt_sha256": "9f107a8ff0ef404a4f189ac9ec232b17a2e16ef006062b4aebef191be69ebb47",
+        "log": "/home/evaletov/DOS/UC2/.git/alpha12-20261114/prose-r2-grok.log"
+      },
+      "verdict": "The new recovery section and the alpha12 release and roadmap notes are mostly direct and technical. One recovery step can be misread, and two smaller wording nits are worth a tighten. No conspicuous formulaic tells turned up.\n\n**NIT \u2014 recovery, scope of `compact`.**  \n\u201cOnce verification succeeds, rerun `compact` to finish cleanup.\u201d  \nThat sentence follows general SQLite and `config.json` guidance, so it can be read as the next step after any interrupted operation. `compact` converts v1 to v2; using it to \u201cfinish cleanup\u201d after a failed create, prune, or restore would start a migration.  \nCorrection: \u201cIf `compact` was interrupted, verify the history, then rerun `compact` to finish that migration. Do not run `compact` to recover a failed create, prune, or restore.\u201d\n\n**NIT \u2014 recovery, repeated lock check.**  \n\u201cconfirm that the owning operation has stopped on the machine that ran it. \u2026 Remove `.writer-lock` only after confirming that its owning operation has stopped.\u201d  \nThe PID-reuse warning is the part that matters; the stop check is stated twice.  \nCorrection: \u201cA PID can be reused, and a repository may have moved between machines, so a failed local PID lookup alone does not establish ownership. Remove `.writer-lock` only after confirming that the owning operation has stopped on the machine that ran it.\u201d\n\n**NIT \u2014 roadmap, who authorises contact.**  \n\u201conce the user has authorised those contacts\u201d  \nIn a public roadmap, \u201cthe user\u201d can mean an end user rather than the maintainer who may approve Total Commander and Midnight Commander contact.  \nCorrection: \u201conce the maintainer has authorised those contacts\u201d.\n\nPower-loss limits, fixed caps, SDF versus GitHub versus PyPI, and deferred MC/TC submission are stated clearly and should stay.\n\nFINDINGS"
+    },
+    "kimi": {
+      "status": {
+        "seat": "kimi",
+        "exit_code": 0,
+        "seconds": 19.447190538980067,
+        "prompt_sha256": "9f107a8ff0ef404a4f189ac9ec232b17a2e16ef006062b4aebef191be69ebb47",
+        "log": "/home/evaletov/DOS/UC2/.git/alpha12-20261114/prose-r2-kimi.log",
+        "transport": "local kimi-review",
+        "retry_of": "starfield02 timeout"
+      },
+      "verdict": "kimi-review: model=kimi-k3 finish=stop prompt_tokens=3171 completion_tokens=595 reasoning_tokens=400 effort=low 19s\nPASS\n\nAll three documents read as technical project prose: specific, hedged where required (power-loss durability, PID reuse, MC/TC deferral) and free of conspicuous AI formulae. Commands, identifiers, limits, failure conditions and source links are preserved and clear.\n\nOne optional observation (not a finding): the release notes' \"[scale and recovery record] contains the measured CLI results, multi-GiB snapshot workload, tests at the default limits and recovery tests\" juxtaposes \"recovery record\" and \"recovery tests\", but the repetition is accurate and aids scanning in release notes, so I would not change it.\n\nThe new recovery section in `snapshots.md` is operational and unambiguous: lock ownership, journal handling, the `config.json` authority switch and restore-staging cleanup each state the condition, the action and the safety caveat. No wording issues warrant correction.\n\nPASS\n"
+    }
+  }
+}

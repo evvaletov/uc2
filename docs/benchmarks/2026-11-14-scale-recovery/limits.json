@@ -1,0 +1,32 @@
+{
+  "limits": {
+    "entries": 100000,
+    "references": 500000,
+    "manifest_bytes": 67108864
+  },
+  "complete": true,
+  "references": {
+    "at_limit_accepted": true,
+    "over_limit_rejected": "snapshot chunk-reference limit exceeded",
+    "block_bytes": 4023,
+    "bytes_at_limit": 2011500000,
+    "seconds": 146.81050772801973
+  },
+  "entries": {
+    "at_limit_accepted": true,
+    "over_limit_rejected": "snapshot entry limit exceeded",
+    "seconds": 90.05673886393197
+  },
+  "manifest": {
+    "synthetic_padding": true,
+    "at_limit_accepted": true,
+    "over_limit_rejected": "file exceeds size limit (64 MiB + 1 byte fixture)"
+  },
+  "packed_manifest": {
+    "synthetic_padding": true,
+    "at_limit_accepted": true,
+    "over_limit_rejected": "manifest exceeds 64 MiB"
+  },
+  "harness_sha256": "a10959e1030bf2c1277e304f98f0bae8dba699cb5b4035ab347ea4f3ed333fb1",
+  "snapshot_sha256": "13ea9bddf6424dd585182250095518bfee33e67078b2818598b87f06efa38b6c"
+}

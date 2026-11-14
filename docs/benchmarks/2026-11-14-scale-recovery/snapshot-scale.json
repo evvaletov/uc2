@@ -1,0 +1,263 @@
+{
+  "corpus": {
+    "unique_mib": 1024,
+    "repeated_file_mib": 2304,
+    "repeated_block_bytes": 262144,
+    "seed": 20261114
+  },
+  "phases": [
+    {
+      "operation": "create",
+      "seconds": 322.80734094325453,
+      "peak_rss_bytes": 158633984,
+      "result": {
+        "snapshot": "20f083a62132b092ce4bbfbafbe875714ed41a4ca5c33b37aec133eca9996a4c",
+        "files": 3,
+        "total_size": 3489660942,
+        "new_chunks": 101250,
+        "new_chunk_bytes": 1117664980,
+        "manifest_bytes": 26047490,
+        "new_manifest_bytes": 26047490,
+        "growth_bytes": 1143712470
+      },
+      "label": "create loose v1"
+    },
+    {
+      "operation": "verify",
+      "seconds": 31.444175376556814,
+      "peak_rss_bytes": 165015552,
+      "result": {
+        "snapshot": "20f083a62132b092ce4bbfbafbe875714ed41a4ca5c33b37aec133eca9996a4c",
+        "verified_files": 3,
+        "total_size": 3489660942
+      },
+      "label": "verify loose v1"
+    },
+    {
+      "operation": "restore",
+      "seconds": 35.71366744302213,
+      "peak_rss_bytes": 164970496,
+      "result": {
+        "snapshot": "20f083a62132b092ce4bbfbafbe875714ed41a4ca5c33b37aec133eca9996a4c",
+        "restored_files": 3,
+        "total_size": 3489660942
+      },
+      "label": "restore loose v1"
+    },
+    {
+      "operation": "compact",
+      "seconds": 70.30282574985176,
+      "peak_rss_bytes": 165015552,
+      "result": {
+        "format_version": 2,
+        "snapshots": 1,
+        "removed_loose_files": 101251,
+        "database_bytes": 1214087168
+      },
+      "label": "compact v1 to v2"
+    },
+    {
+      "operation": "create",
+      "seconds": 33.898285183124244,
+      "peak_rss_bytes": 165773312,
+      "result": {
+        "snapshot": "95c32f391c94f5d17b6f55236184af75f8aa306ea0c45da144dbe6f9572a8f47",
+        "files": 4,
+        "total_size": 3489660997,
+        "new_chunks": 96,
+        "new_chunk_bytes": 1108906,
+        "manifest_bytes": 26047072,
+        "new_manifest_bytes": 4350434,
+        "growth_bytes": 5459340
+      },
+      "label": "create edited packed v2"
+    },
+    {
+      "operation": "restore",
+      "seconds": 31.13186455797404,
+      "peak_rss_bytes": 167006208,
+      "result": {
+        "snapshot": "95c32f391c94f5d17b6f55236184af75f8aa306ea0c45da144dbe6f9572a8f47",
+        "restored_files": 4,
+        "total_size": 3489660997
+      },
+      "label": "restore edited packed v2"
+    },
+    {
+      "operation": "verify",
+      "seconds": 28.028424638323486,
+      "peak_rss_bytes": 167067648,
+      "result": {
+        "error": "BadArchiveError",
+        "message": "Truncated"
+      },
+      "label": "corruption detection first"
+    },
+    {
+      "operation": "verify",
+      "seconds": 27.154228064231575,
+      "peak_rss_bytes": 167350272,
+      "result": {
+        "error": "BadArchiveError",
+        "message": "Truncated"
+      },
+      "label": "corruption detection second"
+    },
+    {
+      "operation": "repair",
+      "seconds": 168.08463559113443,
+      "peak_rss_bytes": 316653568,
+      "result": {
+        "snapshots": [
+          "20f083a62132b092ce4bbfbafbe875714ed41a4ca5c33b37aec133eca9996a4c",
+          "95c32f391c94f5d17b6f55236184af75f8aa306ea0c45da144dbe6f9572a8f47"
+        ],
+        "repaired_chunks": 1,
+        "repaired_manifests": 0
+      },
+      "label": "repair from packed replica"
+    },
+    {
+      "operation": "verify",
+      "seconds": 28.29608492832631,
+      "peak_rss_bytes": 168067072,
+      "result": {
+        "snapshot": "95c32f391c94f5d17b6f55236184af75f8aa306ea0c45da144dbe6f9572a8f47",
+        "verified_files": 4,
+        "total_size": 3489660997
+      },
+      "label": "verify repaired latest"
+    },
+    {
+      "operation": "prune",
+      "seconds": 59.412127416580915,
+      "peak_rss_bytes": 258801664,
+      "result": {
+        "applied": true,
+        "retained_snapshots": [
+          "95c32f391c94f5d17b6f55236184af75f8aa306ea0c45da144dbe6f9572a8f47"
+        ],
+        "removed_snapshots": [
+          "20f083a62132b092ce4bbfbafbe875714ed41a4ca5c33b37aec133eca9996a4c"
+        ],
+        "unreachable_chunks": 104,
+        "unreachable_chunk_bytes": 1111784
+      },
+      "label": "prune old history"
+    },
+    {
+      "operation": "compact",
+      "seconds": 34.58802377153188,
+      "peak_rss_bytes": 166711296,
+      "result": {
+        "format_version": 2,
+        "snapshots": 1,
+        "removed_loose_files": 0,
+        "database_bytes": 1213132800
+      },
+      "label": "vacuum packed repository"
+    },
+    {
+      "operation": "restore",
+      "seconds": 31.453735289163888,
+      "peak_rss_bytes": 166326272,
+      "result": {
+        "snapshot": "95c32f391c94f5d17b6f55236184af75f8aa306ea0c45da144dbe6f9572a8f47",
+        "restored_files": 4,
+        "total_size": 3489660997
+      },
+      "label": "restore after repair prune and vacuum"
+    },
+    {
+      "operation": "snapshots",
+      "seconds": 0.23101778980344534,
+      "peak_rss_bytes": 165994496,
+      "result": [
+        {
+          "snapshot": "95c32f391c94f5d17b6f55236184af75f8aa306ea0c45da144dbe6f9572a8f47",
+          "created": "2026-11-14T12:03:14.039484+00:00",
+          "label": "large second",
+          "total_size": 3489660997
+        }
+      ],
+      "label": "list retained history"
+    }
+  ],
+  "restores": [
+    {
+      "format": 1,
+      "bytes_paths_mtime_mode_equal": true
+    },
+    {
+      "format": 2,
+      "bytes_paths_mtime_mode_equal": true
+    },
+    {
+      "format": 2,
+      "after_maintenance": true,
+      "bytes_paths_mtime_mode_equal": true
+    }
+  ],
+  "complete": true,
+  "notes": "One Linux run. Each operation uses a fresh process with a 2 GiB address-space cap. VmHWM measures resident memory in that process. Timings include verification performed by the API. Data is synthetic; repeats are disclosed.",
+  "first": {
+    "snapshot": "20f083a62132b092ce4bbfbafbe875714ed41a4ca5c33b37aec133eca9996a4c",
+    "files": 3,
+    "total_size": 3489660942,
+    "new_chunks": 101250,
+    "new_chunk_bytes": 1117664980,
+    "manifest_bytes": 26047490,
+    "new_manifest_bytes": 26047490,
+    "growth_bytes": 1143712470
+  },
+  "loose_storage": {
+    "bytes": 1143712582,
+    "allocated_file_bytes": 1346727936,
+    "files": 101252
+  },
+  "packed_storage": {
+    "bytes": 1214087287,
+    "allocated_file_bytes": 1214091264,
+    "files": 2
+  },
+  "second": {
+    "snapshot": "95c32f391c94f5d17b6f55236184af75f8aa306ea0c45da144dbe6f9572a8f47",
+    "files": 4,
+    "total_size": 3489660997,
+    "new_chunks": 96,
+    "new_chunk_bytes": 1108906,
+    "manifest_bytes": 26047072,
+    "new_manifest_bytes": 4350434,
+    "growth_bytes": 5459340
+  },
+  "corruption_detected": true,
+  "retained": [
+    {
+      "snapshot": "95c32f391c94f5d17b6f55236184af75f8aa306ea0c45da144dbe6f9572a8f47",
+      "created": "2026-11-14T12:03:14.039484+00:00",
+      "label": "large second",
+      "total_size": 3489660997
+    }
+  ],
+  "final_storage": {
+    "bytes": 1213132919,
+    "allocated_file_bytes": 1213136896,
+    "files": 2
+  },
+  "host": {
+    "name": "starfield01",
+    "cpu": "AMD Ryzen 9 7950X",
+    "logical_cpus": 32,
+    "memory_gib": 124,
+    "filesystem": "XFS",
+    "python": "3.12.13",
+    "os": "Linux x86_64"
+  },
+  "source": {
+    "snapshot_sha256": "13ea9bddf6424dd585182250095518bfee33e67078b2818598b87f06efa38b6c",
+    "package_version": "3.0.0a12",
+    "wheel_sha256": "0a2638e0d3e495c0f7ab9eb90f42c6893df5cb30d940e94c8273e7068ec511b0",
+    "harness_sha256": "b01e50d7f8336d552f8a89306d0fddafcefbaa92eff0584724ff14055a8997f5",
+    "note": "First complete timing run; a later harness revision adds explicit first-version verification after repair, exact corruption-error/count checks and a predetermined shared chunk. This run already recorded both expected corruption errors and one repaired chunk; prune verifies all history before deletion."
+  }
+}

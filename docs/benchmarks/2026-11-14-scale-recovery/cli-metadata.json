@@ -1,0 +1,136 @@
+{
+  "baseline_source": "97e355c5f3be0e53627b9bd611c58559c7125700",
+  "candidate_main_sha256": "dc132891f1e21742287bb25707cffc756f432e4d1b2fec3832d0056a6e39288f",
+  "platform": "Linux x86_64",
+  "build": "CMake Release, same host; one measured invocation per case",
+  "baseline": [
+    {
+      "kind": "flat",
+      "entries": 10000,
+      "requested_files": 10000,
+      "seconds": 1.998290459974669,
+      "listing_sha256": "e06354e6161bcd3c3a7ae2cff5e9e1c185bf9c235a6791dfc665cdf04ba71511",
+      "archive_bytes": 29355
+    },
+    {
+      "kind": "flat",
+      "requested_files": 50000,
+      "timeout_seconds": 120
+    },
+    {
+      "kind": "flat",
+      "requested_files": 100000,
+      "timeout_seconds": 120
+    },
+    {
+      "kind": "directories",
+      "entries": 20000,
+      "requested_files": 10000,
+      "seconds": 3.3848332330817357,
+      "listing_sha256": "4f2b8ac896495dbcbb410b190ca8be989bfc80afb5a9e0f31ea1b9269505d5e5",
+      "archive_bytes": 70045
+    },
+    {
+      "kind": "directories",
+      "requested_files": 50000,
+      "timeout_seconds": 120
+    },
+    {
+      "kind": "directories",
+      "requested_files": 100000,
+      "timeout_seconds": 120
+    },
+    {
+      "kind": "versions",
+      "entries": 10000,
+      "requested_files": 10000,
+      "seconds": 1.0497358910506591,
+      "listing_sha256": "5fb2927d17d697e21ac6e4bdee7381dc973abea23e4cfff9fdffdb3d908e220d",
+      "archive_bytes": 8399
+    },
+    {
+      "kind": "versions",
+      "requested_files": 50000,
+      "timeout_seconds": 120
+    },
+    {
+      "kind": "versions",
+      "requested_files": 100000,
+      "timeout_seconds": 120
+    }
+  ],
+  "candidate": [
+    {
+      "kind": "flat",
+      "entries": 10000,
+      "requested_files": 10000,
+      "seconds": 0.04178484599106014,
+      "listing_sha256": "e06354e6161bcd3c3a7ae2cff5e9e1c185bf9c235a6791dfc665cdf04ba71511",
+      "archive_bytes": 29355
+    },
+    {
+      "kind": "flat",
+      "entries": 50000,
+      "requested_files": 50000,
+      "seconds": 0.3140225779497996,
+      "listing_sha256": "8e8c10723bb1a37ed08129a9c3ab9c3344e6d86665afd3f7f7acf57c70b51d50",
+      "archive_bytes": 145889
+    },
+    {
+      "kind": "flat",
+      "entries": 100000,
+      "requested_files": 100000,
+      "seconds": 0.49964343197643757,
+      "listing_sha256": "32b45a9d9c8848915b2ff76fe5397b6bd9c867b9e47c35e7a8a2fa4fe5f25a3d",
+      "archive_bytes": 291561
+    },
+    {
+      "kind": "directories",
+      "entries": 20000,
+      "requested_files": 10000,
+      "seconds": 0.11387678899336606,
+      "listing_sha256": "4f2b8ac896495dbcbb410b190ca8be989bfc80afb5a9e0f31ea1b9269505d5e5",
+      "archive_bytes": 70045
+    },
+    {
+      "kind": "directories",
+      "entries": 100000,
+      "requested_files": 50000,
+      "seconds": 0.8133072609780356,
+      "listing_sha256": "17f6ef6652163838d7153eae0b5817212db884bade2a67bd92c6121941a4580c",
+      "archive_bytes": 346755
+    },
+    {
+      "kind": "directories",
+      "entries": 200000,
+      "requested_files": 100000,
+      "seconds": 2.0192515989765525,
+      "listing_sha256": "593e1f1f6a3cffe7b932a759d0a1ed909ba96352b8a280f79f8d379d2eace5ad",
+      "archive_bytes": 690649
+    },
+    {
+      "kind": "versions",
+      "entries": 10000,
+      "requested_files": 10000,
+      "seconds": 0.039329293998889625,
+      "listing_sha256": "5fb2927d17d697e21ac6e4bdee7381dc973abea23e4cfff9fdffdb3d908e220d",
+      "archive_bytes": 8399
+    },
+    {
+      "kind": "versions",
+      "entries": 50000,
+      "requested_files": 50000,
+      "seconds": 0.1924342520069331,
+      "listing_sha256": "d796cce4f925cf4f99b70eed2c773db0a7d65e8cb0053c0e60901d86a73bbe03",
+      "archive_bytes": 41195
+    },
+    {
+      "kind": "versions",
+      "entries": 100000,
+      "requested_files": 100000,
+      "seconds": 0.3858022439526394,
+      "listing_sha256": "60dc65b73c1d0f74d48bea1829def9a51ee8714c1688ce756a4e00c4ee1f3c55",
+      "archive_bytes": 82187
+    }
+  ]
+}

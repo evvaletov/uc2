@@ -1,0 +1,38 @@
+{
+  "interval_seconds": 2,
+  "method": "Sample named migration/journal files, restore staging trees, and unlinked regular files opened by the benchmark worker; deduplicate device/inode. These are sampled lower bounds, not exact total filesystem peaks.",
+  "peaks": {
+    "create large first": {
+      "logical_file_bytes": 32768,
+      "allocated_file_bytes": 32768
+    },
+    "verify": {
+      "logical_file_bytes": 0,
+      "allocated_file_bytes": 0
+    },
+    "restore": {
+      "logical_file_bytes": 3485032419,
+      "allocated_file_bytes": 4294909952
+    },
+    "compact": {
+      "logical_file_bytes": 2427097608,
+      "allocated_file_bytes": 4295098368
+    },
+    "create large second": {
+      "logical_file_bytes": 410912,
+      "allocated_file_bytes": 458752
+    },
+    "between operations": {
+      "logical_file_bytes": 0,
+      "allocated_file_bytes": 0
+    },
+    "repair": {
+      "logical_file_bytes": 33344,
+      "allocated_file_bytes": 36864
+    },
+    "prune": {
+      "logical_file_bytes": 0,
+      "allocated_file_bytes": 0
+    }
+  }
+}

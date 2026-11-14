@@ -5,7 +5,7 @@ Nico de Vries (1992-1996). UC2 used shared compression dictionaries
 ("master blocks") and file versioning.
 
 UC2 v3 is under development in portable C99. The current alpha is
-[3.0.0a11](https://pypi.org/project/uc2/3.0.0a11/).
+[3.0.0a12](https://pypi.org/project/uc2/3.0.0a12/).
 Compression levels 2-5 use the original Huffman format; levels 6-9 require the
 new rANS reader. Original-format compatibility is
 covered by DOSBox-X fixtures, including Turbo/method 80 reads. The native CLI

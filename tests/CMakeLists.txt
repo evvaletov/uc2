@@ -174,6 +174,10 @@ add_test(NAME ingest COMMAND test_ingest)
 # reference parser.  Skipped (return code 77) when opentimestamps is not installed.
 find_package(Python3 3.11 COMPONENTS Interpreter)
 if(Python3_Interpreter_FOUND)
+    add_test(NAME cli_metadata
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_cli_metadata.py
+                $<TARGET_FILE:uc2-cli>)
+    set_tests_properties(cli_metadata PROPERTIES TIMEOUT 90)
     add_test(NAME cli_io
         COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_cli_io.py $<TARGET_FILE:uc2-cli>)
     set_tests_properties(cli_io PROPERTIES TIMEOUT 90)

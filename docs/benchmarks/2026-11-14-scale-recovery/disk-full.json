@@ -1,0 +1,34 @@
+{
+  "source_revision": "97e355c5f3be0e53627b9bd611c58559c7125700",
+  "snapshot_sha256": "13ea9bddf6424dd585182250095518bfee33e67078b2818598b87f06efa38b6c",
+  "harness_sha256": "d7f8baca0a9d300758aff0250c47cf36359346cb0b36dd94dc66284afc24b502",
+  "platform": "Linux x86_64",
+  "cases": [
+    {
+      "case": "create-v1",
+      "error": "OSError",
+      "recovered": true
+    },
+    {
+      "case": "create-v2",
+      "error": "OperationalError",
+      "recovered": true
+    },
+    {
+      "case": "compact",
+      "error": "OperationalError",
+      "recovered": true
+    },
+    {
+      "case": "restore",
+      "error": "OSError",
+      "recovered": true
+    },
+    {
+      "case": "repair-v2",
+      "error": "OperationalError",
+      "recovered": true
+    }
+  ],
+  "method": "real ENOSPC and SQLite SQLITE_FULL in a private 32 MiB tmpfs mount inside unshare -Urnm"
+}
