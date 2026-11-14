@@ -6,6 +6,7 @@ import io
 import os
 from pathlib import Path
 import stat
+import struct
 import subprocess
 import sys
 import tarfile
@@ -20,6 +21,45 @@ def run(*args, cwd, success=True):
                             timeout=20)
     assert (result.returncode == 0) == success, (args, result)
     return result
+
+
+def named_archive(name, *, ancestor):
+    """Generate names the writer rejects without opening a source pathname."""
+    def checksum(data):
+        value = 0xA55A
+        for offset in range(0, len(data), 2):
+            value ^= int.from_bytes(data[offset:offset + 2], 'little')
+        return value
+
+    def turbo(data):
+        literals = b''.join(b'\0' + data[i:i + 8] for i in range(0, len(data), 8))
+        return struct.pack('<H', len(literals)) + literals + b'\0\0'
+
+    payload = turbo(PAYLOAD)
+
+    def entry(component, parent, directory_id=0):
+        encoded = component.encode('cp850') + b'\0'
+        metadata = struct.pack('<IBI11sBB', parent, 0x10 if directory_id else 0x20,
+                               0, b'SAFE    TXT', 0, 1)
+        if directory_id:
+            record = b'\x01' + metadata + struct.pack('<I', directory_id)
+        else:
+            record = b'\x02' + metadata + struct.pack(
+                '<IHIHIII', len(PAYLOAD), checksum(PAYLOAD), len(payload), 80, 1, 1, 29)
+        return (record + b'AIP:Win95 LongN\0' + struct.pack('<I', len(encoded))
+                + b'\0' + encoded)
+
+    if ancestor:
+        directory = entry(name, 0, 1) + entry('payload', 1)
+    else:
+        directory = entry(name, 0)
+    directory += b'\x04' + b'\0' * 6 + b' ' * 11 + b'\0' * 4
+    compressed = turbo(directory)
+    size = 29 + len(payload) + 10 + len(compressed)
+    header = struct.pack('<IIIBIIHBHHB', 0x1A324355, size - 13,
+                         size - 13 + 0x01B2C3D4, 0, 1, 29 + len(payload),
+                         checksum(directory), 0, 200, 200, 0)
+    return header + payload + struct.pack('<IHI', len(compressed), 80, 1) + compressed
 
 
 with tempfile.TemporaryDirectory(prefix='uc2-cli-extraction-') as temporary:
@@ -62,6 +102,21 @@ with tempfile.TemporaryDirectory(prefix='uc2-cli-extraction-') as temporary:
         actual = {p.relative_to(destination).as_posix(): p.read_bytes()
                   for p in destination.rglob('*') if p.is_file()}
         assert actual == expected, actual
+
+    # Selecting a directory itself does not suppress a later recursive
+    # selection, even after one of its descendants has already been marked.
+    for index, patterns in enumerate((('a', 'a/'),
+                                      ('a/sub/first', 'a', 'a/'),
+                                      ('a', 'a/', 'a', 'a/'))):
+        listed = run('-qlT', siblings, *patterns, cwd=source).stdout
+        names = [line.rsplit(b'\t', 1)[-1] for line in listed.splitlines()]
+        assert sorted(names) == [b'a', b'a/sub', b'a/sub/first'], names
+        destination = root / f'expanded-selection-{index}'
+        destination.mkdir()
+        run('-qx', siblings, *patterns, cwd=destination)
+        actual = {p.relative_to(destination).as_posix(): p.read_bytes()
+                  for p in destination.rglob('*') if p.is_file()}
+        assert actual == {'a/sub/first': b'first'}, actual
 
     # Recursive scans obtain UTF-8 names from readdir on Windows. Metadata
     # lookup must use the same path encoding and retain dates beyond 2038.
@@ -174,6 +229,36 @@ with tempfile.TemporaryDirectory(prefix='uc2-cli-extraction-') as temporary:
         for flags in ('-qx', '-qxf'):
             run(flags, archive, cwd=special, success=False)
             assert fifo.is_fifo()
+
+    # Win32 aliases devices even with extensions and recognises superscript
+    # COM/LPT digits. Generate archive bytes so fixture creation never opens a
+    # device; selected ancestors must be checked before mkdir as well.
+    devices = ['NUL', 'con', 'PrN', 'aUx', 'CONIN$', 'conout$']
+    devices += [prefix + digit for prefix in ('COM', 'lpt')
+                for digit in '123456789\u00b9\u00b2\u00b3']
+    unsafe_names = [name + suffix for name in devices for suffix in ('', '.txt')]
+    unsafe_names += ['trailing.', 'trailing ', 'NUL .txt', '...']
+    unsafe_names += ['bad' + c + 'name' for c in '<>:"|?*\x01\x1f\x7f']
+    valid_names = ['CONSOLE', 'auxiliary', 'NULx', 'COM0', 'LPT0', 'COM10',
+                   'LPT10', 'COM1x.txt', 'COM\u00b9x', '.NUL']
+    for index, name in enumerate(unsafe_names + valid_names):
+        for ancestor in (False, True):
+            named = root / f'name-{index}-{ancestor}.uc2'
+            named.write_bytes(named_archive(name, ancestor=ancestor))
+            destination = root / f'name-{index}-{ancestor}'
+            destination.mkdir()
+            rejected_name = os.name == 'nt' and name in unsafe_names
+            patterns = ('*/payload',) if ancestor else ()
+            result = run('-qxf', named, *patterns, cwd=destination,
+                         success=not rejected_name)
+            if rejected_name:
+                assert b'unsafe archive entry name' in result.stderr, result
+                assert not list(destination.iterdir())
+            else:
+                target = destination / name
+                if ancestor:
+                    target /= 'payload'
+                assert target.read_bytes() == PAYLOAD, (name, ancestor)
 
     # Generated with fixture_archive.h: one empty TEST.DAT, level 4, with the
     # raw cdir cut immediately after EndOfCdir (XTAIL and serial omitted) before

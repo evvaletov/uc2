@@ -46,13 +46,15 @@ static void roundtrip(int level, int chunked)
     options.chunked=chunked;
     uc2_writer *w=uc2_writer_create(&options); CHECK(w);
     unsigned directory;
-    CHECK(uc2_writer_add_directory(w,0,"nested",0,0,&directory)==0);
+    CHECK(uc2_writer_add_directory(w,0,"nested",0,0x27,&directory)==0);
     CHECK(uc2_writer_add_file(w,directory,"caf\xc3\xa9.bin",0,0x20,source.size,input,&source)==0);
     source.pos=0;
     CHECK(uc2_writer_add_file(w,directory,"caf\xc3\xa9.bin",0,0x20,UC2_WRITER_UNKNOWN_SIZE,input,&source)==0);
     source.size=0; source.pos=0;
     CHECK(uc2_writer_add_file(w,0,"empty",0,0x20,0,input,&source)==0);
+    CHECK(uc2_writer_set_directory_metadata(w,directory,0x56b4722a,1)==0);
     CHECK(uc2_writer_finish(w,output,&encoded)==0);
+    CHECK(uc2_writer_set_directory_metadata(w,directory,0,0)==UC2_BadState);
     CHECK(uc2_writer_finish(w,output,&encoded)==UC2_BadState);
     struct uc2_writer_stats stats; uc2_writer_get_stats(w,&stats);
     CHECK(stats.files==3 && stats.directories==1 && stats.archive_size==encoded.size);
@@ -68,6 +70,9 @@ static void roundtrip(int level, int chunked)
         CHECK(r>=0 && count<4); entries[count++]=entry;
     }
     CHECK(count==4 && uc2_finish_cdir(h,NULL)==0);
+    CHECK(entries[0].is_dir && entries[0].id==directory && entries[0].dirid==0);
+    CHECK(!strcmp(entries[0].name,"nested") && entries[0].attr==0x11);
+    CHECK(entries[0].dos_time==0x56b4722a);
     for (unsigned i=0; i<count; ++i) if (!entries[i].is_dir) {
         if (chunked) CHECK(entries[i].xi.method==11);
         struct buffer decoded={0};
@@ -88,6 +93,36 @@ static void roundtrip(int level, int chunked)
         }
     }
     uc2_close(h); free(encoded.data);
+}
+static void directory_metadata_errors(void)
+{
+    CHECK(uc2_writer_set_directory_metadata(NULL,1,0,0)==UC2_BadState);
+    /* 0 is the implicit root; 2 is a file; 3 and UINT_MAX are not assigned. */
+    const unsigned ids[]={0,2,3,~0u};
+    const unsigned attrs[]={8,0x10,0x80,~0u};
+    for (unsigned i=0; i<sizeof ids/sizeof *ids+sizeof attrs/sizeof *attrs; ++i) {
+        uc2_writer *w=uc2_writer_create(NULL); CHECK(w);
+        unsigned directory;
+        struct buffer in={0},out={0};
+        CHECK(uc2_writer_add_directory(w,0,"d",1,1,&directory)==0);
+        CHECK(uc2_writer_add_file(w,directory,"f",0,0,0,input,&in)==0);
+        unsigned invalid_ids=sizeof ids/sizeof *ids;
+        unsigned id=i<invalid_ids ? ids[i] : directory;
+        unsigned attr=i<invalid_ids ? 0 : attrs[i-invalid_ids];
+        CHECK(uc2_writer_set_directory_metadata(w,id,2,attr)==UC2_WRITER_INVALID);
+        /* Rejected metadata cannot become a partial archive or be repaired on
+         * this poisoned writer; counts are unchanged and no output is emitted. */
+        struct uc2_writer_stats stats; uc2_writer_get_stats(w,&stats);
+        CHECK(stats.files==1 && stats.directories==1 && stats.archive_size==0);
+        CHECK(uc2_writer_set_directory_metadata(w,directory,0,0)==UC2_WRITER_INVALID);
+        CHECK(uc2_writer_finish(w,output,&out)==UC2_WRITER_INVALID && !out.size);
+        uc2_writer_free(w);
+    }
+    uc2_writer *w=uc2_writer_create(NULL); CHECK(w);
+    unsigned id;
+    CHECK(uc2_writer_add_directory(w,99,"invalid",0,0,&id)==UC2_WRITER_INVALID);
+    CHECK(uc2_writer_set_directory_metadata(w,0,0,0)==UC2_WRITER_INVALID);
+    uc2_writer_free(w);
 }
 static void errors(void)
 {
@@ -117,6 +152,7 @@ static void errors(void)
     CHECK(uc2_writer_finish(w,fail_write,NULL)==UC2_UserFault); uc2_writer_free(w);
     options.max_entries=1; w=uc2_writer_create(&options); CHECK(w);
     CHECK(uc2_writer_add_directory(w,0,"x",0,0,&id)==0);
+    CHECK(uc2_writer_set_directory_metadata(w,id,0,0x27)==0);
     CHECK(uc2_writer_add_directory(w,0,"y",0,0,&id)==UC2_WRITER_LIMIT); uc2_writer_free(w);
     w=uc2_writer_create(NULL); CHECK(w); id=0;
     for (unsigned i=0; i<64; ++i) CHECK(uc2_writer_add_directory(w,id,"d",0,0,&id)==0);
@@ -130,5 +166,6 @@ int main(void)
     for (int level=2; level<=9; ++level) {
         roundtrip(level,0); roundtrip(level,1);
     }
+    directory_metadata_errors();
     errors(); puts("writer: all levels, versions, directories, streams and failures passed"); return 0;
 }

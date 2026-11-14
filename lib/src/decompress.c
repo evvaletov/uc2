@@ -1380,7 +1380,6 @@ static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
 /* cbuf */
 
 struct cbuffer {
-    int strict_limit;
 	u16 head, tail;
 	unsigned limit;
 	unsigned produced;  /* bytes written to the window (master + output), <= 0x10000 */
@@ -1403,14 +1402,9 @@ static int cbuf_flush(struct writer *wr, struct cbuffer *cb, struct delta *db, u
 	for (;;) {
 		unsigned n = cbuf_have(cb);
 		if (!n) return 0;
-        if (cb->strict_limit && cb->limit < n) return UC2_Damaged;
+		if (cb->limit < n) return UC2_Damaged;
 		unsigned u = 0x10000 - cb->head;
 		if (n > u) n = u;
-		if (cb->limit < n) {
-            if (cb->strict_limit) return UC2_Damaged;
-			diag("cbuf_flush %u < %u\a\n", cb->limit, n);
-			n = cb->limit;
-		}
 		u8 *p = cb->data + cb->head;
 		csum_update(&cb->csum, p, n);
 		if (dbuf) {
@@ -1656,7 +1650,6 @@ static int decompressor_ultra(struct uc2_context *uc2, unsigned master, unsigned
 	if (ret < 0)
 		goto ret;
 	ultra->cb.limit = limit;
-    ultra->cb.strict_limit = used != NULL;
 	ultra->cb.head = ultra->cb.tail = ret;
 	ultra->cb.produced = ret;
 	csum_init(&ultra->cb.csum);

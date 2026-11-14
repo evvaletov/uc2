@@ -198,6 +198,33 @@ static void test_decoder_error_and_skip(void)
 	membuf_free(&archive);
 }
 
+static void test_excess_huffman_output(void)
+{
+	/* A correct prefix checksum must not hide an extra decoded byte. */
+	const unsigned sizes[] = {0, 7, 65535};
+	for (unsigned i=0; i<sizeof sizes/sizeof sizes[0]; i++) {
+		unsigned declared=sizes[i];
+		unsigned char *data=gen_random(declared+1, 75);
+		struct membuf compressed, archive, output;
+		unsigned short checksum;
+		int rc=compress_data(data,declared+1,4,NULL,0,&compressed,&checksum);
+		assert(rc==0);
+		checksum=fletcher_checksum(data,declared);
+		rc=build_archive(compressed.data,compressed.len,declared,checksum,1,4,&archive);
+		assert(rc==0);
+		struct uc2_io io={archive_read,my_alloc,my_free,NULL};
+		uc2_handle h=uc2_open(&io,&archive); assert(h);
+		struct uc2_entry entry;
+		assert(uc2_read_cdir(h,&entry)==UC2_BareEntry);
+		assert(uc2_finish_cdir(h,NULL)==0);
+		membuf_init(&output);
+		rc=uc2_extract(h,&entry.xi,entry.size,membuf_write,&output);
+		assert(rc==UC2_Damaged && output.len<=declared);
+		membuf_free(&output); uc2_close(h);
+		membuf_free(&compressed); membuf_free(&archive); free(data);
+	}
+}
+
 static void test_invalid_rans_header(void)
 {
 	for (int mode=0; mode<2; mode++) {
@@ -311,6 +338,7 @@ int main(void)
 {
 	test_decoder_error_and_skip();
 	test_invalid_rans_header();
+	test_excess_huffman_output();
 	test_empty_long_name();
 	test_turbo_directory();
 	int levels[] = {2, 3, 4, 5, 6, 7, 8, 9};

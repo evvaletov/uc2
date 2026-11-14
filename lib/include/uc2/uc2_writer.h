@@ -10,7 +10,7 @@ extern "C" {
 /* Hosted C99 archive writer. Inputs are copied to an anonymous temporary file
  * as they are added. The completed archive is spooled before output begins.
  * Metadata grows with entries and CDC chunks. Each object is used serially;
- * callbacks must not reenter it. Any failed add/finish poisons the object.
+ * callbacks must not reenter it. Any failed add/update/finish poisons the object.
  * Free it to discard all temporary data. No callback is retained after return.
  */
 typedef struct uc2_writer uc2_writer;
@@ -53,6 +53,17 @@ void uc2_writer_free(uc2_writer *writer);
  */
 int uc2_writer_add_directory(uc2_writer *, unsigned parent, const char *name,
                              unsigned dos_time, unsigned attributes, unsigned *id);
+
+/* Replace a directory's metadata before finish, including after adding children.
+ * id must be a nonzero ID returned by add_directory on this writer; files and
+ * the implicit root are invalid. Time/attributes follow add_directory's rules.
+ * The name, parent, ID, entry order and limits are unchanged. Returns 0 on
+ * success, UC2_WRITER_INVALID for an invalid ID/attributes (poisoning the writer
+ * without applying either field), UC2_BadState for a NULL/finalized writer, or
+ * the previous error for an already failed writer.
+ */
+int uc2_writer_set_directory_metadata(uc2_writer *, unsigned id,
+                                      unsigned dos_time, unsigned attributes);
 
 /* read returns 0 at EOF, 1..len bytes, or <0 on error. Known size consumes
  * exactly size bytes then checks EOF; it rejects short or excess input.

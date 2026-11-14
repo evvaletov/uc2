@@ -25,10 +25,11 @@ Tar ownership and Unix permission bits are not fully representable in UC2.
 Write permission maps to the DOS read-only bit; other Unix permissions, uid/gid,
 ownership names, atime and ctime are discarded. Mtimes use the host's local
 zone and DOS two-second precision. Unrepresentable `time_t` or DOS dates become
-zero; negative PAX dates are refused. Directory metadata is recorded at its
-first appearance, including an implicit parent created for a child. Emit explicit
-directory records before children when their DOS metadata matters. Duplicate
-file names create stored versions.
+zero; negative PAX dates are refused. The first explicit directory record supplies
+its metadata even when children appear earlier in the stream. Later explicit
+records for the same directory keep that first record's metadata. Parents without
+an explicit record retain an unspecified timestamp and writable DOS attributes.
+Duplicate file names create stored versions.
 
 Identical files share one compressed payload after SHA-256 and exact-byte
 comparison. The writer also uses content-defined chunks to form shared master

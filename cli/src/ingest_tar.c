@@ -10,7 +10,7 @@
 #define EXT_LIMIT (1024u*1024u)
 #define DIR_LIMIT 100000
 #define BUCKETS 65536
-struct directory { char *path; unsigned id, next; };
+struct directory { char *path; unsigned id, next; int explicit_metadata; };
 struct tar { FILE *in; uc2_writer *writer; char *error; size_t error_size;
     struct directory *dirs; unsigned *buckets, count; };
 struct overrides { char path[PATH_LIMIT]; uint64_t size, mtime; int has_size, has_mtime; };
@@ -149,7 +149,15 @@ static int parents(struct tar *t, char *path, int directory, unsigned date, unsi
             struct directory *d=&t->dirs[t->count];
             d->path=malloc(strlen(path)+1); if (!d->path) return fail(t,"out of memory");
             strcpy(d->path,path); d->id=new_id; d->next=t->buckets[hash];
+            d->explicit_metadata=!saved;
             item=++t->count; t->buckets[hash]=item;
+        } else if (!saved && !t->dirs[item-1].explicit_metadata) {
+            /* A child's path can create this directory before its own header.
+             * Keep its ID/order and retain the first explicit header's metadata,
+             * as for directories that were explicit when first encountered. */
+            if (uc2_writer_set_directory_metadata(t->writer,t->dirs[item-1].id,date,attr)<0)
+                return fail(t,uc2_writer_error(t->writer));
+            t->dirs[item-1].explicit_metadata=1;
         }
         id=t->dirs[item-1].id; *end=saved;
     }

@@ -18,8 +18,8 @@ def _parts(name):
         if (part in ("", ".", "..") or part.endswith((".", " ")) or
                 any(ord(c) < 32 or ord(c) == 127 or c in '\\:<>"|?*' for c in part)):
             raise UnsafePathError(f"unsafe archive pathname: {name!r}")
-        base = part.split(".", 1)[0].upper()
-        if (base in ("CON", "PRN", "AUX", "NUL") or
+        base = part.split(".", 1)[0].rstrip(" ").upper()
+        if (base in ("CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$") or
                 (len(base) == 4 and base[:3] in ("COM", "LPT") and base[-1] in "123456789¹²³")):
             raise UnsafePathError(f"reserved archive pathname: {name!r}")
     return parts

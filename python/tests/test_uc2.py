@@ -201,12 +201,30 @@ def test_links_are_not_followed(archive, tmp_path):
 
 
 @pytest.mark.parametrize("name", ["../escape", "/absolute", "C:/drive", "folder/../escape",
-                                  "folder\\escape", "NUL.txt", "COM¹", "name.", "bad\x00name"])
+                                  "folder\\escape", "NUL.txt", "COM¹", "name.", "bad\x00name",
+                                  "CONIN$", "ConOut$.log", "CON .txt", "aux  .foo"])
 def test_unsafe_names(name):
     from uc2._extract import validate_members
     info = uc2.UC2Info(name, 0, 0, None, 0, 0, 0, False, 0)
     with pytest.raises(uc2.UnsafePathError):
         validate_members([info])
+
+
+@pytest.mark.parametrize("name", ["CONIN$", "ConOut$.log", "CON .txt", "aux  .foo"])
+@pytest.mark.parametrize("ancestor", [False, True])
+def test_device_names_rejected_before_extraction(tmp_path, name, ancestor):
+    member = name + "/payload" if ancestor else name
+    archive = tmp_path / "device-name.uc2"
+    with uc2.UC2Writer(archive) as writer:
+        writer.writestr(member, b"archive payload")
+    destination = tmp_path / "out"
+    with uc2.UC2File(archive) as reader:
+        with pytest.raises(uc2.UnsafePathError, match="reserved"):
+            reader.extract(member, destination)
+        assert not destination.exists()
+        with pytest.raises(uc2.UnsafePathError, match="reserved"):
+            reader.extractall(destination)
+        assert not destination.exists()
 
 
 def test_colliding_names():

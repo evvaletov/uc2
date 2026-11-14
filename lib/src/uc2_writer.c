@@ -200,6 +200,17 @@ int uc2_writer_add_directory(uc2_writer *w, unsigned parent, const char *name,
     if (r==0) *id=e->id;
     return r;
 }
+int uc2_writer_set_directory_metadata(uc2_writer *w, unsigned id,
+                                      unsigned time, unsigned attr)
+{
+    int r=ready(w); if (r<0) return r;
+    if (!id || id>w->count || w->entries[id-1].id!=id)
+        return fail(w,UC2_WRITER_INVALID,"ID is not a previously added directory");
+    if (attr & ~0x27u) return fail(w,UC2_WRITER_INVALID,"unsupported DOS attributes");
+    w->entries[id-1].time=time;
+    w->entries[id-1].attr=attr|0x10u;
+    return 0;
+}
 int uc2_writer_add_file(uc2_writer *w, unsigned parent, const char *name,
                         unsigned time, unsigned attr, uint64_t size,
                         int (*read_cb)(void *,void *,unsigned), void *ctx)

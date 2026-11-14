@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import os
 from pathlib import Path
+import shutil
 import struct
 import subprocess
 import sys
@@ -93,7 +94,7 @@ def main():
             literal = work / name
             literal.write_bytes(name.encode())
             literal_archive = work / f"literal-{index}.uc2"
-            run("-qw", literal_archive, "--", name, cwd=work)
+            run("-qw", "--", literal_archive, name, cwd=work)
             assert run("--ingest-restore", literal_archive).stdout == literal.read_bytes()
 
         archive = work / "small.uc2"
@@ -137,6 +138,17 @@ def main():
                                             stderr=subprocess.PIPE, timeout=30)
                 assert result.returncode != 0, (argv, result.stderr)
             run("--ots-extract", archive, "/dev/full", ok=False)
+            stdbuf = shutil.which("stdbuf")
+            if stdbuf and not os.environ.get("ASAN_OPTIONS"):
+                # Unbuffered printf fails before the final fflush, which can
+                # itself return success. The stream error must still win.
+                with open("/dev/full", "wb") as full:
+                    result = subprocess.run([stdbuf, "-o0", uc2, "-l", str(archive)],
+                                            stdout=full, stderr=subprocess.PIPE, timeout=30)
+                assert result.returncode != 0, result
+                assert b"stdout" in result.stderr, result.stderr
+            else:
+                print("Skipping stdbuf check: unavailable or incompatible with ASan preload order")
 
         proof_path.write_bytes(b"x" * (PROOF_LIMIT + 1))
         before = archive.read_bytes()

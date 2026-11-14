@@ -135,7 +135,7 @@ static void uc2_say(FILE *f, const char *fmt, ...)
 
 static void flush_stdout(void)
 {
-	if (fflush(stdout) != 0)
+	if (fflush(stdout) != 0 || ferror(stdout))
 		err(EXIT_FAILURE, "stdout");
 }
 
@@ -238,6 +238,7 @@ struct node {
 	int version;
 	bool visit:1;
 	bool marked:1;
+	bool expanded:1;
 	struct uc2_entry entry;
 };
 
@@ -279,6 +280,7 @@ static void new_entry(struct node *ne)
 	ne->version = 0;
 	ne->visit = false;
 	ne->marked = false;
+	ne->expanded = false;
 }
 
 static void print_dir_path(struct node *ne)
@@ -308,10 +310,11 @@ static void print_time(unsigned t)
 
 static void mark(struct node *node, bool visit)
 {
-	if (node->marked)
+	if (node->marked && (!visit || node->expanded))
 		return;
 	node->marked = true;
 	if (visit) {
+		node->expanded = true;
 		node->visit = true;
 		for (struct list *l = node->children.next; l != &node->children; l = l->next) {
 			struct node *ne = list_item(l, struct node, on_dir);
@@ -600,6 +603,47 @@ static FILE *create_output(const char *path)
 	return file;
 }
 
+#if defined(_WIN32) || defined(__DJGPP__)
+static bool unsafe_dos_name(const char *name, unsigned length)
+{
+	if (!length || name[length - 1] == '.' || name[length - 1] == ' ')
+		return true;
+	for (unsigned i = 0; i < length; i++) {
+		unsigned char c = (unsigned char)name[i];
+		if (c < 32 || c == 127 || strchr("<>:\"|?*", c))
+			return true;
+	}
+
+	/* DOS device names remain reserved with an extension. Win32 also
+	   ignores spaces immediately before that extension. */
+	unsigned n = 0;
+	while (n < length && name[n] != '.') n++;
+	while (n && name[n - 1] == ' ') n--;
+	if (n > 7) return false;
+	char base[8];
+	for (unsigned i = 0; i < n; i++) {
+		unsigned char c = (unsigned char)name[i];
+		base[i] = c >= 'a' && c <= 'z' ? c - ('a' - 'A') : c;
+	}
+	base[n] = 0;
+	if (!strcmp(base, "CON") || !strcmp(base, "PRN")
+	    || !strcmp(base, "AUX") || !strcmp(base, "NUL")
+	    || !strcmp(base, "CONIN$") || !strcmp(base, "CONOUT$"))
+		return true;
+	if (n >= 4 && (!memcmp(base, "COM", 3) || !memcmp(base, "LPT", 3))) {
+		if (n == 4 && base[3] >= '1' && base[3] <= '9')
+			return true;
+		/* UTF-8 encodings of the reserved superscript digits 1, 2 and 3. */
+		if (n == 5 && (unsigned char)base[3] == 0xc2
+		    && ((unsigned char)base[4] == 0xb9
+		        || (unsigned char)base[4] == 0xb2
+		        || (unsigned char)base[4] == 0xb3))
+			return true;
+	}
+	return false;
+}
+#endif
+
 static bool extract_cb(struct node *ne, void *ctx, enum cause cause)
 {
 	struct path *path = ctx;
@@ -620,7 +664,7 @@ static bool extract_cb(struct node *ne, void *ctx, enum cause cause)
 		    || memchr(e->name, '/', l)
 		    || memchr(e->name, '\\', l)
 #if defined(_WIN32) || defined(__DJGPP__)
-		    || memchr(e->name, ':', l)
+		    || unsafe_dos_name(e->name, l)
 #endif
 		    )
 			errx(EXIT_FAILURE, "unsafe archive entry name: %.*s",
