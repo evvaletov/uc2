@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include <uc2/libuc2.h>
 
 static int failures;
@@ -162,8 +163,156 @@ static unsigned char *gen_text(unsigned *out_len)
 	return data;
 }
 
+static int payload_read_error(void *ctx, unsigned pos, void *ptr, unsigned len)
+{
+	if (pos == 29) return -1;
+	return archive_read(ctx,pos,ptr,len);
+}
+
+static void test_decoder_error_and_skip(void)
+{
+	/* Default Huffman tree: distance 768, length 3 before the initial
+	 * 512-byte zero history. The listed empty file has a valid empty
+	 * checksum, so a swallowed structural error used to look successful. */
+	const unsigned char invalid[] = {0x00,0xb1,0,0,0,0};
+	struct membuf archive, output;
+	int rc=build_archive(invalid,sizeof invalid,0,0xa55a,1,4,&archive);
+	assert(rc==0);
+	struct uc2_io io={archive_read,my_alloc,my_free,NULL};
+	uc2_handle h=uc2_open(&io,&archive); assert(h);
+	assert(uc2_read_cdir(h,NULL)==UC2_End);
+	assert(uc2_finish_cdir(h,NULL)==0); uc2_close(h);
+	h=uc2_open(&io,&archive); assert(h);
+	assert(uc2_finish_cdir(h,NULL)==0); uc2_close(h);
+	for (int mode=0; mode<2; mode++) {
+		io.read=mode ? payload_read_error : archive_read;
+		h=uc2_open(&io,&archive); assert(h);
+		struct uc2_entry entry;
+		assert(uc2_read_cdir(h,&entry)==UC2_BareEntry);
+		assert(uc2_finish_cdir(h,NULL)==0);
+		membuf_init(&output);
+		rc=uc2_extract(h,&entry.xi,entry.size,membuf_write,&output);
+		assert(rc<0 && output.len==0);
+		membuf_free(&output); uc2_close(h);
+	}
+	membuf_free(&archive);
+}
+
+static void test_invalid_rans_header(void)
+{
+	for (int mode=0; mode<2; mode++) {
+		struct membuf compressed, archive, output;
+		unsigned short checksum;
+		int status=compress_data(NULL,0,6,NULL,0,&compressed,&checksum);
+		assert(status==0);
+		/* Bits are MSB-first inside little-endian 16-bit words. Clear
+		 * the state length or all frequencies in an otherwise empty block. */
+		unsigned first=mode ? 33 : 17, last=mode ? 33+344*12 : 33;
+		for (unsigned bit=first; bit<last; bit++) {
+			unsigned shift=15-(bit%16), index=(bit/16)*2+(shift/8);
+			assert(index<compressed.len);
+			compressed.data[index] &= (unsigned char)~(1u<<(shift%8));
+		}
+		status=build_archive(compressed.data,compressed.len,0,checksum,1,6,&archive);
+		assert(status==0);
+		struct uc2_io io={archive_read,my_alloc,my_free,NULL};
+		uc2_handle h=uc2_open(&io,&archive); assert(h);
+		struct uc2_entry entry;
+		assert(uc2_read_cdir(h,&entry)==UC2_BareEntry);
+		assert(uc2_finish_cdir(h,NULL)==0);
+		membuf_init(&output);
+		int rc=uc2_extract(h,&entry.xi,0,membuf_write,&output);
+		assert(rc<0 && output.len==0);
+		uc2_close(h); membuf_free(&output); membuf_free(&archive); membuf_free(&compressed);
+	}
+}
+
+static void test_empty_long_name(void)
+{
+	for (int boundary=0; boundary<4; boundary++) {
+		struct membuf payload, compressed, archive;
+		unsigned short sum;
+		int rc=compress_data(NULL,0,4,NULL,0,&payload,&sum); assert(rc==0);
+		unsigned char raw[450]={0};
+		raw[0]=2; raw[5]=0x20; memcpy(raw+10,"EMPTY   DAT",11); raw[22]=1;
+		put_u16le(raw+27,sum); put_u32le(raw+29,payload.len);
+		put_u16le(raw+33,1); put_u32le(raw+35,1);
+		put_u32le(raw+39,1); put_u32le(raw+43,29);
+		memcpy(raw+47,"AIP:Win95 LongN",15); /* zero payload, no next tag */
+		unsigned tail=68;
+		if (boundary>=2) {
+			put_u32le(raw+63,3); raw[67]=1; memcpy(raw+68,"ok",3);
+			memcpy(raw+71,"AIP:Win95 LongN",15); put_u32le(raw+87,300);
+			memset(raw+92,boundary==2 ? 'a' : 0xb3,300); tail=392;
+		}
+		raw[tail]=4; memset(raw+tail+7,' ',11);
+		unsigned length=boundary==1 ? 68 : tail+22;
+		rc=compress_data(raw,length,4,NULL,0,&compressed,&sum); assert(rc==0);
+		unsigned char header[29]={0}, descriptor[10]={0};
+		unsigned offset=29+payload.len, size=offset+10+compressed.len;
+		put_u32le(header,0x1a324355); put_u32le(header+4,size-13);
+		put_u32le(header+8,size-13+0x01b2c3d4); put_u32le(header+13,1);
+		put_u32le(header+17,offset); put_u16le(header+21,fletcher_checksum(raw,length));
+		put_u16le(header+24,200); put_u16le(header+26,200);
+		put_u32le(descriptor,compressed.len); put_u16le(descriptor+4,1); put_u32le(descriptor+6,1);
+		membuf_init(&archive); membuf_append(&archive,header,sizeof header);
+		membuf_append(&archive,payload.data,payload.len); membuf_append(&archive,descriptor,sizeof descriptor);
+		membuf_append(&archive,compressed.data,compressed.len);
+		struct uc2_io io={archive_read,my_alloc,my_free,NULL};
+		uc2_handle h=uc2_open(&io,&archive); assert(h);
+		struct uc2_entry entry;
+		rc=uc2_read_cdir(h,&entry); assert(rc==UC2_TaggedEntry);
+		rc=uc2_get_tag(h,&entry,NULL,NULL,NULL); assert(rc==UC2_End);
+		assert(strcmp(entry.name,"empty.dat")==0 && entry.name_len==9);
+		rc=uc2_finish_cdir(h,NULL); assert(boundary==1 ? rc<0 : rc==0);
+		uc2_close(h); membuf_free(&payload); membuf_free(&compressed); membuf_free(&archive);
+	}
+}
+
+static void test_turbo_directory(void)
+{
+	for (unsigned count=0; count<=700; count+=700) {
+		unsigned length=count*27+22;
+		unsigned char *raw=calloc(1,length); assert(raw);
+		for (unsigned i=0; i<count; i++) {
+			unsigned char *p=raw+i*27; p[0]=1; p[5]=0x10;
+			char name[12]; snprintf(name,sizeof name,"D%07u   ",i);
+			memcpy(p+10,name,11); put_u32le(p+23,i+1);
+		}
+		raw[count*27]=4; memset(raw+count*27+7,' ',11);
+		/* A valid method-80 block using only literal groups. */
+		struct membuf coded,archive; membuf_init(&coded); membuf_init(&archive);
+		unsigned char sizeword[2]; put_u16le(sizeword,length+(length+7)/8);
+		membuf_append(&coded,sizeword,2);
+		for (unsigned i=0; i<length; i+=8) {
+			unsigned char control=0; membuf_append(&coded,&control,1);
+			unsigned n=length-i<8 ? length-i : 8; membuf_append(&coded,raw+i,n);
+		}
+		put_u16le(sizeword,0); membuf_append(&coded,sizeword,2);
+		unsigned char header[39]={0};
+		put_u32le(header,0x1a324355); put_u32le(header+4,26+coded.len);
+		put_u32le(header+8,26+coded.len+0x01b2c3d4); put_u32le(header+13,1);
+		put_u32le(header+17,29); put_u16le(header+21,fletcher_checksum(raw,length));
+		put_u16le(header+24,200); put_u16le(header+26,200);
+		put_u32le(header+29,coded.len); put_u16le(header+33,80); put_u32le(header+35,1);
+		membuf_append(&archive,header,sizeof header); membuf_append(&archive,coded.data,coded.len);
+		struct uc2_io io={archive_read,my_alloc,my_free,NULL};
+		uc2_handle h=uc2_open(&io,&archive); assert(h);
+		for (unsigned i=0; i<count; i++) {
+			struct uc2_entry entry; int rc=uc2_read_cdir(h,&entry);
+			assert(rc==UC2_BareEntry && entry.is_dir && entry.id==i+1);
+		}
+		int rc=uc2_finish_cdir(h,NULL); assert(rc==0);
+		uc2_close(h); free(raw); membuf_free(&coded); membuf_free(&archive);
+	}
+}
+
 int main(void)
 {
+	test_decoder_error_and_skip();
+	test_invalid_rans_header();
+	test_empty_long_name();
+	test_turbo_directory();
 	int levels[] = {2, 3, 4, 5, 6, 7, 8, 9};
 	int nlev = (int)(sizeof levels / sizeof *levels);
 

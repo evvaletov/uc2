@@ -52,8 +52,12 @@ Examples:
   bin/{executable.name} -w backup.uc2 files...
 
 Create the extraction destination before using -d. This is an alpha release.
-Turbo/method 80 and multi-volume archives remain unsupported. Compression
-levels 6-9 require the new UC2 reader; levels 2-5 use the legacy Huffman format.
+Historical Huffman/delta and Turbo/method 80 are supported. Native path input
+can also read SAS split sets and DOS UC2SEA wrappers; see
+https://github.com/evvaletov/uc2/blob/main/docs/volumes.md .
+Creating split sets and self-extractors is not supported. Compression
+levels 6-9 and all --chunked archives require the new UC2 reader. Unchunked
+levels 2-5 use the legacy Huffman format.
 
 The corresponding source distribution, uc2-{version}.tar.gz, accompanies the
 release at https://github.com/evvaletov/uc2/releases . See the included license

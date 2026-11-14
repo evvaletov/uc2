@@ -9,7 +9,10 @@ uc2-preserve old-archives -o inventory
 
 Directories are searched recursively for `.uc2` files, ignoring case. You can
 also supply individual archives. The output directory must be new. Source
-archives are opened read-only and kept in place.
+archives are opened read-only and kept in place. This migration tool accepts
+single-file native UC2 archives. SAS sets and DOS UC2SEA wrappers must first be
+handled through the CLI or Python path API; their multi-part source provenance
+is not yet represented by the preservation manifest.
 
 To migrate a collection:
 

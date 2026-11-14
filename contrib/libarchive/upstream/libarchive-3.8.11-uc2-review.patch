@@ -103,12 +103,15 @@
  AC_ARG_WITH([lz4],
 --- /dev/null
 +++ b/doc/uc2-reader.md
-@@ -0,0 +1,96 @@
+@@ -0,0 +1,102 @@
 +# Proposed UC2 reader for libarchive
 +
 +Submitted as [libarchive/libarchive#3832](https://github.com/libarchive/libarchive/pull/3832)
 +on 2026-11-07, from `evvaletov:uc2-optional-reader` at `5ad7e3d7`, based on
-+upstream `eb57ffefe20e98eb7ba05829ee1c23b90e589a71`. Maintainer review is pending.
++upstream `eb57ffefe20e98eb7ba05829ee1c23b90e589a71`. Maintainers requested
++design clarification on 8 November; the 13 November
++revision removes whole-input spooling from the optional reader. Acceptance is
++pending.
 +`0x110000` remains proposed, not assigned. The local full-feature adapter keeps
 +its private ID until acceptance.
 +
@@ -128,17 +131,20 @@
 +including custom dictionaries. rANS, shared chunks, encrypted and multi-volume archives are outside
 +this proposed dependency's scope. The regular UC2 release retains rANS.
 +The patch includes registration by code, public declarations, CMake/Autotools
-+wiring, and fixtures for legacy/Turbo reads, quota failures and rANS rejection.
++wiring, and fixtures for legacy/Turbo reads, quota failures, seekable short reads, explicit pipe rejection and rANS rejection.
 +
-+Input and decoded payloads spool to temporary files. Decoder allocations,
++Input uses libarchive seek/read callbacks directly. The optional reader requires
++a seekable source; actual pipes and non-seekable filters fail before any entry
++is returned. Redirected regular-file stdin works. Each decoded entry uses one
++temporary file to bridge the synchronous decoder and libarchive data callbacks. Decoder allocations,
 +including cached dictionaries, and adapter metadata/paths share a **64 MiB**
 +budget. A sorted directory index avoids a full entry scan for each path parent.
 +Defaults also limit input to 4 GiB minus one byte, entries to 100,000, a decoded
 +entry to 1 GiB, and cumulative decoded output to 8 GiB. Limits fail explicitly;
 +they never silently truncate output. Listing and skipping do not decode files.
 +The fixed adapter state (about 65 KiB), stdio and libarchive's own allocations
-+are outside the shared memory budget. The input and current decoded entry use
-+disk space; the decoded entry spool is released between files. Spools use
++are outside the shared memory budget. Only the current decoded entry uses temporary disk space; its spool is released
++between files. Spools use
 +libarchive's anonymous temporary-file helper, including its Windows temp-directory
 +handling. These libarchive build/runtime checks were performed on Linux; native
 +Windows execution of the optional adapter has not been validated.
@@ -177,7 +183,7 @@
 +/tmp/uc2-review/build/bin/libarchive_test \
 +  -r /tmp/uc2-review/libarchive/libarchive/test test_read_format_uc2
 +python3 tests/scripts/check_bsdtar.py /path/to/uc2 \
-+  /tmp/uc2-review/build/bin/bsdtar --legacy-only
++  /tmp/uc2-review/build/bin/bsdtar --legacy-only --seekable-only
 +```
 +
 +The maintainers still need to decide whether to accept this optional LGPL
@@ -275,7 +281,7 @@
  	case ARCHIVE_FORMAT_TAR:
 --- /dev/null
 +++ b/libarchive/archive_read_support_format_uc2.c
-@@ -0,0 +1,694 @@
+@@ -0,0 +1,684 @@
 +/* SPDX-License-Identifier: BSD-2-Clause */
 +/*
 + * BSD 2-Clause License
@@ -306,8 +312,8 @@
 +
 +/* libarchive read handler for UC2 v3 archives.
 + *
-+ * Input and decompressed entries are spooled to anonymous temporary
-+ * files. Decoder allocations, cached masters, metadata and paths share a
++ * Seekable input uses libarchive's callbacks directly.
++ * Decoded entries use anonymous temporary files. Allocations and paths share a
 + * memory budget. Input, entry count and decoded output have separate limits.
 + *
 + * Built against libarchive's internal API
@@ -361,7 +367,7 @@
 +struct uc2_directory { unsigned id; int index; };
 +
 +struct uc2_la_state {
-+	FILE *input;
++	struct archive_read *archive;
 +	uint64_t len;
 +	int prepared;
 +	uint64_t memory_used, memory_limit, input_limit, entry_limit, total_limit;
@@ -418,9 +424,9 @@
 +    return file;
 +}
 +
-+/* libuc2 requires random access, including on non-seekable input. */
++/* libuc2 reads the central directory before returning to file payloads. */
 +static int
-+slurp_read(void *ctx, unsigned pos, void *buf, unsigned len)
++input_read(void *ctx, unsigned pos, void *buf, unsigned len)
 +{
 +	struct uc2_la_state *st = (struct uc2_la_state *)ctx;
 +	if ((uint64_t)pos >= st->len)
@@ -429,9 +435,22 @@
 +	if (len > avail)
 +		len = (unsigned)avail;
 +	if (len > INT_MAX) len = INT_MAX;
-+	if (seek_file(st->input, pos) != 0) return -1;
-+	size_t n = fread(buf, 1, len, st->input);
-+	return ferror(st->input) ? -1 : (int)n;
++	if (__archive_read_seek(st->archive, pos, SEEK_SET) != (int64_t)pos)
++		return -1;
++	unsigned done = 0;
++	while (done < len) {
++		ssize_t available;
++		const void *p = __archive_read_ahead(st->archive, 1, &available);
++		if (!p) return available < 0 ? -1 : (int)done;
++		if (available <= 0) return -1;
++		size_t n = (uint64_t)available < len - done ?
++		    (size_t)available : len - done;
++		memcpy((unsigned char *)buf + done, p, n);
++		if (__archive_read_consume(st->archive, n) != (int64_t)n)
++			return -1;
++		done += (unsigned)n;
++	}
++	return (int)done;
 +}
 +
 +static void *
@@ -451,13 +470,13 @@
 +}
 +
 +static void *
-+slurp_alloc(void *ctx, unsigned size)
++decoder_alloc(void *ctx, unsigned size)
 +{
 +    return budget_alloc(ctx, size);
 +}
 +
 +static void
-+slurp_free(void *ctx, void *ptr)
++budget_free(void *ctx, void *ptr)
 +{
 +    struct uc2_la_state *st = ctx;
 +    if (ptr) {
@@ -474,15 +493,15 @@
 +    if (next && old) {
 +        size_t previous = ((union uc2_allocation *)old - 1)->size - sizeof(union uc2_allocation);
 +        memcpy(next, old, previous < size ? previous : size);
-+        slurp_free(st, old);
++        budget_free(st, old);
 +    }
 +    return next;
 +}
 +
-+static struct uc2_io slurp_io = {
-+	.read  = slurp_read,
-+	.alloc = slurp_alloc,
-+	.free  = slurp_free,
++static struct uc2_io input_io = {
++	.read  = input_read,
++	.alloc = decoder_alloc,
++	.free  = budget_free,
 +	.warn  = NULL,
 +};
 +
@@ -622,46 +641,24 @@
 +	return (0);
 +}
 +
-+/* Spool without holding compressed payloads in RAM. */
-+static int
-+slurp_archive(struct archive_read *a, struct uc2_la_state *st)
-+{
-+	st->input = spool_file();
-+	if (!st->input) {
-+		archive_set_error(&a->archive, errno, "UC2: cannot create input spool");
-+		return ARCHIVE_FATAL;
-+	}
-+	for (;;) {
-+		ssize_t avail;
-+		const void *p = __archive_read_ahead(a, 1, &avail);
-+		if (p == NULL) {
-+			if (avail < 0) {
-+				archive_set_error(&a->archive, EIO,
-+				    "UC2: read error while slurping archive");
-+				return (ARCHIVE_FATAL);
-+			}
-+			break; /* clean EOF */
-+		}
-+		if (avail <= 0)
-+			break;
 +
-+		if (avail > 65536) avail = 65536;
-+		if ((uint64_t)avail > st->input_limit - st->len) {
-+			archive_set_error(&a->archive, EFBIG, "UC2: input-limit exceeded (at most 4 GiB)");
++static int
++prepare_input(struct archive_read *a, struct uc2_la_state *st)
++{
++	int64_t size = __archive_read_seek(a, 0, SEEK_END);
++	st->archive = a;
++	if (size >= 0) {
++		if ((uint64_t)size > st->input_limit) {
++			archive_set_error(&a->archive, EFBIG,
++			    "UC2: input-limit exceeded (at most 4 GiB)");
 +			return ARCHIVE_FATAL;
 +		}
-+		if (fwrite(p, 1, (size_t)avail, st->input) != (size_t)avail ||
-+		    __archive_read_consume(a, avail) != avail) {
-+			archive_set_error(&a->archive, EIO, "UC2: input spool write failed");
-+			return ARCHIVE_FATAL;
-+		}
-+		st->len += (uint64_t)avail;
++		st->len = (uint64_t)size;
++		return ARCHIVE_OK;
 +	}
-+	if (fflush(st->input) != 0) {
-+		archive_set_error(&a->archive, EIO, "UC2: input spool flush failed");
-+		return ARCHIVE_FATAL;
-+	}
-+	return (ARCHIVE_OK);
++	archive_set_error(&a->archive, EIO,
++	    "UC2: seekable input required; save the archive to a file first");
++	return ARCHIVE_FATAL;
 +}
 +
 +/* Walk uc2_read_cdir and cache all entries.  Tagged entries have
@@ -669,7 +666,7 @@
 +static int
 +collect_entries(struct archive_read *a, struct uc2_la_state *st)
 +{
-+	st->handle = uc2_open(&slurp_io, st);
++	st->handle = uc2_open(&input_io, st);
 +	if (st->handle == NULL) {
 +		archive_set_error(&a->archive, ENOMEM,
 +		    "UC2: uc2_open failed (memory-limit or allocation failure)");
@@ -839,7 +836,7 @@
 +	a->archive.archive_format_name = "UC2";
 +
 +	if (!st->prepared) {
-+		int r = slurp_archive(a, st);
++		int r = prepare_input(a, st);
 +		if (r != ARCHIVE_OK) return r;
 +		st->prepared = 1;
 +
@@ -957,13 +954,12 @@
 +	if (st->paths) {
 +		int i;
 +		for (i = 0; i < st->n_entries; i++)
-+			slurp_free(st, st->paths[i]);
-+		slurp_free(st, st->paths);
++			budget_free(st, st->paths[i]);
++		budget_free(st, st->paths);
 +	}
-+	if (st->input) fclose(st->input);
 +	if (st->entry_file) fclose(st->entry_file);
-+	slurp_free(st, st->entries);
-+	slurp_free(st, st->directories);
++	budget_free(st, st->entries);
++	budget_free(st, st->directories);
 +	free(st);
 +	a->format->data = NULL;
 +	return (ARCHIVE_OK);
@@ -982,96 +978,163 @@
      test_read_format_lha_bugfix_0.c
 --- /dev/null
 +++ b/libarchive/test/test_read_format_uc2.c
-@@ -0,0 +1,72 @@
+@@ -0,0 +1,139 @@
 +/* SPDX-License-Identifier: BSD-2-Clause */
 +/* Copyright (c) 2026 Eremey Valetov. */
 +#include "test.h"
 +
 +DEFINE_TEST(test_read_format_uc2)
 +{
-+    struct archive *a = archive_read_new();
-+    int result = archive_read_support_format_uc2(a);
++	struct archive *a = archive_read_new();
++	int result = archive_read_support_format_uc2(a);
 +#ifndef HAVE_LIBUC2READ
-+    assertEqualInt(ARCHIVE_WARN, result);
-+    assertEqualInt(ARCHIVE_OK, archive_read_free(a));
++	assertEqualInt(ARCHIVE_WARN, result);
++	assertEqualInt(ARCHIVE_OK, archive_read_free(a));
 +#else
-+    struct archive_entry *e;
-+    char data[2000];
-+    assertEqualInt(ARCHIVE_OK, result);
-+    /* Keep room for explicit raw fallback after registering every format. */
-+    struct archive *all = archive_read_new();
-+    assertEqualInt(ARCHIVE_OK, archive_read_support_format_all(all));
-+    assertEqualIntA(all, ARCHIVE_OK, archive_read_support_format_raw(all));
-+    assertEqualInt(ARCHIVE_OK, archive_read_free(all));
-+    extract_reference_file("test_read_format_uc2_4.uc2");
-+    assertEqualIntA(a, ARCHIVE_OK, archive_read_open_filename(a, "test_read_format_uc2_4.uc2", 7));
-+    assertEqualIntA(a, ARCHIVE_OK, archive_read_next_header(a, &e));
-+    assertEqualInt(ARCHIVE_FORMAT_UC2, archive_format(a));
-+    assertEqualString("fixture.txt", archive_entry_pathname(e));
-+    assertEqualInt(2000, archive_entry_size(e));
-+    assertEqualIntA(a, 2000, archive_read_data(a, data, sizeof data));
-+    for (int i = 0; i < 100; ++i)
-+        assertEqualMem(data + 20 * i, "UC2 optional reader\n", 20);
-+    assertEqualIntA(a, ARCHIVE_EOF, archive_read_next_header(a, &e));
-+    assertEqualInt(ARCHIVE_OK, archive_read_free(a));
++	struct archive_entry *e;
++	char data[2000];
++	assertEqualInt(ARCHIVE_OK, result);
++	/* Keep room for explicit raw fallback after registering every format.
++	 */
++	struct archive *all = archive_read_new();
++	assertEqualInt(ARCHIVE_OK, archive_read_support_format_all(all));
++	assertEqualIntA(all, ARCHIVE_OK, archive_read_support_format_raw(all));
++	assertEqualInt(ARCHIVE_OK, archive_read_free(all));
++	extract_reference_file("test_read_format_uc2_4.uc2");
++	assertEqualIntA(
++	    a, ARCHIVE_OK,
++	    archive_read_open_filename(a, "test_read_format_uc2_4.uc2", 7));
++	assertEqualIntA(a, ARCHIVE_OK, archive_read_next_header(a, &e));
++	assertEqualInt(ARCHIVE_FORMAT_UC2, archive_format(a));
++	assertEqualString("fixture.txt", archive_entry_pathname(e));
++	assertEqualInt(2000, archive_entry_size(e));
++	assertEqualIntA(a, 2000, archive_read_data(a, data, sizeof data));
++	for (int i = 0; i < 100; ++i)
++		assertEqualMem(data + 20 * i, "UC2 optional reader\n", 20);
++	assertEqualIntA(a, ARCHIVE_EOF, archive_read_next_header(a, &e));
++	assertEqualInt(ARCHIVE_OK, archive_read_free(a));
 +
-+    const char *limits[] = {"uc2:memory-limit=1", "uc2:input-limit=20", "uc2:entry-limit=1999", "uc2:total-limit=1999"};
-+    for (unsigned k = 0; k < sizeof limits / sizeof *limits; k++) {
-+        a = archive_read_new();
-+        assertEqualInt(ARCHIVE_OK, archive_read_support_format_uc2(a));
-+        assertEqualIntA(a, ARCHIVE_OK, archive_read_set_options(a, limits[k]));
-+        assertEqualIntA(a, ARCHIVE_OK, archive_read_open_filename(a, "test_read_format_uc2_4.uc2", 7));
-+        if (k < 2) assertEqualIntA(a, ARCHIVE_FATAL, archive_read_next_header(a, &e));
-+        else {
-+            assertEqualIntA(a, ARCHIVE_OK, archive_read_next_header(a, &e));
-+            assertEqualIntA(a, ARCHIVE_FATAL, archive_read_data(a, data, sizeof data));
-+        }
-+        assertEqualInt(ARCHIVE_OK, archive_read_free(a));
-+    }
-+    a = archive_read_new();
-+    assertEqualInt(ARCHIVE_OK, archive_read_support_format_uc2(a));
-+    extract_reference_file("test_read_format_uc2_80.uc2");
-+    assertEqualIntA(a, ARCHIVE_OK, archive_read_open_filename(a, "test_read_format_uc2_80.uc2", 7));
-+    assertEqualIntA(a, ARCHIVE_OK, archive_read_next_header(a, &e));
-+    assertEqualInt(70001, archive_entry_size(e));
-+    unsigned char *turbo = malloc(70001);
-+    assert(turbo != NULL);
-+    if (turbo) {
-+        assertEqualIntA(a, 70001, archive_read_data(a, turbo, 70001));
-+        unsigned x = 80;
-+        for (unsigned i = 0; i < 70001; i++) {
-+            x = x * 1664525u + 1013904223u;
-+            assertEqualInt(i < 30000 ? (unsigned char)(x >> 24) : (unsigned char)(i % 251), turbo[i]);
-+        }
-+        free(turbo);
-+    }
-+    assertEqualInt(ARCHIVE_OK, archive_read_free(a));
++	/* Random-access callbacks must work across arbitrarily short reads. */
++	size_t archive_size;
++	char *archive_data =
++	    slurpfile(&archive_size, "%s", "test_read_format_uc2_4.uc2");
++	assert(archive_data != NULL);
++	if (archive_data != NULL) {
++		const size_t read_sizes[] = {1, 7, 65536};
++		char exact_limit[80];
++		snprintf(exact_limit, sizeof exact_limit, "uc2:input-limit=%ju",
++			 (uintmax_t)archive_size);
++		for (unsigned k = 0; k < sizeof read_sizes / sizeof *read_sizes;
++		     k++) {
++			a = archive_read_new();
++			assertEqualInt(ARCHIVE_OK,
++				       archive_read_support_format_uc2(a));
++			assertEqualIntA(
++			    a, ARCHIVE_OK,
++			    archive_read_set_options(a, exact_limit));
++			assertEqualIntA(a, ARCHIVE_OK,
++					read_open_memory_seek(a, archive_data,
++							      archive_size,
++							      read_sizes[k]));
++			assertEqualIntA(a, ARCHIVE_OK,
++					archive_read_next_header(a, &e));
++			assertEqualIntA(
++			    a, 2000, archive_read_data(a, data, sizeof data));
++			for (int i = 0; i < 100; i++)
++				assertEqualMem(data + 20 * i,
++					       "UC2 optional reader\n", 20);
++			assertEqualIntA(a, ARCHIVE_EOF,
++					archive_read_next_header(a, &e));
++			assertEqualInt(ARCHIVE_OK, archive_read_free(a));
++		}
++		/* A pipe must fail before entries are exposed; no implicit
++		 * spooling. */
++		a = archive_read_new();
++		assertEqualInt(ARCHIVE_OK, archive_read_support_format_uc2(a));
++		assertEqualIntA(
++		    a, ARCHIVE_OK,
++		    read_open_memory(a, archive_data, archive_size, 7));
++		assertEqualIntA(a, ARCHIVE_FATAL,
++				archive_read_next_header(a, &e));
++		assert(strstr(archive_error_string(a),
++			      "seekable input required") != NULL);
++		assertEqualInt(ARCHIVE_OK, archive_read_free(a));
++		free(archive_data);
++	}
 +
-+    a = archive_read_new();
-+    assertEqualInt(ARCHIVE_OK, archive_read_support_format_by_code(a, ARCHIVE_FORMAT_UC2));
-+    extract_reference_file("test_read_format_uc2_6.uc2");
-+    assertEqualIntA(a, ARCHIVE_OK, archive_read_open_filename(a, "test_read_format_uc2_6.uc2", 7));
-+    assertEqualIntA(a, ARCHIVE_FATAL, archive_read_next_header(a, &e));
-+    assertEqualInt(ARCHIVE_OK, archive_read_free(a));
++	const char *limits[] = {"uc2:memory-limit=1", "uc2:input-limit=20",
++				"uc2:entry-limit=1999", "uc2:total-limit=1999"};
++	for (unsigned k = 0; k < sizeof limits / sizeof *limits; k++) {
++		a = archive_read_new();
++		assertEqualInt(ARCHIVE_OK, archive_read_support_format_uc2(a));
++		assertEqualIntA(a, ARCHIVE_OK,
++				archive_read_set_options(a, limits[k]));
++		assertEqualIntA(a, ARCHIVE_OK,
++				archive_read_open_filename(
++				    a, "test_read_format_uc2_4.uc2", 7));
++		if (k < 2)
++			assertEqualIntA(a, ARCHIVE_FATAL,
++					archive_read_next_header(a, &e));
++		else {
++			assertEqualIntA(a, ARCHIVE_OK,
++					archive_read_next_header(a, &e));
++			assertEqualIntA(
++			    a, ARCHIVE_FATAL,
++			    archive_read_data(a, data, sizeof data));
++		}
++		assertEqualInt(ARCHIVE_OK, archive_read_free(a));
++	}
++	a = archive_read_new();
++	assertEqualInt(ARCHIVE_OK, archive_read_support_format_uc2(a));
++	extract_reference_file("test_read_format_uc2_80.uc2");
++	assertEqualIntA(
++	    a, ARCHIVE_OK,
++	    archive_read_open_filename(a, "test_read_format_uc2_80.uc2", 7));
++	assertEqualIntA(a, ARCHIVE_OK, archive_read_next_header(a, &e));
++	assertEqualInt(70001, archive_entry_size(e));
++	unsigned char *turbo = malloc(70001);
++	assert(turbo != NULL);
++	if (turbo) {
++		assertEqualIntA(a, 70001, archive_read_data(a, turbo, 70001));
++		unsigned x = 80;
++		for (unsigned i = 0; i < 70001; i++) {
++			x = x * 1664525u + 1013904223u;
++			assertEqualInt(i < 30000 ? (unsigned char)(x >> 24)
++						 : (unsigned char)(i % 251),
++				       turbo[i]);
++		}
++		free(turbo);
++	}
++	assertEqualInt(ARCHIVE_OK, archive_read_free(a));
++
++	a = archive_read_new();
++	assertEqualInt(ARCHIVE_OK, archive_read_support_format_by_code(
++				       a, ARCHIVE_FORMAT_UC2));
++	extract_reference_file("test_read_format_uc2_6.uc2");
++	assertEqualIntA(
++	    a, ARCHIVE_OK,
++	    archive_read_open_filename(a, "test_read_format_uc2_6.uc2", 7));
++	assertEqualIntA(a, ARCHIVE_FATAL, archive_read_next_header(a, &e));
++	assertEqualInt(ARCHIVE_OK, archive_read_free(a));
 +#endif
 +}
 --- /dev/null
 +++ b/libarchive/test/test_read_format_uc2_4.uc2.uu
 @@ -0,0 +1,9 @@
 +begin 644 test_read_format_uc2_4.uc2
-+M54,R&MX```"RQ+(!``$```!Y````J;8`RP#(```?A6VG[$]R\NKZ4/2>'D^+
++M54,R&MX```"RQ+(!``$```!Y````/@@`RP#(```?A6VG[$]R\NKZ4/2>'D^+
 +M14^GIYZ`BYY/3Z=%BJ>>GD^+14^GIYZ*BYY/3Z=%%Z>@]P`03X^G1:*GT]-/
 +MQ45/IZ?3HL733T^G1:*GT]-/Q45/IZ?3HHO3T/L`"``````$``$```#XL6;L
-+M&3/=SN_UQAT93\:,'99.QHUOQG9B%IR>3#",PXQ%.."H=JEX69DX:5)D,K/,
-+MN'5JOAFL-0S\8X+>)$$R%(2*5(I)YYITM[51U/7X\2G$:?QNJBTMJ6S:45I<
-+*\":1`.<`[P\@0```
++M&3/=SN_UQAT93\:,'99.QHUOQG9B%IR>3#",PXQ%,L;#-4S%R\K#294BE9EC
++MQJA3\<UGK63@&1/Q)@R2HB!2I%1,/=>BNZ^-IZ[&CT\A3>-Q4VMI2F72CM'B
++*@#>(!#@'>G\``0``
 +`
 +end
 --- /dev/null
 +++ b/libarchive/test/test_read_format_uc2_6.uc2.uu
 @@ -0,0 +1,43 @@
 +begin 644 test_read_format_uc2_6.uc2
-+M54,R&M`&``"DRK(!``$```!U!```M;L`RP#(```2@`@``(``````````````
++M54,R&M`&``"DRK(!``$```!U!```(@4`RP#(```2@`@``(``````````````
 +M```#``"(````````````````````````````````````````````````````
 +M````````````````````````````````````````````````````````````
 +M``````````````````````````````````````````````````````````"`
@@ -1096,20 +1159,20 @@
 +M``````````````"R`P"`````````````````````````````````````````
 +M``````````````````````````````````````````!.`.B$````````````
 +M`````````````````````````.@$`````,(.`'8``%H!JX,'Z,87,A:U(*@%
-+M"ZI:4*"*!;6JJ%`+EEI`@``````*``$````V@">`"(^!)1(H*($``"4``(`!
-+M```H*`$```````````````````````````````"`$@``L`0````````!`!(H
-+M`(`````````!```H```!```H``"!$@`H``"!$@`H``````````"`$@````"!
++M"ZI:4*"*!;6JJ%`+EEI`@``````*``$````V@">`,)"!)1(H*($``"4``(`!
++M```H*`$```````````````````````````````"`$@``L`2`$@`````!```H
++M*`$````````!```H```!```H``"!$@`H``"!$@`H``````````"`$@````"!
 +M$@`H``"`)0``*`$!`!(H*($!```H@`.`$A(`6(("``!8````````````````
 +M``"!$A(H`("`)0`````"`!)8`(`!```H@`.`$@``6`(``!(``(``````````
-+M````````````````````````````````````````````*`$``````````!(`
-+M`(````````"`)0````````````````````````````"`$@``````````````
++M````````````````````````````````````````````````````````````
++M``````````"`)0````````````````````````````"`$@``````````````
 +M`````````````````!(``(``````````````6`(`````````````````````
 +M````````````````````````````````````````````````````````````
 +M````````````6`(``!(``(``````*`$``!(``(`!`"4HL(2`)1(``(``````
 +M````````````````````````````````````````````````````````````
 +M`````````!(`V(4"E@!8`````!(``(``````````````````````````````
-+M````````<`PT^>$?A&<;8]UH)GCE9:U<QJRPJ],&<&FD7R\SN%FV2;TA[$+)
-+M=0/'R<Q7/%1N7I,.!MTJ0<)L:0@BCUB[;-&`>81Z*,>=2K=O7$"2J27Y,O7_
++M````````70!'D7,PJ=)]`.D=>AAL(-7#E1JZ-Z[C:&?:^>`+8VY6D?E,`,B0
++M'QL-UGY"IC#L:KPUJ/%I=6QX#B`V$([L0W00&[>2P=)74KOO;D"2J27Y,O7_
 +"@```
 +`
 +end

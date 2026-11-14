@@ -66,8 +66,8 @@ a later corruption or output error, so callers must stage output when needed.
 All integers are little endian. Archive `versionMadeBy` and
 `versionNeededToExtract` are 300. The central directory uses the existing codec
 and has one ordinary entry per source file, with method 11, master ID 1 and an
-offset to the recipe. The central-directory compressed size equals the recipe
-length. Chunked archives produced by this writer have no master records.
+offset to the recipe. The entry's compressed-size field in the central directory
+equals the recipe length. Chunked archives produced by this writer have no master records.
 
 | Recipe header offset | Bytes | Meaning |
 | --- | ---: | --- |

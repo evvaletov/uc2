@@ -6,6 +6,7 @@ import sys
 import tempfile
 
 uc2, tar = (str(Path(p).resolve()) for p in sys.argv[1:3])
+seekable_only = '--seekable-only' in sys.argv[3:]
 with tempfile.TemporaryDirectory(prefix='uc2-la-limits-') as temp:
     root = Path(temp)
     (root/'a').write_bytes(b'one'*10000)
@@ -22,7 +23,10 @@ with tempfile.TemporaryDirectory(prefix='uc2-la-limits-') as temp:
         for pipe in (False,True):
             result = run(option, listing, pipe)
             assert result.returncode != 0, (option, result)
-            assert b'limit' in result.stderr or b'uc2_open failed' in result.stderr, (option, result.stderr)
+            expected = (b'seekable input required' in result.stderr
+                        if seekable_only and pipe else
+                        b'limit' in result.stderr or b'uc2_open failed' in result.stderr)
+            assert expected, (option, result.stderr)
     for option in ['entries-limit=2', 'entry-limit=30000', 'total-limit=60000',
                    'memory-limit=67108864', 'input-limit='+str(archive.stat().st_size)]:
         result = run(option)

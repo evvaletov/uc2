@@ -99,6 +99,19 @@ def test_bad_source_does_not_stop_batch(tmp_path):
     assert broken['errors'] and broken['export'] is None
 
 
+def test_damaged_turbo_is_an_error(tmp_path):
+    source = ROOT / 'tests/fuzz/regressions/turbo-empty-checksum.uc2'
+    output = tmp_path / 'out'
+    report = preserve([source], output)
+    assert report['status'] == 'partial'
+    manifest = json.loads((output / report['archives'][0]['manifest']).read_text())
+    entry, = manifest['entries']
+    assert entry['method'] == 80
+    assert entry['status'] == 'error'
+    assert entry['sha256'] is None
+    assert 'Damaged archive' in entry['error']
+
+
 def test_corruption_is_recorded_without_partial_export(tmp_path):
     path = tmp_path / 'bad-payload.uc2'
     with UC2Writer(path) as writer:

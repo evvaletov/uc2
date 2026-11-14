@@ -73,13 +73,13 @@ with the original DOS executable. The C decoder remains LGPL-3.0-only.
 - SimHash near-duplicate detection
 - Delta compression for binary patching
 - Content-aware preprocessing (BCJ, BWT, delta filter)
-- LZ4 ultra-fast compression
+- LZ4 block compression
 - BLAKE3 cryptographic hashing
 - SHA-256 (FIPS 180-4) implementation
 - OpenTimestamps integration (proof parser, walker, archive trailer)
 - Dictionary metadata for cross-archive sharing
 - Backward compatibility with original UC2 Pro (verified via DOSBox-X)
-- Automated test infrastructure (19 unit tests, DOSBox-X cross-tool testing)
+- Native and Python tests, cross-platform CI, and DOSBox-X interoperability checks
 
 New core modules are licensed GPL-3.0-or-later by Eremey Valetov (2026).
 The libarchive adapter and independently written integration glue are

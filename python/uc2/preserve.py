@@ -202,7 +202,7 @@ def _one(path, output, format, limits):
                     except _OutputError:
                         raise
                     except (OSError, ValueError, RuntimeError) as error:
-                        entry['status'] = 'unsupported' if info.method == 80 and not isinstance(error, ResourceLimitError) else 'error'
+                        entry['status'] = 'error'
                         entry['sha256'] = None
                         entry['error'] = str(error)
                 if container:
@@ -214,7 +214,7 @@ def _one(path, output, format, limits):
                 source.seek(0)
                 if _hash(source) != manifest['source']['sha256']:
                     raise OSError('source archive changed during the operation')
-                manifest['status'] = ('partial' if any(e['status'] in ('error', 'unsupported')
+                manifest['status'] = ('partial' if any(e['status'] == 'error'
                                                      for e in manifest['entries']) else 'ok')
     except _OutputError:
         raise

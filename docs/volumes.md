@@ -12,7 +12,7 @@ uc2 -x collection.EXE
 ```python
 from uc2 import UC2File
 with UC2File("collection.003") as archive:
-    archive.testzip()
+    archive.verify()
     data = archive.read("README.TXT")
 ```
 

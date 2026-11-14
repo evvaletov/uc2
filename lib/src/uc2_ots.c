@@ -11,6 +11,7 @@
 #include "uc2/uc2_ots.h"
 #include "uc2/uc2_sha256.h"
 #include <string.h>
+#include <limits.h>
 
 static uint32_t r32le(const uint8_t *p)
 {
@@ -91,7 +92,7 @@ int uc2_ots_parse_file(const uint8_t *file, size_t file_len,
                        const uint8_t **out_body,
                        size_t *out_body_len)
 {
-	if (file_len < UC2_OTS_HEADER_MAGIC_LEN + 1 + 1 + 32)
+	if (file_len < UC2_OTS_HEADER_MAGIC_LEN + 1 + 1)
 		return UC2_OTS_ERR_TRUNCATED;
 	if (memcmp(file, UC2_OTS_HEADER_MAGIC, UC2_OTS_HEADER_MAGIC_LEN) != 0)
 		return UC2_OTS_ERR_BAD_MAGIC;
@@ -132,8 +133,12 @@ int uc2_ots_serialize_file(uint8_t hash_op,
 	default: return UC2_OTS_ERR_BAD_HASH_OP;
 	}
 	if (leaf_digest_len != want_len) return UC2_OTS_ERR_BAD_HASH_OP;
-	size_t need = UC2_OTS_HEADER_MAGIC_LEN + 1 + 1 + leaf_digest_len + body_len;
-	if (need > out_cap) return UC2_OTS_ERR_TRUNCATED;
+	size_t prefix = UC2_OTS_HEADER_MAGIC_LEN + 1 + 1 + leaf_digest_len;
+	/* Both size_t addition and the public int result must be representable
+	   before touching either input data or the output buffer. */
+	if (body_len > (size_t)INT_MAX - prefix) return UC2_OTS_ERR_TOO_LARGE;
+	if (out_cap < prefix || body_len > out_cap - prefix)
+		return UC2_OTS_ERR_TRUNCATED;
 	uint8_t *p = out;
 	memcpy(p, UC2_OTS_HEADER_MAGIC, UC2_OTS_HEADER_MAGIC_LEN);
 	p += UC2_OTS_HEADER_MAGIC_LEN;
@@ -141,9 +146,8 @@ int uc2_ots_serialize_file(uint8_t hash_op,
 	*p++ = hash_op;
 	memcpy(p, leaf_digest, leaf_digest_len);
 	p += leaf_digest_len;
-	memcpy(p, body, body_len);
-	p += body_len;
-	return (int)(p - out);
+	if (body_len) memcpy(p, body, body_len);
+	return (int)(prefix + body_len);
 }
 
 /* A serialized timestamp is a sequence of "items"; each item is either
@@ -299,7 +303,8 @@ int uc2_ots_trailer_build(uint32_t archive_len,
 	w32le(p, UC2_OTS_TRAILER_VERSION); p += 4;
 	w32le(p, archive_len);             p += 4;
 	w32le(p, (uint32_t)proof_len);     p += 4;
-	memcpy(p, proof, proof_len);       p += proof_len;
+	if (proof_len) memcpy(p, proof, proof_len);
+	p += proof_len;
 	w32le(p, (uint32_t)proof_len);     p += 4;
 	memcpy(p, UC2_OTS_TRAILER_MAGIC, UC2_OTS_TRAILER_MAGIC_LEN);
 	p += UC2_OTS_TRAILER_MAGIC_LEN;

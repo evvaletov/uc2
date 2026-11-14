@@ -8,8 +8,9 @@ UC2 v3 is under development in portable C99. The current alpha is
 [3.0.0a11](https://pypi.org/project/uc2/3.0.0a11/).
 Compression levels 2-5 use the original Huffman format; levels 6-9 require the
 new rANS reader. Original-format compatibility is
-covered by DOSBox-X fixtures, including Turbo/method 80 reads. Multi-volume
-sets still require reassembly before use.
+covered by DOSBox-X fixtures, including Turbo/method 80 reads. The native CLI
+and Python path API resolve original SAS and DOS UC2SEA sets; keep all parts
+together. See the [volume guide](docs/volumes.md) for supported inputs and limits.
 
 ## Features
 
@@ -20,8 +21,9 @@ stdout, tab-separated listings, and a quiet mode for scripts.
 - LZ77 with Huffman coding at levels 2-5, or rANS at levels 6-9.
 - Optional shared payload chunks across named files and versions with `--chunked`;
   see the [compatibility and format guide](docs/chunk-sharing.md).
-  The resulting archive is self-contained; `--ingest-restore` reconstructs the
-  input stream. A tar input remains a byte stream of `part-N` entries.
+- Stream ingestion with exact restoration through `--ingest-restore`.
+  Default `--ingest` stores `part-N` entries; adding `--chunked` stores one
+  `data` entry. Use [`--ingest-tar`](docs/tar-ingestion.md) for named tar members.
 - Compression comparisons through `-B`, including the library's LZ4 method.
 - OpenTimestamps proof attachment, extraction, and inspection.
 - Readers for [libarchive/bsdtar](contrib/libarchive/README.md),
@@ -37,6 +39,9 @@ stdout, tab-separated listings, and a quiet mode for scripts.
   offline use. Tested in Chromium, Firefox and WebKit.
 - A [preservation toolkit](docs/preservation.md) for batch inventory and
   verified ZIP/tar exports, retaining original paths and metadata in manifests.
+- [Incremental directory snapshots](docs/snapshots.md) in the Python package,
+  with shared SHA-256-addressed chunks, verified restores, retention, replica
+  repair and packed storage.
 
 The library also contains a 64-bit Merkle DAG, a shared block store, SimHash,
 binary delta coding, dictionary metadata, and BCJ/BWT/delta preprocessing.
@@ -115,8 +120,9 @@ uc2 -B files...                        # Benchmark all methods
 | 8 | rANS | Tight |
 | 9 | rANS | Ultra |
 
-Levels 2-5 produce archives readable by the original 1992 UC2 Pro.
-Levels 6-9 use rANS entropy coding (UC2 v3 only).
+The default writer at levels 2-5 produces archives readable by the original
+1992 UC2 Pro. Levels 6-9 use rANS entropy coding (UC2 v3 only).
+At every level, `--chunked` requires the full 3.0.0a11 or newer reader.
 
 ### Options
 
@@ -189,11 +195,3 @@ The libarchive adapter and independently written integration glue are available
 under `GPL-3.0-or-later OR BSD-2-Clause`. The Total Commander adapter retains
 Bobrowski's LGPL license. See [LICENSE](LICENSE), [CREDITS.md](CREDITS.md), and
 the [per-file license audit](docs/license-audit.md).
-
-Incremental directory versions are available through `uc2 snapshot` in the
-Python package, with shared SHA-256-addressed UC2 chunks and verified restores.
-See [the snapshot guide](https://github.com/evvaletov/uc2/blob/main/docs/snapshots.md).
-
-Alpha10 adds [snapshot retention, repair and packing](docs/snapshots.md),
-[data-only SAS/UC2SEA reads](docs/volumes.md), and
-[tar ingestion with individual file entries](docs/tar-ingestion.md).

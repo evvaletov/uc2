@@ -29,8 +29,8 @@ uint64_t uc2_simhash(const uint8_t *data, size_t len)
 		return fnv1a_64(data, len);
 	}
 
-	/* Accumulate bit votes: positive = more 1s, negative = more 0s */
-	int32_t votes[64];
+	/* Count set bits without signed overflow on large inputs. */
+	size_t votes[64];
 	for (int i = 0; i < 64; i++)
 		votes[i] = 0;
 
@@ -41,15 +41,13 @@ uint64_t uc2_simhash(const uint8_t *data, size_t len)
 		for (int b = 0; b < 64; b++) {
 			if (h & ((uint64_t)1 << b))
 				votes[b]++;
-			else
-				votes[b]--;
 		}
 	}
 
 	/* Majority vote */
 	uint64_t result = 0;
 	for (int b = 0; b < 64; b++)
-		if (votes[b] > 0)
+		if (votes[b] > nshingles / 2)
 			result |= (uint64_t)1 << b;
 
 	return result;

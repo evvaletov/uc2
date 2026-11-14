@@ -39,8 +39,9 @@ static void parents(wchar_t *path)
 int wmain(int argc,wchar_t **argv)
 {
     int reject=argc==4 && !wcscmp(argv[1],L"--reject");
-    if(argc!=5 && !reject)return 2;
-    HMODULE dll=LoadLibraryW(argv[reject ? 2 : 1]);
+    int listing=argc==4 && !wcscmp(argv[1],L"--list");
+    if(argc!=5 && !reject && !listing)return 2;
+    HMODULE dll=LoadLibraryW(argv[reject || listing ? 2 : 1]);
     if(!dll){fprintf(stderr,"LoadLibrary failed: %lu\n",GetLastError());return 1;}
     open_fn open=(open_fn)GetProcAddress(dll,"OpenArchiveW");
     read_fn read=(read_fn)GetProcAddress(dll,"ReadHeaderExW");
@@ -59,6 +60,20 @@ int wmain(int argc,wchar_t **argv)
         FreeLibrary(dll);
         puts("WCX DLL: ambiguous version names rejected");
         return 0;
+    }
+    if(listing){
+        tOpenArchiveDataW ad={0};ad.ArcName=argv[3];ad.OpenMode=PK_OM_LIST;
+        void *r=open(&ad);if(!r||ad.OpenResult)return 1;
+        tHeaderDataExW h;
+        int rc;
+        while((rc=read(r,&h))==0){
+            char utf8[4096];
+            if(!WideCharToMultiByte(CP_UTF8,0,h.FileName,-1,utf8,sizeof utf8,NULL,NULL))return 1;
+            puts(utf8);
+            if(process(r,PK_SKIP,NULL,NULL))return 1;
+        }
+        close(r);FreeLibrary(dll);
+        return rc==E_END_ARCHIVE ? 0 : 1;
     }
     if(!can(argv[2]))return 1;
     for(int mode=0;mode<4;mode++){

@@ -1,5 +1,6 @@
 """Retention ordering, verified repair, v1 migration and packed transactions."""
 import json
+import hashlib
 import shutil
 import sqlite3
 from pathlib import Path
@@ -75,6 +76,41 @@ def test_bad_replica_changes_nothing(tmp_path):
     with pytest.raises(ValueError):
         s.repair(repo, replica)
     assert before == {p.relative_to(repo): p.read_bytes() for p in repo.rglob('*') if p.is_file()}
+
+
+@pytest.mark.parametrize('packed', [False, True])
+@pytest.mark.parametrize('where', ['root', 'directory'])
+def test_directory_cannot_supply_repair_chunks(tmp_path, packed, where):
+    _, repo, old, new = versions(tmp_path)
+    replica = tmp_path / 'replica'
+    shutil.copytree(repo, replica)
+    manifest = json.loads((replica / 'snapshots' / (old + '.json')).read_bytes())
+    digest, size = manifest['entries'][0]['chunks'][0]
+    # Directory data is not visited by file verification. A wrong declared
+    # length used to make repair replace a good destination chunk with this
+    # corrupt donor blob, before discovering the error in the replacement.
+    directory = dict(type='directory', mode=0o755, mtime_ns=0,
+                     chunks=[[digest, size + 1]])
+    manifest['entries'] = []
+    manifest['total_size'] = 0
+    if where == 'root':
+        manifest['root'] = directory
+    else:
+        manifest['entries'].append(dict(directory, path='directory'))
+    data = s._json(manifest)
+    address = s._hash(data)
+    for path in (replica / 'snapshots').glob('*.json'):
+        path.unlink()
+    (replica / 'snapshots' / (address + '.json')).write_bytes(data)
+    s._chunk_path(replica, digest).write_bytes(b'not an archive')
+    if packed:
+        s.compact(repo)
+    before = {p.relative_to(repo): p.read_bytes() for p in repo.rglob('*') if p.is_file()}
+    with pytest.raises(ValueError, match='directory has chunk references'):
+        s.repair(repo, replica)
+    assert before == {p.relative_to(repo): p.read_bytes() for p in repo.rglob('*') if p.is_file()}
+    assert s.verify(repo, old)['verified_files'] == 1
+    assert s.verify(repo, new)['verified_files'] == 1
 
 
 def test_reader_lock_refuses_maintenance(tmp_path):
@@ -192,3 +228,24 @@ def test_inventory_limits_include_orphans(tmp_path, monkeypatch, packed):
         with pytest.raises(ValueError, match='snapshot-count limit'):
             s.snapshots(repo)
     assert len(s.snapshots(repo)) == 2
+
+
+@pytest.mark.parametrize('size', [0, 32768, 32769])
+def test_compact_orphan_size_limit(tmp_path, size):
+    src, repo = tmp_path/'src', tmp_path/'repo'
+    src.mkdir()
+    s.create(src, repo)
+    data = b'a' * size
+    digest = hashlib.sha256(data).hexdigest()
+    directory = repo/'chunks'/digest[:2]; directory.mkdir(exist_ok=True)
+    with s.UC2Writer(directory/(digest+'.uc2')) as writer:
+        writer.writestr('data', data)
+    if size == s.MAX_CHUNK:
+        s.compact(repo)
+        assert json.loads((repo/'config.json').read_text())['version'] == 2
+    else:
+        with pytest.raises(ValueError, match='invalid orphan chunk'):
+            s.compact(repo)
+        assert json.loads((repo/'config.json').read_text())['version'] == 1
+        assert not (repo/'objects.sqlite3').exists()
+        assert (directory/(digest+'.uc2')).exists()

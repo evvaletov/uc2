@@ -59,22 +59,28 @@ def _digest(value):
     return value
 
 
+def _reparse(info):
+    return bool(getattr(info, "st_file_attributes", 0) &
+                getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400))
+
+
 def _directory(path):
-    if not stat.S_ISDIR(path.lstat().st_mode):
+    info = path.lstat()
+    if _reparse(info) or not stat.S_ISDIR(info.st_mode):
         raise ValueError(f"expected a real directory: {path}")
 
 
 @contextmanager
 def _regular(path):
     before = path.lstat()
-    if not stat.S_ISREG(before.st_mode):
+    if _reparse(before) or not stat.S_ISREG(before.st_mode):
         raise ValueError(f"expected a regular file: {path}")
     flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
     flags |= getattr(os, "O_NONBLOCK", 0)
     fd = os.open(path, flags)
     with os.fdopen(fd, "rb") as source:
         opened = os.fstat(source.fileno())
-        if not stat.S_ISREG(opened.st_mode) or (before.st_dev, before.st_ino) != (opened.st_dev, opened.st_ino):
+        if _reparse(opened) or not stat.S_ISREG(opened.st_mode) or (before.st_dev, before.st_ino) != (opened.st_dev, opened.st_ino):
             raise ValueError(f"source changed while opening: {path}")
         yield source
 
@@ -327,7 +333,8 @@ def _chunk(root, digest, size):
     if (digest, size) in cache:
         return cache[digest, size]
     with UC2File(io.BytesIO(_archive_data(root, digest)), max_entries=1,
-                 max_decoder_memory=8 * 1024 * 1024, max_extract_size=MAX_CHUNK) as archive:
+                 max_decoder_memory=8 * 1024 * 1024, max_extract_size=MAX_CHUNK,
+                             max_read_size=MAX_CHUNK) as archive:
         entries = archive.infolist(all_versions=True)
         if len(entries) != 1 or entries[0].is_dir() or entries[0].file_size != size:
             raise ValueError(f"invalid chunk archive: {digest}")
@@ -360,7 +367,8 @@ def _store(root, data):
         finally:
             writer.abort()
         encoded = output.getvalue()
-        with UC2File(io.BytesIO(encoded), max_entries=1, max_decoder_memory=8 * 1024 * 1024, max_extract_size=MAX_CHUNK) as archive:
+        with UC2File(io.BytesIO(encoded), max_entries=1, max_decoder_memory=8 * 1024 * 1024, max_extract_size=MAX_CHUNK,
+                             max_read_size=MAX_CHUNK) as archive:
             if archive.read("chunk") != data:
                 raise ValueError("new chunk did not round trip")
         connection.execute("INSERT INTO chunks VALUES (?, ?)", (digest, encoded))
@@ -372,7 +380,8 @@ def _store(root, data):
         with UC2Writer(temporary, level=4, max_entries=1) as archive:
             archive.writestr("chunk", data)
         # Verify the writer result before the chunk becomes reusable.
-        with UC2File(temporary, max_entries=1, max_decoder_memory=8 * 1024 * 1024, max_extract_size=MAX_CHUNK) as archive:
+        with UC2File(temporary, max_entries=1, max_decoder_memory=8 * 1024 * 1024, max_extract_size=MAX_CHUNK,
+                             max_read_size=MAX_CHUNK) as archive:
             if archive.read("chunk") != data:
                 raise ValueError("new chunk did not round trip")
         size = temporary.stat().st_size
@@ -419,7 +428,7 @@ def create(source, repository, *, label="", max_total_size=1 << 40):
         def visit(directory, entry=None):
             nonlocal total, added, new_chunks, refs
             initial = directory.lstat()
-            if not stat.S_ISDIR(initial.st_mode):
+            if _reparse(initial) or not stat.S_ISDIR(initial.st_mode):
                 raise ValueError(f"expected a real directory: {directory}")
             if entry is not None:
                 entry.update(_metadata(directory, "directory", initial))
@@ -438,6 +447,8 @@ def create(source, repository, *, label="", max_total_size=1 << 40):
                     raise ValueError("snapshot entry limit exceeded")
                 path_before = path.lstat()
                 mode = path_before.st_mode
+                if _reparse(path_before):
+                    raise ValueError(f"reparse points are unsupported: {path}")
                 if stat.S_ISDIR(mode):
                     entry = dict(path=relative)
                     entries.append(entry)
@@ -527,6 +538,8 @@ def _manifest(root, address, max_total_size):
             raise ValueError("invalid snapshot entry")
         _integer(e.get("mode"), 0, 0o777)
         _integer(e.get("mtime_ns"), -(1 << 63), (1 << 63) - 1)
+        if e["type"] == "directory" and "chunks" in e:
+            raise ValueError("directory has chunk references")
     metadata(m.get("root"))
     if m["root"]["type"] != "directory":
         raise ValueError("invalid snapshot root")
@@ -668,17 +681,19 @@ def restore(repository, address, destination, *, max_total_size=1 << 40):
         return {"snapshot": address, "restored_files": checked,
                 "total_size": manifest["total_size"]}
     finally:
-        if reserved and stage.exists():
-            destination.rmdir()
-        if stage.exists():
-            # A metadata failure may have made directories readonly.
-            os.chmod(stage, 0o700)
-            for directory, dirs, files in os.walk(stage):
-                for name in dirs:
-                    os.chmod(Path(directory) / name, 0o700)
-                for name in files:
-                    os.chmod(Path(directory) / name, 0o600)
-            shutil.rmtree(stage)
+        try:
+            if reserved and stage.exists():
+                destination.rmdir()
+        finally:
+            if stage.exists():
+                # A metadata failure may have made directories readonly.
+                os.chmod(stage, 0o700)
+                for directory, dirs, files in os.walk(stage):
+                    for name in dirs:
+                        os.chmod(Path(directory) / name, 0o700)
+                    for name in files:
+                        os.chmod(Path(directory) / name, 0o600)
+                shutil.rmtree(stage)
 
 
 @_locked
@@ -786,7 +801,8 @@ def prune(repository, *, keep_last=1, keep=(), apply=False):
 
 def _replace_file(path, data):
     if path.exists() or path.is_symlink():
-        if not stat.S_ISREG(path.lstat().st_mode):
+        info = path.lstat()
+        if _reparse(info) or not stat.S_ISREG(info.st_mode):
             raise ValueError("replacement target must be a regular file")
     fd, name = tempfile.mkstemp(prefix=".repair-", dir=path.parent)
     temporary = Path(name)
@@ -820,7 +836,9 @@ def repair(repository, replica, *, addresses=()):
         for address in selected:
             manifest = _manifest(source, address, (1 << 63) - 1)
             for entry in manifest["entries"]:
-                for digest, size in entry.get("chunks", []):
+                if entry["type"] != "file":
+                    continue
+                for digest, size in entry["chunks"]:
                     try:
                         _chunk(root, digest, size)
                     except (ValueError, OSError, sqlite3.DataError):
@@ -870,9 +888,12 @@ def compact(repository):
             packed.execute("CREATE TABLE manifests (digest TEXT PRIMARY KEY, data BLOB NOT NULL)")
             for digest in sorted(_inventory(root)):
                 data = _archive_data(root, digest)
-                with UC2File(io.BytesIO(data), max_entries=1, max_decoder_memory=8 * 1024 * 1024, max_extract_size=MAX_CHUNK) as archive:
+                with UC2File(io.BytesIO(data), max_entries=1, max_decoder_memory=8 * 1024 * 1024, max_extract_size=MAX_CHUNK,
+                             max_read_size=MAX_CHUNK) as archive:
                     entries = archive.infolist(all_versions=True)
-                    if len(entries) != 1 or entries[0].is_dir() or _hash(archive.read(entries[0])) != digest:
+                    if (len(entries) != 1 or entries[0].is_dir() or
+                            not 1 <= entries[0].file_size <= MAX_CHUNK or
+                            _hash(archive.read(entries[0])) != digest):
                         raise ValueError("invalid orphan chunk: " + digest)
                 packed.execute("INSERT INTO chunks VALUES (?, ?)", (digest, data))
             for _, address in descriptions:

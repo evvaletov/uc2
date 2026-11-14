@@ -51,6 +51,7 @@ struct uc2_rans_enc {
 	uint8_t *rev_buf;
 	size_t rev_pos;
 	size_t rev_cap;
+	int error;        /* sticky allocation failure, reported by finish */
 };
 
 /* Initialize encoder. */
@@ -58,11 +59,12 @@ void uc2_rans_enc_init(struct uc2_rans_enc *enc,
                        const struct uc2_rans_table *tab);
 
 /* Encode one symbol.  Symbols must be encoded in REVERSE order
- * (last symbol first).  Use uc2_rans_enc_flush to finalize. */
+ * (last symbol first). Use uc2_rans_enc_finish to finalize. */
 void uc2_rans_encode(struct uc2_rans_enc *enc, int sym);
 
 /* Finalize encoding: write state and return the compressed data.
- * Caller must free *out_data. Returns compressed size. */
+ * Caller must free *out_data. Returns compressed size, or zero with
+ * *out_data == NULL on allocation failure. */
 size_t uc2_rans_enc_finish(struct uc2_rans_enc *enc,
                            uint8_t **out_data);
 

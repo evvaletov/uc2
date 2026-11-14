@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <string.h>
 
 static const char INGEST_MAGIC[8] = { 'U','C','2','I','N','G','S','T' };
@@ -65,6 +66,8 @@ struct dedup_map {
 	uint32_t *offsets;  /* offset of chunk in archive */
 	int       cap;
 	int       len;
+	int       has_zero;
+	uint32_t  zero_offset; /* hash zero is valid; keep it outside empty slots */
 };
 
 static int dedup_map_init(struct dedup_map *m, int initial_cap)
@@ -81,6 +84,8 @@ static int dedup_map_init(struct dedup_map *m, int initial_cap)
 	}
 	m->cap = cap;
 	m->len = 0;
+	m->has_zero = 0;
+	m->zero_offset = 0;
 	return 0;
 }
 
@@ -88,8 +93,7 @@ static void dedup_map_free(struct dedup_map *m)
 {
 	free(m->keys);
 	free(m->offsets);
-	m->keys = NULL;
-	m->offsets = NULL;
+	memset(m, 0, sizeof *m);
 }
 
 static int dedup_map_grow(struct dedup_map *m);
@@ -99,6 +103,11 @@ static int dedup_map_grow(struct dedup_map *m);
 static int dedup_map_get(const struct dedup_map *m, uint64_t hash,
                          uint32_t *out_off)
 {
+	if (hash == 0) {
+		if (!m->has_zero) return 0;
+		*out_off = m->zero_offset;
+		return 1;
+	}
 	if (m->cap == 0) return 0;
 	uint64_t mask = (uint64_t)m->cap - 1;
 	uint64_t i = hash & mask;
@@ -115,7 +124,13 @@ static int dedup_map_get(const struct dedup_map *m, uint64_t hash,
 
 static int dedup_map_put(struct dedup_map *m, uint64_t hash, uint32_t off)
 {
-	if (hash == 0) hash = 1;  /* sentinel collision: shift to 1 */
+	if (hash == 0) {
+		if (!m->has_zero) {
+			m->has_zero = 1;
+			m->zero_offset = off;
+		}
+		return 0;
+	}
 	if ((m->len + 1) * 2 > m->cap) {
 		if (dedup_map_grow(m) != 0) return -1;
 	}
@@ -168,7 +183,12 @@ int uc2_ingest_write(const char *archive_path,
 		cdc_bits = DEFAULT_CDC_BITS;
 
 	struct uc2_merkle tree;
-	uc2_merkle_build(&tree, data, len, cdc_bits);
+	if (uc2_merkle_build(&tree, data, len, cdc_bits) < 0)
+		return -1;
+	if (tree.nchunks < 0 || tree.nchunks > (1 << 24)) {
+		uc2_merkle_free(&tree);
+		return -1;
+	}
 
 	FILE *f = fopen(archive_path, "wb");
 	if (!f) {
@@ -194,11 +214,6 @@ int uc2_ingest_write(const char *archive_path,
 	 * appending the chunk pool. */
 	long manifest_off = ftell(f);
 	if (manifest_off < 0) {
-		fclose(f);
-		uc2_merkle_free(&tree);
-		return -1;
-	}
-	if (tree.nchunks < 0 || tree.nchunks > (1 << 24)) {
 		fclose(f);
 		uc2_merkle_free(&tree);
 		return -1;
@@ -345,6 +360,7 @@ static int restore_v1(FILE *f, uint32_t nchunks, const char *archive_path,
 		if (fread(rec, 1, sizeof rec, f) != sizeof rec) { rc = -1; break; }
 		uint64_t hash = get_le64(rec);
 		uint32_t clen = get_le32(rec + 8);
+		if (clen > INT_MAX) { rc = -1; break; }
 
 		if (clen > buf_cap) {
 			uint8_t *p = realloc(buf, clen);
@@ -354,7 +370,7 @@ static int restore_v1(FILE *f, uint32_t nchunks, const char *archive_path,
 		}
 
 		int n = uc2_blockstore_read(&bs, hash, buf, clen);
-		if (n != (int)clen) { rc = -1; break; }
+		if (n < 0 || (uint32_t)n != clen) { rc = -1; break; }
 		if (fwrite(buf, 1, clen, out) != clen) { rc = -1; break; }
 	}
 

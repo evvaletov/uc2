@@ -51,14 +51,22 @@ void uc2_rans_build_table(struct uc2_rans_table *tab,
 		}
 	}
 
-	/* Adjust to hit exactly PROB_SCALE: add/remove from largest symbol */
-	if (assigned != UC2_RANS_PROB_SCALE) {
+	/* Adjust without taking a present symbol below one. A skewed
+	 * distribution can require more correction than one symbol holds. */
+	while (assigned != UC2_RANS_PROB_SCALE) {
 		int largest = 0;
 		for (int i = 1; i < nsym; i++)
 			if (tab->freq[i] > tab->freq[largest])
 				largest = i;
-		int32_t diff = (int32_t)UC2_RANS_PROB_SCALE - (int32_t)assigned;
-		tab->freq[largest] = (uint16_t)((int32_t)tab->freq[largest] + diff);
+		if (assigned < UC2_RANS_PROB_SCALE) {
+			tab->freq[largest] += UC2_RANS_PROB_SCALE - assigned;
+			assigned = UC2_RANS_PROB_SCALE;
+		} else {
+			uint32_t take = assigned - UC2_RANS_PROB_SCALE;
+			if (take >= tab->freq[largest]) take = tab->freq[largest] - 1;
+			tab->freq[largest] -= take;
+			assigned -= take;
+		}
 	}
 
 	/* Build cumulative frequencies */
@@ -69,17 +77,21 @@ void uc2_rans_build_table(struct uc2_rans_table *tab,
 
 /* --- Encoder --- */
 
-static void enc_grow(struct uc2_rans_enc *enc)
+static int enc_grow(struct uc2_rans_enc *enc)
 {
+	if (enc->rev_cap > SIZE_MAX / 2) { enc->error = 1; return -1; }
 	size_t newcap = enc->rev_cap ? enc->rev_cap * 2 : 4096;
-	enc->rev_buf = realloc(enc->rev_buf, newcap);
+	uint8_t *buf = realloc(enc->rev_buf, newcap);
+	if (!buf) { enc->error = 1; return -1; }
+	enc->rev_buf = buf;
 	enc->rev_cap = newcap;
+	return 0;
 }
 
 static void enc_put_byte(struct uc2_rans_enc *enc, uint8_t b)
 {
-	if (enc->rev_pos >= enc->rev_cap)
-		enc_grow(enc);
+	if (enc->error) return;
+	if (enc->rev_pos >= enc->rev_cap && enc_grow(enc) < 0) return;
 	enc->rev_buf[enc->rev_pos++] = b;
 }
 
@@ -91,10 +103,12 @@ void uc2_rans_enc_init(struct uc2_rans_enc *enc,
 	enc->rev_buf = NULL;
 	enc->rev_pos = 0;
 	enc->rev_cap = 0;
+	enc->error = 0;
 }
 
 void uc2_rans_encode(struct uc2_rans_enc *enc, int sym)
 {
+	if (enc->error) return;
 	uint32_t freq = enc->tab->freq[sym];
 	if (freq == 0) return;  /* skip zero-freq symbols */
 
@@ -113,16 +127,20 @@ void uc2_rans_encode(struct uc2_rans_enc *enc, int sym)
 
 size_t uc2_rans_enc_finish(struct uc2_rans_enc *enc, uint8_t **out_data)
 {
+	*out_data = NULL;
+	if (enc->error) return 0;
 	/* Write final state (4 bytes, little-endian) */
 	for (int i = 0; i < 4; i++) {
 		enc_put_byte(enc, (uint8_t)(enc->state & 0xFF));
 		enc->state >>= 8;
 	}
+	if (enc->error) return 0;
 
 	/* Reverse the buffer (rANS produces output in reverse) */
 	size_t len = enc->rev_pos;
 	uint8_t *out = malloc(len);
-	if (out) {
+	if (!out) { enc->error = 1; return 0; }
+	{
 		for (size_t i = 0; i < len; i++)
 			out[i] = enc->rev_buf[len - 1 - i];
 	}
@@ -136,6 +154,7 @@ void uc2_rans_enc_free(struct uc2_rans_enc *enc)
 	free(enc->rev_buf);
 	enc->rev_buf = NULL;
 	enc->rev_pos = 0;
+	enc->rev_cap = 0;
 }
 
 /* --- Decoder --- */

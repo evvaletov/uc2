@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <limits.h>
 #include <uc2/uc2_ots.h>
 #include <uc2/uc2_sha256.h>
 
@@ -106,6 +107,57 @@ static void test_file_bad_magic(void)
 	size_t ll, bl;
 	int rc = uc2_ots_parse_file(buf, sizeof buf, &hash_op, &l, &ll, &b, &bl);
 	assert(rc == UC2_OTS_ERR_BAD_MAGIC);
+}
+
+static void test_short_digest_envelopes(void)
+{
+	/* A minimal opaque attestation is 0x00, an eight-byte tag, and an
+	   empty varbytes payload. With a 20-byte digest, this whole envelope
+	   is shorter than the old parser's assumed 32-byte-digest prefix. */
+	uint8_t body[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 0};
+	uint8_t leaf[20] = {0}, encoded[128];
+	uint8_t operations[] = {UC2_OTS_OP_SHA1, UC2_OTS_OP_RIPEMD160};
+	for (size_t i = 0; i < sizeof operations; i++) {
+		int n = uc2_ots_serialize_file(operations[i], leaf, sizeof leaf,
+		                              body, sizeof body, encoded, sizeof encoded);
+		assert(n > 0 && n < UC2_OTS_HEADER_MAGIC_LEN + 2 + 32);
+		uint8_t op;
+		const uint8_t *got_leaf, *got_body;
+		size_t leaf_len, body_len;
+		int result = uc2_ots_parse_file(encoded, (size_t)n, &op, &got_leaf,
+		                               &leaf_len, &got_body, &body_len);
+		assert(result == UC2_OTS_OK && op == operations[i]);
+		assert(leaf_len == sizeof leaf && body_len == sizeof body);
+		assert(!memcmp(got_leaf, leaf, sizeof leaf));
+		assert(!memcmp(got_body, body, sizeof body));
+		result = uc2_ots_parse_file(encoded, UC2_OTS_HEADER_MAGIC_LEN + 2 + 19,
+		                            &op, &got_leaf, &leaf_len, &got_body, &body_len);
+		assert(result == UC2_OTS_ERR_TRUNCATED);
+	}
+}
+
+static void test_envelope_size_guards(void)
+{
+	uint8_t leaf[32] = {0}, sentinel = 0x5a;
+	int result = uc2_ots_serialize_file(UC2_OTS_OP_SHA256, leaf, sizeof leaf,
+	                                    NULL, SIZE_MAX - 64, &sentinel, 0);
+	assert(result == UC2_OTS_ERR_TOO_LARGE && sentinel == 0x5a);
+	result = uc2_ots_serialize_file(UC2_OTS_OP_SHA256, leaf, sizeof leaf,
+	                               NULL, INT_MAX, &sentinel, SIZE_MAX);
+	assert(result == UC2_OTS_ERR_TOO_LARGE && sentinel == 0x5a);
+	result = uc2_ots_serialize_file(UC2_OTS_OP_SHA256, leaf, sizeof leaf,
+	                               NULL, 0, &sentinel, 0);
+	assert(result == UC2_OTS_ERR_TRUNCATED && sentinel == 0x5a);
+	uint8_t encoded[128];
+	result = uc2_ots_serialize_file(UC2_OTS_OP_SHA256, leaf, sizeof leaf,
+	                               NULL, 0, encoded, sizeof encoded);
+	assert(result == UC2_OTS_HEADER_MAGIC_LEN + 2 + 32);
+	uint8_t op;
+	const uint8_t *got_leaf, *got_body;
+	size_t leaf_len, body_len;
+	result = uc2_ots_parse_file(encoded, (size_t)result, &op, &got_leaf,
+	                            &leaf_len, &got_body, &body_len);
+	assert(result == UC2_OTS_OK && body_len == 0 && leaf_len == sizeof leaf);
 }
 
 struct cb_ctx {
@@ -325,6 +377,8 @@ int main(void)
 	TEST(test_varint_overflow_64bit);
 	TEST(test_varint_max_64bit);
 	TEST(test_file_envelope_roundtrip);
+	TEST(test_short_digest_envelopes);
+	TEST(test_envelope_size_guards);
 	TEST(test_file_bad_magic);
 	TEST(test_walk_append_then_attest);
 	TEST(test_walk_two_siblings);

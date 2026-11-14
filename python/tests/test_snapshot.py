@@ -226,3 +226,62 @@ def test_windows_no_hardlink_error_mapping(tmp_path, monkeypatch, code):
     source = tmp_path/'source'; source.mkdir()
     result = s.create(source, tmp_path/'repo')
     assert s.verify(tmp_path/'repo', result['snapshot'])['verified_files'] == 0
+
+
+@pytest.mark.parametrize("location", ["source-child", "repository-chunks", "source-file"])
+def test_reparse_attributes_refused(tmp_path, monkeypatch, location):
+    src, repo = tmp_path/'src', tmp_path/'repo'
+    src.mkdir(); (src/'child').mkdir(); (src/'child'/'data').write_bytes(b'outside')
+    (src/'file').write_bytes(b'file')
+    first = s.create(src, repo)
+    target = {"source-child": src/'child', "repository-chunks": repo/'chunks',
+              "source-file": src/'file'}[location]
+    original = Path.lstat
+    class ReparseStat:
+        st_file_attributes = 0x400
+        def __init__(self, value): self.value = value
+        def __getattr__(self, name): return getattr(self.value, name)
+    def marked(path, *args, **kwargs):
+        result = original(path, *args, **kwargs)
+        return ReparseStat(result) if path == target else result
+    monkeypatch.setattr(Path, 'lstat', marked)
+    with pytest.raises(ValueError):
+        s.create(src, repo)
+    assert len(list((repo/'snapshots').glob('*.json'))) == 1
+
+
+@pytest.mark.skipif(os.name != 'nt', reason='Windows junctions')
+@pytest.mark.parametrize('location', ['source-child', 'repository-chunks'])
+def test_windows_junctions_refused(tmp_path, location):
+    src, repo, outside = tmp_path/'src', tmp_path/'repo', tmp_path/'outside'
+    src.mkdir(); outside.mkdir(); (outside/'data').write_bytes(b'outside')
+    s.create(src, repo)
+    target = src/'child' if location == 'source-child' else repo/'chunks'
+    if target.exists(): target.rmdir()
+    result = subprocess.run(['cmd', '/d', '/c', 'mklink', '/J', str(target), str(outside)],
+                            capture_output=True, text=True)
+    assert result.returncode == 0, result.stdout + result.stderr
+    try:
+        with pytest.raises(ValueError): s.create(src, repo)
+        assert len(list((repo/'snapshots').glob('*.json'))) == 1
+        assert (outside/'data').read_bytes() == b'outside'
+    finally:
+        os.rmdir(target)
+
+
+@pytest.mark.skipif(os.name != 'posix', reason='POSIX destination reservation')
+def test_restore_cleans_stage_if_reservation_cleanup_fails(tmp_path, monkeypatch):
+    src, repo, destination = tmp_path/'src', tmp_path/'repo', tmp_path/'out'
+    src.mkdir(); (src/'data').write_bytes(b'hello')
+    address = s.create(src, repo)['snapshot']
+    original = Path.rmdir
+    def failed_publish(self, target): raise OSError('publish failed')
+    def failed_cleanup(self):
+        if self == destination: raise OSError('reservation cleanup failed')
+        return original(self)
+    monkeypatch.setattr(Path, 'rename', failed_publish)
+    monkeypatch.setattr(Path, 'rmdir', failed_cleanup)
+    with pytest.raises(OSError, match='reservation cleanup failed'):
+        s.restore(repo, address, destination)
+    assert not list(tmp_path.glob('.uc2-restore-*'))
+    assert not list(destination.iterdir())

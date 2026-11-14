@@ -858,6 +858,7 @@ static int flush_block_rans(struct compressor *c, int is_last)
 	uint8_t *rans_data;
 	size_t rans_len = uc2_rans_enc_finish(&enc, &rans_data);
 	uc2_rans_enc_free(&enc);
+	if (!rans_data || rans_len > UINT16_MAX) { r = UC2_UserFault; goto out; }
 
 	/* rANS block format (method 10):
 	   [block-present:1=1] [nsyms:16] [rans_len:16]

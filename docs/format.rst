@@ -1,8 +1,21 @@
 UC2 Archive Format
 ==================
 
-This documents the binary format as implemented by the original UC2
-v2.x and supported by UC2 v3.
+This is a partial guide to the ordinary, single-container UC2 format read by
+this project. It describes the main headers, central-directory record types,
+master dictionaries, and Huffman bitstream. It is not a complete specification
+of the original UC2 format.
+
+The original record declarations are in
+`SUPERMAN.H <https://github.com/evvaletov/uc2/blob/main/original/UC2_source/src/SUPERMAN.H>`_;
+the current reader is in
+`decompress.c <https://github.com/evvaletov/uc2/blob/main/lib/src/decompress.c>`_.
+Encryption, PCP preprocessing, recovery data, and the Turbo bitstream are
+outside this guide. SAS and UC2SEA framing is described in the
+`volume guide <https://github.com/evvaletov/uc2/blob/main/docs/volumes.md>`_.
+The revival's rANS extension is also outside this guide; method 11 is described
+in the `shared-chunk format guide
+<https://github.com/evvaletov/uc2/blob/main/docs/chunk-sharing.md>`_.
 
 Archive Layout
 --------------
@@ -49,13 +62,13 @@ XHEAD: Extended Header
      - Field
    * - 13
      - 4
-     - Cdir volume (always 1)
+     - Cdir volume (1 for ordinary containers accepted by this reader)
    * - 17
      - 4
      - Cdir offset
    * - 21
      - 2
-     - Fletcher checksum of raw cdir
+     - Historical XOR checksum of raw cdir
    * - 23
      - 1
      - Busy flag
@@ -124,7 +137,7 @@ MASMETA (20 bytes):
      - Master index (≥ 2)
    * - 4
      - 4
-     - Content key (FNV-1a hash)
+     - Master grouping key (writer-dependent)
    * - 8
      - 4
      - Total uncompressed size of referring files
@@ -136,18 +149,25 @@ MASMETA (20 bytes):
      - Master data length (uncompressed, ≤ 65 535)
    * - 18
      - 2
-     - Fletcher checksum of master data
+     - Historical checksum field (not validated by this reader)
 
 A master entry in the cdir is: type byte (3) + MASMETA (20) +
 COMPRESS (10) + LOCATION (8) = 39 bytes.  The compressed master data
 is stored at the location pointed to by LOCATION; it is itself
 compressed using another master (typically SuperMaster).
 
+The grouping key is not needed for decoding. The original writer's ``ToKey``
+routine in
+`NEUROMAN.CPP <https://github.com/evvaletov/uc2/blob/main/original/UC2_source/src/NEUROMAN.CPP>`_
+derives it from filenames or file types. The revival writer uses an FNV-1a hash
+of the master bytes. The original source calls the final MASMETA field a
+Fletcher checksum, but historical archives may contain a placeholder there.
+
 Compression Format
 ------------------
 
-UC2 uses LZ77 with Huffman entropy coding.  The bitstream consists of
-blocks, each containing:
+The legacy Huffman methods use LZ77 with Huffman entropy coding. The bitstream
+consists of blocks, each containing:
 
 1. **Block-present flag** (1 bit): 1 = block follows, 0 = end of stream.
 
@@ -187,10 +207,14 @@ lengths using the ``vval`` lookup table.  The first block's default
 lengths are hard-coded.  The delta stream uses 14 delta codes (0--13)
 plus a repeat code for RLE compression.
 
-Fletcher Checksum
------------------
+Historical XOR Checksum
+-----------------------
 
-UC2 uses an XOR-based Fletcher checksum (initial value 0xA55A) for
-both file data integrity and central directory validation.  Bytes are
-processed in little-endian 16-bit words with a carry flag for
-odd-length data.
+For file data and the uncompressed central directory, start with 0xA55A and
+XOR each little-endian 16-bit word into the result. An odd final byte is XORed
+into the low byte of the result. When processing data in pieces, preserve the
+byte position across calls so the next byte completes any pending halfword.
+
+The original code calls this routine ``Fletcher`` in
+`FLETCH.CPP <https://github.com/evvaletov/uc2/blob/main/original/UC2_source/src/FLETCH.CPP>`_,
+but it does not implement the standard Fletcher checksum.

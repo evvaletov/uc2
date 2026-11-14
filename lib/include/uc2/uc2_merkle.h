@@ -8,7 +8,7 @@
  *
  * Usage:
  *   struct uc2_merkle tree;
- *   uc2_merkle_build(&tree, data, len, 13);
+ *   if (uc2_merkle_build(&tree, data, len, 13) < 0) return -1;
  *   uint64_t root = uc2_merkle_root(&tree);
  *   int shared = uc2_merkle_common(&tree_a, &tree_b);
  *   uc2_merkle_free(&tree);
@@ -35,13 +35,16 @@ struct uc2_merkle {
 	uint64_t root;     /* root hash (hash of chunk hash list) */
 };
 
-/* Build a Merkle tree from file data.
- *   tree:  output tree (caller must call uc2_merkle_free later)
- *   data:  file content
- *   len:   file length
- *   bits:  CDC chunk size exponent (13 = avg 8KB) */
-void uc2_merkle_build(struct uc2_merkle *tree,
-                      const uint8_t *data, size_t len, int bits);
+/* Build a Merkle tree from file data. Returns 0 on success, -1 on invalid
+ * input, allocation failure, or an unrepresentable length. On failure the
+ * output tree is empty, with root zero; no partial tree is published.
+ *   tree:  output tree; free any previous contents before building again
+ *   data:  file content (may be NULL only when len is zero)
+ *   len:   file length, at most UINT32_MAX because chunk offsets are 32-bit
+ *   bits:  CDC chunk size exponent (13 = avg 8KB; clamped to 8..20)
+ * A successful empty tree also has root zero. Call uc2_merkle_free after use. */
+int uc2_merkle_build(struct uc2_merkle *tree,
+                     const uint8_t *data, size_t len, int bits);
 
 /* Get the root hash of a Merkle tree. */
 static inline uint64_t uc2_merkle_root(const struct uc2_merkle *tree)

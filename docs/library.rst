@@ -2,9 +2,9 @@ Library API (libuc2)
 ====================
 
 ``libuc2`` provides C99 functions for reading, extracting, and
-compressing UC2 archives.  The library is callback-based: callers supply
-I/O and memory callbacks, making it suitable for embedded, DOS, and
-freestanding environments.
+compressing UC2 archives. The reader uses caller-supplied I/O and memory
+callbacks. Compression uses hosted C allocation, and the archive writer also
+uses temporary files.
 
 Header: ``<uc2/libuc2.h>``
 
@@ -48,7 +48,7 @@ Directory Enumeration
 .. c:function:: int uc2_get_tag(uc2_handle h, struct uc2_entry *entry, char **tag, void **data, unsigned *data_len)
 
    Read a tag from a tagged entry.  Call repeatedly until it returns
-   ``UC2_End``.
+   ``UC2_End`` or a negative error.
 
 .. c:function:: int uc2_finish_cdir(uc2_handle h, char label[12])
 
@@ -75,7 +75,7 @@ Compression
    :param read: Callback returning bytes read (0 at EOF, <0 on error).
    :param write: Callback returning <0 on error.
    :param size: Total input size in bytes.
-   :param checksum_out: Receives the Fletcher checksum of the input.
+   :param checksum_out: Receives the historical UC2 XOR checksum of the input.
    :param compressed_size_out: Receives the compressed size.
    :returns: 0 on success, negative ``UC2_*`` error code on failure.
 

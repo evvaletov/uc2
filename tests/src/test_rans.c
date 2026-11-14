@@ -212,8 +212,31 @@ static void test_vs_huffman_size(void)
 	free(data);
 }
 
+static void test_normalisation_excess(void)
+{
+	uint32_t freq[344];
+	for (int i=0; i<344; i++) freq[i] = i<200 ? 100 : 1;
+	struct uc2_rans_table tab;
+	uc2_rans_build_table(&tab, freq, 344);
+	unsigned sum=0;
+	for (int i=0; i<344; i++) { assert(tab.freq[i]>=1); sum+=tab.freq[i]; }
+	assert(sum == UC2_RANS_PROB_SCALE);
+	struct uc2_rans_enc enc;
+	uc2_rans_enc_init(&enc, &tab);
+	for (int i=1023; i>=0; i--) uc2_rans_encode(&enc, i%344);
+	uint8_t *bytes=NULL;
+	size_t n=uc2_rans_enc_finish(&enc, &bytes);
+	assert(n>=4 && bytes);
+	uc2_rans_enc_free(&enc);
+	struct uc2_rans_dec dec;
+	uc2_rans_dec_init(&dec, &tab, bytes, n);
+	for (int i=0; i<1024; i++) { int sym=uc2_rans_decode(&dec); assert(sym==i%344); }
+	free(bytes);
+}
+
 int main(void)
 {
+	TEST(test_normalisation_excess);
 	printf("rANS tests:\n");
 	TEST(test_build_table);
 	TEST(test_roundtrip_uniform);

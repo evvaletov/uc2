@@ -19,7 +19,10 @@ results remain available after a timeout. Cancel terminates the worker and
 clears the archive. Reopen after cancellation or a timeout. Use `uc2-preserve`
 for larger collections.
 
-Legacy Huffman, Turbo/method 80, v3 rANS and a11 shared chunks are supported. Filenames are rendered as text, and download names are reduced
+Legacy Huffman, Turbo/method 80, v3 rANS and a11 shared chunks are supported.
+For SAS or UC2SEA volume sets, use the CLI or Python path-based reader described
+in the [volume guide](../docs/volumes.md).
+Filenames are rendered as text, and download names are reduced
 to safe leaf names. The browser inventory includes raw timestamps and DOS
 attributes, but does not contain arbitrary tags or original compressed data.
 Unverified entries are explicitly marked.
@@ -77,7 +80,7 @@ tested reader at `https://evvaletov.github.io/uc2/reader/` alongside Sphinx.
 `BUILD-INFO.json` records the source commit and compiler version. Source is in
 this repository, including all build instructions and the original licenses.
 
-The UI tests use original-encoder archives and modern rANS fixtures, check
+The UI tests use original-encoder archives and v3 rANS fixtures, check
 downloaded bytes, stored versions, checksums, inventory hashes, malformed
 inputs, cancellation, mobile layout and the absence of upload requests.
 All three engines also check ZIP bytes/CRCs/hashes, selection limits, offline

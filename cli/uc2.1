@@ -1,5 +1,5 @@
 .\" SPDX-License-Identifier: GPL-3.0-or-later
-.Dd November 5, 2026
+.Dd November 13, 2026
 .Dt UC2 1
 .Os
 .Sh NAME
@@ -26,6 +26,7 @@
 .Fl w
 .Op Fl q
 .Op Fl L Ar level
+.Op Fl -chunked
 .Ar archive.uc2
 .Ar file ...
 .Nm
@@ -42,18 +43,23 @@
 .Fl -ots-info
 .Ar archive.uc2
 .Nm
+.Op Fl -chunked
 .Fl -ingest Ar archive
+.Nm
+.Op Fl -chunked
+.Fl -ingest-tar Ar archive
 .Nm
 .Fl -ingest-restore Ar archive
 .Sh DESCRIPTION
 .Nm
 is a cross-platform revival of UltraCompressor II, the MS-DOS archiver
 published by Nico de Vries (AIP-NL) between 1992 and 1996.
-It reads and writes the original UC2 archive format byte-compatibly:
-archives created by the original
-.Pa uc2pro.exe
-extract correctly, and archives created at compression levels 2 through 5
-can be read by the original DOS program.
+It reads historical Huffman and Turbo archives.
+Encrypted and PCP-preprocessed archives are unsupported.
+Without
+.Fl -chunked ,
+archives created at compression levels 2 through 5 can be read by the
+original DOS program.
 .Pp
 Without a mode option,
 .Nm
@@ -67,12 +73,15 @@ wildcards are accepted.
 .Pp
 Compression levels 2 through 5 use the original LZ77 and Huffman
 bitstream.
-Levels 6 through 9 replace the entropy stage with rANS coding for
-better ratios; such archives require
+Levels 6 through 9 replace the entropy stage with rANS coding; such archives require
 .Nm
 version 3 and cannot be read by the original DOS program.
-Files with similar content are grouped and compressed against shared
+By default, files with similar content are grouped and compressed against shared
 master blocks, the deduplication scheme UC2 introduced in 1992.
+The optional
+.Fl -chunked
+format shares payload chunks and requires version 3.0.0a11 or newer at every
+compression level.
 .Sh OPTIONS
 .Bl -tag -width Ds
 .It Fl a
@@ -84,7 +93,7 @@ a comparison table; no archive is written.
 Change to
 .Ar directory
 before reading or writing any files.
-Applies in every mode.
+Has no effect in ingestion modes.
 .It Fl c , Fl p
 Write extracted data to standard output instead of creating files.
 .It Fl D
@@ -104,11 +113,12 @@ Print version, usage, and option summary.
 Select the compression level for
 .Fl w :
 2 (Fast), 3 (Normal), 4 (Tight, the default), 5 (Ultra) for the
-backward-compatible Huffman methods, or 6 through 9 for rANS.
+Huffman methods, or 6 through 9 for rANS.
 .It Fl l
 List the archive contents.
 .It Fl q
 Quiet operation; suppress status messages.
+Has no effect in ingestion modes.
 .It Fl T
 Separate listing columns with tabs instead of spaces.
 .It Fl t
@@ -119,9 +129,17 @@ Create (write) an archive from the given files and directories.
 Extract; this is the default mode.
 .El
 .Pp
-The long options operate on OpenTimestamps proofs and the streaming
-deduplication store:
+Long options:
 .Bl -tag -width Ds
+.It Fl -chunked
+Share independently stored payload chunks across partly changed files and
+stored versions. Accepted with
+.Fl w ,
+.Fl -ingest
+and
+.Fl -ingest-tar .
+The resulting archive requires a full UC2 3.0.0a11 or newer reader, including
+when the compression level is 2 through 5.
 .It Fl -ots-attach Ar proof.ots
 Attach an OpenTimestamps proof to the archive after verifying that the
 proof commits to the archive contents.
@@ -135,19 +153,35 @@ Describe the attached proof.
 Read a data stream from standard input, split it into content-defined
 chunks, deduplicate identical chunks, and write a regular UC2 archive to
 .Ar archive .
-Each chunk occurrence becomes an entry named
+By default, each chunk occurrence becomes an entry named
 .Ql part- Ns Ar N
 in stream order, so the result can be listed with
 .Fl l
 and extracted with
 .Fl x
 like any other archive; repeated chunks share a single stored block.
+With
+.Fl -chunked ,
+one entry named
+.Ql data
+represents the full stream and uses the shared-chunk format.
 Payload buffers are bounded, while chunk indexes and directory entries grow
 with the number of chunks. Unique raw chunks use temporary disk space.
 The output is staged beside its destination and replaces it after a successful
 close. Forced termination can leave the temporary file behind.
 Input is limited to 2^32-1 bytes, and archive offsets are 32-bit; some platforms
 have lower seek limits. Tar input is preserved as bytes, not individual entries.
+.It Fl -ingest-tar Ar archive
+Read a tar stream from standard input and create named file and directory
+entries. Supported inputs include V7/USTAR, GNU long names, and PAX path,
+size and mtime records. Links, devices, FIFOs, sparse extensions, xattrs,
+unknown PAX keys and unsafe paths are refused.
+Names must be representable in CP850. Unix ownership and most permission bits
+are discarded; timestamps use DOS two-second precision.
+Malformed or unsupported input leaves an existing output archive unchanged.
+Add
+.Fl -chunked
+to share payload chunks across partially changed files.
 .It Fl -ingest-restore Ar archive
 Reassemble the original stream from
 .Ar archive
@@ -157,6 +191,14 @@ Archives written by earlier
 versions (a sidecar block store or self-contained blob) are still
 recognised and restored.
 .El
+.Pp
+The ingestion modes use the current directory and default compression level;
+short options such as
+.Fl C ,
+.Fl L
+and
+.Fl q
+have no effect. Change directory in the shell before invoking them when needed.
 .Sh EXIT STATUS
 .Ex -std
 .Sh EXAMPLES
@@ -173,7 +215,7 @@ $ mkdir -p /tmp/restore
 $ uc2 -f -d /tmp/restore backup.uc2
 .Ed
 .Pp
-Create a smaller archive readable only by
+Create an rANS archive readable only by
 .Nm
 version 3, then verify it:
 .Bd -literal -offset indent
@@ -183,10 +225,10 @@ $ uc2 -t backup.uc2
 .Sh HISTORY
 UltraCompressor II was written by Nico de Vries at AIP-NL and sold as
 shareware from 1992 to 1996.
-De Vries re-released the original source under the LGPL in 2015; Jan
-Bobrowski's libunuc2 (2020) built a portable decompressor from it.
+De Vries re-released the original source under the LGPL in 2015.
+Jan Bobrowski published the portable libunuc2 decompressor in 2020-2021.
 .Nm
-version 3 builds on that lineage as a full reimplementation in C99,
+version 3 builds on that lineage as a portable C99 archiver,
 maintained by Eremey Valetov.
 .Sh AUTHORS
 .An Nico de Vries

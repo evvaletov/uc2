@@ -72,19 +72,40 @@ static int safe_component(const char *name)
     return 1;
 }
 
-static int parent_path(struct reader *r, unsigned id, char *out, size_t cap, unsigned depth)
+static int compare_directory(const void *a, const void *b)
+{
+    const struct item *x = *(const struct item * const *)a;
+    const struct item *y = *(const struct item * const *)b;
+    return (x->entry.id > y->entry.id) - (x->entry.id < y->entry.id);
+}
+
+static int compare_path(const void *a, const void *b)
+{
+    const struct item *x = *(const struct item * const *)a;
+    const struct item *y = *(const struct item * const *)b;
+    int order = strcmp(x->path, y->path);
+    /* Both pointers refer into the same frozen items array. Break path ties
+     * by original archive order so the last occurrence is version zero. */
+    return order ? order : (x > y) - (x < y);
+}
+
+static int parent_path(struct item *const *directories, size_t count, unsigned id,
+                       char *out, size_t cap, unsigned depth)
 {
     if (!id) { out[0] = 0; return 0; }
     if (depth > 64) return -1;
-    for (size_t i = 0; i < r->count; i++) {
-        struct uc2_entry *e = &r->items[i].entry;
-        if (!e->is_dir || e->id != id) continue;
-        int n = parent_path(r, e->dirid, out, cap, depth + 1);
-        if (n < 0) return -1;
-        int added = snprintf(out + n, cap - (size_t)n, "%s\\", e->name);
-        return added < 0 || (size_t)added >= cap - (size_t)n ? -1 : n + added;
+    size_t low = 0, high = count;
+    while (low < high) {
+        size_t middle = low + (high - low) / 2;
+        if (directories[middle]->entry.id < id) low = middle + 1;
+        else high = middle;
     }
-    return -1;
+    if (low == count || directories[low]->entry.id != id) return -1;
+    struct uc2_entry *e = &directories[low]->entry;
+    int n = parent_path(directories, count, e->dirid, out, cap, depth + 1);
+    if (n < 0) return -1;
+    int added = snprintf(out + n, cap - (size_t)n, "%s\\", e->name);
+    return added < 0 || (size_t)added >= cap - (size_t)n ? -1 : n + added;
 }
 
 static int compare_visible(const void *a, const void *b)
@@ -94,29 +115,26 @@ static int compare_visible(const void *a, const void *b)
     return CompareStringOrdinal(x->visible, -1, y->visible, -1, TRUE) - CSTR_EQUAL;
 }
 
-static int prepare_visible_names(struct reader *r)
+static int prepare_visible_names(struct reader *r, struct item **sorted)
 {
-    struct item **sorted = malloc(r->count * sizeof *sorted);
-    if (!sorted && r->count) return -1;
     for (size_t i = 0; i < r->count; i++) {
         struct item *item = &r->items[i];
         char name[NAME_CAP + 32];
         if (item->version) snprintf(name, sizeof name, "%s;%u", item->path, item->version);
         else snprintf(name, sizeof name, "%s", item->path);
         int size = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, name, -1, NULL, 0);
-        if (!size || size > 1024) { free(sorted); return -1; }
+        if (!size || size > 1024) return -1;
         item->visible = malloc((size_t)size * sizeof *item->visible);
-        if (!item->visible) { free(sorted); return -1; }
+        if (!item->visible) return -1;
         MultiByteToWideChar(CP_UTF8, 0, name, -1, item->visible, size);
         sorted[i] = item;
     }
     if (r->count > 1) qsort(sorted, r->count, sizeof *sorted, compare_visible);
     for (size_t i = 1; i < r->count; i++) {
         if (!compare_visible(&sorted[i-1], &sorted[i])) {
-            free(sorted); return -1;
+            return -1;
         }
     }
-    free(sorted);
     return 0;
 }
 
@@ -126,6 +144,8 @@ static void *open_file(FILE *f, int *result)
     if (!f) return NULL;
     struct reader *r = calloc(1, sizeof *r);
     if (!r) { fclose(f); *result = E_NO_MEMORY; return NULL; }
+    struct item **sorted = NULL;
+    size_t capacity = 0, directory_count = 0;
     r->input = f;
     r->handle = uc2_open(&callbacks, r);
     *result = E_BAD_ARCHIVE;
@@ -140,32 +160,54 @@ static void *open_file(FILE *f, int *result)
             if (rc < 0) goto fail;
         }
         if (!safe_component(e.name)) goto fail;
-        if (r->count >= SIZE_MAX / sizeof *r->items - 1) goto fail;
-        void *grown = realloc(r->items, (r->count + 1) * sizeof *r->items);
-        if (!grown) { *result = E_NO_MEMORY; goto fail; }
-        r->items = grown;
+        if (r->count == capacity) {
+            size_t maximum = SIZE_MAX / sizeof *r->items;
+            if (capacity == maximum) { *result = E_NO_MEMORY; goto fail; }
+            size_t next = !capacity ? 16 : capacity > maximum / 2 ? maximum : capacity * 2;
+            void *grown = realloc(r->items, next * sizeof *r->items);
+            if (!grown) { *result = E_NO_MEMORY; goto fail; }
+            r->items = grown;
+            capacity = next;
+        }
         r->items[r->count++] = (struct item){ .entry = e };
     }
     if (uc2_finish_cdir(r->handle, NULL) < 0) goto fail;
+    sorted = malloc(r->count * sizeof *sorted);
+    if (!sorted && r->count) { *result = E_NO_MEMORY; goto fail; }
+    for (size_t i = 0; i < r->count; i++)
+        if (r->items[i].entry.is_dir) sorted[directory_count++] = &r->items[i];
+    if (directory_count > 1) qsort(sorted, directory_count, sizeof *sorted, compare_directory);
+    for (size_t i = 0; i < directory_count; i++)
+        if (!sorted[i]->entry.id || (i && sorted[i-1]->entry.id == sorted[i]->entry.id)) goto fail;
     for (size_t i = 0; i < r->count; i++) {
         struct item *item = &r->items[i];
         char path[NAME_CAP];
-        int n = parent_path(r, item->entry.dirid, path, sizeof path, 0);
+        int n = parent_path(sorted, directory_count, item->entry.dirid, path, sizeof path, 0);
         if (n < 0 || strlen(item->entry.name) >= sizeof path - (size_t)n) goto fail;
         strcpy(path + n, item->entry.name);
         item->path = strdup(path);
         if (!item->path) { *result = E_NO_MEMORY; goto fail; }
-        if (!item->entry.is_dir)
-            for (size_t j = 0; j < i; j++)
-                if (!r->items[j].entry.is_dir && !strcmp(r->items[j].path, path))
-                    r->items[j].version++;
+    }
+    /* Reuse the temporary pointer index for versions and visible collisions;
+     * the owning items array remains in archive order for ReadHeader calls. */
+    for (size_t i = 0; i < r->count; i++) sorted[i] = &r->items[i];
+    if (r->count > 1) qsort(sorted, r->count, sizeof *sorted, compare_path);
+    for (size_t first = 0; first < r->count;) {
+        size_t end = first + 1;
+        while (end < r->count && !strcmp(sorted[first]->path, sorted[end]->path)) end++;
+        unsigned version = 0;
+        for (size_t i = end; i > first; i--)
+            if (!sorted[i-1]->entry.is_dir) sorted[i-1]->version = version++;
+        first = end;
     }
     /* A literal name;1 can collide with a generated historical-version name.
      * Windows also folds case. Reject ambiguous listings before extraction. */
-    if (prepare_visible_names(r) < 0) goto fail;
+    if (prepare_visible_names(r, sorted) < 0) goto fail;
+    free(sorted);
     *result = 0;
     return r;
 fail:
+    free(sorted);
     CloseArchive(r);
     return NULL;
 }

@@ -7,11 +7,33 @@
 #include <assert.h>
 #ifdef _MSC_VER
 #include <process.h>
+#include <direct.h>
+#define rmdir _rmdir
 #define getpid _getpid
 #else
 #include <unistd.h>
 #endif
 #include <uc2/uc2_ingest.h>
+#include <uc2/uc2_merkle.h>
+
+/* Exercise the private map and force an oversized tree without allocating
+ * millions of chunks. Normal cases still use the public Merkle builder.
+ * This source definition replaces the static library's ingest object only
+ * in this executable; production code needs no fault-injection switches. */
+static int forced_chunk_count;
+static int test_merkle_build(struct uc2_merkle *tree, const uint8_t *data,
+                              size_t len, int bits)
+{
+	if (forced_chunk_count) {
+		memset(tree, 0, sizeof *tree);
+		tree->nchunks = forced_chunk_count;
+		return 0;
+	}
+	return uc2_merkle_build(tree, data, len, bits);
+}
+#define uc2_merkle_build test_merkle_build
+#include "../../lib/src/uc2_ingest.c"
+#undef uc2_merkle_build
 
 static int tests_run = 0, tests_passed = 0;
 #define TEST(name) do { tests_run++; printf("  %s: ", #name); name(); tests_passed++; printf("OK\n"); } while (0)
@@ -39,7 +61,7 @@ static void cleanup(const char *path)
 	snprintf(buf, sizeof buf, "%s.out", path);
 	remove(buf);
 	snprintf(buf, sizeof buf, "%s.blocks", path);
-	remove(buf);
+	rmdir(buf);
 }
 
 /* fopen that fails the test loudly: assert() is compiled out in
@@ -271,6 +293,80 @@ static void test_bad_magic_rejected(void)
 	cleanup(tmp_archive);
 }
 
+static void test_v1_oversized_chunk(void)
+{
+	uint8_t record[28] = {'U','C','2','I','N','G','S','T',1};
+	record[12]=1; /* one manifest record */
+	memset(record+24,0xff,4); /* UINT32_MAX, not an int-sized read */
+	FILE *f=xfopen(tmp_archive,"wb");
+	size_t written=fwrite(record,1,sizeof record,f); assert(written==sizeof record);
+	fclose(f);
+	FILE *out=tmpfile(); assert(out);
+	int rc=uc2_ingest_restore(tmp_archive,out);
+	assert(rc<0 && ftell(out)==0);
+	fclose(out); cleanup(tmp_archive);
+}
+
+static void test_zero_and_one_hashes(void)
+{
+	for (int reverse = 0; reverse < 2; reverse++) {
+		struct dedup_map map;
+		int rc = dedup_map_init(&map, 16);
+		assert(rc == 0);
+		uint32_t offset = 999;
+		assert(!dedup_map_get(&map, 0, &offset));
+		assert(!dedup_map_get(&map, 1, &offset));
+		assert(offset == 999);
+		for (int i = 0; i < 2; i++) {
+			uint64_t hash = (uint64_t)(i ^ reverse);
+			rc = dedup_map_put(&map, hash, (uint32_t)(100 + hash));
+			assert(rc == 0);
+		}
+		/* Repeated insertion retains the first offset, including hash 0. */
+		rc = dedup_map_put(&map, 0, 700); assert(rc == 0);
+		rc = dedup_map_put(&map, 1, 701); assert(rc == 0);
+		for (uint64_t hash = 2; hash < 300; hash++) {
+			rc = dedup_map_put(&map, hash, (uint32_t)(100 + hash));
+			assert(rc == 0);
+		}
+		assert(map.cap > 16);
+		for (uint64_t hash = 0; hash < 300; hash++) {
+			rc = dedup_map_get(&map, hash, &offset);
+			assert(rc == 1 && offset == 100 + hash);
+		}
+		dedup_map_free(&map);
+	}
+}
+
+static void test_chunk_limit_preserves_destination(void)
+{
+	const int counts[] = {-1, (1 << 24) + 1};
+	for (size_t i = 0; i < sizeof counts / sizeof *counts; i++) {
+		cleanup(tmp_archive);
+		FILE *file = xfopen(tmp_archive, "wb");
+		const char original[] = "keep original archive";
+		size_t written = fwrite(original, 1, sizeof original, file);
+		assert(written == sizeof original);
+		int rc = fclose(file); assert(rc == 0);
+		forced_chunk_count = counts[i];
+		rc = uc2_ingest_write(tmp_archive, (const uint8_t *)"x", 1, 13, NULL);
+		forced_chunk_count = 0;
+		assert(rc == -1);
+		size_t size;
+		uint8_t *saved = slurp(tmp_archive, &size);
+		assert(size == sizeof original && !memcmp(saved, original, size));
+		free(saved);
+		cleanup(tmp_archive);
+		forced_chunk_count = counts[i];
+		rc = uc2_ingest_write(tmp_archive, (const uint8_t *)"x", 1, 13, NULL);
+		forced_chunk_count = 0;
+		assert(rc == -1);
+		struct stat st;
+		rc = stat(tmp_archive, &st);
+		assert(rc != 0);
+	}
+}
+
 int main(void)
 {
 	snprintf(tmp_archive, sizeof tmp_archive,
@@ -283,6 +379,9 @@ int main(void)
 	TEST(test_v2_self_contained);
 	TEST(test_empty_stream);
 	TEST(test_bad_magic_rejected);
+	TEST(test_v1_oversized_chunk);
+	TEST(test_zero_and_one_hashes);
+	TEST(test_chunk_limit_preserves_destination);
 	printf("Passed: %d/%d\n", tests_passed, tests_run);
 	return tests_passed == tests_run ? 0 : 1;
 }

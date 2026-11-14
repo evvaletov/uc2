@@ -95,6 +95,12 @@ target_include_directories(test_blockstore PRIVATE "${PROJECT_BINARY_DIR}/lib")
 target_compile_features(test_blockstore PRIVATE c_std_99)
 add_test(NAME blockstore COMMAND test_blockstore)
 
+add_executable(test_storage_failures src/test_storage_failures.c)
+target_link_libraries(test_storage_failures PRIVATE uc2)
+target_compile_features(test_storage_failures PRIVATE c_std_99)
+add_test(NAME storage_failures COMMAND test_storage_failures
+    "${CMAKE_CURRENT_BINARY_DIR}/storage-failures")
+
 add_executable(test_simhash src/test_simhash.c)
 target_link_libraries(test_simhash PRIVATE uc2)
 target_include_directories(test_simhash PRIVATE "${PROJECT_BINARY_DIR}/lib")
@@ -116,6 +122,11 @@ endif()
 target_include_directories(test_rans PRIVATE "${PROJECT_BINARY_DIR}/lib")
 target_compile_features(test_rans PRIVATE c_std_99)
 add_test(NAME rans COMMAND test_rans)
+
+add_executable(test_codec_failures src/test_codec_failures.c)
+target_link_libraries(test_codec_failures PRIVATE uc2)
+target_compile_features(test_codec_failures PRIVATE c_std_99)
+add_test(NAME codec_failures COMMAND test_codec_failures)
 
 add_executable(test_dict src/test_dict.c)
 target_link_libraries(test_dict PRIVATE uc2)
@@ -163,6 +174,12 @@ add_test(NAME ingest COMMAND test_ingest)
 # reference parser.  Skipped (return code 77) when opentimestamps is not installed.
 find_package(Python3 3.11 COMPONENTS Interpreter)
 if(Python3_Interpreter_FOUND)
+    add_test(NAME cli_io
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_cli_io.py $<TARGET_FILE:uc2-cli>)
+    set_tests_properties(cli_io PROPERTIES TIMEOUT 90)
+    add_test(NAME cli_extraction
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_cli_extraction.py
+                $<TARGET_FILE:uc2-cli>)
     add_test(NAME integrations
         COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_integrations.py
                 $<TARGET_FILE:uc2-cli> ${PROJECT_SOURCE_DIR}/contrib/mc/uc2)

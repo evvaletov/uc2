@@ -7,6 +7,7 @@ import difflib
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -58,6 +59,16 @@ replace("libarchive/archive_read_set_format.c", "    case ARCHIVE_FORMAT_RAW:",
         '    case ARCHIVE_FORMAT_UC2:\n      str = "uc2";\n      break;\n    case ARCHIVE_FORMAT_RAW:')
 
 adapter = (repo / "contrib/libarchive/archive_read_support_format_uc2.c").read_text()
+# Keep one implementation, but do not submit the standalone pipe-spooling path.
+adapter, removed = re.subn(
+    r"#ifndef UC2_LIBARCHIVE_SEEKABLE_ONLY\n.*?#endif /\* UC2_LIBARCHIVE_SEEKABLE_ONLY \*/\n",
+    "", adapter, flags=re.S)
+if removed != 5 or "UC2_LIBARCHIVE_SEEKABLE_ONLY" in adapter:
+    raise SystemExit("unexpected seekable-only adapter layout")
+adapter = adapter.replace(
+    " * Seekable input uses libarchive's callbacks directly. The full adapter\n"
+    " * spools non-seekable input; the upstream proposal requires seeking.\n",
+    " * Seekable input uses libarchive's callbacks directly.\n")
 adapter = adapter.replace("#include <uc2/libuc2.h>", '''#if !defined(HAVE_LIBUC2READ)
 int
 archive_read_support_format_uc2(struct archive *a)
@@ -146,86 +157,14 @@ for level in (4, 6, 80):
         shutil.copyfile(repo / "tests/archives/turbo0.uc2", archive)
     else:
         subprocess.run([str(args.uc2.resolve()), "-qw", "-L", str(level), str(archive), "fixture.txt"],
-                       cwd=fixtures, check=True)
+                       cwd=fixtures, env=dict(os.environ, TZ="UTC"), check=True)
     data = archive.read_bytes()
     encoded = b"begin 644 " + name.encode() + b"\n"
     encoded += b"".join(binascii.b2a_uu(data[i:i+45], backtick=True) for i in range(0, len(data), 45))
     encoded += b"`\nend\n"
     write("libarchive/test/" + name + ".uu", encoded.decode())
 
-test = '''/* SPDX-License-Identifier: BSD-2-Clause */
-/* Copyright (c) 2026 Eremey Valetov. */
-#include "test.h"
-
-DEFINE_TEST(test_read_format_uc2)
-{
-    struct archive *a = archive_read_new();
-    int result = archive_read_support_format_uc2(a);
-#ifndef HAVE_LIBUC2READ
-    assertEqualInt(ARCHIVE_WARN, result);
-    assertEqualInt(ARCHIVE_OK, archive_read_free(a));
-#else
-    struct archive_entry *e;
-    char data[2000];
-    assertEqualInt(ARCHIVE_OK, result);
-    /* Keep room for explicit raw fallback after registering every format. */
-    struct archive *all = archive_read_new();
-    assertEqualInt(ARCHIVE_OK, archive_read_support_format_all(all));
-    assertEqualIntA(all, ARCHIVE_OK, archive_read_support_format_raw(all));
-    assertEqualInt(ARCHIVE_OK, archive_read_free(all));
-    extract_reference_file("test_read_format_uc2_4.uc2");
-    assertEqualIntA(a, ARCHIVE_OK, archive_read_open_filename(a, "test_read_format_uc2_4.uc2", 7));
-    assertEqualIntA(a, ARCHIVE_OK, archive_read_next_header(a, &e));
-    assertEqualInt(ARCHIVE_FORMAT_UC2, archive_format(a));
-    assertEqualString("fixture.txt", archive_entry_pathname(e));
-    assertEqualInt(2000, archive_entry_size(e));
-    assertEqualIntA(a, 2000, archive_read_data(a, data, sizeof data));
-    for (int i = 0; i < 100; ++i)
-        assertEqualMem(data + 20 * i, "UC2 optional reader\\n", 20);
-    assertEqualIntA(a, ARCHIVE_EOF, archive_read_next_header(a, &e));
-    assertEqualInt(ARCHIVE_OK, archive_read_free(a));
-
-    const char *limits[] = {"uc2:memory-limit=1", "uc2:input-limit=20", "uc2:entry-limit=1999", "uc2:total-limit=1999"};
-    for (unsigned k = 0; k < sizeof limits / sizeof *limits; k++) {
-        a = archive_read_new();
-        assertEqualInt(ARCHIVE_OK, archive_read_support_format_uc2(a));
-        assertEqualIntA(a, ARCHIVE_OK, archive_read_set_options(a, limits[k]));
-        assertEqualIntA(a, ARCHIVE_OK, archive_read_open_filename(a, "test_read_format_uc2_4.uc2", 7));
-        if (k < 2) assertEqualIntA(a, ARCHIVE_FATAL, archive_read_next_header(a, &e));
-        else {
-            assertEqualIntA(a, ARCHIVE_OK, archive_read_next_header(a, &e));
-            assertEqualIntA(a, ARCHIVE_FATAL, archive_read_data(a, data, sizeof data));
-        }
-        assertEqualInt(ARCHIVE_OK, archive_read_free(a));
-    }
-    a = archive_read_new();
-    assertEqualInt(ARCHIVE_OK, archive_read_support_format_uc2(a));
-    extract_reference_file("test_read_format_uc2_80.uc2");
-    assertEqualIntA(a, ARCHIVE_OK, archive_read_open_filename(a, "test_read_format_uc2_80.uc2", 7));
-    assertEqualIntA(a, ARCHIVE_OK, archive_read_next_header(a, &e));
-    assertEqualInt(70001, archive_entry_size(e));
-    unsigned char *turbo = malloc(70001);
-    assert(turbo != NULL);
-    if (turbo) {
-        assertEqualIntA(a, 70001, archive_read_data(a, turbo, 70001));
-        unsigned x = 80;
-        for (unsigned i = 0; i < 70001; i++) {
-            x = x * 1664525u + 1013904223u;
-            assertEqualInt(i < 30000 ? (unsigned char)(x >> 24) : (unsigned char)(i % 251), turbo[i]);
-        }
-        free(turbo);
-    }
-    assertEqualInt(ARCHIVE_OK, archive_read_free(a));
-
-    a = archive_read_new();
-    assertEqualInt(ARCHIVE_OK, archive_read_support_format_by_code(a, ARCHIVE_FORMAT_UC2));
-    extract_reference_file("test_read_format_uc2_6.uc2");
-    assertEqualIntA(a, ARCHIVE_OK, archive_read_open_filename(a, "test_read_format_uc2_6.uc2", 7));
-    assertEqualIntA(a, ARCHIVE_FATAL, archive_read_next_header(a, &e));
-    assertEqualInt(ARCHIVE_OK, archive_read_free(a));
-#endif
-}
-'''
+test = (repo / 'contrib/libarchive/upstream/test_read_format_uc2.c').read_text()
 write("libarchive/test/test_read_format_uc2.c", test)
 replace("libarchive/test/CMakeLists.txt", "    test_read_format_lha.c",
         "    test_read_format_uc2.c\n    test_read_format_lha.c")

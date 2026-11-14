@@ -165,9 +165,37 @@ static void test_detect_binary(void)
 	{ int _r = uc2_detect_content(data, sizeof data); (void)_r; assert(_r == UC2_CONTENT_BINARY); }
 }
 
+static void test_boundaries(void)
+{
+	uint8_t branch[] = {0xe8,0xff,0xff,0xff,0x7f,0xe9,0,0,0,0x80};
+	uint8_t before[sizeof branch]; memcpy(before,branch,sizeof branch);
+	assert(uc2_bcj_apply(branch,sizeof branch)==0);
+	assert(uc2_bcj_revert(branch,sizeof branch)==0);
+	assert(memcmp(branch,before,sizeof branch)==0);
+	uint8_t *out=(uint8_t *)1; uint32_t primary=99;
+	size_t huge=SIZE_MAX/sizeof(uint32_t)+1;
+	assert(uc2_bwt_apply(branch,huge,&out,&primary)<0 && out==NULL && primary==0);
+	out=(uint8_t *)1;
+	assert(uc2_bwt_revert(branch,huge,0,&out)<0 && out==NULL);
+#if SIZE_MAX > UINT32_MAX
+	assert(uc2_bwt_apply(branch,(size_t)UINT32_MAX+1,&out,&primary)<0 && out==NULL);
+	assert(uc2_bwt_revert(branch,(size_t)UINT32_MAX+1,0,&out)<0 && out==NULL);
+#endif
+	/* Equal rotations exercise deterministic sorting and its even/odd heaps. */
+	for (size_t n=1; n<=129; n++) {
+		uint8_t repeated[129]; memset(repeated,'a',sizeof repeated);
+		assert(uc2_bwt_apply(repeated,n,&out,&primary)==0);
+		uint8_t *restored=NULL;
+		assert(uc2_bwt_revert(out,n,primary,&restored)==0);
+		assert(memcmp(repeated,restored,n)==0);
+		free(out); free(restored);
+	}
+}
+
 int main(void)
 {
 	printf("Preprocessing filter tests:\n");
+	TEST(test_boundaries);
 	TEST(test_bcj_roundtrip);
 	TEST(test_bcj_normalizes);
 	TEST(test_bcj_short_data);

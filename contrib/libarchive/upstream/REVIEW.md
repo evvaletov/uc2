@@ -2,7 +2,10 @@
 
 Submitted as [libarchive/libarchive#3832](https://github.com/libarchive/libarchive/pull/3832)
 on 2026-11-07, from `evvaletov:uc2-optional-reader` at `5ad7e3d7`, based on
-upstream `eb57ffefe20e98eb7ba05829ee1c23b90e589a71`. Maintainer review is pending.
+upstream `eb57ffefe20e98eb7ba05829ee1c23b90e589a71`. Maintainers requested
+design clarification on 8 November; the 13 November
+revision removes whole-input spooling from the optional reader. Acceptance is
+pending.
 `0x110000` remains proposed, not assigned. The local full-feature adapter keeps
 its private ID until acceptance.
 
@@ -22,17 +25,20 @@ The adapter reads historical supported Huffman/delta and Turbo entries,
 including custom dictionaries. rANS, shared chunks, encrypted and multi-volume archives are outside
 this proposed dependency's scope. The regular UC2 release retains rANS.
 The patch includes registration by code, public declarations, CMake/Autotools
-wiring, and fixtures for legacy/Turbo reads, quota failures and rANS rejection.
+wiring, and fixtures for legacy/Turbo reads, quota failures, seekable short reads, explicit pipe rejection and rANS rejection.
 
-Input and decoded payloads spool to temporary files. Decoder allocations,
+Input uses libarchive seek/read callbacks directly. The optional reader requires
+a seekable source; actual pipes and non-seekable filters fail before any entry
+is returned. Redirected regular-file stdin works. Each decoded entry uses one
+temporary file to bridge the synchronous decoder and libarchive data callbacks. Decoder allocations,
 including cached dictionaries, and adapter metadata/paths share a **64 MiB**
 budget. A sorted directory index avoids a full entry scan for each path parent.
 Defaults also limit input to 4 GiB minus one byte, entries to 100,000, a decoded
 entry to 1 GiB, and cumulative decoded output to 8 GiB. Limits fail explicitly;
 they never silently truncate output. Listing and skipping do not decode files.
 The fixed adapter state (about 65 KiB), stdio and libarchive's own allocations
-are outside the shared memory budget. The input and current decoded entry use
-disk space; the decoded entry spool is released between files. Spools use
+are outside the shared memory budget. Only the current decoded entry uses temporary disk space; its spool is released
+between files. Spools use
 libarchive's anonymous temporary-file helper, including its Windows temp-directory
 handling. These libarchive build/runtime checks were performed on Linux; native
 Windows execution of the optional adapter has not been validated.
@@ -71,7 +77,7 @@ cmake --build /tmp/uc2-review/build --target bsdtar libarchive_test
 /tmp/uc2-review/build/bin/libarchive_test \
   -r /tmp/uc2-review/libarchive/libarchive/test test_read_format_uc2
 python3 tests/scripts/check_bsdtar.py /path/to/uc2 \
-  /tmp/uc2-review/build/bin/bsdtar --legacy-only
+  /tmp/uc2-review/build/bin/bsdtar --legacy-only --seekable-only
 ```
 
 The maintainers still need to decide whether to accept this optional LGPL

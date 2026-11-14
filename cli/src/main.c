@@ -10,9 +10,14 @@
    (at your option) any later version.
 */
 
+#if !defined(_WIN32) && !defined(__DJGPP__)
+#define _FILE_OFFSET_BITS 64
+#endif
+
 #include <limits.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -40,6 +45,8 @@ void setprogname(const char *argv0);
 #ifdef _WIN32
 #include <windows.h>
 #include <process.h>
+FILE *compat__fopen(const char *path, const char *mode);
+#define fopen compat__fopen
 #define getpid _getpid
 #define open _open
 #define close _close
@@ -126,23 +133,54 @@ static void uc2_say(FILE *f, const char *fmt, ...)
 	va_end(ap);
 }
 
-/* Archive positions are 32-bit in the UC2 container; fail loudly
-   rather than wrap when an archive would cross 4 GiB. */
+static void flush_stdout(void)
+{
+	if (fflush(stdout) != 0)
+		err(EXIT_FAILURE, "stdout");
+}
+
+static int seek_file(FILE *f, uint64_t offset, int whence)
+{
+	if (offset > INT64_MAX) { errno = EFBIG; return -1; }
+#ifdef _WIN32
+	return _fseeki64(f, (__int64)offset, whence);
+#elif defined(__DJGPP__)
+	if (offset > LONG_MAX) { errno = EFBIG; return -1; }
+	return fseek(f, (long)offset, whence);
+#else
+	return fseeko(f, (off_t)offset, whence);
+#endif
+}
+
+static int64_t tell_file(FILE *f)
+{
+#ifdef _WIN32
+	return _ftelli64(f);
+#elif defined(__DJGPP__)
+	return ftell(f);
+#else
+	return ftello(f);
+#endif
+}
+
+/* Archive positions are 32-bit in the UC2 container. */
 static unsigned tell32(FILE *f)
 {
-	long pos = ftell(f);
+	int64_t pos = tell_file(f);
 	if (pos < 0)
-		err(EXIT_FAILURE, "ftell");
-	if ((unsigned long)pos > 0xFFFFFFFFul)
+		err(EXIT_FAILURE, "tell archive");
+	if ((uint64_t)pos > UINT32_MAX)
 		errx(EXIT_FAILURE, "archive exceeds the 4 GiB UC2 format limit");
 	return (unsigned)pos;
 }
 
 static int my_read(void *ctx, unsigned pos, void *ptr, unsigned len)
 {
-	if (fseek(ctx, pos, SEEK_SET) < 0)
-		err(EXIT_FAILURE, "fseek");
-	return fread(ptr, 1, len, ctx);
+	FILE *f = ctx;
+	if (seek_file(f, pos, SEEK_SET) != 0)
+		return -1;
+	size_t got = fread(ptr, 1, len, f);
+	return ferror(f) ? -1 : (int)got;
 }
 
 static void *my_alloc(void *ctx, unsigned size)
@@ -214,11 +252,9 @@ static void new_entry(struct node *ne)
 	struct node *dir = &root;
 	if (e->dirid) {
 		for (struct list *l = dirs.next;; l = l->next) {
-			if (l == &dirs) {
-				warnx("Missing dir of %s\n", e->name);
-				dir = &root;
-				break;
-			}
+			if (l == &dirs)
+				errx(EXIT_FAILURE, "%s: missing parent directory for %s",
+				     opt.archive, e->name);
 			dir = list_item(l, struct node, by_type);
 			if (dir->entry.id == ne->entry.dirid)
 				break;
@@ -326,7 +362,7 @@ static void match_pattern(char *p)
 		list_append(&selected, &sentinel);
 		while (selected.next != &sentinel) {
 			struct node *dir = list_item(selected.next, struct node, on_sel);
-			list_del(&dir->on_sel);
+			list_del_init(&dir->on_sel);
 			for (struct list *l = dir->children.next; l != &dir->children; l = l->next) {
 				struct node *ne = list_item(l, struct node, on_dir);
 				if (!ne->entry.is_dir) {
@@ -337,7 +373,7 @@ static void match_pattern(char *p)
 					continue;
 				}
 				if (mode == IntermediateDirs) {
-					list_del(&ne->on_sel);
+					list_del_init(&ne->on_sel);
 					if (fnmatch(p, ne->entry.name, 0) == 0)
 						list_append(&selected, &ne->on_sel);
 					continue;
@@ -387,8 +423,6 @@ static int visit_selected(struct node *dir, bool (*cb)(struct node *, void *ctx,
 		r = visit_selected(ne, cb, ctx);
 		if (r <= 0)
 			break;
-		if (!ne->marked)
-			continue;
 		r = cb(ne, ctx, LeaveDir);
 		if (r <= 0)
 			break;
@@ -466,7 +500,7 @@ static void set_attrs(char *path, struct node *ne)
 		(void)utime(path, &ut);
 	}
 	if (ne->entry.attr & UC2_Attr_R)
-		(void)chmod(path, 0444);
+		(void)chmod(path, ne->entry.is_dir ? 0555 : 0444);
 }
 
 static void binary_stream(FILE *file)
@@ -510,6 +544,62 @@ static bool pipe_cb(struct node *ne, void *ctx, enum cause cause)
 	return true;
 }
 
+/* Check each archive-controlled component before using it.  The caller owns
+   the destination tree; this rejects existing links and special files, but
+   does not protect against another process replacing parent directories. */
+static bool output_exists(const char *path, bool directory)
+{
+#ifdef _WIN32
+	wchar_t wide[32768];
+	if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path, -1,
+	                        wide, sizeof wide / sizeof *wide))
+		errx(EXIT_FAILURE, "%s: invalid UTF-8 path", path);
+	DWORD attributes = GetFileAttributesW(wide);
+	if (attributes == INVALID_FILE_ATTRIBUTES) {
+		DWORD error = GetLastError();
+		if (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND)
+			return false;
+		errx(EXIT_FAILURE, "%s: cannot inspect output (Windows error %lu)",
+		     path, (unsigned long)error);
+	}
+	if ((attributes & (FILE_ATTRIBUTE_REPARSE_POINT | FILE_ATTRIBUTE_DEVICE))
+	    || !!(attributes & FILE_ATTRIBUTE_DIRECTORY) != directory)
+		errx(EXIT_FAILURE, "%s: unsafe output type", path);
+#else
+	struct stat st;
+#ifdef __DJGPP__
+	int ret = stat(path, &st);
+#else
+	int ret = lstat(path, &st);
+#endif
+	if (ret < 0) {
+		if (errno == ENOENT) return false;
+		errx(EXIT_FAILURE, "%s: cannot inspect output: %s", path, strerror(errno));
+	}
+	if (directory ? !S_ISDIR(st.st_mode) : !S_ISREG(st.st_mode))
+		errx(EXIT_FAILURE, "%s: unsafe output type", path);
+#endif
+	return true;
+}
+
+static FILE *create_output(const char *path)
+{
+	/* Exclusive creation also refuses a leaf link introduced after the check. */
+#ifdef _WIN32
+	wchar_t wide[32768];
+	if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path, -1,
+	                        wide, sizeof wide / sizeof *wide))
+		errx(EXIT_FAILURE, "%s: invalid UTF-8 path", path);
+	int fd = _wopen(wide, _O_CREAT | _O_EXCL | _O_WRONLY | _O_BINARY, 0666);
+#else
+	int fd = open(path, O_CREAT | O_EXCL | O_WRONLY | O_BINARY, 0666);
+#endif
+	if (fd < 0) err(EXIT_FAILURE, "%s", path);
+	FILE *file = fdopen(fd, "wb");
+	if (!file) { close(fd); err(EXIT_FAILURE, "%s", path); }
+	return file;
+}
+
 static bool extract_cb(struct node *ne, void *ctx, enum cause cause)
 {
 	struct path *path = ctx;
@@ -528,7 +618,11 @@ static bool extract_cb(struct node *ne, void *ctx, enum cause cause)
 		    || (l == 1 && e->name[0] == '.')
 		    || (l == 2 && e->name[0] == '.' && e->name[1] == '.')
 		    || memchr(e->name, '/', l)
-		    || memchr(e->name, '\\', l))
+		    || memchr(e->name, '\\', l)
+#if defined(_WIN32) || defined(__DJGPP__)
+		    || memchr(e->name, ':', l)
+#endif
+		    )
 			errx(EXIT_FAILURE, "unsafe archive entry name: %.*s",
 			     (int)l, e->name);
 
@@ -536,21 +630,24 @@ static bool extract_cb(struct node *ne, void *ctx, enum cause cause)
 		if (p + 1 >= endof(path->buffer))
 			errx(EXIT_FAILURE, "Path too long");
 		memcpy(path->ptr, e->name, l);
+		*p = 0;
 
 		if (cause == VisitFile) {
-			*p = 0;
-			if (!opt.overwrite) {
-				if (access(path->buffer, F_OK) == 0) {
+			if (output_exists(path->buffer, false)) {
+				if (!opt.overwrite) {
 					errno = EEXIST;
 					warn("%s", path->buffer);
 					break;
 				}
-			} else
-				(void) unlink(path->buffer);
+#ifdef _WIN32
+				if (chmod(path->buffer, 0666) < 0)
+					err(EXIT_FAILURE, "%s", path->buffer);
+#endif
+				if (unlink(path->buffer) < 0)
+					err(EXIT_FAILURE, "%s", path->buffer);
+			}
 
-			FILE *f = fopen(path->buffer, "wb");
-			if (!f)
-				err(EXIT_FAILURE, "%s", path->buffer);
+			FILE *f = create_output(path->buffer);
 			int ret = uc2_extract(path->uc2, &e->xi, e->size, write_file, f);
 			if (ret < 0)
 				uc2err(path->uc2, ret, "%s", e->name);
@@ -562,22 +659,24 @@ static bool extract_cb(struct node *ne, void *ctx, enum cause cause)
 				set_attrs(path->buffer, ne);
 			break;
 		}
-		*p++ = '/';
-		if (p == endof(path->buffer))
-			errx(EXIT_FAILURE, "Path too long");
-		path->ptr = p;
-		*p = 0;
 		int r = mkdir(path->buffer, 0777);
 		if (r < 0) {
 			if (errno != EEXIST)
 				err(EXIT_FAILURE, "mkdir %s", path->buffer);
+			/* Do not append '/' until after lstat: a trailing slash can
+			   cause it to follow a directory symlink. */
+			if (!output_exists(path->buffer, true))
+				errx(EXIT_FAILURE, "%s: output directory disappeared", path->buffer);
 			ne->marked = false; // skip meta setting
 		}
+		*p++ = '/';
+		path->ptr = p;
+		*p = 0;
 		break;
 
 	case LeaveDir:
 		assert(ne->entry.is_dir);
-		if (!opt.no_dir_meta) {
+		if (ne->marked && !opt.no_dir_meta) {
 			*path->ptr = 0;
 			set_attrs(path->buffer, ne);
 		}
@@ -590,44 +689,58 @@ static bool extract_cb(struct node *ne, void *ctx, enum cause cause)
 
 #ifdef _WIN32
 #  include <io.h>
-static int uc2_truncate(FILE *f, long len)
+static int uc2_truncate(FILE *f, uint64_t len)
 {
+	if (len > INT64_MAX) { errno = EFBIG; return -1; }
 	int rc = _chsize_s(_fileno(f), (__int64)len);
+	if (rc) errno = rc;
 	return rc == 0 ? 0 : -1;
 }
 #else
-static int uc2_truncate(FILE *f, long len)
+static int uc2_truncate(FILE *f, uint64_t len)
 {
+#ifdef __DJGPP__
+	if (len > LONG_MAX) { errno = EFBIG; return -1; }
+#else
+	if (len > INT64_MAX) { errno = EFBIG; return -1; }
+#endif
 	return ftruncate(fileno(f), (off_t)len);
 }
 #endif
 
-static int file_size_of(const char *path, size_t *out)
+static int file_length(FILE *f, uint64_t *out)
 {
-	struct stat st;
-	if (stat(path, &st) < 0) return -1;
-	if (st.st_size < 0) return -1;
-	*out = (size_t)st.st_size;
+	if (seek_file(f, 0, SEEK_END) != 0) return -1;
+	int64_t end = tell_file(f);
+	if (end < 0) return -1;
+	*out = (uint64_t)end;
 	return 0;
 }
 
-static int read_all(const char *path, uint8_t **out_data, size_t *out_len)
+static int read_ots_proof(const char *path, uint8_t **out_data, size_t *out_len)
 {
-	size_t len;
-	if (file_size_of(path, &len) < 0) return -1;
-	uint8_t *buf = malloc(len ? len : 1);
-	if (!buf) return -1;
 	FILE *f = fopen(path, "rb");
-	if (!f) { free(buf); return -1; }
+	if (!f) return -1;
+	uint64_t file_len;
+	if (file_length(f, &file_len) < 0 || seek_file(f, 0, SEEK_SET) != 0) {
+		fclose(f); return -1;
+	}
+	if (file_len > UC2_OTS_TRAILER_MAX_PROOF) {
+		fclose(f); errno = EFBIG; return -1;
+	}
+	size_t len = (size_t)file_len;
+	uint8_t *buf = malloc(len ? len : 1);
+	if (!buf) { fclose(f); return -1; }
 	size_t got = fread(buf, 1, len, f);
+	int failed = ferror(f);
 	fclose(f);
-	if (got != len) { free(buf); return -1; }
+	if (failed || got != len) { free(buf); errno = EIO; return -1; }
 	*out_data = buf;
 	*out_len = len;
 	return 0;
 }
 
-static int sha256_of_prefix(const char *path, size_t prefix_len,
+static int sha256_of_prefix(const char *path, uint64_t prefix_len,
                             uint8_t out[32])
 {
 	FILE *f = fopen(path, "rb");
@@ -635,9 +748,9 @@ static int sha256_of_prefix(const char *path, size_t prefix_len,
 	struct uc2_sha256 ctx;
 	uc2_sha256_init(&ctx);
 	uint8_t buf[8192];
-	size_t remaining = prefix_len;
+	uint64_t remaining = prefix_len;
 	while (remaining) {
-		size_t want = remaining < sizeof buf ? remaining : sizeof buf;
+		size_t want = remaining < sizeof buf ? (size_t)remaining : sizeof buf;
 		size_t got = fread(buf, 1, want, f);
 		if (got == 0) { fclose(f); return -1; }
 		uc2_sha256_update(&ctx, buf, got);
@@ -653,26 +766,80 @@ static void print_hex(const uint8_t *p, size_t n)
 	for (size_t i = 0; i < n; i++) printf("%02x", p[i]);
 }
 
+static uint32_t trailer_u32(const uint8_t *p)
+{
+	return (uint32_t)p[0] | ((uint32_t)p[1] << 8) |
+	       ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
+}
+
 /* Locate an existing OTS trailer in the archive on disk.
  * Returns 0 if a well-formed trailer is found (and fills outputs),
  *         1 if no trailer (back magic absent),
  *         negative on parse error (back magic present but malformed).
  * `*out_buf` is malloc'd; caller frees on success. */
 static int load_trailer(const char *archive_path,
-                        uint8_t **out_buf, size_t *out_buf_len,
+                        uint8_t **out_buf,
                         uint32_t *out_archive_len,
-                        const uint8_t **out_proof, size_t *out_proof_len)
+                        const uint8_t **out_proof, size_t *out_proof_len,
+                        uint64_t *out_file_len)
 {
-	uint8_t *buf;
-	size_t len;
-	if (read_all(archive_path, &buf, &len) < 0)
-		err(EXIT_FAILURE, "%s", archive_path);
-	int rc = uc2_ots_trailer_parse(buf, len, out_archive_len,
-	                               out_proof, out_proof_len);
-	if (rc != 0) { free(buf); return rc; }
-	*out_buf = buf;
-	*out_buf_len = len;
-	return 0;
+	*out_buf = NULL;
+	FILE *f = fopen(archive_path, "rb");
+	if (!f) err(EXIT_FAILURE, "%s", archive_path);
+	uint8_t *buf = NULL;
+	uint8_t tail[UC2_OTS_TRAILER_TAIL_LEN];
+	int rc = 1;
+	uint64_t file_len;
+	if (file_length(f, &file_len) < 0)
+		goto io_error;
+	if (out_file_len) *out_file_len = file_len;
+	if (file_len < sizeof tail) goto done;
+	if (seek_file(f, file_len - sizeof tail, SEEK_SET) != 0 ||
+	    fread(tail, 1, sizeof tail, f) != sizeof tail)
+		goto io_error;
+	if (memcmp(tail + 4, UC2_OTS_TRAILER_MAGIC,
+	           UC2_OTS_TRAILER_MAGIC_LEN) != 0)
+		goto done;
+
+	/* Match uc2_ots_trailer_parse's framing checks without loading the
+	   preceding archive. Allocation and reads are bounded by the proof cap. */
+	uint32_t proof_len = trailer_u32(tail);
+	if (proof_len > UC2_OTS_TRAILER_MAX_PROOF) {
+		rc = UC2_OTS_ERR_TOO_LARGE; goto done;
+	}
+	size_t total = UC2_OTS_TRAILER_OVERHEAD + (size_t)proof_len;
+	if (total > file_len) { rc = UC2_OTS_ERR_TRUNCATED; goto done; }
+	buf = malloc(total);
+	if (!buf) goto io_error;
+	if (seek_file(f, file_len - total, SEEK_SET) != 0 ||
+	    fread(buf, 1, total, f) != total)
+		goto io_error;
+	if (memcmp(buf, UC2_OTS_TRAILER_MAGIC, UC2_OTS_TRAILER_MAGIC_LEN) != 0)
+		rc = UC2_OTS_ERR_BAD_MAGIC;
+	else if (trailer_u32(buf + 8) != UC2_OTS_TRAILER_VERSION)
+		rc = UC2_OTS_ERR_BAD_VERSION;
+	else if (trailer_u32(buf + 16) != proof_len)
+		rc = UC2_OTS_ERR_NONCANONICAL;
+	else if ((uint64_t)trailer_u32(buf + 12) != file_len - total)
+		rc = UC2_OTS_ERR_OVERFLOW;
+	else {
+		*out_archive_len = trailer_u32(buf + 12);
+		*out_proof = buf + UC2_OTS_TRAILER_HEAD_LEN;
+		*out_proof_len = proof_len;
+		*out_buf = buf;
+		rc = UC2_OTS_OK;
+	}
+done:
+	fclose(f);
+	if (rc != UC2_OTS_OK) free(buf);
+	return rc;
+io_error:;
+	int saved_errno = errno ? errno : EIO;
+	fclose(f);
+	free(buf);
+	errno = saved_errno;
+	err(EXIT_FAILURE, "%s", archive_path);
+	return -1;
 }
 
 static int cmd_ots_attach(const char *archive_path, const char *proof_path,
@@ -680,7 +847,7 @@ static int cmd_ots_attach(const char *archive_path, const char *proof_path,
 {
 	/* Read the .ots proof and validate its envelope. */
 	uint8_t *proof; size_t proof_len;
-	if (read_all(proof_path, &proof, &proof_len) < 0)
+	if (read_ots_proof(proof_path, &proof, &proof_len) < 0)
 		err(EXIT_FAILURE, "%s", proof_path);
 	uint8_t hash_op;
 	const uint8_t *leaf, *body;
@@ -697,23 +864,14 @@ static int cmd_ots_attach(const char *archive_path, const char *proof_path,
 	}
 
 	/* Determine the archive byte range to attest (strip any existing trailer). */
-	size_t archive_file_len;
-	if (file_size_of(archive_path, &archive_file_len) < 0) {
-		free(proof);
-		err(EXIT_FAILURE, "%s", archive_path);
-	}
-
-	size_t attest_len = archive_file_len;
+	uint64_t attest_len;
 	{
 		uint8_t *abuf;
-		size_t abuf_len;
-		if (read_all(archive_path, &abuf, &abuf_len) < 0)
-			err(EXIT_FAILURE, "%s", archive_path);
 		uint32_t existing_al;
 		const uint8_t *existing_proof;
 		size_t existing_pl;
-		int trc = uc2_ots_trailer_parse(abuf, abuf_len, &existing_al,
-		                                &existing_proof, &existing_pl);
+		int trc = load_trailer(archive_path, &abuf, &existing_al,
+		                       &existing_proof, &existing_pl, &attest_len);
 		free(abuf);
 		if (trc == UC2_OTS_OK) {
 			if (!force)
@@ -759,7 +917,7 @@ static int cmd_ots_attach(const char *archive_path, const char *proof_path,
 
 	FILE *f = fopen(archive_path, "rb+");
 	if (!f) { free(trailer); free(proof); err(EXIT_FAILURE, "%s", archive_path); }
-	if (fseek(f, (long)attest_len, SEEK_SET) < 0) {
+	if (seek_file(f, attest_len, SEEK_SET) != 0) {
 		fclose(f); free(trailer); free(proof);
 		err(EXIT_FAILURE, "%s", archive_path);
 	}
@@ -768,13 +926,15 @@ static int cmd_ots_attach(const char *archive_path, const char *proof_path,
 		err(EXIT_FAILURE, "%s", archive_path);
 	}
 	/* Truncate any leftover bytes (e.g. when replacing a longer prior trailer). */
-	long new_end = (long)attest_len + tn;
-	fflush(f);
-	if (uc2_truncate(f, new_end) < 0) {
+	uint64_t new_end = attest_len + (unsigned)tn;
+	if (fflush(f) != 0 || uc2_truncate(f, new_end) < 0) {
 		fclose(f); free(trailer); free(proof);
 		err(EXIT_FAILURE, "truncate");
 	}
-	fclose(f);
+	if (fclose(f) != 0) {
+		free(trailer); free(proof);
+		err(EXIT_FAILURE, "%s", archive_path);
+	}
 
 	free(trailer);
 	free(proof);
@@ -786,11 +946,11 @@ static int cmd_ots_attach(const char *archive_path, const char *proof_path,
 
 static int cmd_ots_extract(const char *archive_path, const char *out_path)
 {
-	uint8_t *buf; size_t buf_len;
+	uint8_t *buf;
 	uint32_t archive_len;
 	const uint8_t *proof; size_t proof_len;
-	int rc = load_trailer(archive_path, &buf, &buf_len,
-	                      &archive_len, &proof, &proof_len);
+	int rc = load_trailer(archive_path, &buf,
+	                      &archive_len, &proof, &proof_len, NULL);
 	if (rc == 1)
 		errx(EXIT_FAILURE, "%s: no OTS trailer present", archive_path);
 	if (rc < 0)
@@ -800,7 +960,8 @@ static int cmd_ots_extract(const char *archive_path, const char *out_path)
 	if (!f) err(EXIT_FAILURE, "%s", out_path);
 	if (fwrite(proof, 1, proof_len, f) != proof_len)
 		err(EXIT_FAILURE, "%s", out_path);
-	fclose(f);
+	if (fclose(f) != 0)
+		err(EXIT_FAILURE, "%s", out_path);
 	free(buf);
 	uc2_say(stderr, "Wrote %zu-byte .ots proof to %s\n", proof_len, out_path);
 	return EXIT_SUCCESS;
@@ -824,13 +985,12 @@ static int ots_info_cb(void *vctx,
 		/* Pending payload is varbytes(uri). */
 		uint64_t uri_len;
 		size_t consumed;
-		if (payload_len > 0 &&
-		    uc2_ots_varint_decode(payload, payload_len, &uri_len, &consumed) == 0 &&
-		    consumed + uri_len <= payload_len) {
-			printf("  (calendar: ");
-			fwrite(payload + consumed, 1, (size_t)uri_len, stdout);
-			printf(")");
-		}
+		if (uc2_ots_varint_decode(payload, payload_len, &uri_len, &consumed) < 0 ||
+		    consumed > payload_len || uri_len > payload_len - consumed)
+			return -1;
+		printf("  (calendar: ");
+		fwrite(payload + consumed, 1, (size_t)uri_len, stdout);
+		printf(")");
 	} else if (name && strcmp(name, "Bitcoin") == 0) {
 		uint64_t height; size_t consumed;
 		if (uc2_ots_varint_decode(payload, payload_len, &height, &consumed) == 0)
@@ -842,11 +1002,11 @@ static int ots_info_cb(void *vctx,
 
 static int cmd_ots_info(const char *archive_path)
 {
-	uint8_t *buf; size_t buf_len;
+	uint8_t *buf;
 	uint32_t archive_len;
 	const uint8_t *proof; size_t proof_len;
-	int rc = load_trailer(archive_path, &buf, &buf_len,
-	                      &archive_len, &proof, &proof_len);
+	int rc = load_trailer(archive_path, &buf,
+	                      &archive_len, &proof, &proof_len, NULL);
 	if (rc == 1)
 		errx(EXIT_FAILURE, "%s: no OTS trailer present", archive_path);
 	if (rc < 0)
@@ -884,6 +1044,7 @@ static int cmd_ots_info(const char *archive_path)
 		printf("  status: structurally valid (calendar-path ops only)\n");
 
 	free(buf);
+	flush_stdout();
 	return leaf_match && wr >= 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
@@ -891,11 +1052,11 @@ static int cmd_ots_info(const char *archive_path)
  * Returns 0 if no trailer or trailer verifies; non-zero on mismatch. */
 static int verify_trailer_if_present(const char *archive_path)
 {
-	uint8_t *buf; size_t buf_len;
+	uint8_t *buf;
 	uint32_t archive_len;
 	const uint8_t *proof; size_t proof_len;
-	int rc = load_trailer(archive_path, &buf, &buf_len,
-	                      &archive_len, &proof, &proof_len);
+	int rc = load_trailer(archive_path, &buf,
+	                      &archive_len, &proof, &proof_len, NULL);
 	if (rc == 1) return 0; /* no trailer */
 	if (rc < 0) {
 		fprintf(stderr, "%s: malformed OTS trailer (%d)\n", archive_path, rc);
@@ -1040,19 +1201,22 @@ static void writer_scan(uc2_writer *writer, const char *path, const char *name,
                         unsigned parent, unsigned depth)
 {
     if (depth > 64) errx(EXIT_FAILURE, "%s: directory nesting exceeds 64", path);
-    struct stat st;
 #ifdef _WIN32
+    struct _stat64 st;
     wchar_t wide[32768];
     if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path, -1, wide, sizeof wide / sizeof *wide))
         errx(EXIT_FAILURE, "%s: invalid UTF-8 path", path);
     DWORD flags = GetFileAttributesW(wide);
     if (flags == INVALID_FILE_ATTRIBUTES || (flags & FILE_ATTRIBUTE_REPARSE_POINT))
         errx(EXIT_FAILURE, "%s: missing input or unsupported reparse point", path);
-    if (stat(path, &st) < 0) err(EXIT_FAILURE, "%s", path);
-#elif defined(__DJGPP__)
+    if (_wstat64(wide, &st) < 0) err(EXIT_FAILURE, "%s", path);
+#else
+    struct stat st;
+#ifdef __DJGPP__
     if (stat(path, &st) < 0) err(EXIT_FAILURE, "%s", path);
 #else
     if (lstat(path, &st) < 0) err(EXIT_FAILURE, "%s", path);
+#endif
 #endif
     if (S_ISDIR(st.st_mode)) {
         unsigned id;
@@ -1171,28 +1335,42 @@ static int run_benchmark(int nfiles, char **files)
 {
 	/* Read all input files into memory */
 	size_t total_size = 0;
+	size_t *sizes = calloc((size_t)nfiles, sizeof *sizes);
+	if (!sizes) err(EXIT_FAILURE, "calloc");
 	for (int i = 0; i < nfiles; i++) {
-		struct stat st;
-		if (stat(files[i], &st) < 0) err(EXIT_FAILURE, "%s", files[i]);
-		total_size += (size_t)st.st_size;
+		FILE *f = fopen(files[i], "rb");
+		if (!f) err(EXIT_FAILURE, "%s", files[i]);
+		uint64_t size;
+		if (file_length(f, &size) < 0) err(EXIT_FAILURE, "%s", files[i]);
+		fclose(f);
+		if (size > UINT32_MAX - total_size || size > SIZE_MAX - total_size)
+			errx(EXIT_FAILURE, "benchmark input exceeds the 4 GiB UC2 limit");
+		sizes[i] = (size_t)size;
+		total_size += sizes[i];
 	}
-	uint8_t *data = malloc(total_size);
+	if (total_size > SIZE_MAX - total_size / 8 - 4096)
+		errx(EXIT_FAILURE, "benchmark output buffer is too large");
+	uint8_t *data = malloc(total_size ? total_size : 1);
 	if (!data) err(EXIT_FAILURE, "malloc");
 	size_t pos = 0;
 	for (int i = 0; i < nfiles; i++) {
 		FILE *f = fopen(files[i], "rb");
 		if (!f) err(EXIT_FAILURE, "%s", files[i]);
-		pos += fread(data + pos, 1, total_size - pos, f);
+		size_t got = fread(data + pos, 1, sizes[i], f);
+		int extra = fgetc(f);
+		if (got != sizes[i] || extra != EOF || ferror(f))
+			errx(EXIT_FAILURE, "%s: input changed or read failed", files[i]);
+		pos += got;
 		fclose(f);
 	}
-	total_size = pos;
+	free(sizes);
 
 	printf("UC2 Benchmark: %zu bytes input (%d file%s)\n\n",
 	       total_size, nfiles, nfiles == 1 ? "" : "s");
-	printf("%-16s %10s %8s %10s %10s\n",
-	       "Method", "Compressed", "Ratio", "Enc (ms)", "Dec (ms)");
-	printf("%-16s %10s %8s %10s %10s\n",
-	       "----------------", "----------", "--------", "----------", "----------");
+	printf("%-16s %10s %8s %10s\n",
+	       "Method", "Compressed", "Ratio", "Enc (ms)");
+	printf("%-16s %10s %8s %10s\n",
+	       "----------------", "----------", "--------", "----------");
 
 	struct { int level; const char *name; } methods[] = {
 		{2, "Huffman Fast"},
@@ -1205,7 +1383,6 @@ static int run_benchmark(int nfiles, char **files)
 		{9, "rANS Ultra"},
 	};
 
-	struct mem_reader { const uint8_t *data; unsigned pos; unsigned len; };
 	/* Benchmark each method against the same in-memory input. */
 
 	for (int m = 0; m < (int)(sizeof methods / sizeof methods[0]); m++) {
@@ -1234,8 +1411,6 @@ static int run_benchmark(int nfiles, char **files)
 		double enc_ms = (double)(t1 - t0) * 1000.0 / CLOCKS_PER_SEC;
 		double ratio = total_size ? (double)csize / total_size * 100.0 : 0;
 
-		/* Decompress (round-trip verify) */
-		/* For now just report compression stats */
 		printf("%-16s %10u %7.1f%% %9.1f ms\n",
 		       methods[m].name, csize, ratio, enc_ms);
 
@@ -1260,6 +1435,7 @@ static int run_benchmark(int nfiles, char **files)
 
 	printf("\n");
 	free(data);
+	flush_stdout();
 	return EXIT_SUCCESS;
 }
 
@@ -1392,18 +1568,6 @@ static int ing_map_grow(struct ing_map *m)
 	return 0;
 }
 
-static int seek_spool(FILE *f, uint64_t offset)
-{
-#ifdef _WIN32
-	return _fseeki64(f, (__int64)offset, SEEK_SET);
-#elif defined(__DJGPP__)
-	if (offset > LONG_MAX) return -1;
-	return fseek(f, (long)offset, SEEK_SET);
-#else
-	return fseeko(f, (off_t)offset, SEEK_SET);
-#endif
-}
-
 static char *staged_path;
 
 static void discard_staged_output(void)
@@ -1531,7 +1695,7 @@ static int ingest_write_v3(const char *archive_path,
 		while (map.keys[p]) {
 			int s = map.slots[p];
 			if (map.keys[p] == key && uniq[s].usize == clen) {
-				if (seek_spool(raw, uniq[s].src_off) != 0 ||
+				if (seek_file(raw, uniq[s].src_off, SEEK_SET) != 0 ||
 				    fread(compare, 1, clen, raw) != clen)
 					err(EXIT_FAILURE, "chunk spool read");
 				if (memcmp(compare, data, clen) == 0) { slot = s; break; }
@@ -1567,7 +1731,7 @@ static int ingest_write_v3(const char *archive_path,
 			.off = here, .csize = csize, .usize = clen,
 			.csum = csum, .src_off = (uint32_t)raw_size
 		};
-		if (seek_spool(raw, raw_size) != 0 || fwrite(data, 1, clen, raw) != clen)
+		if (seek_file(raw, raw_size, SEEK_SET) != 0 || fwrite(data, 1, clen, raw) != clen)
 			err(EXIT_FAILURE, "chunk spool write");
 		raw_size += clen;
 		occ_uniq[nocc++] = slot;
@@ -1585,11 +1749,12 @@ static int ingest_write_v3(const char *archive_path,
 	int width = 1;
 	for (int t = nocc - 1; t >= 10; t /= 10) width++;
 
-	/* size_t math: one entry per occurrence, so nocc can be large enough
-	   that a 32-bit product would wrap and undersize the allocation. */
-	size_t cdir_cap = 22;  /* EndOfCdir + XTAIL + aserial */
-	cdir_cap += (size_t)nocc * (size_t)(47 + 21 + (5 + width) + 1);
-	if (cdir_cap > UINT32_MAX) errx(EXIT_FAILURE, "central directory too large");
+	/* Match the decoder's 64 MiB limit; check before multiplying on 32-bit hosts. */
+	const size_t cdir_limit = 64u * 1024u * 1024u;
+	const size_t entry_size = 47 + 21 + (5 + width) + 1;
+	if ((size_t)nocc > (cdir_limit - 22) / entry_size)
+		errx(EXIT_FAILURE, "central directory too large");
+	size_t cdir_cap = 22 + (size_t)nocc * entry_size; /* Includes the directory tail. */
 
 	unsigned char *raw_cdir = malloc(cdir_cap);
 	if (!raw_cdir) err(EXIT_FAILURE, "malloc");
@@ -1652,13 +1817,13 @@ static int ingest_write_v3(const char *archive_path,
 
 	unsigned total = tell32(out);
 
-	if (seek_spool(out, cdir_offset) != 0) err(EXIT_FAILURE, "seek output");
+	if (seek_file(out, cdir_offset, SEEK_SET) != 0) err(EXIT_FAILURE, "seek output");
 	w32(crec + 0, 0);
 	w16(crec + 4, method);
 	w32(crec + 6, 1);                /* masterPrefix = NoMaster */
 	if (fwrite(crec, 1, 10, out) != 10) err(EXIT_FAILURE, "write directory header");
 
-	if (seek_spool(out, 0) != 0) err(EXIT_FAILURE, "seek output");
+	if (seek_file(out, 0, SEEK_SET) != 0) err(EXIT_FAILURE, "seek output");
 	unsigned complen = total - 13;
 	w32(header + 0, 0x1A324355);
 	w32(header + 4, complen);
@@ -1740,6 +1905,8 @@ static int ingest_restore_v3(const char *archive_path, FILE *out)
 		}
 	}
 
+	if (rc == 0 && uc2_finish_cdir(uc2, NULL) < 0)
+		rc = -1;
 	if (rc == 0) {
 		for (size_t i = 0; i < nents; i++) {
 			if (uc2_extract(uc2, &ents[i].xi, ents[i].size,
@@ -1834,6 +2001,7 @@ static int cmd_ingest_restore(const char *archive_path)
 
 	if (rc != 0)
 		errx(EXIT_FAILURE, "ingest restore failed: %s", archive_path);
+	flush_stdout();
 	return EXIT_SUCCESS;
 }
 
@@ -1849,6 +2017,7 @@ static int extract_ots_long_opts(int *argcp, char **argv, char **out_value)
 	*out_value = NULL;
 	for (int i = 1; i < argc; ) {
 		const char *a = argv[i];
+		if (!strcmp(a, "--")) break;
 		int matched_args = 0;
 		int new_mode = OTS_MODE_NONE;
 		const char *inline_value = NULL;
@@ -1902,6 +2071,8 @@ int main(int argc, char *argv[])
 	{
 		char *ingest_path = NULL;
 		opt.ingest_mode = extract_ingest_long_opts(&argc, argv, &ingest_path);
+		if (opt.ingest_mode != INGEST_MODE_NONE)
+			opt.archive = ingest_path;
 		if (opt.ingest_mode == INGEST_MODE_TAR)
 			return cmd_ingest_tar(ingest_path);
 		if (opt.ingest_mode == INGEST_MODE_WRITE)
@@ -2006,6 +2177,7 @@ usage:
 					" -T      Tab-separated\n"
 					"\nhttps://github.com/evvaletov/uc2\n"
 				);
+			flush_stdout();
 			return opt.help ? EXIT_SUCCESS : EXIT_FAILURE;
 		}
 	}
@@ -2081,7 +2253,13 @@ usage:
 	}
 
 	char label[12];
-	uc2_finish_cdir(uc2, label);
+	int ret = uc2_finish_cdir(uc2, label);
+	if (ret < 0) {
+		uc2err(uc2, ret, 0);
+		uc2_close(uc2);
+		fclose(f);
+		return EXIT_FAILURE;
+	}
 
 	if (optind == argc) {
 		mark(&root, true);
@@ -2107,6 +2285,7 @@ usage:
 		if (opt.test)
 			uc2_say(stderr, "Testing archive integrity...\n");
 		visit_selected(&root, pipe_cb, uc2);
+		flush_stdout();
 		if (opt.test) {
 			if (verify_trailer_if_present(opt.archive)) {
 				uc2_close(uc2);
@@ -2137,5 +2316,6 @@ usage:
 		uc2_say(stderr, "Decompression complete\n");
 	uc2_close(uc2);
 	fclose(f);
+	flush_stdout();
 	return had_error ? EXIT_FAILURE : EXIT_SUCCESS;
 }

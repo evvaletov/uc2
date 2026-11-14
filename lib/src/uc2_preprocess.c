@@ -18,9 +18,9 @@ int uc2_bcj_apply(uint8_t *data, size_t len)
 	if (len < 5) return 0;
 	for (size_t i = 0; i + 4 < len; i++) {
 		if (data[i] == 0xE8 || data[i] == 0xE9) {
-			int32_t rel = (int32_t)((uint32_t)data[i+1] | ((uint32_t)data[i+2] << 8) |
+			uint32_t rel = ((uint32_t)data[i+1] | ((uint32_t)data[i+2] << 8) |
 			              ((uint32_t)data[i+3] << 16) | ((uint32_t)data[i+4] << 24));
-			int32_t abs_addr = rel + (int32_t)(i + 5);
+			uint32_t abs_addr = rel + (uint32_t)(i + 5);
 			data[i+1] = (uint8_t)(abs_addr);
 			data[i+2] = (uint8_t)(abs_addr >> 8);
 			data[i+3] = (uint8_t)(abs_addr >> 16);
@@ -36,9 +36,9 @@ int uc2_bcj_revert(uint8_t *data, size_t len)
 	if (len < 5) return 0;
 	for (size_t i = 0; i + 4 < len; i++) {
 		if (data[i] == 0xE8 || data[i] == 0xE9) {
-			int32_t abs_addr = (int32_t)((uint32_t)data[i+1] | ((uint32_t)data[i+2] << 8) |
+			uint32_t abs_addr = ((uint32_t)data[i+1] | ((uint32_t)data[i+2] << 8) |
 			                   ((uint32_t)data[i+3] << 16) | ((uint32_t)data[i+4] << 24));
-			int32_t rel = abs_addr - (int32_t)(i + 5);
+			uint32_t rel = abs_addr - (uint32_t)(i + 5);
 			data[i+1] = (uint8_t)(rel);
 			data[i+2] = (uint8_t)(rel >> 8);
 			data[i+3] = (uint8_t)(rel >> 16);
@@ -51,36 +51,48 @@ int uc2_bcj_revert(uint8_t *data, size_t len)
 
 /* --- BWT (Burrows-Wheeler Transform) --- */
 
-/* Simple BWT using suffix array (O(n log^2 n) via qsort). */
-
-static const uint8_t *bwt_data;
-static size_t bwt_len;
-
-static int bwt_cmp(const void *a, const void *b)
+/* Sort cyclic rotations with an explicit context. Comparison takes O(n),
+ * so this simple helper is O(n^2 log n) in the worst case. No shared state. */
+static int bwt_cmp(uint32_t a, uint32_t b, const uint8_t *data, size_t len)
 {
-	uint32_t ia = *(const uint32_t *)a;
-	uint32_t ib = *(const uint32_t *)b;
-	for (size_t k = 0; k < bwt_len; k++) {
-		uint8_t ca = bwt_data[(ia + k) % bwt_len];
-		uint8_t cb = bwt_data[(ib + k) % bwt_len];
+	for (size_t k = 0; k < len; k++) {
+		uint8_t ca = data[((size_t)a + k) % len];
+		uint8_t cb = data[((size_t)b + k) % len];
 		if (ca != cb) return (int)ca - (int)cb;
 	}
-	return 0;
+	return (a > b) - (a < b);
+}
+
+static void bwt_sift(uint32_t *sa, size_t root, size_t count,
+                     const uint8_t *data, size_t len)
+{
+	while (root < count / 2) {
+		size_t child = root * 2 + 1;
+		if (child + 1 < count && bwt_cmp(sa[child], sa[child+1], data, len) < 0)
+			child++;
+		if (bwt_cmp(sa[root], sa[child], data, len) >= 0) break;
+		uint32_t tmp = sa[root]; sa[root] = sa[child]; sa[child] = tmp;
+		root = child;
+	}
 }
 
 int uc2_bwt_apply(const uint8_t *data, size_t len,
                   uint8_t **out, uint32_t *primary_index)
 {
-	if (len == 0) { *out = NULL; *primary_index = 0; return 0; }
+	*out = NULL; *primary_index = 0;
+	if (len == 0) return 0;
+	if (!data || len > UINT32_MAX || len > SIZE_MAX / sizeof(uint32_t)) return -1;
 
 	uint32_t *sa = malloc(len * sizeof(uint32_t));
 	uint8_t *result = malloc(len);
 	if (!sa || !result) { free(sa); free(result); return -1; }
 
 	for (size_t i = 0; i < len; i++) sa[i] = (uint32_t)i;
-	bwt_data = data;
-	bwt_len = len;
-	qsort(sa, len, sizeof(uint32_t), bwt_cmp);
+	for (size_t i = len / 2; i > 0; i--) bwt_sift(sa, i-1, len, data, len);
+	for (size_t n = len; n > 1; n--) {
+		uint32_t tmp = sa[0]; sa[0] = sa[n-1]; sa[n-1] = tmp;
+		bwt_sift(sa, 0, n-1, data, len);
+	}
 
 	*primary_index = 0;
 	for (size_t i = 0; i < len; i++) {
@@ -96,12 +108,14 @@ int uc2_bwt_apply(const uint8_t *data, size_t len,
 int uc2_bwt_revert(const uint8_t *data, size_t len,
                    uint32_t primary_index, uint8_t **out)
 {
-	if (len == 0) { *out = NULL; return 0; }
+	*out = NULL;
+	if (len == 0) return 0;
 
 	/* primary_index indexes data[]/T[]; reject an out-of-range value
 	   (it can come from an untrusted stream).  Also guard the T[]
 	   allocation multiply against wrap on 32-bit. */
-	if (primary_index >= len || len > ((size_t)-1) / sizeof(uint32_t))
+	if (!data || primary_index >= len || len > UINT32_MAX ||
+	    len > SIZE_MAX / sizeof(uint32_t))
 		return -1;
 
 	uint8_t *result = malloc(len);

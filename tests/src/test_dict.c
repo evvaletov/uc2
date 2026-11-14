@@ -93,6 +93,42 @@ static void test_deserialize_bad_magic(void)
 	{ int _r = uc2_dict_deserialize(&dict, bad, sizeof bad); (void)_r; assert(_r == -1); }
 }
 
+static void test_size_boundaries(void)
+{
+	uint8_t header[24] = {'U', 'C', '2', 'D'};
+	const uint32_t sizes[] = {1, UINT32_MAX - 23, UINT32_MAX};
+	struct uc2_dict dict;
+	for (unsigned i = 0; i < sizeof sizes / sizeof *sizes; i++) {
+		for (unsigned byte = 0; byte < 4; byte++)
+			header[16 + byte] = (uint8_t)(sizes[i] >> (8 * byte));
+		int result = uc2_dict_deserialize(&dict, header, sizeof header);
+		assert(result == -1);
+		assert(dict.data == NULL);
+		uc2_dict_free(&dict);
+	}
+	uint8_t data[] = "Dictionary with a complete payload";
+	int result = uc2_dict_create(&dict, data, sizeof data);
+	assert(result == 0);
+	uint8_t *buf = NULL;
+	size_t len = uc2_dict_serialize(&dict, &buf);
+	assert(len > 0);
+	struct uc2_dict restored;
+	result = uc2_dict_deserialize(&restored, buf, len - 1);
+	assert(result == -1);
+	result = uc2_dict_deserialize(&restored, buf, len);
+	assert(result == 0);
+	assert(restored.size == sizeof data);
+	assert(memcmp(restored.data, data, sizeof data) == 0);
+	uc2_dict_free(&restored);
+	uc2_dict_free(&dict);
+	free(buf);
+#if SIZE_MAX > UINT32_MAX
+	result = uc2_dict_create(&dict, data, (size_t)UINT32_MAX + 1);
+	assert(result == -1);
+	assert(dict.data == NULL);
+#endif
+}
+
 int main(void)
 {
 	printf("Dictionary tests:\n");
@@ -102,6 +138,7 @@ int main(void)
 	TEST(test_serialize_roundtrip);
 	TEST(test_corrupted);
 	TEST(test_deserialize_bad_magic);
+	TEST(test_size_boundaries);
 	printf("%d/%d tests passed\n", tests_passed, tests_run);
 	return tests_passed == tests_run ? 0 : 1;
 }

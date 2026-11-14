@@ -108,7 +108,9 @@ int uc2_ots_parse_file(const uint8_t *file, size_t file_len,
                        size_t *out_body_len);
 
 /* Build a .ots file from a leaf digest and a serialized timestamp body.
- * Returns total bytes written, or a negative error code. */
+ * Returns total bytes written, or a negative error code. The complete file
+ * must fit INT_MAX as well as out_cap; size failures leave out untouched.
+ * body may be NULL when body_len is zero. */
 int uc2_ots_serialize_file(uint8_t hash_op,
                            const uint8_t *leaf_digest, size_t leaf_digest_len,
                            const uint8_t *body, size_t body_len,

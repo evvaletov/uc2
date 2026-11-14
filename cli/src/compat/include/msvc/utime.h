@@ -9,7 +9,7 @@
  *
  * UC2 needs UTF-8 paths to round-trip correctly, so this shim
  * substitutes utime() with our compat__utime(), which goes through
- * compat__wpath() before calling _wutime32. */
+ * compat__wpath() before calling _wutime64. */
 
 #ifndef _COMPAT_UTIME_H
 #define _COMPAT_UTIME_H

@@ -35,7 +35,7 @@ LGPL-3.0 licence; nothing is moved upward to GPL-3.0.
 
 ## Layer 2: Jan Bobrowski (2020-2021), libunuc2 / unuc2
 
-Jan Bobrowski wrote a clean-room portable decompressor for UC2 v3
+Jan Bobrowski wrote a clean-room portable decompressor for historical UC2
 archives between 2020 and 2021.  He released two products:
 
 - `libunuc2` (decompression library) under LGPL-3.0
@@ -86,7 +86,7 @@ the UC2 v3 revival project, released under GPL-3.0-or-later:
 | `lib/src/uc2_rans.c` + `.h`           | rANS entropy coder (method 10)                     |
 | `lib/src/uc2_dict.c` + `.h`           | Dictionary metadata for cross-archive sharing      |
 | `lib/src/uc2_preprocess.c` + `.h`     | BCJ / BWT / delta-filter preprocessing             |
-| `lib/src/uc2_lz4.c` + `.h`            | LZ4 ultra-fast compression                         |
+| `lib/src/uc2_lz4.c` + `.h`            | LZ4 block compression                              |
 | `lib/src/uc2_blake3.c` + `.h`         | BLAKE3 cryptographic hashing                       |
 | `lib/src/uc2_sha256.c` + `.h`         | SHA-256 (FIPS 180-4)                               |
 | `lib/src/uc2_ots.c` + `.h`            | OpenTimestamps proof parser, walker, trailer      |

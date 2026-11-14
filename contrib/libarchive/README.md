@@ -4,7 +4,8 @@ For the optional LGPL-only legacy-reader proposal, see
 [the upstream review bundle](upstream/REVIEW.md) and
 [`prepare_upstream.py`](prepare_upstream.py). That proposal is separate from
 the full Huffman/rANS integration below. Its format ID and dependency design
-await maintainer acceptance; nothing has been submitted upstream.
+await maintainer acceptance in
+[libarchive PR #3832](https://github.com/libarchive/libarchive/pull/3832).
 
 The adapter reads UC2 directories, long-name tags, file versions, master blocks,
 and Huffman/rANS payloads through libarchive's normal read interface. It is an
@@ -12,12 +13,14 @@ opt-in integration using libarchive's private API. It cannot be loaded as a
 runtime plugin into an unmodified system libarchive. Stored versions are
 returned as repeated pathnames; normal bsdtar extraction leaves the last one.
 
-Input and each decoded file are spooled to anonymous temporary files. Payload
-RAM for the decoder, directory metadata and cached dictionaries shares a
-configurable 64 MiB budget. Temporary disk space can reach
-the compressed archive size plus the largest decoded entry. A file is decoded
-and checked before its first data block is returned. Pipes and filter input
-work, but this is not low-latency incremental decompression.
+Seekable sources use libarchive's read and seek callbacks directly. The full
+adapter retains bounded input spooling for pipes and non-seekable filters;
+the optional upstream proposal requires seekable input. Each decoded file
+uses an anonymous temporary file so it can be checked before its first data
+block is returned. Decoder allocations, directory metadata and cached
+dictionaries share a configurable 64 MiB budget. Temporary disk space can
+reach the largest decoded entry, plus the compressed input size when the
+full adapter needs its pipe fallback.
 
 ## Build actual bsdtar with UC2 support
 
@@ -72,7 +75,7 @@ The adapter can therefore be offered under BSD, but upstream still needs to
 accept a compatible external dependency arrangement or an independently
 licensed decoder. It also needs to assign an official format number; this
 prototype uses `0xC0FF0000`. The distribution recipe and tests are ready for
-review. No upstream acceptance or submission is implied.
+review. Upstream acceptance remains pending.
 
 Resource limits are configurable through `--options uc2:memory-limit=BYTES`
 and the `input-limit`, `entries-limit`, `entry-limit`, and `total-limit` keys.

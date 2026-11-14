@@ -100,14 +100,15 @@ jobs:
         run: |
           python3 contrib/libarchive/prepare_upstream.py --source libarchive-3.8.11 --uc2 build/cli/uc2 --output review
           patch --dry-run -p1 -d libarchive-3.8.11 -i "$PWD/review/libarchive-3.8.11-uc2-review.patch"
+          cmp review/libarchive-3.8.11-uc2-review.patch contrib/libarchive/upstream/libarchive-3.8.11-uc2-review.patch
       - name: Build and test enabled proposal
         run: |
           cmake -S review/libarchive -B review/build -DCMAKE_BUILD_TYPE=Release -DENABLE_WERROR=OFF -DENABLE_TEST=ON -DENABLE_UC2READ=ON -DCMAKE_PREFIX_PATH="$PWD/reader-prefix"
           cmake --build review/build --target bsdtar libarchive_test -j 4
           review/build/bin/libarchive_test -r "$PWD/review/libarchive/libarchive/test" test_read_format_uc2
-          python3 tests/scripts/check_bsdtar.py build/cli/uc2 review/build/bin/bsdtar --legacy-only
+          python3 tests/scripts/check_bsdtar.py build/cli/uc2 review/build/bin/bsdtar --legacy-only --seekable-only
       - name: Verify optional-reader resource limits
-        run: python3 tests/scripts/check_bsdtar_limits.py build/cli/uc2 review/build/bin/bsdtar
+        run: python3 tests/scripts/check_bsdtar_limits.py build/cli/uc2 review/build/bin/bsdtar --seekable-only
       - name: Verify the default build has no reader dependency
         run: |
           cmake -S review/libarchive -B review/build -DENABLE_UC2READ=OFF

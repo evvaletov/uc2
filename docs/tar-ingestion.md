@@ -19,7 +19,7 @@ components, control characters, colons and backslashes are refused. Names must
 be representable in CP850, as required by the UC2 writer. The parser caps paths
 at 4,095 bytes and 64 components, extended metadata at 1 MiB and 128 records
 between members, and directories at 100,000. The writer also limits combined
-entries to 100,000 and logical input/output to its 4 GiB format boundary.
+entries to 100,000 and logical input/output to its 2^32−1-byte format boundary.
 
 Tar ownership and Unix permission bits are not fully representable in UC2.
 Write permission maps to the DOS read-only bit; other Unix permissions, uid/gid,

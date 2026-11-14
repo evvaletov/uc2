@@ -6,7 +6,7 @@ History
 
    * - **1992-1996**
      - UltraCompressor II created by Nico de Vries.  Releases v1.0
-       through v2.3 for DOS.  Notable features: LZ77+Huffman
+       through v2.3 for DOS. Features included LZ77+Huffman
        compression, master-block deduplication, file versioning,
        and multi-volume spanning.
 

@@ -1,6 +1,6 @@
 # Fuzzing UC2
 
-Two libFuzzer harnesses cover the code that handles **untrusted** input:
+Four libFuzzer harnesses cover input parsing and compression:
 
 - `fuzz_extract.c` -- the read path. Drives
   `uc2_open -> uc2_read_cdir -> uc2_finish_cdir -> uc2_extract` over
@@ -11,6 +11,10 @@ Two libFuzzer harnesses cover the code that handles **untrusted** input:
   fuzzer bytes (the first byte selects the level), wraps them in a
   minimal one-file archive, decompresses, and asserts byte-identity.
   Catches encoder crashes and any compress<->decompress mismatch.
+- `fuzz_chunks.c` -- the method-11 path. Recomputes the bounded recipe
+  digest after mutations to reach descriptor and compressed-payload checks.
+- `fuzz_sea.c` -- the standalone SEA Huffman decoder. Feeds bounded raw
+  bitstreams to `uc2_decompress_raw` without running executable input.
 
 ## Build and run by hand
 
@@ -29,7 +33,7 @@ mkdir -p corpus && cp tests/fuzz/seeds/* tests/fuzz/regressions/* corpus/
 ./fuzz_extract -max_len=65536 -timeout=20 corpus/
 ```
 
-ASan flags any out-of-bounds access; libFuzzer writes a `crash-*` (or
+ASan checks memory accesses in the instrumented code; libFuzzer writes a `crash-*` (or
 `timeout-*` / `oom-*`) artifact for each finding, and exits non-zero.
 Re-run a single artifact with `./fuzz_extract <artifact>`.
 
@@ -50,8 +54,8 @@ Two layers run automatically:
 - `fuzz_regression` (ctest, every platform) -- a portable replay
   (`fuzz_replay.c`, no Clang/ASan needed) runs the read-path harness over
   every file in `regressions/` and `seeds/` under a 30 s ctest TIMEOUT,
-  so a hang or out-of-bounds regresses visibly in the normal matrix.
-- the `fuzz` workflow job (Linux) -- builds both harnesses with
+  so a hang or failing replay is reported in the normal matrix.
+- the `fuzz` workflow job (Linux) -- builds all four harnesses with
   libFuzzer + ASan, replays the committed artifacts, then runs a bounded
   coverage-guided session over each path. A crash, OOM, or slow input
   fails the job and uploads the artifact.
@@ -60,8 +64,6 @@ Two layers run automatically:
 a zero-length file and deliberately wrong file checksum. Libarchive must
 verify the stream even when the declared file size is zero.
 
-`fuzz_chunks.c` replays method-11 archives and recomputes the bounded recipe
-digest after mutations, reaching descriptor and compressed-payload checks.
 `chunk-raw.uc2`, `chunk-huffman.uc2` and `chunk-rans.uc2` are generated a11
 fixtures containing pseudorandom data or repeated test strings. The regular
 read-path replay also opens them. CI builds harnesses with `NDEBUG`, matching

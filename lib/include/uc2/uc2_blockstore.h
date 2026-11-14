@@ -41,16 +41,23 @@ int uc2_blockstore_open(struct uc2_blockstore *bs, const char *path);
 
 /* Ingest a file's chunks into the store.  Only stores chunks not
  * already present (dedup).  Returns the number of NEW chunks stored
- * (0 = fully deduplicated). */
+ * (0 = fully deduplicated), or -1 on invalid ranges or any storage error.
+ * len must fit UINT32_MAX, as in uc2_merkle_build. Invalid ranges are rejected
+ * before writing; after an I/O error, earlier completed chunks remain stored
+ * and counted. Failed new chunk files are removed when possible. Existing
+ * objects must be regular files of the expected length. The caller must keep
+ * the store under its control and serialise writers; this is not a transaction
+ * or a cryptographic integrity check of existing content. */
 int uc2_blockstore_ingest(struct uc2_blockstore *bs,
                           const struct uc2_merkle *tree,
                           const uint8_t *data, size_t len);
 
-/* Check if a chunk exists in the store. */
+/* Return 1 if a regular chunk file exists, 0 if absent or inaccessible. */
 int uc2_blockstore_has(const struct uc2_blockstore *bs, uint64_t hash);
 
 /* Read a chunk from the store into buf (must be large enough).
- * Returns chunk length, or -1 on error. */
+ * buf_size must fit INT_MAX. Returns bytes read, or -1 on open/read/close
+ * error, an invalid buffer size, or a non-regular chunk path. */
 int uc2_blockstore_read(const struct uc2_blockstore *bs,
                         uint64_t hash, uint8_t *buf, size_t buf_size);
 

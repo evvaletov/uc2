@@ -8,6 +8,7 @@ import sys
 import tempfile
 
 uc2, tar = (str(Path(p).resolve()) for p in sys.argv[1:3])
+seekable_only = '--seekable-only' in sys.argv[3:]
 
 
 def sha(path):
@@ -27,11 +28,20 @@ with tempfile.TemporaryDirectory(prefix='uc2-bsdtar-') as temp:
         listed=subprocess.check_output([tar,'-tf',str(archive)]).decode().splitlines()
         for name in ('folder/long filename.txt','empty','root.bin'):
             if name not in listed: raise AssertionError('missing '+name)
-        for pipe in (False,True):
-            out=root/f'out-{level}-{chunked}-{pipe}';out.mkdir()
+        for mode in ('path', 'stdin-file', 'pipe'):
+            out=root/f'out-{level}-{chunked}-{mode}';out.mkdir()
             with archive.open('rb') as inp:
-                subprocess.run([tar,'-xf','-' if pipe else str(archive),'-C',str(out)],
-                               stdin=inp if pipe else None,check=True)
+                result = subprocess.run(
+                    [tar,'-xf',str(archive) if mode == 'path' else '-', '-C',str(out)],
+                    stdin=inp if mode == 'stdin-file' else None,
+                    input=archive.read_bytes() if mode == 'pipe' else None,
+                    capture_output=True)
+            if seekable_only and mode == 'pipe':
+                if result.returncode == 0 or b'seekable input required' not in result.stderr:
+                    raise AssertionError('non-seekable input was not explicitly rejected')
+                if list(out.iterdir()): raise AssertionError('failed pipe input published output')
+                continue
+            result.check_returncode()
             for path in src.rglob('*'):
                 if path.is_file() and sha(path)!=sha(out/path.relative_to(src)):
                     raise AssertionError('restore mismatch')
@@ -40,6 +50,9 @@ with tempfile.TemporaryDirectory(prefix='uc2-bsdtar-') as temp:
         subprocess.run([tar,'-xf',str(archive),'-C',str(single),'folder/long filename.txt'],check=True)
         if sha(src/'folder/long filename.txt') != sha(single/'folder/long filename.txt'):
             raise AssertionError('selective extraction mismatch')
+        # Listing a seekable source must not require an input temporary file.
+        env = dict(os.environ, TMPDIR=str(root/'missing-temp-directory'))
+        subprocess.run([tar,'-tf',str(archive)],check=True,env=env,stdout=subprocess.DEVNULL)
     if sys.platform == 'linux' and not os.environ.get('UC2_SKIP_MEMORY_LIMIT'):
         import resource
         large=src/'large.bin'
@@ -52,4 +65,4 @@ with tempfile.TemporaryDirectory(prefix='uc2-bsdtar-') as temp:
         subprocess.run([tar,'-xf',str(archive),'-C',str(out)],check=True,preexec_fn=limit)
         if sha(large)!=sha(out/'large.bin'): raise AssertionError('large restore mismatch')
         print('128 MiB entry restored under a 96 MiB address-space limit')
-print('Actual bsdtar: listing, supported methods, pipes, directories, empty entries, selective extraction passed')
+print('Actual bsdtar: listing, supported methods, file/stdin/pipe policy, directories, empty entries, selective extraction passed')

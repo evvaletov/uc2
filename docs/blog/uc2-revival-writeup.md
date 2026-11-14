@@ -1,5 +1,8 @@
 # Reviving UltraCompressor II
 
+This article describes the project on 5 November 2026. For current format
+support and tools, see the [README](../../README.md).
+
 UltraCompressor II was a DOS archiver written by Nico de Vries with Danny
 Bezemer in the 1990s. Its shared master dictionaries and stored file versions
 make it an interesting format to preserve. UC2 v3 adds a portable compressor

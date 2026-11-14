@@ -481,9 +481,12 @@ static u8 *put_utf8(u8 *d, u8 *e, enum casechg cc, u8 c)
 
 static void copy_long_name(struct uc2_entry *e, u8 *s, u8 *se)
 {
+	/* An invalid replacement must not retain a prior tag's length.
+	 * The caller restores the DOS name after all tags are consumed. */
+	e->name_len = 0;
 	u8 *d = (u8*)e->name;
 	u8 *de = d + sizeof e->name - 1;
-	do {
+	while (s < se) {
 		u8 c = *s++;
 		if (!c)
 			break;
@@ -492,7 +495,7 @@ static void copy_long_name(struct uc2_entry *e, u8 *s, u8 *se)
 		d = put_utf8(d, de, KeepCase, c);
 		if (!d)
 			return;
-	} while (s < se);
+	}
 	*d = 0;
 	e->name_len = (unsigned short)(d - (u8*)e->name);
 }
@@ -723,7 +726,7 @@ static int decompress_cdir(struct uc2_context *uc2, u32 offset, u16 csum)
 		Prealloc = 0x4000
 	};
 
-	unsigned size = Prealloc;
+	unsigned size = Prealloc, produced = 0;
 	for (;;) {
 		uc2->cdir_buf = u_alloc(uc2, size);
 		if (!uc2->cdir_buf)
@@ -745,11 +748,12 @@ static int decompress_cdir(struct uc2_context *uc2, u32 offset, u16 csum)
 			goto fail;
 		}
 
-		if ((unsigned)ret <= size)
+		produced = wctx.produced;
+		if (produced <= size)
 			break;
 
-		diag("Decompressing Cdir again (size:%u < %d)\n", size, ret);
-		size = ret;
+		diag("Decompressing Cdir again (size:%u < %u)\n", size, produced);
+		size = produced;
 		uc2->cdir_buf = u_free(uc2, uc2->cdir_buf);
 	}
 
@@ -757,7 +761,7 @@ static int decompress_cdir(struct uc2_context *uc2, u32 offset, u16 csum)
 	   allocation.  A damaged cdir that passes the 16-bit checksum by
 	   chance would otherwise be parsed into uninitialised heap between
 	   the real end and the buffer end. */
-	uc2->cdir_range.end = uc2->cdir_buf + (unsigned)ret;
+	uc2->cdir_range.end = uc2->cdir_buf + produced;
 	return 0;
 
 	/* On error, free cdir_buf and leave it NULL so the invariant
@@ -808,9 +812,10 @@ int uc2_read_cdir(struct uc2_context *uc2, struct uc2_entry *e)
 			if (e)
 				return ret;
 
-			ret = uc2_get_tag(uc2, 0, 0, 0, 0); // Skip tags
-			if (ret < 0)
-				return ret;
+			if (ret == UC2_TaggedEntry) {
+				ret = uc2_get_tag(uc2, 0, 0, 0, 0); /* Skip tags. */
+				if (ret < 0) return ret;
+			}
 			break;
 
 		case MasterEntry:;
@@ -1261,16 +1266,23 @@ static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
 		unsigned rlen = (unsigned)(bits_get(&bi, 8) & 0xff) << 8;
 		rlen |= (unsigned)(bits_get(&bi, 8) & 0xff);
 		if (bi.err) break;
+		/* Every rANS block starts with a four-byte state and ends in
+		 * an EOB symbol pair, even when it has no literal payload. */
+		if (rlen < 4 || nsyms < 2) { bi.err = UC2_Damaged; break; }
 
 		u32 freqs[344];
-		for (int i = 0; i < 344; i++)
+		unsigned freq_sum = 0;
+		for (int i = 0; i < 344; i++) {
 			freqs[i] = (u32)(bits_get(&bi, 12) & 0xfff);
+			freq_sum += freqs[i];
+		}
+		if (freq_sum != UC2_RANS_PROB_SCALE) { bi.err = UC2_Damaged; break; }
 		if (bi.err) break;
 
 		struct uc2_rans_table tab;
 		uc2_rans_build_table(&tab, freqs, 344);
 
-		u8 *rdata = u_alloc(uc2, rlen ? rlen : 1);
+		u8 *rdata = u_alloc(uc2, rlen);
 		if (!rdata) { bits_destroy(&bi); u_free(uc2, buf); return UC2_UserFault; }
 		for (unsigned i = 0; i < rlen; i++)
 			rdata[i] = (u8)bits_get(&bi, 8);
@@ -1285,9 +1297,9 @@ static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
 		int ended = 0;
 		for (unsigned s = 0; s < nsyms; s++) {
 			int sym = uc2_rans_decode(&dec);
-            if (used && (sym<0 || sym>=316)) { bi.err=UC2_Damaged; break; }
+            if (sym<0 || sym>=316) { bi.err=UC2_Damaged; break; }
 			if (sym < 256) {
-                if (used && !remaining) { bi.err=UC2_Damaged; break; }
+                if (!remaining) { bi.err=UC2_Damaged; break; }
 				if (remaining) {
 					buf[tail++] = (u8)sym;
 					remaining--;
@@ -1307,18 +1319,17 @@ static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
 				if (dist == EOB) {
                     ended = 1;
                     s++;
-                    if (used && s>=nsyms) { bi.err=UC2_Damaged; break; }
+                    if (s>=nsyms) { bi.err=UC2_Damaged; break; }
                     if (s<nsyms) {
                         int end=uc2_rans_decode(&dec);
-                        if (used && (end<316 || end>=344 || s+1!=nsyms)) bi.err=UC2_Damaged;
+                        if (end<316 || end>=344 || s+1!=nsyms) bi.err=UC2_Damaged;
                     }
                     break;
                 }
 				s++;
-				if (s >= nsyms) { if (used) bi.err=UC2_Damaged; break; }
+				if (s >= nsyms) { bi.err=UC2_Damaged; break; }
 				int ls = uc2_rans_decode(&dec) - 316;
-                if (used && (ls<0 || ls>=28)) { bi.err=UC2_Damaged; break; }
-				if (ls < 0) ls = 0;
+                if (ls<0 || ls>=28) { bi.err=UC2_Damaged; break; }
 				unsigned length = (ls < 8) ? ls + 3 :
 					(ls < 16) ? (ls-8)*2+11+(bits_get(&bi,1) & 0x1) :
 					(ls < 24) ? (ls-16)*8+27+(bits_get(&bi,3) & 0x7) :
@@ -1327,7 +1338,7 @@ static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
 					(ls == 26) ? 667+(bits_get(&bi,11) & 0x7ff) :
 					             2715+(bits_get(&bi,15) & 0x7fff);
 				if (bi.err) break;
-				if (used && length>remaining) { bi.err=UC2_Damaged; break; }
+				if (length>remaining) { bi.err=UC2_Damaged; break; }
 				if (dist > produced) { bi.err = UC2_Damaged; break; }
 				for (unsigned j = 0; j < length && remaining > 0; j++) {
 					buf[tail] = buf[(u16)(tail - dist)];
@@ -1341,7 +1352,7 @@ static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
 				if (bi.err) break;
 			}
 		}
-		if (used && !ended) bi.err=UC2_Damaged;
+		if (!ended) bi.err=UC2_Damaged;
 		u_free(uc2, rdata);
 		if (bi.err) break;
 	}
@@ -1359,7 +1370,9 @@ static int decompressor_rans(struct uc2_context *uc2, unsigned master_id,
 	u_free(uc2, buf);
 	if (csum) *csum = csum_get(&cs);
     if (used) *used=bi.consumed;
-	return limit - remaining;
+	/* Archive extraction reports status; its callback tracks the full
+	 * unsigned size. Raw/cdir callers only request counts <= INT_MAX. */
+	return limit - remaining > INT_MAX ? 0 : (int)(limit - remaining);
 }
 
 #endif /* !UC2_HUFFMAN_ONLY */
@@ -1669,14 +1682,20 @@ static int decompressor_ultra(struct uc2_context *uc2, unsigned master, unsigned
 	dc_init(&ultra->dc);
 	for (;;) {
 		ret = decode_ht(ultra);
-		if (ret < 0 && used) goto ret2;
+		if (ret < 0 && (ret != UC2_Truncated || used))
+			goto ret2;
 		if (ret <= 0) break;
 		for (;;) {
 			int o = decompress_block(ultra);
-			if (o < 0 && used) { ret = o; goto ret2; }
+			if (o < 0 && o != UC2_Truncated) { ret = o; goto ret2; }
 			ret = cbuf_flush(wr, &ultra->cb, &db, dbuf);
 			if (ret < 0)
 				goto ret2;
+			/* Historical blocks can end before the Huffman lookahead is
+			 * full. Retain that EOF convention in archive mode; callers
+			 * check output size/checksum. Structural and callback errors
+			 * still fail, and raw blocks require a complete terminator. */
+			if (o < 0 && used) { ret = o; goto ret2; }
 			if (o != More)
 				break;
 		}
@@ -1685,7 +1704,7 @@ static int decompressor_ultra(struct uc2_context *uc2, unsigned master, unsigned
 	bits_destroy(&ultra->bi);
 	if (csum)
 		*csum = csum_get(&ultra->cb.csum);
-	ret = limit - ultra->cb.limit;
+	ret = limit - ultra->cb.limit > INT_MAX ? 0 : (int)(limit - ultra->cb.limit);
 ret2:
 	u_free(uc2, dbuf);
 ret:

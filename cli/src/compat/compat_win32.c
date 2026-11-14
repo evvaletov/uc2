@@ -84,7 +84,6 @@ void vwarnx(const char* f, va_list a)
 	if (*p)
 		fprintf(stderr, "%s: ", p);
 	if (f) {
-		fprintf(stderr, ": ");
 		vfprintf(stderr, f, a);
 	}
 	fprintf(stderr, "\n");
@@ -252,16 +251,16 @@ wchar_t *compat__wpath(const char *path)
 }
 #endif
 
-#ifdef g_fopen
-FILE *fopen(const char *name, const char *mode)
+FILE *compat__fopen(const char *name, const char *mode)
 {
 	wchar_t wname[MAX_PATH], wmode[16];
-	if (!MultiByteToWideChar(CP_UTF8, 0, name, -1, wname, MAX_PATH)
-	 || !MultiByteToWideChar(CP_UTF8, 0, mode, -1, wmode, MAX_PATH))
+	if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, name, -1, wname, MAX_PATH)
+	 || !MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, mode, -1, wmode, sizeof wmode / sizeof *wmode)) {
+		errno = EINVAL;
 		return 0;
+	}
 	return _wfopen(wname, wmode);
 }
-#endif
 
 #ifdef g_access
 int access(const char *path, int mode)
@@ -318,8 +317,8 @@ int compat__utime(const char *path, struct utimbuf *ut)
 	wchar_t *wpath = compat__wpath(path);
 	if (!wpath)
 		return -1;
-	struct __utimbuf32 wut = {.actime = (long)ut->actime, .modtime = (long)ut->modtime};
-	return _wutime32(wpath, &wut);
+	struct __utimbuf64 wut = {.actime = (__time64_t)ut->actime, .modtime = (__time64_t)ut->modtime};
+	return _wutime64(wpath, &wut);
 }
 #endif
 
@@ -361,13 +360,15 @@ DIR *opendir(const char *path)
 struct dirent *readdir(DIR *d)
 {
 	if (!d) return 0;
-	if (!d->first && !FindNextFileW(d->handle, &d->find))
+	if (!d->first && !FindNextFileW(d->handle, &d->find)) {
+		if (GetLastError() != ERROR_NO_MORE_FILES) errno = EIO;
 		return 0;
+	}
 	d->first = 0;
-	int rc = WideCharToMultiByte(CP_UTF8, 0, d->find.cFileName, -1,
+	int rc = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, d->find.cFileName, -1,
 	                             d->ent.d_name, sizeof d->ent.d_name,
 	                             0, 0);
-	if (rc <= 0) return 0;
+	if (rc <= 0) { errno = EILSEQ; return 0; }
 	return &d->ent;
 }
 

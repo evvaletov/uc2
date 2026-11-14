@@ -30,7 +30,7 @@ static void test_hash64_deterministic(void)
 static void test_build_empty(void)
 {
 	struct uc2_merkle tree;
-	uc2_merkle_build(&tree, NULL, 0, 13);
+	{ int rc = uc2_merkle_build(&tree, NULL, 0, 13); assert(rc == 0); }
 	assert(tree.nchunks == 0);
 	{ uint64_t _r = uc2_merkle_root(&tree); (void)_r; assert(_r == 0); }
 	uc2_merkle_free(&tree);
@@ -40,11 +40,28 @@ static void test_build_small(void)
 {
 	uint8_t data[] = "short";
 	struct uc2_merkle tree;
-	uc2_merkle_build(&tree, data, 5, 13);
+	{ int rc = uc2_merkle_build(&tree, data, 5, 13); assert(rc == 0); }
 	assert(tree.nchunks == 1);
 	assert(tree.chunks[0].offset == 0);
 	assert(tree.chunks[0].length == 5);
-	assert(uc2_merkle_root(&tree) != 0);
+	/* Root from the original concatenated-hash implementation. */
+	assert(uc2_merkle_root(&tree) == UINT64_C(0x53852319310ef7cf));
+	uc2_merkle_free(&tree);
+	assert(tree.root == 0);
+}
+
+static void test_invalid_input(void)
+{
+	struct uc2_merkle tree;
+	int rc = uc2_merkle_build(&tree, NULL, 1, 13);
+	assert(rc == -1);
+	assert(!tree.chunks && !tree.nchunks && !tree.capacity && !tree.root);
+#if SIZE_MAX > UINT32_MAX
+	uint8_t byte = 0;
+	rc = uc2_merkle_build(&tree, &byte, (size_t)UINT32_MAX + 1, 13);
+	assert(rc == -1);
+	assert(!tree.chunks && !tree.nchunks && !tree.capacity && !tree.root);
+#endif
 	uc2_merkle_free(&tree);
 }
 
@@ -55,8 +72,8 @@ static void test_identical_files(void)
 	fill_random(data, len, 0xDEADBEEF);
 
 	struct uc2_merkle t1, t2;
-	uc2_merkle_build(&t1, data, len, 13);
-	uc2_merkle_build(&t2, data, len, 13);
+	{ int rc = uc2_merkle_build(&t1, data, len, 13); assert(rc == 0); }
+	{ int rc = uc2_merkle_build(&t2, data, len, 13); assert(rc == 0); }
 
 	{ uint64_t _r = uc2_merkle_root(&t1); (void)_r; assert(_r == uc2_merkle_root(&t2)); }
 	assert(t1.nchunks == t2.nchunks);
@@ -77,8 +94,8 @@ static void test_different_files(void)
 	fill_random(b, len, 0x22222222);
 
 	struct uc2_merkle ta, tb;
-	uc2_merkle_build(&ta, a, len, 13);
-	uc2_merkle_build(&tb, b, len, 13);
+	{ int rc = uc2_merkle_build(&ta, a, len, 13); assert(rc == 0); }
+	{ int rc = uc2_merkle_build(&tb, b, len, 13); assert(rc == 0); }
 
 	assert(uc2_merkle_root(&ta) != uc2_merkle_root(&tb));
 	int common = uc2_merkle_common(&ta, &tb);
@@ -110,8 +127,8 @@ static void test_partial_overlap(void)
 	fill_random(fb + shared_len, unique_len, 0xBBBBBBBB);
 
 	struct uc2_merkle ta, tb;
-	uc2_merkle_build(&ta, fa, unique_len + shared_len, 13);
-	uc2_merkle_build(&tb, fb, shared_len + unique_len, 13);
+	{ int rc = uc2_merkle_build(&ta, fa, unique_len + shared_len, 13); assert(rc == 0); }
+	{ int rc = uc2_merkle_build(&tb, fb, shared_len + unique_len, 13); assert(rc == 0); }
 
 	int common = uc2_merkle_common(&ta, &tb);
 	double sim = uc2_merkle_similarity(&ta, &tb);
@@ -134,13 +151,13 @@ static void test_root_changes_with_content(void)
 	fill_random(data, len, 0x12345678);
 
 	struct uc2_merkle t1;
-	uc2_merkle_build(&t1, data, len, 13);
+	{ int rc = uc2_merkle_build(&t1, data, len, 13); assert(rc == 0); }
 	uint64_t root1 = uc2_merkle_root(&t1);
 
 	/* Change one byte in the middle */
 	data[len / 2] ^= 0xFF;
 	struct uc2_merkle t2;
-	uc2_merkle_build(&t2, data, len, 13);
+	{ int rc = uc2_merkle_build(&t2, data, len, 13); assert(rc == 0); }
 	uint64_t root2 = uc2_merkle_root(&t2);
 
 	/* Root should change (the affected chunk's hash changes) */
@@ -162,7 +179,11 @@ static void test_covers_all_bytes(void)
 	fill_random(data, len, 0xFEEDFACE);
 
 	struct uc2_merkle tree;
-	uc2_merkle_build(&tree, data, len, 13);
+	{ int rc = uc2_merkle_build(&tree, data, len, 13); assert(rc == 0); }
+	/* Multi-chunk root from the original implementation; order and byte
+	   representation must remain stable when hashing incrementally. */
+	assert(tree.nchunks == 7);
+	assert(tree.root == UINT64_C(0x0aad07ba68e2af34));
 
 	uint32_t total = 0;
 	for (int i = 0; i < tree.nchunks; i++) {
@@ -183,6 +204,7 @@ int main(void)
 	TEST(test_hash64_deterministic);
 	TEST(test_build_empty);
 	TEST(test_build_small);
+	TEST(test_invalid_input);
 	TEST(test_identical_files);
 	TEST(test_different_files);
 	TEST(test_partial_overlap);

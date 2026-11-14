@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <limits.h>
 #include <sys/stat.h>
 #ifdef _MSC_VER
 #include <process.h>
@@ -11,9 +12,11 @@
 #include <direct.h>
 #define getpid _getpid
 #define rmdir _rmdir
+#define create_dir(path) _mkdir(path)
 #else
 #include <unistd.h>
 #include <dirent.h>
+#define create_dir(path) mkdir(path, 0755)
 #endif
 #include <uc2/uc2_blockstore.h>
 #include <uc2/uc2_merkle.h>
@@ -101,7 +104,7 @@ static void test_ingest_single(void)
 	fill_random(data, sizeof data, 0xABCD);
 
 	struct uc2_merkle tree;
-	uc2_merkle_build(&tree, data, sizeof data, 12);
+	{ int rc = uc2_merkle_build(&tree, data, sizeof data, 12); assert(rc == 0); }
 
 	struct uc2_blockstore bs;
 	uc2_blockstore_open(&bs, store_path);
@@ -121,7 +124,7 @@ static void test_dedup_identical(void)
 	fill_random(data, sizeof data, 0x1234);
 
 	struct uc2_merkle tree;
-	uc2_merkle_build(&tree, data, sizeof data, 12);
+	{ int rc = uc2_merkle_build(&tree, data, sizeof data, 12); assert(rc == 0); }
 
 	struct uc2_blockstore bs;
 	uc2_blockstore_open(&bs, store_path);
@@ -144,7 +147,7 @@ static void test_read_back(void)
 	fill_random(data, sizeof data, 0x5678);
 
 	struct uc2_merkle tree;
-	uc2_merkle_build(&tree, data, sizeof data, 12);
+	{ int rc = uc2_merkle_build(&tree, data, sizeof data, 12); assert(rc == 0); }
 
 	struct uc2_blockstore bs;
 	uc2_blockstore_open(&bs, store_path);
@@ -171,7 +174,7 @@ static void test_cross_archive_dedup(void)
 
 	/* Archive 1: [shared] */
 	struct uc2_merkle t1;
-	uc2_merkle_build(&t1, shared, shared_len, 12);
+	{ int rc = uc2_merkle_build(&t1, shared, shared_len, 12); assert(rc == 0); }
 
 	/* Archive 2: [shared + unique(8KB)] */
 	size_t f2_len = shared_len + 8192;
@@ -179,7 +182,7 @@ static void test_cross_archive_dedup(void)
 	memcpy(f2, shared, shared_len);
 	fill_random(f2 + shared_len, 8192, 0xBEEF);
 	struct uc2_merkle t2;
-	uc2_merkle_build(&t2, f2, f2_len, 12);
+	{ int rc = uc2_merkle_build(&t2, f2, f2_len, 12); assert(rc == 0); }
 
 	struct uc2_blockstore bs;
 	uc2_blockstore_open(&bs, store_path);
@@ -209,7 +212,7 @@ static void test_has(void)
 	fill_random(data, sizeof data, 0x9999);
 
 	struct uc2_merkle tree;
-	uc2_merkle_build(&tree, data, sizeof data, 12);
+	{ int rc = uc2_merkle_build(&tree, data, sizeof data, 12); assert(rc == 0); }
 
 	struct uc2_blockstore bs;
 	uc2_blockstore_open(&bs, store_path);
@@ -227,6 +230,86 @@ static void test_has(void)
 
 	uc2_blockstore_close(&bs);
 	uc2_merkle_free(&tree);
+}
+
+static void test_invalid_ranges(void)
+{
+	uint8_t data[64] = {0};
+	struct uc2_chunk chunks[2] = {
+		{uc2_hash64(data, 32), 0, 32},
+		{1, UINT32_MAX, 2}
+	};
+	struct uc2_merkle tree = {chunks, 2, 2, 0};
+	struct uc2_blockstore bs;
+	int rc = uc2_blockstore_open(&bs, store_path);
+	assert(rc == 0);
+	rc = uc2_blockstore_ingest(&bs, &tree, data, sizeof data);
+	assert(rc == -1);
+	assert(bs.nblocks == 0 && bs.total_bytes == 0 && bs.saved_bytes == 0);
+	assert(!uc2_blockstore_has(&bs, chunks[0].hash));
+	chunks[1].offset = 0;
+	chunks[1].length = 0;
+	rc = uc2_blockstore_ingest(&bs, &tree, data, sizeof data);
+	assert(rc == -1);
+	uc2_blockstore_close(&bs);
+}
+
+static void test_bad_storage_paths(void)
+{
+	FILE *file = fopen(store_path, "wb");
+	assert(file);
+	int rc = fclose(file);
+	assert(rc == 0);
+	struct uc2_blockstore bs;
+	rc = uc2_blockstore_open(&bs, store_path);
+	assert(rc == -1 && !bs.path);
+	rc = remove(store_path);
+	assert(rc == 0);
+	rc = uc2_blockstore_open(&bs, store_path);
+	assert(rc == 0);
+	uint8_t data[] = "complete chunk";
+	struct uc2_merkle tree;
+	rc = uc2_merkle_build(&tree, data, sizeof data, 13);
+	assert(rc == 0 && tree.nchunks == 1);
+	uint64_t hash = tree.chunks[0].hash;
+	char prefix[512], path[512];
+	snprintf(prefix, sizeof prefix, "%s/%02x", store_path, (unsigned)(hash >> 56));
+	snprintf(path, sizeof path, "%s/%02x/%016llx", store_path,
+	         (unsigned)(hash >> 56), (unsigned long long)hash);
+	/* A prefix path that is a file must not look like deduplication. */
+	file = fopen(prefix, "wb");
+	assert(file);
+	rc = fclose(file);
+	assert(rc == 0);
+	rc = uc2_blockstore_ingest(&bs, &tree, data, sizeof data);
+	assert(rc == -1);
+	rc = remove(prefix);
+	assert(rc == 0);
+	rc = create_dir(prefix);
+	assert(rc == 0);
+	/* Neither a directory nor a short file is a usable stored chunk. */
+	rc = create_dir(path);
+	assert(rc == 0);
+	rc = uc2_blockstore_ingest(&bs, &tree, data, sizeof data);
+	assert(rc == -1 && !uc2_blockstore_has(&bs, hash));
+	uint8_t out[sizeof data];
+	rc = uc2_blockstore_read(&bs, hash, out, sizeof out);
+	assert(rc == -1);
+	rc = rmdir(path);
+	assert(rc == 0);
+	file = fopen(path, "wb");
+	assert(file);
+	size_t written = fwrite(data, 1, 1, file);
+	assert(written == 1);
+	rc = fclose(file);
+	assert(rc == 0);
+	rc = uc2_blockstore_ingest(&bs, &tree, data, sizeof data);
+	assert(rc == -1);
+	assert(bs.nblocks == 0 && bs.total_bytes == 0 && bs.saved_bytes == 0);
+	rc = uc2_blockstore_read(&bs, hash, out, (size_t)INT_MAX + 1);
+	assert(rc == -1);
+	uc2_merkle_free(&tree);
+	uc2_blockstore_close(&bs);
 }
 
 int main(void)
@@ -248,6 +331,10 @@ int main(void)
 	TEST(test_cross_archive_dedup);
 	rmtree(store_path);
 	TEST(test_has);
+	rmtree(store_path);
+	TEST(test_invalid_ranges);
+	rmtree(store_path);
+	TEST(test_bad_storage_paths);
 	rmtree(store_path);
 
 	printf("%d/%d tests passed\n", tests_passed, tests_run);

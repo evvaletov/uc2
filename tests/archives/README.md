@@ -15,14 +15,14 @@ archives, compare each file hash to its known payload, then reopen both ZIP
 and tar exports and compare their contents. Browser tests use the same
 archives and compare downloaded files with the native reader.
 
-Turbo/method 80 and multi-volume archives remain gaps.
+Additional Turbo/method 80, SAS and UC2SEA fixtures are described below.
 `tests/scripts/create_archives.sh` documents the
 original fixture-generation procedure; regeneration changes archive timestamps
 and requires reviewing and updating the pinned hashes.
 
 ## Historical collections
 
-`historical.json` pins three independently sourced archives from the
+`historical.json` includes three independently sourced archives from the
 [Sembiance format samples](https://sembiance.com/fileFormatSamples/archive/ultraCompressor2/):
 BLKTXT.UC2, MKMSG.UC2 and UC2INFO.UC2. Their 88 entries carry DOS timestamps
 from 1993-1995. Both ZIP and tar migrations passed on November 7, 2026.
@@ -42,7 +42,7 @@ Run the optional network check with an installed UC2 package:
 python tests/scripts/check_historical.py --cache /tmp/uc2-historical
 ```
 
-The five bundled original-encoder archives remain the offline CI corpus.
+The five bundled original-encoder archives form the basic offline CI corpus.
 
 Turbo fixtures `turbo0.uc2` and `turbo1.uc2` are generated format fixtures,
 with SuperMaster and NoMaster respectively. Their original-DOS and independent

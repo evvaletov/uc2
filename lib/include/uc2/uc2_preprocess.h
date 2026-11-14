@@ -33,12 +33,14 @@ int uc2_bcj_revert(uint8_t *data, size_t len);
 
 /* Apply BWT to data.  Allocates *out (caller must free).
  * Sets *primary_index to the BWT primary index (needed for revert).
- * Returns 0 on success. */
+ * Returns 0 on success, -1 on invalid size or allocation failure;
+ * *out is NULL on failure. Length must fit uint32_t and the index array. */
 int uc2_bwt_apply(const uint8_t *data, size_t len,
                   uint8_t **out, uint32_t *primary_index);
 
 /* Revert BWT.  Allocates *out (caller must free).
- * Returns 0 on success. */
+ * Returns 0 on success, -1 on invalid size or allocation failure;
+ * *out is NULL on failure. Length must fit uint32_t and the index array. */
 int uc2_bwt_revert(const uint8_t *data, size_t len,
                    uint32_t primary_index, uint8_t **out);
 

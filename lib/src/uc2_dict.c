@@ -27,7 +27,7 @@ static uint64_t get64(const uint8_t *p) {
 int uc2_dict_create(struct uc2_dict *dict, const uint8_t *data, size_t size)
 {
 	memset(dict, 0, sizeof *dict);
-	if (!data || size == 0) return -1;
+	if (!data || size == 0 || size > UINT32_MAX) return -1;
 	dict->data = malloc(size);
 	if (!dict->data) return -1;
 	memcpy(dict->data, data, size);
@@ -68,7 +68,7 @@ int uc2_dict_deserialize(struct uc2_dict *dict, const uint8_t *buf, size_t len)
 	if (len < HDR_SIZE) return -1;
 	if (get32(buf) != UC2_DICT_MAGIC) return -1;
 	uint32_t size = get32(buf + 16);
-	if (HDR_SIZE + size > len) return -1;
+	if (size > len - HDR_SIZE) return -1;
 	dict->id = get64(buf + 4);
 	dict->checksum = get32(buf + 12);
 	dict->size = size;

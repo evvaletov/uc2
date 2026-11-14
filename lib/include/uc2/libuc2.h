@@ -74,7 +74,8 @@ UC2_API int uc2_finish_cdir(
 );
 
 /* Allowed only after whole cdir has been read.
-   write() should return <0 on error. */
+   write() should return <0 on error. Returns a nonnegative value on
+   success (not necessarily a byte count), or a negative error code. */
 UC2_API int uc2_extract(
 	uc2_handle,
 	struct uc2_xinfo *,
@@ -95,7 +96,8 @@ UC2_API const char *uc2_message(uc2_handle, int ret);
 
 #ifndef UC2_HUFFMAN_ONLY
 /* Compress raw data into a UC2 bitstream (no archive framing).
-   level: 2=Fast, 3=Normal, 4=Tight(default), 5=Ultra.
+   level: 2=Fast, 3=Normal, 4=Tight, 5=Ultra (Huffman);
+   6-9 are the corresponding rANS levels in the full build.
    read() should return bytes read (0 at EOF, <0 on error).
    write() should return <0 on error.
    Returns 0 on success, negative UC2_* error code on failure. */

@@ -57,16 +57,17 @@ struct uc2_ingest_stats {
 	uint64_t bytes_saved;    /* bytes saved by dedup */
 };
 
-/* Ingest len bytes of data into archive_path.  The block store lives
- * at <archive_path>.blocks/.  cdc_bits selects the average chunk
- * size (13 = 8 KiB; 0 picks a sensible default). */
+/* Ingest len bytes into a self-contained v2 container at archive_path.
+ * cdc_bits selects the average chunk size (13 = 8 KiB; 0 picks the default).
+ * Returns 0 on success, -1 on error. */
 int uc2_ingest_write(const char *archive_path,
                      const uint8_t *data, size_t len,
                      int cdc_bits,
                      struct uc2_ingest_stats *stats);
 
 /* Restore the byte stream described by an ingest manifest.  Reads
- * chunks from <archive_path>.blocks/ and writes them in order to out. */
+ * chunks from the embedded v2 pool or legacy v1 <archive_path>.blocks/
+ * sidecar and writes them in order to out. */
 int uc2_ingest_restore(const char *archive_path, FILE *out);
 
 #endif

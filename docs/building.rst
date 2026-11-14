@@ -6,7 +6,10 @@ Requirements
 
 - CMake >= 3.16
 - C99 compiler: GCC, Clang, or MSVC
+- Python 3.11 or newer for the CMake CLI integration tests
 - Optional: DJGPP cross-compiler for DOS builds
+
+The Python package itself supports Python 3.10 or newer.
 
 Linux / macOS
 -------------
@@ -58,8 +61,10 @@ To build a patched bsdtar, first build the UC2 CLI above, then run:
 
 The build directory must be new. The recipe copies the supplied source before
 registering the UC2 reader. It handles directories, long names, masters,
-Huffman/rANS, and pipes. Payloads spool to temporary files; metadata and cached
-masters still consume memory proportional to archive contents.
+Huffman/rANS, and pipes. This full adapter spools decoded entries to temporary
+files and accepts pipes through a bounded input spool. The separate optional
+upstream proposal requires seekable input. Metadata and cached dictionaries
+share a memory budget in both variants.
 
 The separate ``uc2_libarchive`` target and its public-API test are documented in
 ``contrib/libarchive/README.md``. The adapter has a BSD license option, but the

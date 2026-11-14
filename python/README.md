@@ -7,7 +7,12 @@ or compiler is needed when a wheel is available.
 
 This is an alpha release. It supports the implemented legacy Huffman methods,
 master dictionaries, directories, stored versions, and UC2 v3 rANS entries.
-Turbo/method 80 is supported for reading. Multi-volume sets require reassembly. Use `UC2File` for reading and `UC2Writer` for creation.
+Turbo/method 80 and a11 shared-chunk entries are supported for reading.
+Filesystem paths resolve original SAS and DOS UC2SEA sets without executing
+input; keep all parts together. File-like objects require an ordinary UC2
+container. See the
+[volume guide](https://github.com/evvaletov/uc2/blob/main/docs/volumes.md).
+Use `UC2File` for reading and `UC2Writer` for creation.
 
 ## Install and read
 
@@ -147,6 +152,11 @@ concurrent or reentrant use.
 Writer limits and metadata:
 
 - `level=4` by default; 2-5 use legacy Huffman and 6-9 use v3 rANS.
+- `chunked=True` shares payload chunks across partly changed files and stored
+  versions. At every level, these archives require the full 3.0.0a11 or newer
+  reader. For method 11, `UC2Info.compress_size` counts the recipe only;
+  shared payloads are excluded. See the
+  [chunk-sharing guide](https://github.com/evvaletov/uc2/blob/main/docs/chunk-sharing.md).
 - `max_entries=100_000`, configurable from 1 through 1,000,000, includes automatic
   parent directories. `max_total_size=0xFFFFFFFF` bounds all input bytes combined
   and may be reduced. Each file and the completed archive also fit 32 bits.
@@ -167,6 +177,14 @@ After successful close, `writer.stats` reports file, directory and master counts
 and archive size. The C interface is documented in
 [`uc2_writer.h`](https://github.com/evvaletov/uc2/blob/main/lib/include/uc2/uc2_writer.h)
 and the [library guide](https://github.com/evvaletov/uc2/blob/main/docs/library.rst).
+
+## Incremental directory snapshots
+
+`uc2 snapshot` creates directory versions with shared SHA-256-addressed chunks
+and verified restores. Maintenance commands provide explicit `prune`, `repair`
+and `compact`; packed repositories require alpha10 or later. See the
+[snapshot guide](https://github.com/evvaletov/uc2/blob/main/docs/snapshots.md)
+for commands, metadata support and collection limits.
 
 ## Read-only Linux mount
 
@@ -203,17 +221,3 @@ The distribution contains GPL-3.0-or-later and LGPL-3.0-only code. Independently
 written Python integration code also has a BSD-2-Clause option. This does not
 change the licenses of the bundled core or third-party code. License texts,
 credits, and the per-file audit are included in the distribution.
-
-Incremental directory versions are available through `uc2 snapshot` in the
-Python package, with shared SHA-256-addressed UC2 chunks and verified restores.
-See [the snapshot guide](https://github.com/evvaletov/uc2/blob/main/docs/snapshots.md).
-
-Filesystem paths now resolve SAS and DOS UC2SEA sets without executing input.
-Keep all volumes together. Snapshot maintenance adds explicit `prune`, `repair`
-and `compact`; packed repositories require alpha10 or later. See the
-[repository guides](https://github.com/evvaletov/uc2/tree/main/docs).
-
-Optional `UC2Writer(..., chunked=True)` shares payload chunks across partly
-changed files and stored versions. Use the full 3.0.0a11 or newer reader.
-For method 11, `UC2Info.compress_size` counts the recipe only; shared payloads
-are excluded. See the [chunk-sharing guide](../docs/chunk-sharing.md).

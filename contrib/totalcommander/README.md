@@ -1,10 +1,13 @@
 # Total Commander UC2 reader
 
 This WCX plugin lists, tests, and extracts UC2 archives, including custom master
-blocks and UC2 v3 rANS entries. It supports the Unicode WCX API, older ANSI
-entry points, version suffixes, cancellation, and content-based recognition.
+blocks, Turbo/method 80, UC2 v3 rANS and a11 shared chunks. It supports the Unicode
+WCX API, older ANSI entry points, version suffixes, cancellation, and
+content-based recognition.
 Extraction stages each file before replacing its destination. The host controls
 the extraction destination and metadata application. Packing is not supported.
+SAS and UC2SEA volume sets require the CLI or Python path-based reader; see the
+[volume guide](../../docs/volumes.md).
 
 Open `uc2-wcx-<version>.zip` from the
 [release page](https://github.com/evvaletov/uc2/releases) inside Total Commander
