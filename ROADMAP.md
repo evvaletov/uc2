@@ -8,11 +8,14 @@ The [release record](docs/releases/3.0.0a12-qa.md) and
 cover the implementation, validation and remaining limits. SDF mirrors the
 source and release tags.
 
-1. [ ] **Submit the prepared Total Commander and Midnight Commander proposals.**
-   Review the [TC catalogue draft](contrib/totalcommander/CATALOG-DRAFT.md) and
-   [MC patch](contrib/mc/upstream/REVIEW.md), confirm current upstream requirements
-   and the MC DCO acknowledgement, then obtain the first-contact authority
-   recorded in 4b7fbd1. Submission remains pending.
+1. [ ] **Complete the Total Commander and Midnight Commander submissions.**
+   The [TC catalogue enquiry](contrib/totalcommander/CATALOG-DRAFT.md) and
+   [MC proposal](contrib/mc/upstream/REVIEW.md) are authorised and have completed
+   QA, prose and elegance review. TC awaits access to the owner-selected Gmail
+   sender; GitHub rejected MC issue creation with an account restriction.
+   Neither has been sent. Resume submission when access is available, then
+   track maintainer feedback. [Review record](docs/qa/commander-submissions-2026-11-14.md);
+   tracking: 4b7fbd1. A later MC code commit needs the contributor's DCO sign-off.
 2. [ ] **Tune shared-chunk compression and mode selection.** Investigate the
    measured 9.1% public-source regression while preserving edited-binary reuse
    gains, format compatibility and current defaults. Tracking: 3fdd442.

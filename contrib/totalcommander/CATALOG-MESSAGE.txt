@@ -1,0 +1,18 @@
+Hello,
+
+Would you consider listing a read-only UC2 WCX plugin in the Total Commander plugin catalogue? I maintain the cross-platform UltraCompressor II revival.
+
+The plugin lists, tests and extracts original Huffman and Turbo archives, stored file versions and shared dictionaries, plus the revival's rANS and shared-chunk extensions. It runs without a DOS runtime. One installable ZIP contains the 32-bit and 64-bit builds, licence notices and a source reference. It does not pack archives or resolve SAS/UC2SEA volume sets.
+
+Automated tests run Total Commander 11.58.1 itself on native Windows runners in both architectures, open .uc2 through ordinary plugin registration and compare the extracted bytes. The current release is alpha12.
+
+Plugin ZIP: https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.12/uc2-wcx-3.0.0a12.zip
+
+Source and installation: https://github.com/evvaletov/uc2/tree/v3.0.0-alpha.12/contrib/totalcommander
+
+Release notes and SHA256SUMS: https://github.com/evvaletov/uc2/releases/tag/v3.0.0-alpha.12
+
+Please let me know whether this fits the catalogue and which listing details or further checks you would need.
+
+Best regards,
+Eremey Valetov
