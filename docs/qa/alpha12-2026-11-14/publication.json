@@ -1,0 +1,313 @@
+{
+  "source_commit": "8d57501c7b90c919d783007efa88f48631665fbf",
+  "release": "https://github.com/evvaletov/uc2/releases/tag/v3.0.0-alpha.12",
+  "published_at": "2026-11-14T13:14:23Z",
+  "github_downloads": [
+    {
+      "name": "BUILD-INFO.json",
+      "sha256": "24c83f51a63e00b4ef83f37fadb2b9ffb049c32a2b8256d6f91aaebcb240188f",
+      "bytes": 564
+    },
+    {
+      "name": "SHA256SUMS",
+      "sha256": "dbf1430f90d4927d0457764d626125462670a9d1f04ef2b2b2abe86818ed1ef8",
+      "bytes": 3286
+    },
+    {
+      "name": "uc2-3.0.0a12-cp310-cp310-macosx_10_9_x86_64.whl",
+      "sha256": "d88f11394018f8450c0a1e5a0e54776170caf4785aea34640079ac0b9a34aace",
+      "bytes": 229760
+    },
+    {
+      "name": "uc2-3.0.0a12-cp310-cp310-macosx_11_0_arm64.whl",
+      "sha256": "e20df2a2d5ffb8c5f9620e2d209ff5808280de8fc3a099fbaafd296d7ee8d7a1",
+      "bytes": 225371
+    },
+    {
+      "name": "uc2-3.0.0a12-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "sha256": "81db8c87088078c891136bf0b9a1a375253e3553ed18df75fb3be2be63672742",
+      "bytes": 232881
+    },
+    {
+      "name": "uc2-3.0.0a12-cp310-cp310-win_amd64.whl",
+      "sha256": "01a61c0005cf0a50e5dc47698201ae445e654c28736dd80ea38b950c117732f7",
+      "bytes": 409415
+    },
+    {
+      "name": "uc2-3.0.0a12-cp311-cp311-macosx_10_9_x86_64.whl",
+      "sha256": "3a50a709d88908d5962b484c7d2da2bc21a8af13d5674b9ce5b89e94ec95323d",
+      "bytes": 229579
+    },
+    {
+      "name": "uc2-3.0.0a12-cp311-cp311-macosx_11_0_arm64.whl",
+      "sha256": "f177885d7522566c303a945304d2c1a63db9489d8079235f0829e88e7852448b",
+      "bytes": 225192
+    },
+    {
+      "name": "uc2-3.0.0a12-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "sha256": "8c1aa1cfbed441dec6203ab3ecb1d02d688ec0fccb1405010046f7831058e74b",
+      "bytes": 232767
+    },
+    {
+      "name": "uc2-3.0.0a12-cp311-cp311-win_amd64.whl",
+      "sha256": "5759795ae0851b5efca5463b0aebfc8536987dd5b720e0e903a0c37858c843e9",
+      "bytes": 409246
+    },
+    {
+      "name": "uc2-3.0.0a12-cp312-cp312-macosx_10_13_x86_64.whl",
+      "sha256": "9428f5168de1685349cc2929091bce5fd9640a145882496760ceccb7c339f73e",
+      "bytes": 229874
+    },
+    {
+      "name": "uc2-3.0.0a12-cp312-cp312-macosx_11_0_arm64.whl",
+      "sha256": "b52a5c5a301307a3a5e7ef3de73ab68bf8933e97d6072fc4b3bba1838fcb6dd8",
+      "bytes": 225269
+    },
+    {
+      "name": "uc2-3.0.0a12-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "sha256": "26dff4bd941588c3e9dc46d773eb909dfc579d0c76c07d93389a7fe17a555482",
+      "bytes": 232824
+    },
+    {
+      "name": "uc2-3.0.0a12-cp312-cp312-win_amd64.whl",
+      "sha256": "1b9f89751401b0f34e2ec2446b39d730b0432ddb99ea988aa1d74f528923f814",
+      "bytes": 409317
+    },
+    {
+      "name": "uc2-3.0.0a12-cp313-cp313-macosx_10_13_x86_64.whl",
+      "sha256": "1c8d99b9baafe5849c3c7d35ceb359f4c3500c791c31a4a007bfd05df534fa73",
+      "bytes": 229863
+    },
+    {
+      "name": "uc2-3.0.0a12-cp313-cp313-macosx_11_0_arm64.whl",
+      "sha256": "f2d47d134cf2fa1a1582271a447c7916a718135746501354a857d8d1027246a5",
+      "bytes": 225266
+    },
+    {
+      "name": "uc2-3.0.0a12-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "sha256": "b7911853ce3a2390d4dee8f38c5022e617e81b29b1f12e1a0537e344cde3ca2c",
+      "bytes": 232829
+    },
+    {
+      "name": "uc2-3.0.0a12-cp313-cp313-win_amd64.whl",
+      "sha256": "c765bf679fa16d625ca8c223e51de33c6cbf9da7c9ec735eab72445eec77ac5b",
+      "bytes": 409313
+    },
+    {
+      "name": "uc2-3.0.0a12-cp314-cp314-macosx_10_15_x86_64.whl",
+      "sha256": "53965598814f422db1d2ae30ef3c89922f5aee0e59af77619a65b482af3c2e54",
+      "bytes": 230124
+    },
+    {
+      "name": "uc2-3.0.0a12-cp314-cp314-macosx_11_0_arm64.whl",
+      "sha256": "7a01a7c9bcd2b20cd7aebc780d42a37c1b93b816db4e8c7e743f9c0a6c10362b",
+      "bytes": 225276
+    },
+    {
+      "name": "uc2-3.0.0a12-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "sha256": "1838aa48cc32d5539f663a712ccef24a98384f8ce7aef362bf15cf8721188c3b",
+      "bytes": 232833
+    },
+    {
+      "name": "uc2-3.0.0a12-cp314-cp314-win_amd64.whl",
+      "sha256": "0a7ded6045f0652d50528a7955a32a8789716d68ccbae44b36f0fdd716fd347f",
+      "bytes": 417880
+    },
+    {
+      "name": "uc2-3.0.0a12-linux-x86_64.tar.gz",
+      "sha256": "72ff2fcd16f9d33415be109e87b2c6da4b4fcca64f08570d24cab4e03ca25d89",
+      "bytes": 124039
+    },
+    {
+      "name": "uc2-3.0.0a12-macos-arm64.tar.gz",
+      "sha256": "21416634b04b135feb5e7ff0afa3950c8a6a2fa4c96c4003e06786cb9ab9e00d",
+      "bytes": 121132
+    },
+    {
+      "name": "uc2-3.0.0a12-macos-x86_64.tar.gz",
+      "sha256": "a9ba301e2be130a5797f9c8e6362ab0f72e27aa50ad24b525654c6f09685a5e5",
+      "bytes": 123933
+    },
+    {
+      "name": "uc2-3.0.0a12-windows-x86_64.zip",
+      "sha256": "299887f616cde5e10cdf44d7c4fccf0f69991ecfda27048fb2a240a2839f5f57",
+      "bytes": 225081
+    },
+    {
+      "name": "uc2-3.0.0a12.tar.gz",
+      "sha256": "aaa45df8d2791dd6436d6b92b6b696d2768a639fc41f6d75dc081fd330b22972",
+      "bytes": 962324
+    },
+    {
+      "name": "uc2-browser-3.0.0a12.zip",
+      "sha256": "af46de23f4d1e76aa9f383ba864a4ecec0075a9d0e63f5771b56aaf6dd34863b",
+      "bytes": 121685
+    },
+    {
+      "name": "uc2-libarchive-review-3.0.0a12.tar.gz",
+      "sha256": "335f7870f12813c54804feccca3d17874c0c95d83aafea58cb3f90a4b98651d4",
+      "bytes": 74348
+    },
+    {
+      "name": "uc2-mc-3.0.0a12.tar.gz",
+      "sha256": "267c33460cd707f6c69eccd8237646a13d7a35d7b4a90e5acc6e8a38e1ea470a",
+      "bytes": 26636
+    },
+    {
+      "name": "uc2-wcx-3.0.0a12.zip",
+      "sha256": "187edd950d2afc411496268f96c380c7fc59ec1ab120d270c8ff71566ab1f554",
+      "bytes": 271782
+    }
+  ],
+  "pypi_url": "https://pypi.org/project/uc2/3.0.0a12/",
+  "pypi_distributions": [
+    {
+      "filename": "uc2-3.0.0a12-cp310-cp310-macosx_10_9_x86_64.whl",
+      "sha256": "d88f11394018f8450c0a1e5a0e54776170caf4785aea34640079ac0b9a34aace"
+    },
+    {
+      "filename": "uc2-3.0.0a12-cp310-cp310-macosx_11_0_arm64.whl",
+      "sha256": "e20df2a2d5ffb8c5f9620e2d209ff5808280de8fc3a099fbaafd296d7ee8d7a1"
+    },
+    {
+      "filename": "uc2-3.0.0a12-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "sha256": "81db8c87088078c891136bf0b9a1a375253e3553ed18df75fb3be2be63672742"
+    },
+    {
+      "filename": "uc2-3.0.0a12-cp310-cp310-win_amd64.whl",
+      "sha256": "01a61c0005cf0a50e5dc47698201ae445e654c28736dd80ea38b950c117732f7"
+    },
+    {
+      "filename": "uc2-3.0.0a12-cp311-cp311-macosx_10_9_x86_64.whl",
+      "sha256": "3a50a709d88908d5962b484c7d2da2bc21a8af13d5674b9ce5b89e94ec95323d"
+    },
+    {
+      "filename": "uc2-3.0.0a12-cp311-cp311-macosx_11_0_arm64.whl",
+      "sha256": "f177885d7522566c303a945304d2c1a63db9489d8079235f0829e88e7852448b"
+    },
+    {
+      "filename": "uc2-3.0.0a12-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "sha256": "8c1aa1cfbed441dec6203ab3ecb1d02d688ec0fccb1405010046f7831058e74b"
+    },
+    {
+      "filename": "uc2-3.0.0a12-cp311-cp311-win_amd64.whl",
+      "sha256": "5759795ae0851b5efca5463b0aebfc8536987dd5b720e0e903a0c37858c843e9"
+    },
+    {
+      "filename": "uc2-3.0.0a12-cp312-cp312-macosx_10_13_x86_64.whl",
+      "sha256": "9428f5168de1685349cc2929091bce5fd9640a145882496760ceccb7c339f73e"
+    },
+    {
+      "filename": "uc2-3.0.0a12-cp312-cp312-macosx_11_0_arm64.whl",
+      "sha256": "b52a5c5a301307a3a5e7ef3de73ab68bf8933e97d6072fc4b3bba1838fcb6dd8"
+    },
+    {
+      "filename": "uc2-3.0.0a12-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "sha256": "26dff4bd941588c3e9dc46d773eb909dfc579d0c76c07d93389a7fe17a555482"
+    },
+    {
+      "filename": "uc2-3.0.0a12-cp312-cp312-win_amd64.whl",
+      "sha256": "1b9f89751401b0f34e2ec2446b39d730b0432ddb99ea988aa1d74f528923f814"
+    },
+    {
+      "filename": "uc2-3.0.0a12-cp313-cp313-macosx_10_13_x86_64.whl",
+      "sha256": "1c8d99b9baafe5849c3c7d35ceb359f4c3500c791c31a4a007bfd05df534fa73"
+    },
+    {
+      "filename": "uc2-3.0.0a12-cp313-cp313-macosx_11_0_arm64.whl",
+      "sha256": "f2d47d134cf2fa1a1582271a447c7916a718135746501354a857d8d1027246a5"
+    },
+    {
+      "filename": "uc2-3.0.0a12-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "sha256": "b7911853ce3a2390d4dee8f38c5022e617e81b29b1f12e1a0537e344cde3ca2c"
+    },
+    {
+      "filename": "uc2-3.0.0a12-cp313-cp313-win_amd64.whl",
+      "sha256": "c765bf679fa16d625ca8c223e51de33c6cbf9da7c9ec735eab72445eec77ac5b"
+    },
+    {
+      "filename": "uc2-3.0.0a12-cp314-cp314-macosx_10_15_x86_64.whl",
+      "sha256": "53965598814f422db1d2ae30ef3c89922f5aee0e59af77619a65b482af3c2e54"
+    },
+    {
+      "filename": "uc2-3.0.0a12-cp314-cp314-macosx_11_0_arm64.whl",
+      "sha256": "7a01a7c9bcd2b20cd7aebc780d42a37c1b93b816db4e8c7e743f9c0a6c10362b"
+    },
+    {
+      "filename": "uc2-3.0.0a12-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "sha256": "1838aa48cc32d5539f663a712ccef24a98384f8ce7aef362bf15cf8721188c3b"
+    },
+    {
+      "filename": "uc2-3.0.0a12-cp314-cp314-win_amd64.whl",
+      "sha256": "0a7ded6045f0652d50528a7955a32a8789716d68ccbae44b36f0fdd716fd347f"
+    },
+    {
+      "filename": "uc2-3.0.0a12.tar.gz",
+      "sha256": "aaa45df8d2791dd6436d6b92b6b696d2768a639fc41f6d75dc081fd330b22972"
+    }
+  ],
+  "fresh_install": {
+    "version": "3.0.0a12",
+    "path": "/tmp/uc2-alpha12-20261114/public-verification/venv/lib64/python3.12/site-packages/uc2/__init__.py"
+  },
+  "downloaded_linux_cli_metadata_regression": "PASS; all 100,000 rows and mixed/duplicate-ID/CP850/version/missing-parent fixtures",
+  "snapshot_smoke": "PASS; create/verify/restore/migrate/edit/shared-corruption/repair/both-version-verifies/prune/vacuum/final-restore",
+  "snapshot_smoke_restores": [
+    {
+      "format": 1,
+      "bytes_paths_mtime_mode_equal": true
+    },
+    {
+      "format": 2,
+      "bytes_paths_mtime_mode_equal": true
+    },
+    {
+      "format": 2,
+      "after_maintenance": true,
+      "bytes_paths_mtime_mode_equal": true
+    }
+  ],
+  "ci": [
+    {
+      "conclusion": "success",
+      "databaseId": 43596167034,
+      "headSha": "8d57501c7b90c919d783007efa88f48631665fbf",
+      "status": "completed",
+      "url": "https://github.com/evvaletov/uc2/actions/runs/43596167034",
+      "workflowName": "Integration releases"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 43596167161,
+      "headSha": "8d57501c7b90c919d783007efa88f48631665fbf",
+      "status": "completed",
+      "url": "https://github.com/evvaletov/uc2/actions/runs/43596167161",
+      "workflowName": "Docs"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 43596167104,
+      "headSha": "8d57501c7b90c919d783007efa88f48631665fbf",
+      "status": "completed",
+      "url": "https://github.com/evvaletov/uc2/actions/runs/43596167104",
+      "workflowName": "Distributions"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 43596167002,
+      "headSha": "8d57501c7b90c919d783007efa88f48631665fbf",
+      "status": "completed",
+      "url": "https://github.com/evvaletov/uc2/actions/runs/43596167002",
+      "workflowName": "Build"
+    }
+  ],
+  "sdf": {
+    "repository": "https://git.sdf.org/evv/uc2",
+    "source_tag": "https://git.sdf.org/evv/uc2/src/tag/v3.0.0-alpha.12",
+    "tag_object": "c2b7588ce11d540d6f35d333d4659c86e1c8a4a0",
+    "tag_peeled_commit": "8d57501c7b90c919d783007efa88f48631665fbf",
+    "main_at_release_publication": "8d57501c7b90c919d783007efa88f48631665fbf",
+    "verification": "git ls-remote over owner SSH; both main and annotated tag matched; missing older release tags synchronised",
+    "binary_assets": "Hosted on GitHub; Python distributions on PyPI; SDF is a source/tag/git-bug mirror."
+  }
+}

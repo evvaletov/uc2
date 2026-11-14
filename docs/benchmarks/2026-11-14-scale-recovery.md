@@ -1,7 +1,7 @@
 # Collection scale and recovery, 14 November 2026
 
-These Linux measurements cover CLI metadata, snapshot limits and recovery. It uses
-synthetic inputs and records each workload separately. It does not measure
+These Linux measurements cover CLI metadata, snapshot limits and recovery. Each
+workload uses synthetic inputs and is recorded separately. The tests do not measure
 power-loss recovery or establish performance on other machines.
 
 ## CLI metadata
@@ -99,6 +99,15 @@ bytes. See [the full result](2026-11-14-scale-recovery/snapshot-scale.json).
 | restore after repair prune and vacuum | 31.45 | 158.6 |
 | list retained history | 0.23 | 158.3 |
 
+A second complete run used the final reviewed harness from release commit
+`8d57501`. It explicitly proved that both versions referenced the damaged chunk,
+checked both exact corruption errors, required one replacement and verified both
+original snapshot IDs before pruning. All three independent restore inventories
+matched again. Peak worker RSS was 302.5 MiB, within the 2 GiB address-space cap.
+The table above records the first completed run; the
+[second run and source hashes](2026-11-14-scale-recovery/snapshot-scale-final.json)
+are retained separately.
+
 Loose repository files occupied 1,143,712,582 logical bytes before packing; the
 first packed database was 1,214,087,168 bytes. Packing reduced the file count,
 but SQLite page overhead outweighed the saved manifest bytes in this corpus.
@@ -156,6 +165,7 @@ for the executed process and space failures; hardware power loss, filesystem
 damage and general SQLite salvage require separate evidence and backups.
 
 All nine named SIGKILL checkpoints and all five disk-full cases recovered.
-The tests check committed snapshot IDs as well as decoded contents. Receipts:
+The final harness reruns check the exact expected committed snapshot IDs and
+verify every retained ID after each retry, including failed compaction. Receipts:
 [process kills](2026-11-14-scale-recovery/process-kill.json),
 [disk full](2026-11-14-scale-recovery/disk-full.json).

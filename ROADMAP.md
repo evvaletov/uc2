@@ -28,6 +28,7 @@ source and release tags.
    Use the measured boundaries to decide on repository partitioning or a larger
    packed format. Keep v1/v2 compatibility and verified publication; assess
    read-only/concurrent readers separately from the current exclusive lock.
+   Tracking: 179a8de; the scale/recovery validation in a3bcfb4 is complete.
 
 ### Distribution and visibility TODOs (14 November 2026)
 
@@ -35,10 +36,10 @@ Tracking: `655345a`; SDF mirror work also relates to `176dc48`. Public package
 submissions, mailing-list messages and announcements remain pending. The TC/MC
 proposals above remain a separate task.
 
-- [ ] Reconcile the current alpha release across GitHub assets, PyPI metadata,
-  installation commands and the release record before outreach. Preserve the
-  active alpha12 release work; existing binary and Python distribution is a
-  foundation to extend, not a source-only installation problem.
+- [x] Publish alpha12 with matching GitHub assets, PyPI distributions, SDF source
+  and release tags. All 31 public GitHub downloads and 21 PyPI distribution hashes
+  match; a fresh PyPI installation and downloaded Linux CLI passed verification.
+  [Publication receipt](docs/qa/alpha12-2026-11-14/publication.json).
 - [ ] Prepare and validate a FreeDOS ZIP/LSM package, current official repository/
   ibiblio submission requirements and FDIMPLES/FDNPKG installation; draft the
   relevant freedos-devel/freedos-user notices. Confirm the third-party route and
@@ -94,6 +95,7 @@ Route references: [Homebrew taps](https://docs.brew.sh/How-to-Create-and-Maintai
   plus a multi-GiB create/restore/maintenance workload. The existing limits and
   explicit manual lock-recovery policy remain in force.
 - Evidence: [alpha12 release record](docs/releases/3.0.0a12-qa.md),
+  [final reviews and publication](docs/qa/alpha12-2026-11-14.md),
   [measurements and recovery](docs/benchmarks/2026-11-14-scale-recovery.md).
 
 ### Completed in the 13 November audit

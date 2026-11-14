@@ -1,8 +1,9 @@
 {
-  "source_revision": "97e355c5f3be0e53627b9bd611c58559c7125700",
+  "release_commit": "8d57501c7b90c919d783007efa88f48631665fbf",
   "snapshot_sha256": "13ea9bddf6424dd585182250095518bfee33e67078b2818598b87f06efa38b6c",
-  "harness_sha256": "d7f8baca0a9d300758aff0250c47cf36359346cb0b36dd94dc66284afc24b502",
+  "harness_sha256": "94db0fd3c689a47a6ddfde5fa95a8aaf8266a6bd1c28363dc8308715b4787c15",
   "platform": "Linux x86_64",
+  "final_postcondition": "After every retry, exact expected committed IDs and verify every final ID.",
   "cases": [
     {
       "case": "create-v1",
@@ -30,5 +31,5 @@
       "recovered": true
     }
   ],
-  "method": "real ENOSPC and SQLite SQLITE_FULL in a private 32 MiB tmpfs mount inside unshare -Urnm"
+  "method": "Actual ENOSPC and SQLite SQLITE_FULL in a dedicated 32 MiB tmpfs inside a private unshare -Urnm mount namespace"
 }

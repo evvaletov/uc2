@@ -1,0 +1,273 @@
+{
+  "corpus": {
+    "unique_mib": 1024,
+    "repeated_file_mib": 2304,
+    "repeated_block_bytes": 262144,
+    "seed": 20261114
+  },
+  "phases": [
+    {
+      "operation": "create",
+      "seconds": 342.4365236200392,
+      "peak_rss_bytes": 158257152,
+      "result": {
+        "snapshot": "85b481f9558da8f90355c610c03663937cb0dc331c755868941484e54b2a3bfe",
+        "files": 3,
+        "total_size": 3489660942,
+        "new_chunks": 101250,
+        "new_chunk_bytes": 1117664980,
+        "manifest_bytes": 26047490,
+        "new_manifest_bytes": 26047490,
+        "growth_bytes": 1143712470
+      },
+      "label": "create loose v1"
+    },
+    {
+      "operation": "verify",
+      "seconds": 35.682224654592574,
+      "peak_rss_bytes": 164929536,
+      "result": {
+        "snapshot": "85b481f9558da8f90355c610c03663937cb0dc331c755868941484e54b2a3bfe",
+        "verified_files": 3,
+        "total_size": 3489660942
+      },
+      "label": "verify loose v1"
+    },
+    {
+      "operation": "restore",
+      "seconds": 37.56873172800988,
+      "peak_rss_bytes": 165158912,
+      "result": {
+        "snapshot": "85b481f9558da8f90355c610c03663937cb0dc331c755868941484e54b2a3bfe",
+        "restored_files": 3,
+        "total_size": 3489660942
+      },
+      "label": "restore loose v1"
+    },
+    {
+      "operation": "compact",
+      "seconds": 79.09998920559883,
+      "peak_rss_bytes": 165281792,
+      "result": {
+        "format_version": 2,
+        "snapshots": 1,
+        "removed_loose_files": 101251,
+        "database_bytes": 1214087168
+      },
+      "label": "compact v1 to v2"
+    },
+    {
+      "operation": "create",
+      "seconds": 34.743501831777394,
+      "peak_rss_bytes": 164552704,
+      "result": {
+        "snapshot": "619a9043c5acc17513da19959d28dd3e60ec1f98a8d6d0c2d08b4afe05718511",
+        "files": 4,
+        "total_size": 3489660997,
+        "new_chunks": 96,
+        "new_chunk_bytes": 1108906,
+        "manifest_bytes": 26047072,
+        "new_manifest_bytes": 4350432,
+        "growth_bytes": 5459338
+      },
+      "label": "create edited packed v2"
+    },
+    {
+      "operation": "restore",
+      "seconds": 33.05993225611746,
+      "peak_rss_bytes": 165646336,
+      "result": {
+        "snapshot": "619a9043c5acc17513da19959d28dd3e60ec1f98a8d6d0c2d08b4afe05718511",
+        "restored_files": 4,
+        "total_size": 3489660997
+      },
+      "label": "restore edited packed v2"
+    },
+    {
+      "operation": "verify",
+      "seconds": 0.3102619117125869,
+      "peak_rss_bytes": 165957632,
+      "result": {
+        "error": "BadArchiveError",
+        "message": "Truncated"
+      },
+      "label": "corruption detection first"
+    },
+    {
+      "operation": "verify",
+      "seconds": 0.315993906930089,
+      "peak_rss_bytes": 165969920,
+      "result": {
+        "error": "BadArchiveError",
+        "message": "Truncated"
+      },
+      "label": "corruption detection second"
+    },
+    {
+      "operation": "repair",
+      "seconds": 175.69785950984806,
+      "peak_rss_bytes": 317214720,
+      "result": {
+        "snapshots": [
+          "619a9043c5acc17513da19959d28dd3e60ec1f98a8d6d0c2d08b4afe05718511",
+          "85b481f9558da8f90355c610c03663937cb0dc331c755868941484e54b2a3bfe"
+        ],
+        "repaired_chunks": 1,
+        "repaired_manifests": 0
+      },
+      "label": "repair from packed replica"
+    },
+    {
+      "operation": "verify",
+      "seconds": 30.580048851668835,
+      "peak_rss_bytes": 165654528,
+      "result": {
+        "snapshot": "85b481f9558da8f90355c610c03663937cb0dc331c755868941484e54b2a3bfe",
+        "verified_files": 3,
+        "total_size": 3489660942
+      },
+      "label": "verify repaired first"
+    },
+    {
+      "operation": "verify",
+      "seconds": 30.45602908730507,
+      "peak_rss_bytes": 165597184,
+      "result": {
+        "snapshot": "619a9043c5acc17513da19959d28dd3e60ec1f98a8d6d0c2d08b4afe05718511",
+        "verified_files": 4,
+        "total_size": 3489660997
+      },
+      "label": "verify repaired latest"
+    },
+    {
+      "operation": "prune",
+      "seconds": 62.029852544888854,
+      "peak_rss_bytes": 258420736,
+      "result": {
+        "applied": true,
+        "retained_snapshots": [
+          "619a9043c5acc17513da19959d28dd3e60ec1f98a8d6d0c2d08b4afe05718511"
+        ],
+        "removed_snapshots": [
+          "85b481f9558da8f90355c610c03663937cb0dc331c755868941484e54b2a3bfe"
+        ],
+        "unreachable_chunks": 104,
+        "unreachable_chunk_bytes": 1111784
+      },
+      "label": "prune old history"
+    },
+    {
+      "operation": "compact",
+      "seconds": 36.797865186817944,
+      "peak_rss_bytes": 165785600,
+      "result": {
+        "format_version": 2,
+        "snapshots": 1,
+        "removed_loose_files": 0,
+        "database_bytes": 1213136896
+      },
+      "label": "vacuum packed repository"
+    },
+    {
+      "operation": "restore",
+      "seconds": 33.69808867853135,
+      "peak_rss_bytes": 165924864,
+      "result": {
+        "snapshot": "619a9043c5acc17513da19959d28dd3e60ec1f98a8d6d0c2d08b4afe05718511",
+        "restored_files": 4,
+        "total_size": 3489660997
+      },
+      "label": "restore after repair prune and vacuum"
+    },
+    {
+      "operation": "snapshots",
+      "seconds": 0.340221737511456,
+      "peak_rss_bytes": 166608896,
+      "result": [
+        {
+          "snapshot": "619a9043c5acc17513da19959d28dd3e60ec1f98a8d6d0c2d08b4afe05718511",
+          "created": "2026-11-14T12:43:55.343146+00:00",
+          "label": "large second",
+          "total_size": 3489660997
+        }
+      ],
+      "label": "list retained history"
+    }
+  ],
+  "restores": [
+    {
+      "format": 1,
+      "bytes_paths_mtime_mode_equal": true
+    },
+    {
+      "format": 2,
+      "bytes_paths_mtime_mode_equal": true
+    },
+    {
+      "format": 2,
+      "after_maintenance": true,
+      "bytes_paths_mtime_mode_equal": true
+    }
+  ],
+  "complete": true,
+  "notes": "One Linux run. Each operation uses a fresh process with a 2 GiB address-space cap. VmHWM measures resident memory in that process. Timings include verification performed by the API. Data is synthetic; repeats are disclosed.",
+  "first": {
+    "snapshot": "85b481f9558da8f90355c610c03663937cb0dc331c755868941484e54b2a3bfe",
+    "files": 3,
+    "total_size": 3489660942,
+    "new_chunks": 101250,
+    "new_chunk_bytes": 1117664980,
+    "manifest_bytes": 26047490,
+    "new_manifest_bytes": 26047490,
+    "growth_bytes": 1143712470
+  },
+  "loose_storage": {
+    "bytes": 1143712582,
+    "allocated_file_bytes": 1346727936,
+    "files": 101252
+  },
+  "packed_storage": {
+    "bytes": 1214087287,
+    "allocated_file_bytes": 1214091264,
+    "files": 2
+  },
+  "second": {
+    "snapshot": "619a9043c5acc17513da19959d28dd3e60ec1f98a8d6d0c2d08b4afe05718511",
+    "files": 4,
+    "total_size": 3489660997,
+    "new_chunks": 96,
+    "new_chunk_bytes": 1108906,
+    "manifest_bytes": 26047072,
+    "new_manifest_bytes": 4350432,
+    "growth_bytes": 5459338
+  },
+  "corruption_detected": true,
+  "retained": [
+    {
+      "snapshot": "619a9043c5acc17513da19959d28dd3e60ec1f98a8d6d0c2d08b4afe05718511",
+      "created": "2026-11-14T12:43:55.343146+00:00",
+      "label": "large second",
+      "total_size": 3489660997
+    }
+  ],
+  "final_storage": {
+    "bytes": 1213137015,
+    "allocated_file_bytes": 1213140992,
+    "files": 2
+  },
+  "provenance": {
+    "release_commit": "8d57501c7b90c919d783007efa88f48631665fbf",
+    "harness_sha256": "f65cdc61d89168b0f2a7c9e1c744e9cce13f55406162e2fd6c950c42b525e558",
+    "snapshot_sha256": "13ea9bddf6424dd585182250095518bfee33e67078b2818598b87f06efa38b6c",
+    "host": "starfield01",
+    "cpu": "AMD Ryzen 9 7950X",
+    "logical_cpus": 32,
+    "memory_gib": 124,
+    "filesystem": "XFS",
+    "python": "3.12.13",
+    "worker_address_space_limit_bytes": 2147483648,
+    "measurement": "VmHWM from /proc/self/status; each operation in a fresh process",
+    "package": "uc2 3.0.0a12 wheel built from the release source",
+    "purpose": "Second full run, with the final reviewed harness: shared corruption target, exact corruption errors, one repair, both original IDs explicitly verified before prune."
+  }
+}

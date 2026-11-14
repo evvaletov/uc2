@@ -1,0 +1,446 @@
+{
+  "release_commit": "8d57501c7b90c919d783007efa88f48631665fbf",
+  "skills": [
+    "task-qa",
+    "task-elegance"
+  ],
+  "models": {
+    "astra": {
+      "model": "gpt-6-astra",
+      "effort": "high",
+      "transport": "local codex exec, ephemeral read-only session"
+    },
+    "grok": {
+      "model": "grok-4.7-build-fast",
+      "effort": "medium in rounds1-5, low in round6",
+      "transport": "local grok-lean; no subagents; web disabled; read_file only"
+    },
+    "kimi": {
+      "model": "kimi-k3",
+      "effort": "low",
+      "transport": "kimi-review on starfield02; 12000 completion token budget after the incomplete round2 attempt"
+    }
+  },
+  "scope": {
+    "production": "CLI directory/name indexes and deferred stored-version counts, ownership/bounds/order compatibility; unchanged snapshot implementation supplied as context.",
+    "harnesses": "Five opt-in/regression scripts for CLI metadata, timings, snapshot scale/default limits and interruption/disk-full recovery.",
+    "independence": "Fresh single-seat calls; frozen complete permitted source bundles; no other reviewer outputs. Source inspection, not independent test execution.",
+    "limitations": "Bounded correctness and consequential-complexity review; no claim of optimal architecture, untested platforms, power-loss durability or a 1TiB successful boundary."
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "source_hashes": {
+        "cli/src/main.c": "dc132891f1e21742287bb25707cffc756f432e4d1b2fec3832d0056a6e39288f",
+        "lib/src/list.h": "6a66f1359db526cfb9a8b00785747fdb9df19c19bc41c967479ffb1757b9b498",
+        "lib/include/uc2/libuc2.h": "0b31b8be5583b96846a717342fa42ba9e2372f4ada2a85b262d10ab8b6d08f5b",
+        "tests/scripts/check_cli_metadata.py": "4bb7a4f94be823565256158e4bc93e95515fc900a686695854534e186c7859e5",
+        "tests/scripts/benchmark_snapshot_scale.py": "a2aeb004a23e5d598f5c14127dedc50e239f309e1af27e990a75f04e46cbccd7",
+        "tests/scripts/check_snapshot_recovery.py": "3474fb9b5abd42d9e2bd8faced72142bda2bc764e4a3ada7f6c5aa0af0f26d99",
+        "python/uc2/snapshot.py": "13ea9bddf6424dd585182250095518bfee33e67078b2818598b87f06efa38b6c"
+      },
+      "reviewers": {
+        "astra": {
+          "status": {
+            "seat": "astra",
+            "exit_code": 0,
+            "seconds": 106.9,
+            "prompt_sha256": "117481510e06ca90cc393d1d535b6cd231deb2770df69866383d5455f17f895f"
+          },
+          "review": "Completed static review of the entire frozen bundle. Scope: alpha12 metadata ingestion/finalization, CLI regression, both validation harnesses, and supplied context. No tests, other paths, web, skills, delegation, or edits. Reported benchmark results were not independently verified.\n\n**BLOCKING**\n\n- `tests/scripts/check_snapshot_recovery.py:194\u2013209` \u2014 Disk-fill safety checks disappear under `python -O` or `PYTHONOPTIMIZE`. With an ordinary work directory, the harness can then allocate almost all available space on the host filesystem. **Fix:** replace the mount, emptiness, and capacity assertions with unconditional checks that raise before creating fixtures or allocating the filler. Keep filler allocation inside its cleanup `try/finally`.\n\n**SUBSTANTIVE**\n\n- `tests/scripts/check_snapshot_recovery.py:78\u201380` \u2014 The SQLite kill hook cannot identify its target connection. `snapshot.py:172` passes a URI such as `file:///\u2026/repo/objects.sqlite3?mode=rw`; `Path(path).parent` does not equal the filesystem path `repo`. Consequently, `self.target` remains false, so `prune-v2` and `repair-v2` commit without reaching `stop()`. The normal harness fails waiting for `READY` and does not exercise these rollback boundaries. **Fix:** compare against the expected SQLite URI or properly decode the URI before comparing filesystem paths.\n\n- `tests/scripts/benchmark_snapshot_scale.py:31\u201335, 129\u2013150, 169\u2013176` \u2014 Validation falls short of the bundle\u2019s required metadata/path checks. `inventory()` excludes directories and the root; the separate empty-directory assertion checks existence only. Incorrect directory modes/timestamps or extra empty directories can therefore pass the reported `bytes_paths_mtime_mode_equal` check. There is also no fresh restore/comparison after packed repair, prune, and vacuum. **Fix:** inventory root and directory paths/types/modes/mtimes alongside file hashes, and restore the retained snapshot into a fresh destination after maintenance for comparison with `expected_second`.\n\n**POLISH**\n\nNONE.\n\nWithin the reviewed production change, I found no correctness defect or consequential unnecessary complexity. The indexes retain full equality checks and first-directory-ID behavior; deferred counts preserve file versions and same-named-directory increments. List insertion preserves the historical mixed file/directory ordering. Capacity growth and version-count overflow checks appear sound for the stated 32/64-bit scope.\n\nThese conclusions are source-based; runtime behavior, platform builds, performance measurements, and power-loss durability were not verified.\n\nFINDINGS",
+          "review_sha256": "c36c5273a996fe613de959ac1c297a7a7ae3b7c8d6e2dab1c0ffc1ae27fdb141"
+        },
+        "grok": {
+          "status": {
+            "seat": "grok",
+            "exit_code": 0,
+            "seconds": 432.4,
+            "prompt_sha256": "117481510e06ca90cc393d1d535b6cd231deb2770df69866383d5455f17f895f"
+          },
+          "review": "FINDINGS\n\nThe metadata index in `new_entry` / `finish_entries` matches the old sibling scan. Parent lookup still takes the first directory id and still rejects a missing parent. A new file is inserted before the current name-group head; a directory is still appended. `file_count` is the number of same-named files so far, and `finish_entries` sets `version` to files that arrive later, including on a same-named directory. Latest file stays version 0. Hash hits re-check id or parent pointer, name length, and bytes. Slot arrays are freed after one archive; node ownership stays on the lists. The open-addressed tables are justified by the quadratic `dirs` / children scans (100k names, many versions).\n\nBLOCKING\n- `tests/scripts/check_snapshot_recovery.py` `connect` (prune-v2, repair-v2) never stops the child. `snapshot._connect` calls `sqlite3.connect(path.as_uri() + \"?mode=rw\", uri=True)`. The hook sets `connection.target = Path(path).parent == repo`. That URI\u2019s parent is not `repo`, so `target` is false, `commit` does not call `stop()`, and no `READY` is printed. `kill_checks` then fails the readline assert. v2 rollback on SIGKILL is not exercised. Fix: key off the real database path (parse the `file:` URI, or compare the path string to `repo / \"objects.sqlite3\"`) before treating that connection\u2019s `commit` as the kill point. create-v2\u2019s `_save_manifest` hook is unaffected.\n\nSUBSTANTIVE\n- `tests/scripts/benchmark_snapshot_scale.py` does not check paths, bytes, mode, and mtime after packed repair and prune. `inventory()` is asserted only for `restore-v1` and `restore-v2`, both before the chunk is damaged. After repair, the script calls `verify` on the latest id only; after prune it checks that the retained id list is `[second]`. `report['complete'] = True` and `bytes_paths_mtime_mode_equal` do not cover that post-repair/prune tree. `verify` checks stored hashes, not restored mode or mtime. Fix: restore the repaired latest snapshot (and the post-prune tree) and compare `inventory()` to `expected_second`, including the empty directory if directory metadata matters.\n\nPOLISH\n- `finish_entries` (`cli/src/main.c`) `free`s both slot arrays and does not clear `slots`, `capacity`, or `count`. Safe for one process that exits; a second archive in-process would reuse a freed table. Null the indexes after the free.\n- `check_cli_metadata.py`\u2019s 100k case only asserts length plus the first and last rows, so a middle-order bug would pass. The smaller full-list compare does cover order and versions.\n- `check_snapshot_recovery.py` module docstring says disk-full work is retained; `disk_checks` deletes each case directory inside the mount after success. That matches the \u201cremove fixtures only on the private mount\u201d rule; the docstring does not.\n- Scale `inventory()` ignores directories, so empty-dir mode and mtime are not part of `bytes_paths_mtime_mode_equal` (only `is_dir()` is checked).\n\nProcess-kill handling, lock removal (dead child pid only), and the disk-full mount cap (16\u201364 MiB, fill that mount, require real `ENOSPC` / `SQLITE_FULL`) match the stated safety limits. No production change needed in the version index.",
+          "review_sha256": "9080dd703de6b60d410398c5e49a2a71c83339304adba53f2ec30335edc56518"
+        },
+        "kimi": {
+          "status": {
+            "seat": "kimi",
+            "exit_code": 0,
+            "seconds": 136.6,
+            "prompt_sha256": "117481510e06ca90cc393d1d535b6cd231deb2770df69866383d5455f17f895f"
+          },
+          "review": "## Review: alpha12 CLI metadata indexes / deferred version numbering\n\n### BLOCKING\nNONE.\n\nI traced the deferred versioning against the old algorithm for all orderings (files only; dir-first/file-later; file/dir/file interleavings; duplicate directory IDs):\n\n- **Insertion position**: old code inserts a new file *before* the first same-named child found in list order (`list_append(at, \u2026)` = `list_add_before`). Because every prior same-named insert also went to the head of the run, the first match is always the most recent file \u2014 exactly what `group->first_version` tracks. Dir-first case: old code's scan also matches the directory node (incrementing its version) and inserts the file before it; new code's `group->first_version` is the directory node in that case, giving the same position. Equivalent.\n- **Version math**: file k of N gets `N \u2212 k` (latest = 0); a directory inserted after k files gets `N \u2212 k`, matching the old per-subsequent-file increment. `finish_entries` runs before selection/printing; indexes freed there; lists retain ownership/traversal order; duplicate dir IDs keep first-wins via the `if (!*slot)` guard; missing parent still rejected (`!dir` \u2192 errx); 32/64-bit growth guarded (`capacity <= index->capacity`, `SIZE_MAX` division check, `UINT_MAX` version cap).\n- Hash collisions resolved by full equality (parent pointer + name_len + memcmp); load \u2264 0.5 keeps probes terminating.\n\n### SUBSTANTIVE\n\n1. **`tests/scripts/benchmark_snapshot_scale.py` \u2014 post-repair/prune verification gap vs. stated requirement.** The review requirement says \"Verify data/mode/mtime paths after both restores **and packed repair/prune**.\" The harness compares full `inventory()` (sha256/size/mtime_ns/mode) only after `restore loose v1` and `restore edited packed v2`. After `repair from packed replica`, `prune old history`, and `vacuum packed repository` it runs only `verify` (hash-level) and a snapshot-ID list assertion \u2014 no restore + inventory comparison of the surviving snapshot against `expected_second`. Trigger: any repair/prune/vacuum bug that corrupts metadata-carrying state (or chunk bytes in a way `verify`'s cache masks) would pass. Fix: after `run('vacuum packed repository', \u2026)`, add a third restore of `second['snapshot']` to a fresh dir and `assert inventory(out3) == expected_second` (and `(out3/'empty').is_dir()`), recording it in `report['restores']`. Low cost; no production change needed.\n\n### POLISH\n\n2. **`cli/src/main.c`, `new_entry`**: the `group->file_count == UINT_MAX` check can never fire on a 64-bit build before memory exhaustion, and on 32-bit `unsigned` the stored `ne->version` is fine but the error message prints `e->name` without a length bound (relies on libuc2 NUL-terminating names, as the old code did). Nonblocking.\n\n3. **`check_snapshot_recovery.py`, `disk_checks`**: `posix_fallocate(\u2026 f_bavail*f_frsize \u2212 8192)` leaves only an 8 KiB margin; on a filesystem with large metadata overhead per file the ENOSPC could trip during `prepare()` rather than the measured operation, weakening (not invalidating) the \"actual ENOSPC/SQLITE_FULL\" evidence. Consider a slightly larger margin or asserting the failure came from the measured call. Nonblocking.\n\n4. Test-overclaim check otherwise passes: process-kill cases are correctly labeled (no power-loss claim), `.writer-lock` removal is PID-checked against the killed child, the disk-full harness asserts a private mount of 16\u201364 MiB and deletes its fixtures only inside it, VmHWM rationale and the 2 GiB AS cap are documented, and the 3.25 GiB/1 GiB-unique corpus is disclosed.\n\n### Verdict\n**FINDINGS** \u2014 one substantive test-coverage gap (post-repair/prune restore verification) in an opt-in harness; the production change in `main.c` (`new_entry`/`finish_entries` and the two temporary indexes) is correct and preserves all enumerated invariants.\nkimi-review: model=kimi-k3 finish=stop prompt_tokens=40685 completion_tokens=4471 reasoning_tokens=3549 effort=low 136s\n",
+          "review_sha256": "e67c515f24df4ce7a517216e9aec471c038c2352b32e942398b145a1f9fc3453"
+        }
+      },
+      "synthesis": {
+        "round": 1,
+        "scope": "CLI metadata and new validation harnesses; snapshot implementation unchanged context",
+        "seats": {
+          "astra": "findings",
+          "grok": "findings",
+          "kimi": "findings"
+        },
+        "production_findings": [],
+        "fixed": [
+          "SQLite URI hook now resolves PRAGMA database_list filename",
+          "Unconditional private filesystem guards and refusal of optimised Python",
+          "Filler cleanup if space reservation fails",
+          "Root/directory metadata inventory and final post-maintenance restore",
+          "Full comparison of 100k CLI rows",
+          "Accurate fixture retention docstring"
+        ],
+        "declined": [
+          {
+            "finding": "Reset freed index globals",
+            "reason": "CLI handles one archive per invocation; globals are never accessed after finish_entries."
+          },
+          {
+            "finding": "Remove unreachable UINT_MAX count guard",
+            "reason": "Explicit overflow bound preserves the supported integer range."
+          },
+          {
+            "finding": "Increase disk filler margin in case fixture preparation fails",
+            "reason": "Fixtures are prepared before filling; allocation failures propagate and cannot count as the tested operation failing."
+          }
+        ]
+      }
+    },
+    {
+      "round": 2,
+      "source_hashes": {
+        "cli/src/main.c": "dc132891f1e21742287bb25707cffc756f432e4d1b2fec3832d0056a6e39288f",
+        "lib/src/list.h": "6a66f1359db526cfb9a8b00785747fdb9df19c19bc41c967479ffb1757b9b498",
+        "lib/include/uc2/libuc2.h": "0b31b8be5583b96846a717342fa42ba9e2372f4ada2a85b262d10ab8b6d08f5b",
+        "tests/scripts/check_cli_metadata.py": "c73f537ca85cf353406d31af71d7016617c1c2e04867b738dc7fe3a8342fb9d0",
+        "tests/scripts/benchmark_snapshot_scale.py": "b01e50d7f8336d552f8a89306d0fddafcefbaa92eff0584724ff14055a8997f5",
+        "tests/scripts/check_snapshot_recovery.py": "d7f8baca0a9d300758aff0250c47cf36359346cb0b36dd94dc66284afc24b502",
+        "python/uc2/snapshot.py": "13ea9bddf6424dd585182250095518bfee33e67078b2818598b87f06efa38b6c",
+        "tests/scripts/check_snapshot_limits.py": "203365de13e6779ad81db6a04556c70b0b46a63ff0b1c151358bcb540d341369",
+        "tests/scripts/benchmark_cli_metadata.py": "b138a413fcc46a0c6d84547164753c7d712a6790c4631eed6e3cc720249a01d6"
+      },
+      "reviewers": {
+        "astra": {
+          "status": {
+            "seat": "astra",
+            "exit_code": 0,
+            "seconds": 125.2,
+            "prompt_sha256": "77c5785afb786c285d047727145adba353d1b63a9fbcae30a8848487b67f9570"
+          },
+          "review": "Completed a static review of the entire frozen bundle, focusing on alpha12 metadata ingestion, version finalization, CLI regression, and validation harnesses. Unchanged code was reviewed as supporting context.\n\nBLOCKING: NONE.\n\nSUBSTANTIVE: One validation gap.\n\n- `tests/scripts/check_snapshot_recovery.py:165\u2013182,195`: The compaction kill cases never assert that committed snapshot IDs survive. If `compact-after-config` publishes a packed database missing the original manifest, `current` can be empty; verification then performs zero checks. Retrying compaction can succeed and remove loose backups, after which the harness records `recovered=True`. This permits a false success for committed-history loss.\n  \n  Fix: Require `current == previous` for both compaction checkpoints. After retrying compaction, assert the snapshot IDs still equal `previous` and verify every original snapshot before recording recovery.\n\nPOLISH: NONE.\n\nNo concrete production metadata defect or consequential unnecessary complexity found. The indexes retain full equality checks and first-parent semantics; list insertion and deferred counts preserve the supplied historical versioning rules, including same-named directories. Capacity growth checks and temporary index ownership appear sound for the stated invocation model.\n\nLimitations: No tests, benchmarks, fault injection, or platform builds were run. Reported performance and prior successful runs were not independently verified. No other paths, reviewers, skills, delegation, or web sources were accessed.\n\nFINDINGS",
+          "review_sha256": "c47bcf5930e6c14d67314d06e8aa02a8e721caa03f0a9c7c4ab8e1b80205db27"
+        },
+        "grok": {
+          "status": {
+            "seat": "grok",
+            "exit_code": 0,
+            "seconds": 414.0,
+            "prompt_sha256": "77c5785afb786c285d047727145adba353d1b63a9fbcae30a8848487b67f9570"
+          },
+          "review": "BLOCKING: NONE\n\nSUBSTANTIVE: NONE\n\nPOLISH: NONE\n\nPASS\n\nThe metadata change in `cli/src/main.c` (`node_hash`, `node_slot`, `new_entry`, `finish_entries`) matches the old sibling scan. Parent id 0 stays on `root`. Any other `dirid` resolves through `directory_index`, and a miss still exits with `missing parent directory`. Duplicate ids do not overwrite the first slot. Name groups are per parent pointer plus full `name_len`/`memcmp`, so a hash hit is not enough. Lists still own order: a file is inserted before the current `first_version`, and a directory always takes the `list_append` onto `dir->children`. `file_count` advances only for files, including files that follow a same-named directory. `finish_entries` sets `version = file_count - stored`, which leaves the newest file at 0 and gives every earlier file and same-named directory one step per later file. `UINT_MAX` is rejected before the `unsigned` increment. Slot growth is power-of-two, rejects a wrapped `size_t`, and keeps load at or below one half, so probes still end on an empty slot on 32- and 64-bit. Indexes are freed after one archive; node ownership stays with the lists until process exit. The extra tables are what removes the old per-entry sibling walk; the 100k timings are consistent with that, and pattern selection and extraction are untouched.\n\n`tests/scripts/check_cli_metadata.py` checks the same rules: first parent id, duplicate ids, directory-after-file append, version 0 filtering, `;1` selection, a missing parent, CP850 `caf\u00e9`, and every flat 100k row. `benchmark_cli_metadata.py` records listing hashes and a timeout as data rather than a pass. The snapshot harnesses refuse `python -O`. The scale script inventories root and every directory for data, mode, and `mtime_ns`, compares again after repair, prune, and `compact`/`VACUUM`, caps worker address space at 2 GiB, and reads `VmHWM`. The kill script treats a missing `READY` as failure, keeps child stderr, and unlinks `.writer-lock` only when the pid is the dead child. Disk-full checks demand an empty 16\u201364 MiB mount, build fixtures before `posix_fallocate`, drop a failed filler without counting it as `ENOSPC`, and accept only `ENOSPC` or `SQLITE_FULL`. The limits script uses `MAX_ENTRIES`, `MAX_REFS`, and `MAX_MANIFEST`, and labels manifest padding as synthetic. No overclaim or unsafe setup showed up in these sources.",
+          "review_sha256": "614cf7e5c092fd84f7f35b854779b85a916d5a50b33ad9537649d9c34c392720"
+        },
+        "kimi": {
+          "status": {
+            "seat": "kimi",
+            "exit_code": 0,
+            "seconds": 126.09666330704931,
+            "prompt_sha256": "77c5785afb786c285d047727145adba353d1b63a9fbcae30a8848487b67f9570",
+            "retry_of": "empty reply: 6000 tokens consumed by reasoning",
+            "max_tokens": 12000
+          },
+          "review": "# Review: alpha12 \u2014 CLI metadata indexes / deferred version numbering\n\nI reviewed the new `node_index` hash tables, rewritten `new_entry`, new `finish_entries`, and the three validation scripts against the OLD implementation and every invariant listed in the scope.\n\n## BLOCKING\nNONE\n\n## SUBSTANTIVE\nNONE\n\n## POLISH\nNONE\n\n## Verification notes (why the flagged-risk areas are actually correct)\n\n**Version numbering equivalence (main.c, `new_entry`/`finish_entries`).** Traced against OLD: OLD inserts each new file *before* the first name-match in `dir->children` (`list_append(at, ...)` = `list_add_before`), so the newest file sits at the front of its version chain, and every earlier same-named node (files *and* same-named directories) is incremented. NEW stores `ne->version = group->file_count` at insertion and resolves in `finish_entries` as `final_count \u2212 stored`. Worked traces (file-only runs; dir-before-files; dir-between-files; dir-after-files; the scope's \"directory appended, not prepended\" case) all reproduce OLD exactly, including the insertion point: `group->first_version` is the previous *latest* file (or the group-creating directory), which is precisely the node OLD's head-first scan would match first, so `list_append(&first_version->on_dir, ...)` lands at the identical list position. All-version traversal order and `version == 0` latest selection are preserved; `finish_entries()` runs before `mark()`/`match_pattern()`.\n\n**First-matching-parent and duplicate directory IDs.** `directory_index` lookup by ID rejects unavailable parents with the same `errx` message; on duplicate IDs the first directory wins (`if (!*slot)` guard), matching OLD's head-first scan. Parent resolution therefore always yields the canonical first node, so `name_index`'s parent-*pointer* equality is consistent with its parent-*ID* hash.\n\n**Collision safety / ownership.** Both indexes use open addressing at load factor \u2264 0.5 with full equality confirmation (`id`, or `parent` + `name_len` + `memcmp`); hash collisions can never merge distinct nodes. Lists retain sole ownership; indexes are freed in `finish_entries()` and are per-invocation only.\n\n**32/64-bit safety.** Capacity doubling is guarded (`capacity <= index->capacity`, `capacity > SIZE_MAX / sizeof *slots`); `file_count` has an explicit `UINT_MAX` check; `count`/`capacity` are `size_t`; the deferred subtraction cannot underflow (`stored \u2264 final count`).\n\n**Harnesses.** `check_cli_metadata.py`'s independent `expected()` reference uses first-match-index insertion, which matches OLD/NEW semantics, and it now compares all 100k rows, duplicate IDs, CP850 names, missing-parent rejection, and `;version` selection. `check_snapshot_recovery.py` mounts/capacity-guards are unconditional, filler is allocated after fixture preparation and cleaned on failure, lock removal is PID-verified, READY-missing is fatal, and real ENOSPC/SQLITE_FULL is asserted. `benchmark_snapshot_scale.py` verifies data/mode/mtime after both restores and after repair+prune+VACUUM, uses VmHWM with the ru_maxrss caveat documented, and discloses the synthetic repeat corpus. `check_snapshot_limits.py` uses the real 500000/100000/64MiB bounds with padding only in the disclosed synthetic manifest case. No overclaim or unsafe setup found.\n\n**Minor observation (non-issues).** The Python `checksum()` omits the C fletcher's odd-length final-byte `| 0x10000` bit; the generated records are even-length so the fixtures are valid, and a mismatch would fail loudly rather than pass falsely. The production change is confined to metadata ingestion/`finish_entries` as scoped.\n\n## Verdict\n**PASS**\nkimi-review: model=kimi-k3 finish=stop prompt_tokens=42742 completion_tokens=4710 reasoning_tokens=3884 effort=low 125s\n",
+          "review_sha256": "c6b74474415e4bad2002732bbb46b6f469d8b4b9985904ef5780cda6fcd0432d"
+        }
+      },
+      "synthesis": {
+        "round": 2,
+        "production_metadata": "Three complete seats; no confirmed production findings. Same source as round1.",
+        "harness_finding": "Astra: compaction kill checks could accept an empty history because verification loop ran zero times.",
+        "fix": "Assert expected committed IDs at each checkpoint and exact retained IDs and hashes after maintenance retry.",
+        "incomplete_attempt": "Kimi initial6000token budget empty; retained receipt. Fresh same-snapshot retry with12000budget completed PASS."
+      }
+    },
+    {
+      "round": 3,
+      "source_hashes": {
+        "tests/scripts/benchmark_snapshot_scale.py": "b01e50d7f8336d552f8a89306d0fddafcefbaa92eff0584724ff14055a8997f5",
+        "tests/scripts/check_snapshot_recovery.py": "ef5da74822ae047b4cd6a67309937a7bd1cba17827c76bd8c5f86f1f6f052086",
+        "tests/scripts/check_snapshot_limits.py": "203365de13e6779ad81db6a04556c70b0b46a63ff0b1c151358bcb540d341369",
+        "tests/scripts/benchmark_cli_metadata.py": "b138a413fcc46a0c6d84547164753c7d712a6790c4631eed6e3cc720249a01d6",
+        "tests/scripts/check_cli_metadata.py": "c73f537ca85cf353406d31af71d7016617c1c2e04867b738dc7fe3a8342fb9d0",
+        "python/uc2/snapshot.py": "13ea9bddf6424dd585182250095518bfee33e67078b2818598b87f06efa38b6c"
+      },
+      "reviewers": {
+        "astra": {
+          "status": {
+            "seat": "astra",
+            "exit_code": 0,
+            "seconds": 109.4,
+            "prompt_sha256": "81b236b54054d0a7e1bdc5d2f963389672cb9ec3a0b41be37df47f65ea42c097"
+          },
+          "review": "Completed a static review of the entire frozen bundle: all five validation scripts and the complete `snapshot.py` supporting context.\n\n- **BLOCKING: NONE**\n- **SUBSTANTIVE: NONE**\n- **POLISH: NONE**\n\nThe strengthened kill checks compare exact committed snapshot IDs. Compaction retries preserve and verify the original IDs; prune retries retain and verify the specifically planned IDs. Lock removal requires the confirmed dead child\u2019s PID, and restore checks explicitly handle the empty destination reservation.\n\nDisk-full checks enforce mount, emptiness, and capacity guards; filler-allocation failures propagate separately from operation failures. Successful cases require ENOSPC or SQLITE_FULL.\n\nThe scale harness compares independent inventories, including root and directory metadata, and repeats restoration after repair, pruning, and VACUUM. Linux operation workers apply the 2 GiB address-space cap and collect process-local VmHWM. CLI checks compare all 100,000 expected rows; benchmark timeouts remain timeout records.\n\nLimitations: this was source inspection only. I ran no tests, inspected no external evidence or other paths, and made no changes. This review does not confirm the pending strengthened rerun, performance measurements, or power-loss durability. The supplied boundary script exercises entries, references, and manifest bytes; it does not independently demonstrate the 1 TiB logical-size boundary. Production C implementation was outside this review\u2019s scope.\n\nPASS",
+          "review_sha256": "5193690600f6ea1397bfdec67070af11dd36a8708d3aa3f65822404999b3b40a"
+        },
+        "grok": {
+          "status": {
+            "seat": "grok",
+            "exit_code": 0,
+            "seconds": 560.2,
+            "prompt_sha256": "81b236b54054d0a7e1bdc5d2f963389672cb9ec3a0b41be37df47f65ea42c097"
+          },
+          "review": "**FINDINGS**\n\nThe kill-checkpoint ID checks, disk-fill mount bounds, 2 GiB `RLIMIT_AS` plus `VmHWM`, synthetic manifest labeling, and the CLI version/parent/order oracle match the stated contracts. Two harness holes can still record success without the condition they name.\n\n**BLOCKING**\nNONE\n\n**SUBSTANTIVE**\n\n1. `tests/scripts/benchmark_snapshot_scale.py` (corruption loop, `assert any(damaged)`, then `report['corruption_detected'] = True`, repair, and `verify` of `second['snapshot']` only).  \n   **Trigger:** `SELECT digest FROM chunks ORDER BY digest LIMIT 1` can be a chunk only the first snapshot references (the replaced slice of `unique.bin`). `verify(first)` then returns `error`, `verify(second)` succeeds, and `any()` passes. Repair can leave that blob untouched, `verify(second)` still succeeds, and prune deletes snapshot 1. Any other caught `verify` error on one id (`OSError`, unrelated `ValueError`) also sets `corruption_detected`.  \n   **Fix:** Damage a digest that the retained snapshot references, or record which ids reference it. Require a content-mismatch error on each referencing id and success on the others. After repair, require `repaired_chunks >= 1` and `verify` every id that prune keeps, including snapshot 1 before prune.\n\n2. `tests/scripts/check_cli_metadata.py`, `listing()`. Rows keep only `fields[3]`, optional `fields[4]`, and `fields[0][1] == 'd'`. The mixed `-qalT` compare and the 100k compare use those tuples. The full layout `attr, empty timestamp, size, name, version` is asserted only for two file lines (`first` and `directory/nested`).  \n   **Trigger:** `a-----\\t12:00\\t0\\tfile-000000` still equals `(file-000000, 0, False)`. A directory row with size `0` or a non-empty timestamp still matches `(name, version, True)` because the name stays column 4. Directory size is never required to be empty.  \n   **Fix:** Parse timestamp and size in `listing()` and compare them in `expected()` (empty timestamp when zero, empty size for directories, `0` for these empty files), including every 100k row.\n\n**POLISH**\n\n- `tests/scripts/check_snapshot_limits.py`: after each over-limit `create`, `snapshots()` equality does not re-`verify` the accepted id, so a rejection that keeps the manifest rows and damages chunks still passes. Re-`verify` that id before recording `over_limit_rejected`.\n- `tests/scripts/benchmark_snapshot_scale.py`: `notes` is the fixed string \u201cOne Linux run\u201d and the JSON has no hostname or `uname`. A `complete: true` file cannot identify the host. Add `platform.node()` and `platform.uname()` when the run starts.\n\n**Checked as holding:** all nine kill paths assert the pre-retry id set (`retained` only for `prune-v1`, otherwise the prior list), then `verify` each survivor; compact retries require the same id list, no loose `*.uc2`, and `verify` of each original id; prune retries require the planned ids and `verify` them. Disk fill refuses a non-mount, a non-empty mount, and a size outside 16\u201364 MiB; allocation errors propagate before the operation; only `ENOSPC` or `SQLITE_FULL` counts. `-O` / `PYTHONOPTIMIZE` aborts every script. Lock removal requires the dead child\u2019s pid.\n\nFINDINGS",
+          "review_sha256": "49eeb79247448ee2ba25283418082cbf0dbc152b23cc0bf3e2da7c3f20281bf3"
+        },
+        "kimi": {
+          "status": {
+            "seat": "kimi",
+            "exit_code": 0,
+            "seconds": 197.4,
+            "prompt_sha256": "81b236b54054d0a7e1bdc5d2f963389672cb9ec3a0b41be37df47f65ea42c097"
+          },
+          "review": "# Independent Review: alpha12 Validation Harnesses\n\n## BLOCKING\nNONE\n\n## SUBSTANTIVE\n\n1. **`tests/scripts/check_snapshot_limits.py` \u2014 manifest-limit case exercises only the v1 (loose) read path; the packed (v2) `MAX_MANIFEST` enforcement is untested by any harness.**\n   - Trigger: the manifest case writes padded manifests as loose `snapshots/<digest>.json` files and calls `s.verify`. For v1, `_read()` raises `\"file exceeds size limit: ...\"`, which contains the asserted phrase `'limit'`. In a packed repository, `_manifest_data()` raises `\"manifest exceeds 64 MiB\"` after gzip decompression \u2014 that message does **not** contain `'limit'`, so a naive extension of this test would also fail its phrase assertion.\n   - Consequence: the harness claims \"checks at the actual default snapshot limits,\" but the v2 over-limit rejection branch (`if len(data) > MAX_MANIFEST` in `_manifest_data`) has no end-to-end coverage here, and the phrase-coupling hides a message inconsistency between the two storage formats.\n   - Fix: after the v1 manifest case, `s.compact(repo)` (or build a second packed repo), insert a gzip-compressed padded manifest blob directly into `manifests`, and assert rejection at exactly `MAX_MANIFEST + 1`; either assert on the actual v2 message or align the two error strings.\n\n## POLISH\n\n1. **`tests/scripts/benchmark_snapshot_scale.py` (`worker`)** \u2014 only `(ValueError, OSError, sqlite3.Error)` are captured into the JSON row. A `MemoryError` under the 2 GiB `RLIMIT_AS` cap (a plausible outcome the harness is specifically designed to probe) escapes as a traceback; `run()` then raises `RuntimeError` and the failing phase is never appended to `results.json`, leaving the retained report without the most interesting row. Fix: also catch `MemoryError` (or record `returncode != 0` as a phase row before raising).\n\n2. **`tests/scripts/check_snapshot_recovery.py` (`disk_checks`)** \u2014 results are only printed to stdout and fixtures are deleted (docstring discloses this; intended). Minor: unlike `kill_checks`, no incremental `results.json` is written inside the private mount before teardown, so a crash mid-case leaves no machine-readable record. Acceptable as documented; note only.\n\n3. **`tests/scripts/benchmark_cli_metadata.py`** \u2014 fixture reuse is keyed solely on `archive.exists()`. An interrupted writer run can leave a truncated `.uc2` that is then \"reused\" and fails listing with a confusing assert rather than being regenerated. Fix: write fixtures to a temp name and rename, or validate before reuse.\n\n## Verified strengths (checked against stated contracts, no defect found)\n\n- **Kill checkpoints**: child `READY`\u2192SIGSTOP\u2192parent SIGKILL with `wait() == -SIGKILL`; lock removal is guarded by `int(lock.read_text()) == process.pid` (confirmed dead owner only). The strengthened ID assertions are present at every checkpoint: pre/post-kill `set(current) == set(expected)`, post-retry compact asserts `snapshots == previous` plus per-ID `verify`, and prune retry asserts exactly `set(retained)` with per-ID verify. SQLite connection targeting via `PRAGMA database_list` filename is correctly implemented.\n- **Restore POSIX reservation**: `restore-before-publish` asserts the reserved empty dir, preserves evidence semantics, `rmdir()`s only that empty dir, then retries.\n- **Disk-full**: empty-private-mount check, 16\u201364 MiB capacity guard, filler allocation errors cleaned up and propagated, operation must produce ENOSPC/SQLITE_FULL, lock absence asserted, retry-and-verify for each of the five cases.\n- **Limits**: real 100,000-entry boundary (not lowered), real 500,000-chunk-reference file with an asserted chunk-boundary invariant (`chunk_length(block*2) == len(block)`), over-limit rejection leaves snapshot list unchanged.\n- **CLI metadata**: independent reference model matches the stated contract (files-then-directories, files increment same-name earlier entries incl. directories, insertion before first same-name sibling, first-prior-parent resolution, CP850\u2192UTF-8); all 100k rows compared; missing-parent rejection asserted on stderr; duplicate directory IDs deliberately covered. Benchmark records timeouts rather than failing and uses writer-made fixtures.\n- All five scripts carry unconditional `__debug__` guards.\n\n## Verdict\nFINDINGS\nkimi-review: model=kimi-k3 finish=stop prompt_tokens=17881 completion_tokens=7881 reasoning_tokens=6926 effort=low 196s\n",
+          "review_sha256": "fd8266088a65b128fa8284645e9ed5951ca10478761c9460bb294ae10dffac3a"
+        }
+      },
+      "synthesis": {
+        "round": 3,
+        "production_changes": false,
+        "harness_improvements": [
+          "Packed64MiB exact/default-overlimit check",
+          "Reverify history after rejected create",
+          "Both corruption targets proven referenced by both versions; exact expected error and repaired count; explicitly verify both before prune",
+          "All CLI TSV fields checked"
+        ],
+        "disposition_notes": [
+          "Original repair and prune already verify all histories internally; extra explicit harness assertions improve independent attribution. Completed large run already showed both corrupted verifies and one repaired chunk.",
+          "CLI timestamp/size printing unchanged and full10k baseline output hashes equal; added explicit field assertions anyway.",
+          "Uncaught MemoryError makes worker fail and leaves stderr/report incomplete; it never yields a passing result.",
+          "UC2Writer is transactional; interrupted fixture creation does not publish a truncated archive."
+        ]
+      }
+    },
+    {
+      "round": 4,
+      "source_hashes": {
+        "tests/scripts/benchmark_snapshot_scale.py": "f65cdc61d89168b0f2a7c9e1c744e9cce13f55406162e2fd6c950c42b525e558",
+        "tests/scripts/check_snapshot_recovery.py": "ef5da74822ae047b4cd6a67309937a7bd1cba17827c76bd8c5f86f1f6f052086",
+        "tests/scripts/check_snapshot_limits.py": "a10959e1030bf2c1277e304f98f0bae8dba699cb5b4035ab347ea4f3ed333fb1",
+        "tests/scripts/benchmark_cli_metadata.py": "b138a413fcc46a0c6d84547164753c7d712a6790c4631eed6e3cc720249a01d6",
+        "tests/scripts/check_cli_metadata.py": "361752cb9ef23411c74aa0ac728ae5b9818bcb5df585096ba3fe836066f660c5",
+        "python/uc2/snapshot.py": "13ea9bddf6424dd585182250095518bfee33e67078b2818598b87f06efa38b6c"
+      },
+      "reviewers": {
+        "astra": {
+          "status": {
+            "seat": "astra",
+            "exit_code": 0,
+            "seconds": 80.9,
+            "prompt_sha256": "f558efcd4738a821acfb3d76f39147c1846c10ef869121e86385fa546782a6ca"
+          },
+          "review": "Completed static review of the entire frozen bundle: all five validation harnesses and the complete supporting `snapshot.py`.\n\nBLOCKING: NONE.\n\nSUBSTANTIVE: One finding.\n\n- `tests/scripts/check_snapshot_recovery.py:252\u2013263`: The disk-full compaction case verifies the original snapshot **before** retrying `s.compact(repo)`, then immediately reports `recovered=True` and deletes the fixture. It never checks the committed IDs or verifies the original snapshot after that retry. Consequently, a retry that returns successfully but loses history or damages the packed copy would still receive a successful recovery receipt. The strengthened kill-case checks cover this condition, but the disk-full branch does not. **Fix:** after the compaction retry, assert that the committed IDs equal `[first]` and call `s.verify(repo, first)` before recording success or removing the fixture.\n\nPOLISH: NONE.\n\nThe remaining reviewed checks are consistent with the supplied contracts, including corruption detection in both versions, repair counts, complete CLI row comparisons, manifest byte boundaries, lock ownership checks, and explicit ENOSPC classification.\n\nLimitations: source review only; no tests executed, external evidence inspected, or production C implementation reviewed. Reported prior passes and ongoing reruns remain supplied context, not independently verified results. No other paths accessed or files modified.\n\nFINDINGS",
+          "review_sha256": "792841f233ef961e864d48a399260a758d64369d029b970baf21270eea560f14"
+        },
+        "grok": {
+          "status": {
+            "seat": "grok",
+            "exit_code": 0,
+            "seconds": 556.4,
+            "prompt_sha256": "f558efcd4738a821acfb3d76f39147c1846c10ef869121e86385fa546782a6ca"
+          },
+          "review": "PASS\n\nBLOCKING\nNONE\n\nSUBSTANTIVE\nNONE\n\nPOLISH\nNONE\n\nThe harnesses match the stated contracts and fail closed. They do not turn a killed process, ENOSPC, a rejected limit, a timeout, or a truncated archive into a pass.\n\nRecovery (`check_snapshot_recovery.py`). All nine kill points stop on the durable boundary: loose chunk stored but no manifest; v2 manifest inserted but not committed; config replace before and after; v1 manifest unlink; v2 prune/repair `commit`; restore rename before and after. Checkpoint IDs are the specific pre-kill set, except prune-v1, which expects the one obsolete manifest already removed. That matches v1 unlink-before-chunks. Compact retry keeps the original ID list and verifies each ID; prune retry keeps the planned IDs and verifies those. Locks are removed only after `SIGKILL` and only when the sentinel PID is that child. Disk-full refuses a non-empty, non-mount, or out-of-range filesystem; filler failures propagate and are not recorded as ENOSPC; the operation must raise `ENOSPC` or `SQLITE_FULL`, drop the lock, and leave the original snapshot verifiable. Restore cleanup of the empty reservation and `.uc2-restore-*` stage is required. `-O` is refused, so the assertions stay active.\n\nScale (`benchmark_snapshot_scale.py`). The corpus note is 1 GiB unique plus 2.25 GiB of a repeated 256 KiB block. Linux workers set a 2 GiB `RLIMIT_AS` and record `VmHWM`. Inventory equality covers root, files, directories, type, size, hash, mode, and mtime. Both manifests must share `repeated.bin`\u2019s first chunk; both verifies must return exactly `BadArchiveError` / `Truncated` for the 7-byte blob; repair must report one chunk; both original IDs verify before prune; retained history and the post-maintenance restore are the second snapshot only. `complete` stays false on worker failure, and `MemoryError` is not turned into a result row.\n\nLimits (`check_snapshot_limits.py`). Caps come from `s.MAX_ENTRIES`, `s.MAX_REFS`, and `s.MAX_MANIFEST`. Over-limit creates are rejected with the snapshot list unchanged, then the accepted ID is verified again. Packed gzip uses the exact 64 MiB payload and that payload plus one byte, with the documented messages. Padding is labeled synthetic.\n\nCLI. `listing()` checks every `-qalT` row for `a-----`/`-d----`, an empty timestamp, an empty directory size or file size `0`, the full name, and the optional version. The 100k case compares every name in order. The oracle matches the version, sibling-insert, directory-append, first-parent, and files-then-directories rules, including same-name files and directories and CP850 `caf\u00e9`. The timing script records `TimeoutExpired` without a listing hash and reuses fixtures only through `UC2Writer`\u2019s final path.\n\nThis is a source review. The in-flight strengthened scale run is not treated as finished.",
+          "review_sha256": "6030697f893d04d29c0688a42742d87543bfa18b8033fc68506e212b6e68aa50"
+        },
+        "kimi": {
+          "status": {
+            "seat": "kimi",
+            "exit_code": 0,
+            "seconds": 103.9,
+            "prompt_sha256": "f558efcd4738a821acfb3d76f39147c1846c10ef869121e86385fa546782a6ca"
+          },
+          "review": "# Review: alpha12 validation harnesses (round 4)\n\nReviewed all five harness files in full, with snapshot.py as frozen context.\n\n## BLOCKING\nNONE\n\n## SUBSTANTIVE\nNONE\n\nThe previously flagged areas check out in current code:\n\n- **Corruption proof** (benchmark_snapshot_scale.py, `first_repeated_chunk`): selects `repeated.bin`'s first chunk from the second manifest and asserts the first manifest references the identical address before damaging it; both verify runs assert the exact `{'error': 'BadArchiveError', 'message': 'Truncated'}` dict, not a substring. `repair` result is asserted `repaired_chunks == 1`, followed by explicit verifies of both original IDs and a post-prune restore whose inventory must equal `expected_second`. No false pass path.\n- **Kill checkpoints** (check_snapshot_recovery.py): expected post-recovery snapshot sets are exact (`set(current) == set(expected)`, compact case asserts ordered equality with `previous`, prune case asserts `set(retained)`), and every retained/original ID is verified individually after recovery. The v1-vs-v2 expectation split (`expected = retained if case == 'prune-v1' else previous`) correctly matches v1 manifest-first deletion vs v2 transactional rollback. READY-missing and non-SIGKILL exits raise, never pass.\n- **Lock removal** is gated on `int(lock.read_text()) == process.pid` after confirmed kill \u2014 matches the no-stealing contract.\n- **Disk fill**: guards (`ismount`, empty dir, 16\u201364 MiB size) are outside any assert, so they survive `-O`; the unconditional `__debug__` guard also exists. Filler allocation failure cleans up and re-raises via `except BaseException`, and only real `ENOSPC`/`SQLITE_FULL` from the operation counts. Post-failure retry and `s.verify(repo, first)` run for every case.\n- **Packed manifest boundaries** (check_snapshot_limits.py): `data[:-1]` (exactly 64 MiB decompressed) is inserted and accepted; `data` (64 MiB+1) is rejected with the exact 'manifest exceeds 64 MiB' phrase; accepted loose and packed histories are re-verified after over-limit rejections, and over-limit creates assert `s.snapshots(repo) == before`.\n- **CLI regression** (check_cli_metadata.py): `listing()` validates attr (`a-----`/`-d----`), empty timestamp, empty dir size / `'0'` file size, field count, and version parsing per row; the 100k case compares all rows exactly. The independent `expected()` correctly implements first-match insertion for files, increment-all-earlier versions, directory append, first-prior-parent resolution, and files-then-directories traversal. CP850 `caf\u00e9` exercises UTF-8 conversion. Missing-parent 999 asserts the stderr phrase on a failing run.\n- **Memory**: Linux worker caps `RLIMIT_AS` at 2 GiB per fresh subprocess and reads VmHWM from `/proc/self/status`, avoiding inherited `ru_maxrss`. Worker exception list is narrow, so MemoryError/non-listed errors exit nonzero with stderr retained \u2014 matching the stated behavior; no catch-and-pass.\n- Benchmark `run()` asserts error presence matches `fail`; corrupted-state rows are asserted exact; `complete` flag only set at the end.\n\n## POLISH\n- `tests/scripts/check_snapshot_limits.py` (final block): after building `report['packed_manifest']`, the stdout print emits only `report['manifest']`; the new packed gzip boundary result reaches `results.json` but is not streamed like the other sections. Fix: also `print(json.dumps(report['packed_manifest'], flush=True))`. Result is still persisted, so no evidence loss.\n- `tests/scripts/benchmark_snapshot_scale.py` (corruption loop): the per-label verify rows are appended to `report['phases']` but `save()` is not called inside that loop (unlike `run()`), so a crash between detection and repair loses the detection rows from `results.json` until the next `run()` save. Fix: call `save()` after each append. Receipts are printed via neither path here; minor retention gap only.\n\n## Verdict\nPASS\nkimi-review: model=kimi-k3 finish=stop prompt_tokens=18454 completion_tokens=3750 reasoning_tokens=2856 effort=low 103s\n",
+          "review_sha256": "f9157d3a051be61cfa2c72ba58a21d65ac762914442f13f1e9ea83238047b4d2"
+        }
+      },
+      "synthesis": {
+        "round": 4,
+        "finding": "Astra: disk-full compaction retry lacked final IDs/verification.",
+        "fix": "Shared final ID equality and per-ID verification after every kill/disk-full retry; compare disk-full restored bytes.",
+        "optional_declined": [
+          "Extra stdout printing of packed-limit results is unnecessary because complete results.json includes them.",
+          "Corruption receipts are saved with the next API result; a failure aborts with an incomplete result and traceback, never a pass."
+        ]
+      }
+    },
+    {
+      "round": 5,
+      "source_hashes": {
+        "tests/scripts/benchmark_snapshot_scale.py": "f65cdc61d89168b0f2a7c9e1c744e9cce13f55406162e2fd6c950c42b525e558",
+        "tests/scripts/check_snapshot_recovery.py": "94db0fd3c689a47a6ddfde5fa95a8aaf8266a6bd1c28363dc8308715b4787c15",
+        "tests/scripts/check_snapshot_limits.py": "a10959e1030bf2c1277e304f98f0bae8dba699cb5b4035ab347ea4f3ed333fb1",
+        "tests/scripts/benchmark_cli_metadata.py": "b138a413fcc46a0c6d84547164753c7d712a6790c4631eed6e3cc720249a01d6",
+        "tests/scripts/check_cli_metadata.py": "361752cb9ef23411c74aa0ac728ae5b9818bcb5df585096ba3fe836066f660c5",
+        "python/uc2/snapshot.py": "13ea9bddf6424dd585182250095518bfee33e67078b2818598b87f06efa38b6c"
+      },
+      "reviewers": {
+        "astra": {
+          "status": {
+            "seat": "astra",
+            "exit_code": 0,
+            "seconds": 60.5,
+            "prompt_sha256": "332779f86ccc4fdde522c63de9df3c0e2f7b231c3b55f40a7ea9e9536b3f9507"
+          },
+          "review": "Completed a static review of the entire frozen bundle: all five validation harnesses and the complete supporting `python/uc2/snapshot.py`.\n\n- **BLOCKING: NONE**\n- **SUBSTANTIVE: NONE**\n- **POLISH: NONE**\n\nThe common recovery postcondition checks exact committed snapshot IDs after retries and verifies every final ID, including compaction retries. The checkpoint hooks match the supplied transaction and publication behavior. Disk-full checks distinguish allocation failures from operation failures and compare restored bytes.\n\nThe strengthened scale harness checks shared-chunk corruption in both versions, exactly one repaired chunk, and independent restore inventories after maintenance. Manifest boundary checks cover both loose and packed storage. The CLI regression compares all 100,000 rows, including attributes, timestamps, sizes, names, ordering, and versions.\n\nLimitations: this was source inspection only. I ran no tests, inspected no execution receipts or other paths, and did not independently confirm reported or pending runs. This review does not establish power-loss durability or a tested 1 TiB boundary.\n\nPASS",
+          "review_sha256": "b14545849090bb0d6560d1dc3d82e680851378f97b9d39dedfb049bcb6b257d5"
+        },
+        "grok": {
+          "status": {
+            "seat": "grok",
+            "exit_code": 0,
+            "seconds": 715.7,
+            "prompt_sha256": "332779f86ccc4fdde522c63de9df3c0e2f7b231c3b55f40a7ea9e9536b3f9507"
+          },
+          "review": "**PASS.** The corrected harnesses match the stated recovery, limit, CLI, and scale contracts. I did not find a false pass, an unsafe disk or lock action, or a history or metadata claim the code does not actually check.\n\n**BLOCKING:** NONE\n\n**SUBSTANTIVE:** NONE\n\n**POLISH:** NONE\n\nThe shared recovery postcondition is implemented for all nine SIGKILL cases and all five ENOSPC cases. After the retry, committed IDs must equal the pre-kill set, or the prune plan, plus the new create ID, and every final ID is verified. Compaction is included. `prune-v1` expects the manifest already removed at the unlink checkpoint. `prune-v2` expects a rollback because `commit()` stops before `super().commit()`. Create, compact, and repair checkpoints sit before publication. The kill path still requires the damaged `repair-v2` snapshot to fail verify before the retry. Restore-before-publish only removes the empty reserved directory. Disk-full restore also checks that the stage is gone and that restored bytes match. Locks are removed only when the PID is the reaped child. Filler setup errors are not counted as ENOSPC. The fill is limited to an empty private 16\u201364 MiB mount.\n\nThe scale harness records a shared `repeated.bin` chunk, requires both damaged verifies to return exactly `BadArchiveError` / `Truncated` for the 7-byte archive, requires one repaired chunk, verifies both original IDs, and compares full path, type, size, hash, mode, and mtime inventories after repair, prune, and vacuum. The corpus note correctly says 1 GiB unique plus 2.25 GiB repeated, not 3.25 GiB unique. Linux workers set a 2 GiB address-space cap and record `VmHWM`. `complete` stays false until the last assertion. `MemoryError` is not turned into a successful phase.\n\nThe limits harness uses `s.MAX_ENTRIES`, `s.MAX_REFS`, and `s.MAX_MANIFEST`, re-verifies the accepted snapshot after the rejected create, and checks packed gzip at 64 MiB and 64 MiB+1 with the exact over-limit message. The CLI checker compares an independent version and order model, checks every row\u2019s attribute, empty timestamp, and directory or zero size, and compares all 100k rows. `-O` is refused unconditionally. No production change is required.",
+          "review_sha256": "8d7ca7c51a07b8ee6321c7ee30814d5b9fa1af188b5c2bd9eb3fbb0deb3a4fd4"
+        },
+        "kimi": {
+          "status": {
+            "seat": "kimi",
+            "exit_code": 0,
+            "seconds": 147.0,
+            "prompt_sha256": "332779f86ccc4fdde522c63de9df3c0e2f7b231c3b55f40a7ea9e9536b3f9507"
+          },
+          "review": "## Review: alpha12 validation harnesses\n\n### BLOCKING\nNONE\n\n### SUBSTANTIVE\nNONE\n\nI traced each harness against the stated contracts rather than prior-round defects:\n\n- **benchmark_snapshot_scale.py**: corruption selects `repeated.bin`'s first chunk from the *second* manifest and asserts equality with the first snapshot's chunk address before damaging it (lines around `first_repeated_chunk`), so the \"shared by both versions\" claim is proven, not assumed. Both damaged verifies bypass `run()` and assert the exact `{'error': 'BadArchiveError', 'message': 'Truncated'}` payload; `check=True` is safe because the worker exits 0 with the error encoded in JSON. Repair asserts `repaired_chunks == 1`, both original IDs are verified explicitly before prune, and the post-maintenance restore re-inventories all paths/bytes/mtime/mode. `run()`'s `('error' in result) == fail` assert blocks false-pass on unexpected errors; worker MemoryError escapes the caught tuple, producing nonzero exit and a raised RuntimeError with the report left `complete: False` \u2014 matches the stated behavior.\n\n- **check_snapshot_recovery.py**: The common final postcondition (`snapshots == final_ids`, every final ID verified, after the retry) is applied uniformly to all nine kill cases and all five ENOSPC cases, including the previously weak failed-compaction retry; compact retries additionally assert no loose `.uc2` files remain. Lock removal is guarded by exact dead-child PID match. Connection targeting uses `PRAGMA database_list` real filename, so the replica connection (`target=False`) cannot trip the commit-stop. The `READY`/select handshake prevents killing a child that never reached the checkpoint. Restore-before-publish asserts the reservation is an empty dir before `rmdir`, and restore-after-publish compares restored bytes. Disk-full guard rejects non-mount/non-empty/non-16\u201364MiB workspaces; filler allocation failure cleans up and propagates outside the operation-failure accounting; ENOSPC/SQLITE_FULL is asserted on the operation itself. Receipts go to stdout, fixtures retained/removed as documented.\n\n- **check_snapshot_limits.py**: Entry and reference cases use the real `MAX_ENTRIES`/`MAX_REFS` constants (100,001 files, 500,001 refs) with no lowered limits; over-limit rejection is followed by re-verify of the accepted history. The chunk block is proven self-delimiting (`chunk_length(block*2) == len(block)`), so the ref count is exact. Manifest cases are honestly labeled synthetic padding; the packed variant exercises decompressed bytes at exactly 64 MiB (accepted, hash-verified) and 64 MiB+1 (rejected with the exact \"manifest exceeds 64 MiB\" reader message), via `gzip.compress(mtime=0)` inserts with correct digest keys.\n\n- **check_cli_metadata.py**: The independent `expected()` reference implements first-prior-directory parent resolution (`setdefault` keeps `old-parent` for ID 3), version increment of earlier same-name files with insertion before the first sibling, directory append, and files-then-directories recursive order. Every row asserts attr, empty timestamp, empty dir size / `0` file size, name, and version. CP850 `caf\u00e9` exercises the reader's UTF-8 conversion. The 100,000-row regression compares all rows exactly. Missing-parent rejection checks the stderr message; version selection (`first;1`) checks exact output lines.\n\n- **benchmark_cli_metadata.py**: Opt-in, timeout recorded as data (not pass/fail), hashes and byte counts recorded per run; transactional `UC2Writer` means an interrupted fixture build never leaves a cached \"complete\" archive (`archive.exists()` gate).\n\n### POLISH\nNONE \u2014 prior polish items (docstring fixture retention, READY-failure diagnostics, `-O` guards unconditional at module import in the CLI benchmark) are all correctly in place.\n\n### Verdict\n**PASS**\nkimi-review: model=kimi-k3 finish=stop prompt_tokens=18618 completion_tokens=6758 reasoning_tokens=5927 effort=low 146s\n",
+          "review_sha256": "894058f8deeba9963ed0681575590e4da8a7d60640a4ce13b83ffc14d5bcc7ef"
+        }
+      },
+      "synthesis": {
+        "source_commit": "8d57501c7b90c919d783007efa88f48631665fbf",
+        "round": 5,
+        "scope": "Final validation harnesses and snapshot context",
+        "verdict": "PASS",
+        "reviewers": {
+          "astra": "PASS; no findings",
+          "grok": "PASS; no findings",
+          "kimi": "PASS; no findings"
+        },
+        "confirmed_findings": [],
+        "next": "Fresh second clean confirmation round 6; identical source hashes"
+      }
+    },
+    {
+      "round": 6,
+      "source_hashes": {
+        "tests/scripts/benchmark_snapshot_scale.py": "f65cdc61d89168b0f2a7c9e1c744e9cce13f55406162e2fd6c950c42b525e558",
+        "tests/scripts/check_snapshot_recovery.py": "94db0fd3c689a47a6ddfde5fa95a8aaf8266a6bd1c28363dc8308715b4787c15",
+        "tests/scripts/check_snapshot_limits.py": "a10959e1030bf2c1277e304f98f0bae8dba699cb5b4035ab347ea4f3ed333fb1",
+        "tests/scripts/benchmark_cli_metadata.py": "b138a413fcc46a0c6d84547164753c7d712a6790c4631eed6e3cc720249a01d6",
+        "tests/scripts/check_cli_metadata.py": "361752cb9ef23411c74aa0ac728ae5b9818bcb5df585096ba3fe836066f660c5",
+        "python/uc2/snapshot.py": "13ea9bddf6424dd585182250095518bfee33e67078b2818598b87f06efa38b6c"
+      },
+      "reviewers": {
+        "astra": {
+          "status": {
+            "seat": "astra",
+            "exit_code": 0,
+            "seconds": 64.7,
+            "prompt_sha256": "893e2e6688455343770f3b41d9aebd067fe85717018ceb2bc7d8fe15e4c35d2f"
+          },
+          "review": "Completed a static review of the entire frozen bundle: all five validation/benchmark scripts and the complete `snapshot.py` supporting context.\n\n- **BLOCKING: NONE**\n- **SUBSTANTIVE: NONE**\n- **POLISH: NONE**\n\nThe common recovery postcondition runs after retries in both SIGKILL and ENOSPC cases, checks the exact expected committed IDs, and verifies every final snapshot. Compaction retries are included. Disk-full restore also compares restored bytes.\n\nThe scale harness establishes that both versions reference the deliberately corrupted chunk, requires the exact corruption error for each, checks that exactly one chunk was repaired, and verifies both original IDs before pruning. Independent restore inventories cover content and metadata, including after maintenance.\n\nThe limit checks exercise the actual entry/reference boundaries and loose/packed manifest byte boundaries. CLI checks compare metadata, names, ordering, and versions across the mixed fixture and all 100,000 rows. Benchmark timeouts are recorded separately from completed measurements.\n\nLimitations: this was source review only. I ran no tests, inspected no external receipts or production C sources, and did not independently reproduce the reported successful runs or timings. The assessment applies to the stated trusted-workspace and Linux/POSIX scope; it does not establish power-loss durability or a 1 TiB boundary result. No other paths, skills, reviewers, delegation, web access, or modifications were used.\n\nPASS",
+          "review_sha256": "2bb4a9a6b94a3423c835a35d19d717119be3b621d6f6bc9158a995da7eb94863"
+        },
+        "grok": {
+          "status": {
+            "seat": "grok",
+            "exit_code": 0,
+            "seconds": 204.7,
+            "prompt_sha256": "893e2e6688455343770f3b41d9aebd067fe85717018ceb2bc7d8fe15e4c35d2f"
+          },
+          "review": "PASS\n\nBLOCKING: NONE\n\nSUBSTANTIVE: NONE\n\nPOLISH: NONE\n\nThe harnesses match the stated recovery, limit, CLI, and benchmark contracts. I did not find a false pass, an unsafe action, or a claim the code does not actually check.\n\nRecovery (`check_snapshot_recovery.py`). All nine kill cases and five ENOSPC cases share one postcondition after retry: committed IDs equal the planned set, create adds exactly one new ID, and every final ID is verified. `prune-v1` expects the dry-run retention set immediately, because the hook stops after a manifest `unlink`; `prune-v2` and `repair-v2` still expect the pre-kill set because `commit` is stopped first. Compaction retries then require every original ID and no leftover `*.uc2`. Restore-before removes only the empty reservation and restores again; both restore cases compare `data` bytes. Disk-full still demands a private 16\u201364 MiB mount, treats filler allocation errors as setup failures, and accepts only `ENOSPC` or `SQLITE_FULL`. Lock removal is limited to a sentinel whose PID is the dead child. `--O` / `PYTHONOPTIMIZE` is rejected.\n\nLimits (`check_snapshot_limits.py`). Reference and entry cases use `MAX_REFS` and `MAX_ENTRIES`, reject one past the limit, leave the snapshot list unchanged, and verify the accepted ID again. Loose manifest coverage is the file-size boundary (`limit`). Packed coverage inserts gzip bodies of 64 MiB and 64 MiB+1 and requires `manifest exceeds 64 MiB`.\n\nCLI (`check_cli_metadata.py`, `benchmark_cli_metadata.py`). The independent walker matches the contract: latest version is 0, a later file bumps earlier files and directories, new files insert ahead of the first same-name sibling, directories append, and the first directory ID wins. `-qalT` checks attribute, empty timestamp, empty directory size, file size `0`, name, order, and version on the mixed corpus and on all 100,000 rows. `-qlT` keeps version 0; explicit `;1` selection and a missing parent are checked. The timing script only counts rows and records timeouts. It exits 0 when a run times out, which is the documented benchmark behavior.\n\nScale (`benchmark_snapshot_scale.py`). The corpus is 1 GiB unique plus 2.25 GiB of repeating 256 KiB, with that split recorded. Workers set a 2 GiB address-space cap and record `VmHWM`. Corruption takes the first `repeated.bin` chunk, requires both manifests to cite it, and requires `BadArchiveError` / `Truncated` for both IDs. Repair must report one chunk; both IDs are verified, then prune, vacuum, restore, and a second inventory run. `complete` is set only at the end. A worker timeout or crash fails the run.\n\n`snapshot.py` was used only to confirm those hooks and limits. No production change is indicated.",
+          "review_sha256": "340cfd7ff2f43b38e7b8950220be7d605599288f08f9923a05e5447b10ec7c7e"
+        },
+        "kimi": {
+          "status": {
+            "seat": "kimi",
+            "exit_code": 0,
+            "seconds": 272.1,
+            "prompt_sha256": "893e2e6688455343770f3b41d9aebd067fe85717018ceb2bc7d8fe15e4c35d2f"
+          },
+          "review": "## Review: alpha12 validation harnesses (final revision)\n\n### BLOCKING\nNONE\n\n### SUBSTANTIVE\nNONE\n\nI traced each harness against the stated contracts and `snapshot.py`:\n\n- **Recovery final postcondition** (`check_snapshot_recovery.py`, kill_checks ~lines 190\u2013215, disk_checks ~lines 260\u2013285): the unified postcheck (`snapshots(repo) == final_ids`, verify every final ID) runs after the retry in all nine kill and five disk-full branches. `final_ids` is correctly the planned retained set for prune cases, `previous` for compact/repair/restore, and `previous + new ID` for create retries. The compact retry additionally asserts no loose `*.uc2` remain; the failed-compaction-retry gap is closed.\n- **Kill injection points**: `create-v1` stops after a durable loose chunk with no manifest; `create-v2` stops after manifest INSERT but before commit (rollback verified by unchanged ID set). The v2 commit hook correctly targets only the repo DB via `PRAGMA database_list` real filename, so the replica connection in `repair-v2` is not mistargeted. Lock removal is PID-checked against the confirmed-dead child (both repo and replica locks for repair). `READY`/stderr handling fails loudly.\n- **Disk-full**: private-mount guard (`ismount`, empty, 16\u201364 MiB) survives `-O` (guard uses `raise`, not assert); filler allocation errors clean up and propagate; operation must produce ENOSPC/SQLITE_FULL; restore-retry compares restored bytes; no lock residue asserted.\n- **Scale benchmark**: shared-chunk selection proves both manifests reference the first `repeated.bin` chunk before damaging it; both damaged verifies require exactly `{'error': 'BadArchiveError', 'message': 'Truncated'}`; repair asserts exactly one repaired chunk and both original IDs verify explicitly before prune; post-maintenance restore inventory matches; MemoryError propagates to nonzero exit via `run()`'s RuntimeError (no false pass); corpus docstring accurately discloses 1 GiB unique + 2.25 GiB repeating.\n- **Limits**: full 100,000/100,001 entries and 500,000/500,001 refs at real constants; accepted histories re-verified after each over-limit rejection; v1 manifest exercised at exactly 64 MiB and +1; packed gzip path exercised at both boundaries with distinct digests; no 1 TiB claim.\n- **CLI regression**: independent reference model correctly implements first-parent resolution for duplicate IDs (`setdefault`), version increments for earlier files and directories, new-file-before-first-sibling insertion, files-then-directories recursion; per-row attribute/empty-timestamp/empty-dir-size checks; CP850 `caf\u00e9` round-trip; all 100k rows compared exactly; missing-parent rejected on stderr.\n- **Benchmark harnesses**: fixture reuse is content-keyed by kind/count and writer publication is transactional, so interrupted output isn't a stale fixture; timeouts recorded, not passed.\n\n### POLISH\n1. `benchmark_snapshot_scale.py`, corruption-detection loop: rows are appended to `report['phases']` but `save()` is not called until the subsequent `run('repair ...')`; a crash between would lose the corruption rows from `results.json`. Fix: call `save()` after the loop. Cosmetic; the assertions themselves gate success.\n2. `check_snapshot_recovery.py`, `child()`: the `save` closure defined for `create-v1` is never installed (only the `_store` hook is). Dead code; remove for clarity.\n\n### Verdict\n**PASS** (two polish items above do not affect validity of the evidence produced).\nkimi-review: model=kimi-k3 finish=stop prompt_tokens=18642 completion_tokens=8125 reasoning_tokens=7341 effort=low 272s\n",
+          "review_sha256": "7a02086aca64b5b6660f79dc6a30e81315c3f05f77f92fed203d01c279b262fa"
+        }
+      },
+      "synthesis": {
+        "round": 6,
+        "source_commit": "8d57501c7b90c919d783007efa88f48631665fbf",
+        "verdict": "PASS; no blocking or substantive findings",
+        "reviewers": {
+          "astra": "PASS; no findings",
+          "grok": "PASS; no findings",
+          "kimi": "PASS; two optional polish notes"
+        },
+        "polish_disposition": [
+          {
+            "finding": "Persist deliberate-corruption receipt rows immediately",
+            "decision": "Optional; a failure before the next successful phase leaves complete=false, never a passing result. Both completed runs retain the rows. No release source change."
+          },
+          {
+            "finding": "Unused create-v1 save closure",
+            "decision": "The shared save closure is installed for create-v2; create-v1 installs the store hook instead. Moving closure construction into the v2 branch is cosmetic. Current behaviour and evidence are correct; no release source change."
+          }
+        ],
+        "clean_rounds": {
+          "production_cli": [
+            1,
+            2
+          ],
+          "final_harnesses": [
+            5,
+            6
+          ]
+        }
+      }
+    }
+  ],
+  "incomplete_attempts": [
+    {
+      "name": "r2-kimi-incomplete-status",
+      "status": {
+        "seat": "kimi",
+        "exit_code": 2,
+        "seconds": 164.0,
+        "prompt_sha256": "77c5785afb786c285d047727145adba353d1b63a9fbcae30a8848487b67f9570"
+      },
+      "counted_as_clean": false
+    },
+    {
+      "name": "prose-r2-kimi-incomplete-status",
+      "status": {
+        "seat": "kimi",
+        "exit_code": 3,
+        "seconds": 604.3,
+        "prompt_sha256": "9f107a8ff0ef404a4f189ac9ec232b17a2e16ef006062b4aebef191be69ebb47"
+      },
+      "counted_as_clean": false
+    }
+  ],
+  "result": {
+    "confirmed_blocking_or_substantive_remaining": 0,
+    "production_clean_rounds": [
+      1,
+      2
+    ],
+    "final_harness_clean_rounds": [
+      5,
+      6
+    ],
+    "optional_polish_deferred": [
+      {
+        "finding": "Persist deliberate-corruption receipt rows immediately",
+        "decision": "Optional; a failure before the next successful phase leaves complete=false, never a passing result. Both completed runs retain the rows. No release source change."
+      },
+      {
+        "finding": "Unused create-v1 save closure",
+        "decision": "The shared save closure is installed for create-v2; create-v1 installs the store hook instead. Moving closure construction into the v2 branch is cosmetic. Current behaviour and evidence are correct; no release source change."
+      }
+    ]
+  }
+}
