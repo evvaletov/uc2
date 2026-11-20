@@ -43,7 +43,11 @@ Reviewed message SHA256 hashes:
 | TC email | `29477402a4214840e07a8167aa0fa5a579b70628fb53173a8242573b383ac4a3` |
 | MC issue | `219c39e3e9a2b8f82052690b2980391c3a11ce52fa5b5c28bcaa17b9c19fdda8` |
 
-Submission state:
+Submission state on 14 November (superseded):
+
+Both submissions have since been verified. See the
+[20 November receipt](commander-submissions-2026-11-20.md). The following records
+the access blockers at the end of the original review session.
 
 - **Total Commander:** ready; the owner selected a Gmail sender and authorised
   the sf01 browser route. That sender is neither signed in nor configured as a

@@ -9,22 +9,21 @@ and `measurements
 
 The next priorities are:
 
-1. Complete the authorised Total Commander and Midnight Commander submissions.
-   QA, prose and elegance reviews are complete. TC awaits access to the selected
-   sender; GitHub rejected MC issue creation with an account restriction.
-   A later MC code commit needs the contributor's DCO sign-off.
-2. Tune shared-chunk compression against the documented public-source regression
+1. Tune shared-chunk compression against the documented public-source regression
    while preserving edited-binary gains and compatibility.
-3. Resolve libarchive's optional dependency, format ID and decoded-entry spool
+2. Resolve libarchive's optional dependency, format ID and decoded-entry spool
    decisions with the maintainers.
-4. Add transactional CLI extraction and OTS attachment, preserving existing
+3. Add transactional CLI extraction and OTS attachment, preserving existing
    outputs on failure.
-5. Design snapshot growth beyond the fixed reference and manifest caps; assess
+4. Design snapshot growth beyond the fixed reference and manifest caps; assess
    read-only/concurrent access separately from the current exclusive lock.
+5. Prepare and installation-test a FreeDOS ZIP/LSM package, then confirm current
+   repository submission requirements.
 
 See `ROADMAP.md on GitHub
 <https://github.com/evvaletov/uc2/blob/main/ROADMAP.md>`_ for evidence, completed
-work and tracking references. TC and MC submissions remain pending; their
-`submission review record
-<https://github.com/evvaletov/uc2/blob/main/docs/qa/commander-submissions-2026-11-14.md>`_
-records completed checks and the remaining access blockers.
+work and tracking references. The TC catalogue enquiry and `MC issue #5225
+<https://github.com/MidnightCommander/mc/issues/5225>`_ were submitted on
+19 November (EST) and verified on 20 November. Their `submission receipts
+<https://github.com/evvaletov/uc2/blob/main/docs/qa/commander-submissions-2026-11-20.md>`_
+record the completed checks. Catalogue acceptance and an MC merge remain pending.

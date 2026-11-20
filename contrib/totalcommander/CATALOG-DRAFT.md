@@ -1,19 +1,20 @@
 # Total Commander catalogue proposal
 
-Prepared November 7, 2026; refreshed November 14 for alpha12. Submission is
-authorised and QA, prose and elegance review are complete. The owner-selected
-Gmail sender is not available in the inspected sf01 browser session. No email
-has been sent; resume when that account is signed in. See the
-[submission review record](../../docs/qa/commander-submissions-2026-11-14.md).
+Prepared November 7, 2026; refreshed November 14 for alpha12. Submitted to
+`support@ghisler.com` on November 19 at 21:49 EST. The owner's Gmail Sent copy
+was verified on asteroid01 on November 20 and matches the reviewed text.
+QA, prose and elegance review were complete before submission. No duplicate
+was sent during verification. See the
+[submission receipt](../../docs/qa/commander-submissions-2026-11-20.md).
 
 The [official plugin catalogue](https://www.ghisler.com/plugins.htm) asks authors
 to contact the project before a catalogue listing to avoid duplicates. Its current
 page has no UC2 entry. Use the contact route on the
 [official support page](https://www.ghisler.com/faq.htm): `support@ghisler.com`.
 
-Proposed subject: **UC2 read-only WCX plugin for 32-bit and 64-bit Total Commander**
+Subject: **UC2 read-only WCX plugin for 32-bit and 64-bit Total Commander**
 
-Proposed message: [exact email text](CATALOG-MESSAGE.txt).
+Submitted message: [exact email text](CATALOG-MESSAGE.txt).
 
 Suggested short listing:
 

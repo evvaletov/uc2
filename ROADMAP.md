@@ -1,6 +1,6 @@
 # UC2 Roadmap
 
-## Recommended next priorities (2026-11-14)
+## Recommended next priorities (2026-11-20)
 
 Alpha12 includes the project audit repairs and the CLI metadata indexes.
 The [release record](docs/releases/3.0.0a12-qa.md) and
@@ -8,36 +8,38 @@ The [release record](docs/releases/3.0.0a12-qa.md) and
 cover the implementation, validation and remaining limits. SDF mirrors the
 source and release tags.
 
-1. [ ] **Complete the Total Commander and Midnight Commander submissions.**
-   The [TC catalogue enquiry](contrib/totalcommander/CATALOG-DRAFT.md) and
-   [MC proposal](contrib/mc/upstream/REVIEW.md) are authorised and have completed
-   QA, prose and elegance review. TC awaits access to the owner-selected Gmail
-   sender; GitHub rejected MC issue creation with an account restriction.
-   Neither has been sent. Resume submission when access is available, then
-   track maintainer feedback. [Review record](docs/qa/commander-submissions-2026-11-14.md);
-   tracking: 4b7fbd1. A later MC code commit needs the contributor's DCO sign-off.
-2. [ ] **Tune shared-chunk compression and mode selection.** Investigate the
+The TC catalogue enquiry and [MC issue #5225](https://github.com/MidnightCommander/mc/issues/5225)
+were submitted on 19 November (EST), after the completed QA, prose and elegance
+reviews. Both were verified on 20 November. Track maintainer feedback in
+4b7fbd1; catalogue acceptance and an MC merge remain pending.
+[Submission receipts](docs/qa/commander-submissions-2026-11-20.md).
+
+1. [ ] **Tune shared-chunk compression and mode selection.** Investigate the
    measured 9.1% public-source regression while preserving edited-binary reuse
    gains, format compatibility and current defaults. Tracking: 3fdd442.
-3. [ ] **Resolve the remaining libarchive design decisions with maintainers.**
+2. [ ] **Resolve the remaining libarchive design decisions with maintainers.**
    [PR #3832](https://github.com/libarchive/libarchive/pull/3832) removes
    whole-input spooling from the optional reader. Dependency acceptance, format
    ID allocation and the decoded-entry spool remain open. Tracking: 7bbb6b6.
-4. [ ] **Make CLI extraction and OTS attachment transactional.** Preserve
+3. [ ] **Make CLI extraction and OTS attachment transactional.** Preserve
    existing outputs when decoding, writing or final publication fails. The CLI
    metadata-scaling part of 380e7de is complete; direct-output behaviour remains
    documented pending this separate change.
-5. [ ] **Design snapshot growth beyond the fixed reference and manifest caps.**
+4. [ ] **Design snapshot growth beyond the fixed reference and manifest caps.**
    Use the measured boundaries to decide on repository partitioning or a larger
    packed format. Keep v1/v2 compatibility and verified publication; assess
    read-only/concurrent readers separately from the current exclusive lock.
    Tracking: 179a8de; the scale/recovery validation in a3bcfb4 is complete.
+5. [ ] **Prepare and installation-test a FreeDOS package.** Build the ZIP/LSM
+   bundle from the published release, test FDIMPLES/FDNPKG installation and
+   confirm the current repository submission requirements before proposing it.
+   Tracking: 655345a; the broader distribution tasks remain below.
 
 ### Distribution and visibility TODOs (14 November 2026)
 
 Tracking: `655345a`; SDF mirror work also relates to `176dc48`. Public package
 submissions, mailing-list messages and announcements remain pending. The TC/MC
-proposals above remain a separate task.
+proposals have been submitted; their reviews remain a separate task.
 
 - [x] Publish alpha12 with matching GitHub assets, PyPI distributions, SDF source
   and release tags. All 31 public GitHub downloads and 21 PyPI distribution hashes

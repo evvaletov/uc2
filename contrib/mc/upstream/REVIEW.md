@@ -1,9 +1,10 @@
 # Proposed Midnight Commander UC2 helper
 
-Prepared November 7, 2026; revalidated November 14 for alpha12. Submission is
-authorised and QA, prose and elegance review are complete. GitHub rejected the
-issue-creation attempt because of an account restriction. No upstream issue,
-PR or message has been submitted.
+Prepared November 7, 2026; revalidated November 14 for alpha12. Submitted as
+[MidnightCommander/mc#5225](https://github.com/MidnightCommander/mc/issues/5225)
+on November 19 at 21:44 EST (November 20, 02:44 UTC), verified November 20.
+QA, prose and elegance review were complete before submission. The earlier
+account restriction is superseded by the verified issue receipt.
 
 [Patch](mc-3228c23-uc2.patch), based on MidnightCommander/mc master
 `3228c23fd57db28c20c35db8e0e1c6d3b087b3c7`, adds a read-only Python extfs
@@ -14,9 +15,11 @@ Python 3 is required. The helper lists stored versions and
 copies files out with literal path selection and staged replacement. Writes
 are refused. The configured helper retains the upstream test command hook.
 
-Proposed issue/PR title: **Add read-only UltraCompressor II extfs support**
+Issue title: **Add read-only UltraCompressor II extfs support**
 
-Proposed description: [reviewed issue text](ISSUE-DRAFT.md).
+Description: [reviewed issue text](ISSUE-DRAFT.md). The posted issue changes
+only the upstream-revision sentence: it names the original patch base and
+records clean applicability to `fc236523376ef3e66f597759ea36380df6ef121e`.
 
 Validation:
 
@@ -51,6 +54,6 @@ The [current contribution instructions](https://midnight-commander.org/source-co
 require an issue or PR and review. The prepared feature issue links the patch;
 it does not submit a signed code commit. A later code contribution needs the
 contributor's DCO acknowledgement and an initial `Ticket #<issue>: ...` commit
-title. This patch has no invented issue number or sign-off. Once GitHub access
-is available, check for an existing submission and any upstream changes before
-posting the reviewed issue.
+title. This patch has no invented sign-off. Track maintainer feedback on issue
+5225 and recheck upstream changes before preparing a code commit. See the
+[submission receipt](../../../docs/qa/commander-submissions-2026-11-20.md).
