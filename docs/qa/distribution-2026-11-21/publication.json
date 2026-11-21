@@ -212,5 +212,10 @@
     "reply_index": 2,
     "body_sha256": "23b0b83002d109363f3827fe8c3b6c10fa2b27dcace8dca0ecb84ef826141894",
     "whitespace_normalised_match": true
+  },
+  "copr": {
+    "publication": "deferred at owner request; standalone RPMs published",
+    "login_error": "System error",
+    "login_page": "https://id.fedoraproject.org/login/gssapi/negotiate"
   }
 }

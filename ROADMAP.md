@@ -20,11 +20,12 @@ reviews. Both were verified on 20 November. Track maintainer feedback in
 4b7fbd1; catalogue acceptance and an MC merge remain pending.
 [Submission receipts](docs/qa/commander-submissions-2026-11-20.md).
 
-1. [ ] **Publish a signed Copr repository.** The Fedora 45 RPM and complete
-   source RPM are available and lifecycle-tested. The Fedora account is verified;
-   Copr needs a normal browser login. Build and verify the hosted package, then
-   assess Fedora 44 and Enterprise Linux. Resume AUR publication when account
-   registration reopens. Tracking: 655345a.
+1. [ ] **Expand RPM distribution.** The Fedora 45 x86_64 RPM and complete
+   source RPM are published and lifecycle-tested. Assess Fedora 44, Enterprise
+   Linux and aarch64 builds, then signed repository delivery. The owner chose
+   standalone RPMs for now after Fedora's GSSAPI login returned "System error";
+   Copr is deferred. Resume AUR publication when registration reopens.
+   Tracking: 655345a.
 2. [ ] **Fix drive-qualified DOS input paths.** Creating an archive from a
    relative 8.3 input works; a drive-qualified backslash input still fails.
    Extend basename handling and add a FreeDOS regression check before the next
@@ -57,7 +58,7 @@ reviews. Both were verified on 20 November. Track maintainer feedback in
 - [x] Build and lifecycle-test the Arch recipe. AUR registration is temporarily
   closed, so the recipe remains available for local `makepkg` builds.
 - [x] Publish Fedora 45 x86_64 and source RPMs with checksums. The standalone
-  RPMs are unsigned; Copr publication is pending browser access.
+  RPMs are unsigned; Copr publication is deferred after a Fedora login error.
 - [x] Update the GitHub and SDF alpha13 release entries with package links.
 - [Package installation and test details](docs/distribution.md);
   [review and publication evidence](docs/qa/distribution-2026-11-21.md).
@@ -115,7 +116,7 @@ the earlier TC/MC proposals. Recipient decisions remain separate tasks.
   freedos-devel eligibility enquiry with AI assistance disclosed. Await the
   optional-package decision; official acceptance has not been granted.
 - [x] Publish a project Homebrew tap and Fedora RPMs, and test an Arch recipe.
-  AUR registration is closed; Copr awaits browser access. See the completed
+  AUR registration is closed; Copr is deferred after a Fedora login error. See the completed
   distribution work above and the installation guide.
 - [ ] Assess distribution-maintained Linux packages and Winget requirements.
   Defer Homebrew core submission until stable-release and platform criteria

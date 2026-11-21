@@ -3,8 +3,9 @@
 UC2 now has a public [Homebrew tap](https://github.com/evvaletov/homebrew-tap),
 a tested FreeDOS ZIP, and Fedora 45 binary and source RPMs. The Arch recipe
 passes its local build and package lifecycle checks; AUR registration is closed
-according to the owner's report. Copr publication awaits a normal OIDC login.
-The standalone RPMs are unsigned.
+according to the owner's report. The Fedora login page returned "System error"
+at its GSSAPI negotiation step. The owner chose standalone RPMs for now,
+so Copr publication is deferred. The standalone RPMs are unsigned.
 
 The [alpha13 GitHub release](https://github.com/evvaletov/uc2/releases/tag/v3.0.0-alpha.13)
 retains its original 31 assets and adds six package/source/checksum downloads.

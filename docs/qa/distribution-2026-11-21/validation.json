@@ -153,6 +153,11 @@
     "checksum_failure_blocks_install": "PASS with deliberately altered manifest"
   },
   "copr": {
-    "publication": "pending normal OIDC login; no project or build published"
+    "publication": "deferred at owner request; standalone RPM distribution is current",
+    "login_observation": {
+      "url": "https://id.fedoraproject.org/login/gssapi/negotiate",
+      "error": "System error"
+    },
+    "project_or_build_published": false
   }
 }

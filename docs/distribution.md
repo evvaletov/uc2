@@ -65,7 +65,7 @@ upgrade, package-file verification, archive round trips, removal and
 reinstallation were tested in a Fedora 45 container.
 
 The recipe and rebuild instructions are in `packaging/rpm/`. Copr publication
-is pending. The release filenames use `3.0.0a13`; the RPM metadata retains
+is deferred. The release filenames use `3.0.0a13`; the RPM metadata retains
 `3.0.0~alpha.13` for version ordering.
 No inclusion in Fedora's official repositories is claimed.
 

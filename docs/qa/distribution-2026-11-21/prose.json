@@ -14,8 +14,14 @@
     "ROADMAP.md",
     "docs/roadmap.rst"
   ],
-  "word_count": 10240,
+  "word_count": 10263,
   "findings": [],
-  "iterations": 3,
-  "scope": "Final publication prose and roadmaps; the SDF reply received a focused Grok/Fable factual update review."
+  "iterations": 4,
+  "scope": "Final publication prose and roadmaps; the SDF reply received a focused Grok/Fable factual update review.",
+  "patterns": [
+    "typographical_quotes_dashes",
+    "stock_phrases",
+    "rhetorical_contrast",
+    "placeholders"
+  ]
 }

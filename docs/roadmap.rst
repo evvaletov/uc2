@@ -20,8 +20,9 @@ See the `SDF evidence
 
 The next priorities are:
 
-1. Publish a signed Copr repository from the tested RPM, then assess further
-   Fedora and Enterprise Linux targets. Resume AUR upload when registration opens.
+1. Extend the published RPMs to further Fedora/Enterprise Linux targets and
+   aarch64, then assess signed repository delivery. Copr is deferred after a
+   Fedora login error; resume AUR upload when registration opens.
 2. Fix drive-qualified DOS input paths and add a FreeDOS regression check.
 3. Publish the reviewed SDF tutorial when wiki access is granted.
 4. Resolve the FreeDOS eligibility enquiry and libarchive's optional dependency,
