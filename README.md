@@ -83,6 +83,9 @@ with UC2File("archive.uc2") as archive:
 See the [Python documentation](python/README.md) for limits, stored versions,
 error handling, and extraction behavior.
 
+[Recover a DOS archive on SDF](docs/sdf.rst): a tested NetBSD build and a
+short demonstration using an archive made by the original DOS encoder.
+
 ## Building
 
 Requires CMake >= 3.16 and a C99 compiler (GCC, Clang, or MSVC).

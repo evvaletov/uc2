@@ -1,0 +1,13 @@
+To: membership@sdf.org
+Subject: UC2 archive-preservation tutorial and wiki access (evv)
+
+Hello,
+
+I'm evv on SDF. I've prepared a tutorial on recovering DOS UltraCompressor II archives with the UC2 revival, using a native build tested on otaku. It covers building under /tmp, checking an original-encoder fixture, preserving source archives and reporting compatibility problems.
+
+https://git.sdf.org/evv/uc2/src/branch/main/docs/sdf.rst
+
+I'd like to contribute it to the SDF tutorial wiki. Could you arrange wiki write access for evv and suggest a suitable page name? I can adapt the page to the wiki's format and suggested location.
+
+Thanks,
+Eremey Valetov (evv)

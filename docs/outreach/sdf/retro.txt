@@ -1,0 +1,22 @@
+Subject: UC2: opening DOS UltraCompressor II archives on SDF
+
+I've been reviving UltraCompressor II, Nico de Vries's DOS archiver,
+in C99. Alpha13 now builds on SDF's NetBSD 9.3 amd64 host otaku.
+
+The linked example lists, tests and extracts an archive made
+with the original UC2 Pro 2.3 in DOSBox-X. All six payloads match
+byte for byte. The fixture was generated for this project.
+
+https://git.sdf.org/evv/uc2/src/branch/main/docs/sdf.rst
+
+Classic output at levels 2-5 remains readable by original DOS UC2.
+The newer rANS levels and shared-chunk format need the revival
+reader. Downloads for Linux, macOS and Windows are here:
+https://github.com/evvaletov/uc2/releases/tag/v3.0.0-alpha.13
+
+If you have old .UC2 files or use another NetBSD setup, I'd welcome
+compatibility reports: version, command and any error message.
+Please check an archive's contents and sharing rights before posting
+it. Keeping the original is especially useful while testing an alpha.
+
+evv

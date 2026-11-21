@@ -37,5 +37,6 @@ SAS/UC2SEA reads. See the `tar guide
    library
    format
    building
+   sdf
    history
    roadmap

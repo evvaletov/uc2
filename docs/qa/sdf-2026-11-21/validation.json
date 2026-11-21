@@ -1,0 +1,62 @@
+{
+  "date": "2026-11-21",
+  "release_tag": "v3.0.0-alpha.13",
+  "release_source": "b297757b7509b3b46be9002979eff5e3e20e6ea8",
+  "test_revision": "a76e66fa4b745395bbacaf3ed6810ccbdde5ad9a",
+  "native": {
+    "host": "otaku.sdf.org",
+    "os": "NetBSD 9.3 amd64",
+    "compiler": "GCC 7.5.0",
+    "cmake": "4.1.2",
+    "python": "3.12.7",
+    "ctest_passed": 35,
+    "ctest_skipped": {
+      "ots_cross_check": "optional Python dependency unavailable"
+    },
+    "ctest_excluded": [
+      "roundtrip_dosbox"
+    ],
+    "cli_sha256": "d5cdb68811a74924efbf725a9cc19ba8cb7769df70d3a421228e30ea6f8e7ee8",
+    "dynamic_dependencies": [
+      "libc.so.12"
+    ],
+    "original_encoder_fixture_payloads_compared": 6,
+    "new_classic_archive_restored_exactly": true,
+    "private_install_verified": true,
+    "user_install": "$HOME/opt/uc2-3.0.0a13/bin/uc2",
+    "production_source_changes": false
+  },
+  "local": {
+    "cli_io": "PASS",
+    "cli_staging": "PASS",
+    "sphinx_warnings_as_errors": "PASS",
+    "generator_shell_syntax_and_exact_output": "PASS"
+  },
+  "reviews": {
+    "scope": [
+      "correctness",
+      "prose",
+      "elegance"
+    ],
+    "models": [
+      "grok-4.7-build",
+      "claude-fable-5-2",
+      "gpt-6.2-astra"
+    ],
+    "replacement": "Gemini Argon subscription authentication failed; Astra supplied the independent replacement seat.",
+    "round1": "FINDINGS: RST underlines and fail-closed test checkout corrected; pinned test hashes verified.",
+    "round2": "PASS: all three independent seats; no required findings.",
+    "round3": "PASS: fresh three-seat panel on unchanged files; no required findings.",
+    "consecutive_clean_rounds": 2,
+    "files_sha256": {
+      "tests/scripts/check_cli_io.py": "4bcc389b6021036d6af76aaaf3e785cb6b8dbb4b90f44afda234052dd4e02c6b",
+      "tests/scripts/check_cli_staging.py": "c156a3a6c482addb1263266b9aa81fde9f8d195d9981edf7ad3f62ae619f5c59",
+      "scripts/gen-bboard-post.sh": "1e24103c651324b06334f3a470d7bc281d5492d62d0bde17849dbf46e650b674",
+      "docs/sdf.rst": "8b50ed8801bdcf15da4fa1e0afc34354a607c611bfa4635080761ed3d977c5da",
+      "docs/outreach/sdf/retro.txt": "8c86957449853d1ecb05b5c899573e79740ff0e18aabba5ef62c1f8848047ea3",
+      "docs/outreach/sdf/requests.txt": "df6ab0b88c26deed9ace24403f7a74ad93686ba3c481eb4efef4e4d0299ba507",
+      "docs/outreach/sdf/tutorial-offer.txt": "abccc3cc345df4eec0db496cabb196a4c0ecd51139c326cd65a64d8845ca85fe",
+      "docs/outreach/sdf/release.md": "e6ad97d71a351cb2a1cbc1ff0f5836c15f98213cb448726f6a039132be6a8ecd"
+    }
+  }
+}

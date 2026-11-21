@@ -1,0 +1,83 @@
+Test project /tmp/uc2-alpha13-evv.LKS4s9/build-netbsd
+      Start  1: identify
+ 1/36 Test  #1: identify .........................   Passed    0.00 sec
+      Start  2: extract
+ 2/36 Test  #2: extract ..........................   Passed    0.01 sec
+      Start  3: roundtrip
+ 3/36 Test  #3: roundtrip ........................   Passed    0.12 sec
+      Start  4: turbo
+ 4/36 Test  #4: turbo ............................   Passed    0.06 sec
+      Start  5: cli_create
+ 5/36 Test  #5: cli_create .......................   Passed    0.06 sec
+      Start  6: cli_master
+ 6/36 Test  #6: cli_master .......................   Passed    0.06 sec
+      Start  7: cli_bigfile
+ 7/36 Test  #7: cli_bigfile ......................   Passed    0.24 sec
+      Start  8: cli_dirs
+ 8/36 Test  #8: cli_dirs .........................   Passed    0.08 sec
+      Start  9: cli_ingest
+ 9/36 Test  #9: cli_ingest .......................   Passed    0.13 sec
+      Start 10: cdc
+10/36 Test #10: cdc ..............................   Passed    0.01 sec
+      Start 11: merkle
+11/36 Test #11: merkle ...........................   Passed    0.01 sec
+      Start 12: blockstore
+12/36 Test #12: blockstore .......................   Passed    0.04 sec
+      Start 13: storage_failures
+13/36 Test #13: storage_failures .................   Passed    0.05 sec
+      Start 14: simhash
+14/36 Test #14: simhash ..........................   Passed    0.01 sec
+      Start 15: delta
+15/36 Test #15: delta ............................   Passed    0.00 sec
+      Start 16: rans
+16/36 Test #16: rans .............................   Passed    0.00 sec
+      Start 17: codec_failures
+17/36 Test #17: codec_failures ...................   Passed    0.01 sec
+      Start 18: dict
+18/36 Test #18: dict .............................   Passed    0.00 sec
+      Start 19: preprocess
+19/36 Test #19: preprocess .......................   Passed    0.10 sec
+      Start 20: lz4
+20/36 Test #20: lz4 ..............................   Passed    0.00 sec
+      Start 21: blake3
+21/36 Test #21: blake3 ...........................   Passed    0.50 sec
+      Start 22: sha256
+22/36 Test #22: sha256 ...........................   Passed    0.01 sec
+      Start 23: ots
+23/36 Test #23: ots ..............................   Passed    0.00 sec
+      Start 24: ingest
+24/36 Test #24: ingest ...........................   Passed    0.03 sec
+      Start 25: cli_metadata
+25/36 Test #25: cli_metadata .....................   Passed    5.61 sec
+      Start 26: cli_io
+26/36 Test #26: cli_io ...........................   Passed    0.38 sec
+      Start 27: cli_extraction
+27/36 Test #27: cli_extraction ...................   Passed    2.12 sec
+      Start 28: cli_options
+28/36 Test #28: cli_options ......................   Passed    0.92 sec
+      Start 29: cli_staging
+29/36 Test #29: cli_staging ......................   Passed    0.21 sec
+      Start 30: cli_transactions
+30/36 Test #30: cli_transactions .................   Passed    0.59 sec
+      Start 31: integrations
+31/36 Test #31: integrations .....................   Passed    1.99 sec
+      Start 32: ots_cross_check
+32/36 Test #32: ots_cross_check ..................***Skipped   0.09 sec
+      Start 33: fuzz_regression
+33/36 Test #33: fuzz_regression ..................   Passed    0.01 sec
+      Start 34: writer
+34/36 Test #34: writer ...........................   Passed    0.45 sec
+      Start 35: chunk_corruption
+35/36 Test #35: chunk_corruption .................   Passed    0.60 sec
+      Start 36: sea
+36/36 Test #36: sea ..............................   Passed    0.08 sec
+
+100% tests passed, 0 tests failed out of 36
+
+Label Time Summary:
+optional    =   0.09 sec*proc (1 test)
+
+Total Test time (real) =  14.65 sec
+
+The following tests did not run:
+	 32 - ots_cross_check (Skipped)

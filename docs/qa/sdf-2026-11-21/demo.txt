@@ -1,0 +1,27 @@
+a----- 2026-03-11 08:21:12   256 allbytes.bin
+a----- 2026-03-11 08:21:12     0 empty.dat
+a----- 2026-03-11 08:21:12    15 hello.txt
+a----- 2026-03-11 08:21:12  1024 random.bin
+a----- 2026-03-11 08:21:12  1719 textfile.txt
+a----- 2026-03-11 08:21:12 65536 zeros.bin
+Testing allbytes.bin 256 bytes
+Testing empty.dat 0 bytes
+Testing hello.txt 15 bytes
+Testing random.bin 1024 bytes
+Testing textfile.txt 1719 bytes
+Testing zeros.bin 65536 bytes
+Testing archive integrity...
+Everything went OK
+Decompression complete
+Testing hello.txt 15 bytes
+Six fixture payloads and new archive restored exactly
+Testing archive integrity...
+Everything went OK
+-- Install configuration: "Release"
+-- Installing: /tmp/uc2-demo.6pry4g/installed/bin/uc2
+-- Installing: /tmp/uc2-demo.6pry4g/installed/man/man1/uc2.1
+-- Installing: /tmp/uc2-demo.6pry4g/installed/libexec/mc/extfs.d/uc2
+-- Installing: /tmp/uc2-demo.6pry4g/installed/share/uc2/mc/mc.ext.ini
+-- Installing: /tmp/uc2-demo.6pry4g/installed/share/uc2/mc/LICENSE.BSD-2-Clause
+CLI SHA256: d5cdb68811a74924efbf725a9cc19ba8cb7769df70d3a421228e30ea6f8e7ee8
+Private prefix installation passed

@@ -1,0 +1,25 @@
+Subject: uc2 alpha13: NetBSD build for installation consideration
+
+Could uc2 be considered for installation on SDF? It reads and writes
+UltraCompressor II archives and provides a C99 CLI and man page.
+
+I built v3.0.0-alpha.13 on otaku (NetBSD 9.3 amd64), using GCC 7.5.0
+and CMake 4.1.2. The CLI links only to libc.so.12. Building under /tmp
+with two jobs and installing to a private prefix both worked.
+
+With two portable Python test scripts, 35 tests passed. One optional
+OpenTimestamps check was skipped; DOSBox testing was excluded here.
+The changes fix assumptions about directory reads on NetBSD and leave
+the compiled release source unchanged. Commands and scope are here:
+https://git.sdf.org/evv/uc2/src/branch/main/docs/sdf.rst
+
+Source and tag: https://git.sdf.org/evv/uc2
+The source has GPL-3.0-or-later and LGPL-3.0-only components, detailed
+in docs/license-audit.md. This is an alpha release.
+
+The REQUESTS charter mentions MetaARPA installs under /sys/sdf. I can
+use that route if it fits better, or adapt the build for pkgsrc.
+Please let me know the preferred location and packaging convention.
+
+Thanks,
+evv
