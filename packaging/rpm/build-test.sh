@@ -18,8 +18,9 @@ arch=$(uname -m)
 [[ $arch == x86_64 || $arch == aarch64 ]]
 [[ $arch == "${UC2_RPM_EXPECT_ARCH:-$arch}" ]]
 
+# Request the executable so an installed curl-minimal also satisfies the dependency.
 dnf -y --setopt=install_weak_deps=False install \
-  rpm-build redhat-rpm-config cmake gcc make python3 diffutils curl shadow-utils
+  rpm-build redhat-rpm-config cmake gcc make python3 diffutils /usr/bin/curl shadow-utils
 useradd -m uc2builder
 work=$(mktemp -d /tmp/uc2-rpm.XXXXXX)
 chown uc2builder:uc2builder "$work"
@@ -87,7 +88,10 @@ check_installed() {
 
 remove_package() {
   dnf -y remove uc2
-  ! rpm -q uc2
+  if rpm -q uc2 >/dev/null 2>&1; then
+    echo 'UC2 is still registered after removal.' >&2
+    return 1
+  fi
   test ! -e /usr/bin/uc2
   test ! -e /usr/libexec/mc/extfs.d/uc2
   cmp "$trial/keep.txt" "$trial/expected.txt"

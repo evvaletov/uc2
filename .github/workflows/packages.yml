@@ -11,6 +11,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: package-recipes-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   rpm:
     name: RPM (${{ matrix.target.id }}, ${{ matrix.runner.arch }})
