@@ -1,5 +1,10 @@
 %global upstream_version 3.0.0a13
 %global upstream_tag v3.0.0-alpha.13
+%if 0%{?rhel} == 9
+%global test_python python3.11
+%else
+%global test_python python3
+%endif
 
 Name:           uc2
 Version:        3.0.0~alpha.13
@@ -11,7 +16,7 @@ Source0:        %{url}/archive/refs/tags/%{upstream_tag}.tar.gz
 BuildRequires:  gcc
 BuildRequires:  cmake
 BuildRequires:  make
-BuildRequires:  python3
+BuildRequires:  %{test_python} >= 3.11
 BuildRequires:  diffutils
 Requires:       python3
 
@@ -26,7 +31,7 @@ echo '41566267ca92d36cf181b6c4fc5878b53050b4aebf43baba7d16bdf60149ed93  %{SOURCE
 %autosetup -n uc2-3.0.0-alpha.13
 
 %build
-%cmake -DUC2_VERSION_LABEL=%{upstream_version} -DUC2_BUILD_TESTS=ON
+%cmake -DUC2_VERSION_LABEL=%{upstream_version} -DUC2_BUILD_TESTS=ON -DPython3_EXECUTABLE=/usr/bin/%{test_python}
 %cmake_build
 
 %install

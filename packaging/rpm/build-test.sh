@@ -19,8 +19,10 @@ arch=$(uname -m)
 [[ $arch == "${UC2_RPM_EXPECT_ARCH:-$arch}" ]]
 
 # Request the executable so an installed curl-minimal also satisfies the dependency.
+test_python=python3
+if [[ $(rpm --eval '%{?rhel}') == 9 ]]; then test_python=python3.11; fi
 dnf -y --setopt=install_weak_deps=False install \
-  rpm-build redhat-rpm-config cmake gcc make python3 diffutils tar \
+  rpm-build redhat-rpm-config cmake gcc make python3 "$test_python" diffutils tar \
   /usr/bin/curl /usr/sbin/runuser shadow-utils
 useradd -m uc2builder
 work=$(mktemp -d /tmp/uc2-rpm.XXXXXX)
