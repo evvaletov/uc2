@@ -127,9 +127,9 @@ with tempfile.TemporaryDirectory(prefix='uc2-integrations-') as temporary:
         try:
             process.stdin.write(b'partial input'); process.stdin.flush()
             deadline = time.monotonic() + 5
-            while not list(root.glob('protected.uc2.tmp-*')) and time.monotonic() < deadline:
+            while not list(root.glob('U???????.TMP' if os.name == 'nt' else '.uc2-tmp-*')) and time.monotonic() < deadline:
                 time.sleep(.01)
-            if not list(root.glob('protected.uc2.tmp-*')):
+            if not list(root.glob('U???????.TMP' if os.name == 'nt' else '.uc2-tmp-*')):
                 raise AssertionError('writer did not start')
             if protected.read_bytes() != b'existing destination':
                 raise AssertionError('destination changed before EOF')

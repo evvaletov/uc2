@@ -7,9 +7,9 @@ Synopsis
 .. code-block:: none
 
    uc2 [options] archive.uc2 [patterns...]
-   uc2 [--chunked] -w [-L level] archive.uc2 files...
-   uc2 [--chunked] --ingest archive.uc2
-   uc2 [--chunked] --ingest-tar archive.uc2
+   uc2 [--chunked[=auto]] -w [-L level] archive.uc2 files...
+   uc2 [--chunked[=auto]] --ingest archive.uc2
+   uc2 [--chunked[=auto]] --ingest-tar archive.uc2
    uc2 --ingest-restore archive.uc2
 
 Modes
@@ -54,6 +54,12 @@ Modes
    every compression level. See the `chunk-sharing guide
    <https://github.com/evvaletov/uc2/blob/main/docs/chunk-sharing.md>`_.
 
+   ``--chunked=auto`` builds both layouts and keeps the smaller complete archive,
+   choosing classic on ties. It costs both compression passes and temporary
+   space for both archives. Both candidates must fit the existing limits;
+   failures abort before publication. Auto output may require the a11 reader
+   at any level. The default is unchanged.
+
 ``uc2 --ingest archive.uc2``
    Read an opaque stream from standard input. The default mode stores chunk
    occurrences as ``part-N`` entries; with ``--chunked``, one ``data`` entry
@@ -70,15 +76,38 @@ Modes
 
 The ingestion modes use the current directory and default compression level.
 They reject short options and extra operands before opening the archive;
-``--chunked`` is accepted by the two creation modes. Change directory in the
+``--chunked`` and ``--chunked=auto`` are accepted by the two creation modes.
+With either option, ``--ingest`` stores the stream as one ``data`` entry. Change directory in the
 shell when needed. Ingestion and OTS operation options cannot be combined.
 
-CLI extraction writes each file directly to its final path. A corruption or
-output error can leave a partial file; with ``-f``, the previous file has already
-been removed. OTS attachment also modifies the archive in place and can leave a
-partial trailer on an output failure. Keep a copy when the existing output must
-survive failure. Archive creation and ingestion publish their staged output only
-after successful assembly and close.
+CLI extraction stages each file in its destination directory. Corruption,
+write, close and publication errors preserve an existing destination. Earlier
+files from the same extraction remain committed if a later file fails; this
+is not a transaction over the whole directory tree. Without ``-f``, existing
+files found before decoding are skipped. A target appearing during publication
+on POSIX or Windows is preserved and the command fails. OTS attachment and
+proof extraction also
+stage their output; attachment hashes the archive bytes copied into its
+replacement and retains ordinary permissions: the nine POSIX ``rwx`` bits or
+the Windows read-only attribute. Special mode bits, ownership, ACLs, extended
+attributes and hard-link relationships are not preserved.
+
+As before, an extracted file starts with permissions 0666 subject to umask,
+then receives the archive's timestamp and read-only attribute unless ``-DD``
+was given. Forced extraction does not retain the replaced file's permissions;
+``-DD`` skips archive metadata without changing that rule.
+
+The destination directory tree must remain under the caller's control during
+the operation. Concurrent changes to parent directories or the source archive
+are unsupported. Successful close and publication do not guarantee durability
+after power loss. POSIX systems without native no-replace rename support
+need hard-link support for publication without ``-f``. Abrupt termination can
+leave a sibling temporary file.
+DOS refuses to replace an existing target because its runtime deletes the
+target before renaming. Use a fresh destination for DOS extraction and a
+Linux, macOS or Windows build for OTS attachment. Archive creation and
+ingestion use the same staging and publication rules. As before, created and
+ingested archives use owner-only access (0600, subject to umask).
 
 Options
 -------
@@ -100,6 +129,8 @@ Options
        5 = Ultra; 6-9 = rANS Fast, Normal, Tight, Ultra
    * - ``--chunked``
      - Share payload chunks during creation; requires the a11 or newer reader
+   * - ``--chunked=auto``
+     - Build both layouts and keep the smaller archive; may require the a11 reader
    * - ``-a``
      - Include all file versions (not just latest)
    * - ``-d path``

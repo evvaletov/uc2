@@ -14,26 +14,38 @@ reviews. Both were verified on 20 November. Track maintainer feedback in
 4b7fbd1; catalogue acceptance and an MC merge remain pending.
 [Submission receipts](docs/qa/commander-submissions-2026-11-20.md).
 
-1. [ ] **Tune shared-chunk compression and mode selection.** Investigate the
-   measured 9.1% public-source regression while preserving edited-binary reuse
-   gains, format compatibility and current defaults. Tracking: 3fdd442.
-2. [ ] **Resolve the remaining libarchive design decisions with maintainers.**
-   [PR #3832](https://github.com/libarchive/libarchive/pull/3832) removes
-   whole-input spooling from the optional reader. Dependency acceptance, format
-   ID allocation and the decoded-entry spool remain open. Tracking: 7bbb6b6.
-3. [ ] **Make CLI extraction and OTS attachment transactional.** Preserve
-   existing outputs when decoding, writing or final publication fails. The CLI
-   metadata-scaling part of 380e7de is complete; direct-output behaviour remains
-   documented pending this separate change.
-4. [ ] **Design snapshot growth beyond the fixed reference and manifest caps.**
-   Use the measured boundaries to decide on repository partitioning or a larger
-   packed format. Keep v1/v2 compatibility and verified publication; assess
-   read-only/concurrent readers separately from the current exclusive lock.
-   Tracking: 179a8de; the scale/recovery validation in a3bcfb4 is complete.
-5. [ ] **Prepare and installation-test a FreeDOS package.** Build the ZIP/LSM
-   bundle from the published release, test FDIMPLES/FDNPKG installation and
-   confirm the current repository submission requirements before proposing it.
-   Tracking: 655345a; the broader distribution tasks remain below.
+1. [ ] **Resolve the remaining libarchive design decisions with maintainers.**
+   [PR #3832](https://github.com/libarchive/libarchive/pull/3832) uses seekable input.
+   Optional dependency acceptance, format ID allocation and the decoded-entry
+   spool remain open. Tracking: 7bbb6b6.
+2. [ ] **Design snapshot growth beyond fixed reference and manifest caps.**
+   Choose repository partitioning or a larger packed format from the existing
+   measurements, retaining v1/v2 readability and verified publication. Assess
+   concurrent readers separately from the exclusive lock. Tracking: 179a8de.
+3. [ ] **Prepare and installation-test a FreeDOS package.** Build a ZIP/LSM
+   bundle, test installation/removal and document DOS's refusal to replace
+   existing outputs. Confirm current repository submission rules. Tracking: 655345a.
+4. [ ] **Prepare Homebrew tap and AUR packages.** Use published binaries or
+   verified source builds and test clean installation, upgrade and removal.
+   Keep distribution-maintained repository proposals separate. Tracking: 655345a.
+5. [ ] **Add a reproducible Linux/DOS round-trip demo to the README.** Include
+   exact commands, a short recording and a text alternative. Show the default
+   legacy-compatible mode and explain when the new reader is required.
+   Tracking: 655345a.
+
+### Implemented for 3.0.0a13
+
+- [x] Opt-in `--chunked=auto` / `UC2Writer(chunked="auto")` compares both complete
+  archive layouts and keeps the smaller one. It removes the measured 9.1%
+  public-source expansion while retaining edited-binary reuse gains. Default
+  and explicit chunked output remain unchanged. Tracking: 3fdd442.
+- [x] CLI extraction, OTS attachment and proof extraction stage output before
+  publication. Existing bytes survive decoding/write/close/publication errors.
+  POSIX/Windows support replacement; DOS refuses existing targets because its
+  runtime cannot replace them safely. This is per-file publication, not a
+  whole-tree transaction or a power-loss guarantee. Transactional part of 380e7de.
+- Evidence: [layout measurements](docs/benchmarks/2026-11-20-auto-chunks.md) and
+  [release checks](docs/releases/3.0.0a13-qa.md).
 
 ### Distribution and visibility TODOs (14 November 2026)
 

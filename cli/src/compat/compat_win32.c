@@ -180,8 +180,9 @@ void compat__utf8_console(void)
 #ifdef g_compat__wpath
 wchar_t *compat__wpath(const char *path)
 {
-	static wchar_t wpath[MAX_PATH];
-	if (!MultiByteToWideChar(CP_UTF8, 0, path, -1, wpath, MAX_PATH))
+	static wchar_t wpath[32768];
+	if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path, -1,
+	                        wpath, sizeof wpath / sizeof *wpath))
 		return 0;
 	return wpath;
 }
@@ -189,8 +190,8 @@ wchar_t *compat__wpath(const char *path)
 
 FILE *compat__fopen(const char *name, const char *mode)
 {
-	wchar_t wname[MAX_PATH], wmode[16];
-	if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, name, -1, wname, MAX_PATH)
+	wchar_t wname[32768], wmode[16];
+	if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, name, -1, wname, sizeof wname / sizeof *wname)
 	 || !MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, mode, -1, wmode, sizeof wmode / sizeof *wmode)) {
 		errno = EINVAL;
 		return 0;

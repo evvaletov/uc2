@@ -75,7 +75,7 @@ static void roundtrip(int level, int chunked)
     CHECK(uc2_writer_finish(w,output,&encoded)==UC2_BadState);
     struct uc2_writer_stats stats; uc2_writer_get_stats(w,&stats);
     CHECK(stats.files==3 && stats.directories==1 && stats.archive_size==encoded.size);
-    if (chunked) CHECK(stats.unique_chunks && stats.chunk_references>stats.unique_chunks && stats.shared_bytes>=sizeof data);
+    if (chunked==1) CHECK(stats.unique_chunks && stats.chunk_references>stats.unique_chunks && stats.shared_bytes>=sizeof data);
     uc2_writer_free(w);
     uc2_handle h=uc2_open(&io,&encoded); CHECK(h);
     struct uc2_entry entries[4]; unsigned count=0;
@@ -91,7 +91,7 @@ static void roundtrip(int level, int chunked)
     CHECK(!strcmp(entries[0].name,"nested") && entries[0].attr==0x11);
     CHECK(entries[0].dos_time==0x56b4722a);
     for (unsigned i=0; i<count; ++i) if (!entries[i].is_dir) {
-        if (chunked) CHECK(entries[i].xi.method==11);
+        if (chunked==1) CHECK(entries[i].xi.method==11);
         struct buffer decoded={0};
         int result = uc2_extract(h,&entries[i].xi,entries[i].size,output,&decoded);
         if (result < 0) fprintf(stderr,"level %d, entry %s: extract returned %d\n", level, entries[i].name, result);
@@ -102,7 +102,7 @@ static void roundtrip(int level, int chunked)
             CHECK(decoded.size==sizeof data && !memcmp(decoded.data,data,sizeof data));
         }
         free(decoded.data);
-        if (chunked && entries[i].size) {
+        if (entries[i].xi.method==11 && entries[i].size) {
             CHECK(uc2_extract(h,&entries[i].xi,entries[i].size,fail_write,NULL)==UC2_UserFault);
             refuse_allocation=1;
             CHECK(uc2_extract(h,&entries[i].xi,entries[i].size,fail_write,NULL)==UC2_UserFault);
@@ -279,13 +279,36 @@ static void errors(void)
     uc2_handle h=uc2_open(&io,&out); struct uc2_entry e={0}; CHECK(h);
     CHECK(uc2_read_cdir(h,&e)==UC2_End && uc2_finish_cdir(h,NULL)==0); uc2_close(h); free(out.data);
 }
+static unsigned auto_allocation_failure(unsigned failure)
+{
+    struct uc2_writer_options options=UC2_WRITER_OPTIONS_INIT;
+    options.chunked=UC2_WRITER_AUTO_CHUNKED;
+    uc2_writer *w=uc2_writer_create(&options); CHECK(w);
+    unsigned char bytes[9001];
+    for (unsigned i=0; i<sizeof bytes; ++i) bytes[i]=(unsigned char)(i*13+i/91);
+    struct buffer in={bytes,sizeof bytes,0},out={0};
+    CHECK(uc2_writer_add_file(w,0,"data",0,0,in.size,input,&in)==0);
+    writer_allocations=0; writer_fail_allocation=failure;
+    int result=uc2_writer_finish(w,output,&out);
+    unsigned count=writer_allocations;
+    writer_fail_allocation=0;
+    if (failure) {
+        CHECK(result==UC2_UserFault && out.size==0);
+        CHECK(uc2_writer_finish(w,output,&out)==result && out.size==0);
+    } else CHECK(result==0 && out.size>0);
+    free(out.data); uc2_writer_free(w);
+    return count;
+}
 int main(void)
 {
     for (int level=2; level<=9; ++level) {
-        roundtrip(level,0); roundtrip(level,1);
+        roundtrip(level,0); roundtrip(level,1); roundtrip(level,UC2_WRITER_AUTO_CHUNKED);
     }
     directory_metadata_errors();
     indexed_names();
+    unsigned auto_allocations=auto_allocation_failure(0);
+    CHECK(auto_allocations>3);
+    for (unsigned i=1; i<=auto_allocations; ++i) auto_allocation_failure(i);
     unsigned allocations=insertion_allocations(0);
     CHECK(allocations>4);
     for (unsigned failure=1; failure<=allocations; ++failure) insertion_allocations(failure);

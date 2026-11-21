@@ -17,12 +17,13 @@ typedef struct uc2_writer uc2_writer;
 #define UC2_WRITER_UNKNOWN_SIZE UINT64_MAX
 #define UC2_WRITER_LIMIT (-8)
 #define UC2_WRITER_INVALID (-9)
+#define UC2_WRITER_AUTO_CHUNKED 2
 
 struct uc2_writer_options {
     int level;                 /* 2-5 Huffman, 6-9 rANS */
     unsigned max_entries;      /* files plus directories; 1..1000000 */
     uint64_t max_input_size;    /* total spooled bytes; 1..UINT32_MAX */
-    int chunked;               /* 0: classic layout; 1: shared chunk recipes */
+    int chunked;               /* 0: classic; 1: chunks; 2: smaller of both */
 };
 #define UC2_WRITER_OPTIONS_INIT {4, 100000, UINT32_MAX, 0}
 struct uc2_writer_stats {
@@ -35,7 +36,13 @@ struct uc2_writer_stats {
  * independent Gear chunks once across files/versions and a recipe per file.
  * Maximum 1048576 logical chunk references across the input collection.
  * Classic output remains the default; historical DOS readers cannot read
- * chunked archives. No cross-archive references are created. */
+ * chunked archives. No cross-archive references are created.
+ * UC2_WRITER_AUTO_CHUNKED assembles both layouts from the same input spool,
+ * selecting the smaller complete archive (classic on ties). This costs both
+ * compression passes and temporary space for both archives. Both candidates
+ * must fit the existing limits; any assembly failure aborts before output.
+ * Stats describe only the selected archive. Auto output may require the new
+ * reader, so use chunked=0 when historical compatibility is required. */
 
 /* NULL options selects defaults. NULL result: invalid options or allocation/
  * temporary-file failure. Uses malloc/free and the platform's tmpfile(). */

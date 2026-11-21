@@ -7,18 +7,22 @@ snapshot scale/recovery validation. See the `release record
 and `measurements
 <https://github.com/evvaletov/uc2/blob/main/docs/benchmarks/2026-11-14-scale-recovery.md>`_.
 
+Alpha13 adds automatic layout selection and staged CLI extraction/OTS output.
+See the `release checks
+<https://github.com/evvaletov/uc2/blob/main/docs/releases/3.0.0a13-qa.md>`_.
+
 The next priorities are:
 
-1. Tune shared-chunk compression against the documented public-source regression
-   while preserving edited-binary gains and compatibility.
-2. Resolve libarchive's optional dependency, format ID and decoded-entry spool
+1. Resolve libarchive's optional dependency, format ID and decoded-entry spool
    decisions with the maintainers.
-3. Add transactional CLI extraction and OTS attachment, preserving existing
-   outputs on failure.
-4. Design snapshot growth beyond the fixed reference and manifest caps; assess
-   read-only/concurrent access separately from the current exclusive lock.
-5. Prepare and installation-test a FreeDOS ZIP/LSM package, then confirm current
-   repository submission requirements.
+2. Design snapshot growth beyond fixed reference and manifest caps; assess
+   concurrent readers separately from the exclusive lock.
+3. Prepare and installation-test a FreeDOS ZIP/LSM package, including the DOS
+   replacement limitation, then confirm current submission requirements.
+4. Prepare Homebrew tap and AUR packages with installation, upgrade and removal
+   checks.
+5. Add a reproducible Linux/DOS round-trip demo, with commands, a recording and
+   a text alternative.
 
 See `ROADMAP.md on GitHub
 <https://github.com/evvaletov/uc2/blob/main/ROADMAP.md>`_ for evidence, completed

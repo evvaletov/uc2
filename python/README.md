@@ -7,7 +7,8 @@ or compiler is needed when a wheel is available.
 
 This is an alpha release. It supports the implemented legacy Huffman methods,
 master dictionaries, directories, stored versions, and UC2 v3 rANS entries.
-Turbo/method 80 and a11 shared-chunk entries are supported for reading.
+Turbo/method 80 entries are supported for reading; a11 shared-chunk entries can
+be read and written.
 Filesystem paths resolve original SAS and DOS UC2SEA sets without executing
 input; keep all parts together. File-like objects require an ordinary UC2
 container. See the
@@ -157,6 +158,11 @@ Writer limits and metadata:
   reader. For method 11, `UC2Info.compress_size` counts the recipe only;
   shared payloads are excluded. See the
   [chunk-sharing guide](https://github.com/evvaletov/uc2/blob/main/docs/chunk-sharing.md).
+- `chunked="auto"` builds both layouts and selects the smaller complete archive,
+  choosing classic on ties. It costs both compression passes and temporary
+  space for both archives. Both must fit the limits below; any failure aborts
+  before replacing the destination. Statistics describe the selected layout.
+  Auto output may require the full a11 reader at any level.
 - `max_entries=100_000`, configurable from 1 through 1,000,000, includes automatic
   parent directories. `max_total_size=0xFFFFFFFF` bounds all input bytes combined
   and may be reduced. Each file and the completed archive also fit 32 bits.
@@ -173,8 +179,8 @@ Writer limits and metadata:
   outside that range become unspecified. It stores ordinary file/directory
   attributes, not Unix permissions.
 
-After successful close, `writer.stats` reports file, directory and master counts
-and archive size. The C interface is documented in
+After successful close, `writer.stats` reports file, directory, master and chunk
+counts, chunk reuse and archive size. The C interface is documented in
 [`uc2_writer.h`](https://github.com/evvaletov/uc2/blob/main/lib/include/uc2/uc2_writer.h)
 and the [library guide](https://github.com/evvaletov/uc2/blob/main/docs/library.rst).
 

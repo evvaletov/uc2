@@ -64,7 +64,7 @@ with tempfile.TemporaryDirectory(prefix='uc2-cli-staging-') as temporary:
         os.close(fd)
     assert b'read stdin' in result.stderr, result
     assert protected.read_bytes() == b'existing archive'
-    assert not list(root.glob('protected.uc2.tmp-*'))
+    assert not list(root.glob('U???????.TMP' if os.name == 'nt' else '.uc2-tmp-*'))
 
     tar_bytes = io.BytesIO()
     with tarfile.open(fileobj=tar_bytes, mode='w') as tar:
@@ -86,14 +86,14 @@ with tempfile.TemporaryDirectory(prefix='uc2-cli-staging-') as temporary:
         archive = root / f'{mode}.uc2'
         run(*arguments(archive), data=data)
         run('-qt', archive)
-        assert not list(root.glob(archive.name + '.tmp-*'))
+        assert not list(root.glob('U???????.TMP' if os.name == 'nt' else '.uc2-tmp-*'))
         destination = root / f'{mode}-directory.uc2'
         destination.mkdir()
         marker = destination / 'keep'
         marker.write_bytes(b'keep this directory')
         run(*arguments(destination), data=data, success=False)
         assert marker.read_bytes() == b'keep this directory'
-        assert not list(root.glob(destination.name + '.tmp-*'))
+        assert not list(root.glob('U???????.TMP' if os.name == 'nt' else '.uc2-tmp-*'))
     assert source.read_bytes() == PAYLOAD
 
 print('CLI staged output checks passed')

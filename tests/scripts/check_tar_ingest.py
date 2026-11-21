@@ -120,6 +120,6 @@ with tempfile.TemporaryDirectory() as name:
         result=subprocess.run([cli,'--ingest-tar',str(destination)], input=data,capture_output=True)
         assert result.returncode, kind
         assert destination.read_bytes()==b'existing',kind
-        assert not list(root.glob('protected.uc2.tmp-*'))
+        assert not list(root.glob('U???????.TMP' if os.name == 'nt' else '.uc2-tmp-*'))
         print(kind,'refused atomically')
 print('tar ingestion checks passed')

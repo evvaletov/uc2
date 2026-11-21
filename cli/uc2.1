@@ -1,5 +1,5 @@
 .\" SPDX-License-Identifier: GPL-3.0-or-later
-.Dd November 13, 2026
+.Dd November 20, 2026
 .Dt UC2 1
 .Os
 .Sh NAME
@@ -26,7 +26,7 @@
 .Fl w
 .Op Fl q
 .Op Fl L Ar level
-.Op Fl -chunked
+.Op Fl -chunked Ns Op =auto
 .Ar archive.uc2
 .Ar file ...
 .Nm
@@ -43,10 +43,10 @@
 .Fl -ots-info
 .Ar archive.uc2
 .Nm
-.Op Fl -chunked
+.Op Fl -chunked Ns Op =auto
 .Fl -ingest Ar archive
 .Nm
-.Op Fl -chunked
+.Op Fl -chunked Ns Op =auto
 .Fl -ingest-tar Ar archive
 .Nm
 .Fl -ingest-restore Ar archive
@@ -129,6 +129,16 @@ Create (write) an archive from the given files and directories.
 Extract; this is the default mode.
 .El
 .Pp
+Extraction stages each file in its destination directory and publishes it only
+when decoding and close succeed. Failed replacement preserves existing bytes.
+Earlier files remain committed if a later file fails. The caller must control
+the destination directory tree; power-loss durability is not guaranteed.
+Abrupt termination can leave a temporary file. OTS attachment preserves the
+nine POSIX rwx bits or the Windows read-only attribute. It does not retain
+special mode bits, ownership, ACLs, extended attributes or hard-link relationships.
+DOS refuses existing targets because its runtime cannot safely replace them;
+use a fresh extraction destination and a hosted build for OTS attachment.
+.Pp
 Long options:
 .Bl -tag -width Ds
 .It Fl -chunked
@@ -140,10 +150,17 @@ and
 .Fl -ingest-tar .
 The resulting archive requires a full UC2 3.0.0a11 or newer reader, including
 when the compression level is 2 through 5.
+.It Fl -chunked=auto
+Build both classic and chunked layouts, then select the smaller complete
+archive; ties select classic. This costs both compression passes and temporary
+space for both archives. Both candidates must fit the writer limits; failure
+aborts before publication. The output may require an a11 reader at any level.
 .It Fl -ots-attach Ar proof.ots
 Attach an OpenTimestamps proof to the archive after verifying that the
 proof commits to the archive contents.
 The proof is stored in a trailer that the original DOS program ignores.
+The archive is copied and verified in a sibling temporary file before replacement.
+Existing bytes survive a failed write, close or replacement.
 .It Fl -ots-extract
 Write the attached proof to the named output file, suitable for
 .Ql ots verify .
@@ -195,7 +212,13 @@ recognised and restored.
 The ingestion modes use the current directory and default compression level.
 They reject short options and extra operands before opening the archive;
 .Fl -chunked
-is accepted by the two creation modes.
+and
+.Fl -chunked=auto
+are accepted by the two creation modes. With either option,
+.Fl -ingest
+stores the stream as one
+.Ql data
+entry. Auto selects the smaller complete archive, which may use the classic layout.
 Change directory in the shell before invoking them when needed.
 Ingestion and OTS operation options cannot be combined.
 .Pp

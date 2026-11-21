@@ -65,10 +65,14 @@ class UC2Writer:
     are rejected. A failed operation aborts the writer, preserving an existing
     destination. Explicit abort(), an exception in the context, and destruction
     discard work. close() commits; destruction never commits implicitly.
+
+    chunked=True shares payload chunks; chunked="auto" builds both layouts
+    and keeps the smaller archive, choosing classic on ties. Both passes must
+    succeed and need temporary space. False keeps the classic layout.
     """
 
     def __init__(self, file, *, level: int = 4, max_entries: int = 100_000,
-                 max_total_size: int = 0xFFFFFFFF, chunked: bool = False):
+                 max_total_size: int = 0xFFFFFFFF, chunked: bool | str = False):
         self._writer = None
         self._busy = False
         self._temporary = None
@@ -83,11 +87,12 @@ class UC2Writer:
         _integer("max_total_size", max_total_size, 0xFFFFFFFF)
         if not max_entries or not max_total_size:
             raise ValueError("writer limits must be positive")
-        if not isinstance(chunked, bool):
-            raise TypeError("chunked must be a bool")
+        if not isinstance(chunked, bool) and not (isinstance(chunked, str) and chunked == "auto"):
+            raise TypeError('chunked must be a bool or "auto"')
         self._directories = {(): 0}
         self._files = set()
-        self._writer = _native.Writer(level, max_entries, max_total_size, chunked)
+        self._writer = _native.Writer(level, max_entries, max_total_size,
+                                      2 if chunked == "auto" else int(chunked))
 
     @property
     def closed(self) -> bool:

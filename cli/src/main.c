@@ -39,6 +39,15 @@ void setprogname(const char *argv0);
 #include <sys/stat.h>
 #include <dirent.h>
 #include <fcntl.h>
+#if defined(__APPLE__) && defined(RENAME_EXCL) && defined(__has_builtin)
+#if __has_builtin(__builtin_available)
+#define UC2_HAVE_RENAME_EXCL 1
+#endif
+#endif
+#ifdef __linux__
+#include <sys/syscall.h>
+#include <linux/fs.h>
+#endif
 #if defined(_WIN32) || defined(__DJGPP__)
 #include <io.h>
 #endif
@@ -99,7 +108,7 @@ struct options {
 	bool help:1;
 	bool quiet:1;
 	bool benchmark:1;
-	bool chunked:1;
+	int chunked;
 	int ots_mode;
 	int ingest_mode;
 	char sep;
@@ -666,23 +675,12 @@ static bool output_exists(const char *path, bool directory)
 	return true;
 }
 
-static FILE *create_output(const char *path)
-{
-	/* Exclusive creation also refuses a leaf link introduced after the check. */
-#ifdef _WIN32
-	wchar_t wide[32768];
-	if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path, -1,
-	                        wide, sizeof wide / sizeof *wide))
-		errx(EXIT_FAILURE, "%s: invalid UTF-8 path", path);
-	int fd = _wopen(wide, _O_CREAT | _O_EXCL | _O_WRONLY | _O_BINARY, 0666);
-#else
-	int fd = open(path, O_CREAT | O_EXCL | O_WRONLY | O_BINARY, 0666);
-#endif
-	if (fd < 0) err(EXIT_FAILURE, "%s", path);
-	FILE *file = fdopen(fd, "wb");
-	if (!file) { close(fd); err(EXIT_FAILURE, "%s", path); }
-	return file;
-}
+static char *staged_path;
+static FILE *staged_stream;
+static FILE *stage_output(const char *path, int mode);
+static int close_staged_output(void);
+static void discard_staged_output(void);
+static void commit_staged_output(const char *path, bool replace);
 
 #if defined(_WIN32) || defined(__DJGPP__)
 static bool unsafe_dos_name(const char *name, unsigned length)
@@ -764,24 +762,20 @@ static bool extract_cb(struct node *ne, void *ctx, enum cause cause)
 					warn("%s", path->buffer);
 					break;
 				}
-#ifdef _WIN32
-				if (chmod(path->buffer, 0666) < 0)
-					err(EXIT_FAILURE, "%s", path->buffer);
-#endif
-				if (unlink(path->buffer) < 0)
-					err(EXIT_FAILURE, "%s", path->buffer);
 			}
 
-			FILE *f = create_output(path->buffer);
+			FILE *f = stage_output(path->buffer, 0666);
 			int ret = uc2_extract(path->uc2, &e->xi, e->size, write_file, f);
-			if (ret < 0)
+			if (ret < 0) {
 				uc2err(path->uc2, ret, "%s", e->name);
-			/* Report a write error (e.g. a full disk) surfaced at close
-			   rather than silently truncating the extracted file. */
-			if (fclose(f) != 0 && ret >= 0)
+				discard_staged_output();
+				break;
+			}
+			if (close_staged_output() != 0)
 				err(EXIT_FAILURE, "%s", path->buffer);
 			if (!opt.no_file_meta)
-				set_attrs(path->buffer, ne);
+				set_attrs(staged_path, ne);
+			commit_staged_output(path->buffer, opt.overwrite);
 			break;
 		}
 		int r = mkdir(path->buffer, 0777);
@@ -811,27 +805,6 @@ static bool extract_cb(struct node *ne, void *ctx, enum cause cause)
 }
 
 /* --- OpenTimestamps (Phase 7) --- */
-
-#ifdef _WIN32
-#  include <io.h>
-static int uc2_truncate(FILE *f, uint64_t len)
-{
-	if (len > INT64_MAX) { errno = EFBIG; return -1; }
-	int rc = _chsize_s(_fileno(f), (__int64)len);
-	if (rc) errno = rc;
-	return rc == 0 ? 0 : -1;
-}
-#else
-static int uc2_truncate(FILE *f, uint64_t len)
-{
-#ifdef __DJGPP__
-	if (len > LONG_MAX) { errno = EFBIG; return -1; }
-#else
-	if (len > INT64_MAX) { errno = EFBIG; return -1; }
-#endif
-	return ftruncate(fileno(f), (off_t)len);
-}
-#endif
 
 static int file_length(FILE *f, uint64_t *out)
 {
@@ -886,9 +859,9 @@ static int sha256_of_prefix(const char *path, uint64_t prefix_len,
 	return 0;
 }
 
-static void print_hex(const uint8_t *p, size_t n)
+static void fprint_hex(FILE *out, const uint8_t *p, size_t n)
 {
-	for (size_t i = 0; i < n; i++) printf("%02x", p[i]);
+	for (size_t i = 0; i < n; i++) fprintf(out, "%02x", p[i]);
 }
 
 static uint32_t trailer_u32(const uint8_t *p)
@@ -970,6 +943,8 @@ io_error:;
 static int cmd_ots_attach(const char *archive_path, const char *proof_path,
                           int force)
 {
+	if (!output_exists(archive_path, false))
+		errx(EXIT_FAILURE, "%s: archive does not exist", archive_path);
 	/* Read the .ots proof and validate its envelope. */
 	uint8_t *proof; size_t proof_len;
 	if (read_ots_proof(proof_path, &proof, &proof_len) < 0)
@@ -1016,17 +991,30 @@ static int cmd_ots_attach(const char *archive_path, const char *proof_path,
 		errx(EXIT_FAILURE, "%s: archive too large for v1 OTS trailer", archive_path);
 	}
 
-	/* Verify leaf digest matches the archive's SHA-256. */
-	uint8_t archive_sha[32];
-	if (sha256_of_prefix(archive_path, attest_len, archive_sha) < 0) {
-		free(proof);
-		err(EXIT_FAILURE, "%s", archive_path);
+	/* Hash the exact bytes copied into the replacement, so validation and
+	   publication use the same archive prefix. */
+	FILE *source = fopen(archive_path, "rb");
+	if (!source) err(EXIT_FAILURE, "%s", archive_path);
+	FILE *f = stage_output(archive_path, 0600);
+	struct uc2_sha256 sha;
+	uc2_sha256_init(&sha);
+	uint8_t copy[65536];
+	uint64_t remaining = attest_len;
+	while (remaining) {
+		size_t n = remaining < sizeof copy ? (size_t)remaining : sizeof copy;
+		if (fread(copy, 1, n, source) != n || fwrite(copy, 1, n, f) != n)
+			errx(EXIT_FAILURE, "%s: cannot copy archive prefix", archive_path);
+		uc2_sha256_update(&sha, copy, n);
+		remaining -= n;
 	}
+	if (fclose(source) != 0) err(EXIT_FAILURE, "%s", archive_path);
+	uint8_t archive_sha[32];
+	uc2_sha256_final(&sha, archive_sha);
 	if (leaf_len != 32 || memcmp(archive_sha, leaf, 32) != 0) {
 		fprintf(stderr, "%s: proof leaf does not match archive SHA-256\n",
 		        archive_path);
-		fprintf(stderr, "  archive: "); print_hex(archive_sha, 32); fprintf(stderr, "\n");
-		fprintf(stderr, "  proof:   "); print_hex(leaf, leaf_len); fprintf(stderr, "\n");
+		fprintf(stderr, "  archive: "); fprint_hex(stderr, archive_sha, 32); fprintf(stderr, "\n");
+		fprintf(stderr, "  proof:   "); fprint_hex(stderr, leaf, leaf_len); fprintf(stderr, "\n");
 		free(proof);
 		return EXIT_FAILURE;
 	}
@@ -1040,26 +1028,28 @@ static int cmd_ots_attach(const char *archive_path, const char *proof_path,
 	if (tn < 0) { free(trailer); free(proof);
 		errx(EXIT_FAILURE, "trailer build failed (%d)", tn); }
 
-	FILE *f = fopen(archive_path, "rb+");
-	if (!f) { free(trailer); free(proof); err(EXIT_FAILURE, "%s", archive_path); }
-	if (seek_file(f, attest_len, SEEK_SET) != 0) {
-		fclose(f); free(trailer); free(proof);
-		err(EXIT_FAILURE, "%s", archive_path);
-	}
 	if (fwrite(trailer, 1, (size_t)tn, f) != (size_t)tn) {
-		fclose(f); free(trailer); free(proof);
-		err(EXIT_FAILURE, "%s", archive_path);
-	}
-	/* Truncate any leftover bytes (e.g. when replacing a longer prior trailer). */
-	uint64_t new_end = attest_len + (unsigned)tn;
-	if (fflush(f) != 0 || uc2_truncate(f, new_end) < 0) {
-		fclose(f); free(trailer); free(proof);
-		err(EXIT_FAILURE, "truncate");
-	}
-	if (fclose(f) != 0) {
 		free(trailer); free(proof);
 		err(EXIT_FAILURE, "%s", archive_path);
 	}
+	if (close_staged_output() != 0) {
+		free(trailer); free(proof);
+		err(EXIT_FAILURE, "%s", archive_path);
+	}
+#ifdef _WIN32
+	wchar_t wide[32768];
+	if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, archive_path, -1,
+	                        wide, sizeof wide / sizeof *wide))
+		errx(EXIT_FAILURE, "invalid archive path");
+	DWORD attributes = GetFileAttributesW(wide);
+	if (attributes == INVALID_FILE_ATTRIBUTES || chmod(staged_path,
+	    attributes & FILE_ATTRIBUTE_READONLY ? 0444 : 0666) < 0)
+#else
+	struct stat st;
+	if (stat(archive_path, &st) < 0 || chmod(staged_path, st.st_mode & 0777) < 0)
+#endif
+		err(EXIT_FAILURE, "%s: cannot retain archive permissions", archive_path);
+	commit_staged_output(archive_path, true);
 
 	free(trailer);
 	free(proof);
@@ -1081,12 +1071,11 @@ static int cmd_ots_extract(const char *archive_path, const char *out_path)
 	if (rc < 0)
 		errx(EXIT_FAILURE, "%s: malformed OTS trailer (%d)", archive_path, rc);
 
-	FILE *f = fopen(out_path, "wb");
-	if (!f) err(EXIT_FAILURE, "%s", out_path);
+	output_exists(out_path, false);
+	FILE *f = stage_output(out_path, 0666);
 	if (fwrite(proof, 1, proof_len, f) != proof_len)
 		err(EXIT_FAILURE, "%s", out_path);
-	if (fclose(f) != 0)
-		err(EXIT_FAILURE, "%s", out_path);
+	commit_staged_output(out_path, true);
 	free(buf);
 	uc2_say(stderr, "Wrote %zu-byte .ots proof to %s\n", proof_len, out_path);
 	return EXIT_SUCCESS;
@@ -1149,7 +1138,7 @@ static int cmd_ots_info(const char *archive_path)
 	printf("  archive bytes attested: %u\n", archive_len);
 	printf("  hash:    %s\n",
 	       hash_op == UC2_OTS_OP_SHA256 ? "SHA-256" : "<other>");
-	printf("  leaf:    "); print_hex(leaf, leaf_len); printf("\n");
+	printf("  leaf:    "); fprint_hex(stdout, leaf, leaf_len); printf("\n");
 
 	uint8_t archive_sha[32];
 	if (sha256_of_prefix(archive_path, archive_len, archive_sha) < 0)
@@ -1314,12 +1303,20 @@ static int fwrite_cb(void *ctx, const void *ptr, unsigned len)
 	return fwrite(ptr, 1, len, (FILE *)ctx) == len ? 0 : -1;
 }
 
-static FILE *stage_output(const char *path);
-static void commit_staged_output(const char *path);
-
 static void writer_check(uc2_writer *writer, int result, const char *path)
 {
     if (result < 0) errx(EXIT_FAILURE, "%s: %s (%d)", path, uc2_writer_error(writer), result);
+}
+
+static void report_sharing(const struct uc2_writer_stats *stats)
+{
+    if (opt.chunked == UC2_WRITER_AUTO_CHUNKED)
+        uc2_say(stderr, "Selected %s layout (auto)\n",
+                stats->masters || !stats->files ? "classic" : "chunked");
+    if (opt.chunked && !stats->masters && (stats->files || opt.chunked == 1))
+        uc2_say(stderr, "Shared chunks: %u unique, %u references, %llu payload bytes reused\n",
+                stats->unique_chunks, stats->chunk_references,
+                (unsigned long long)stats->shared_bytes);
 }
 
 static void writer_scan(uc2_writer *writer, const char *path, const char *name,
@@ -1415,18 +1412,16 @@ static int create_archive(int nargs, char **args)
         }
         writer_scan(writer, path, name, 0, 0);
     }
-    FILE *out = stage_output(opt.archive);
+    FILE *out = stage_output(opt.archive, 0600);
     int result = uc2_writer_finish(writer, fwrite_cb, out);
     writer_check(writer, result, opt.archive);
-    commit_staged_output(opt.archive);
+    commit_staged_output(opt.archive, true);
     struct uc2_writer_stats stats;
     uc2_writer_get_stats(writer, &stats);
     uc2_writer_free(writer);
     if (stats.masters)
         uc2_say(stderr, "  master[2]: custom master dictionaries: %u\n", stats.masters);
-    if (opt.chunked)
-        uc2_say(stderr,"  shared chunks: %u unique, %u references, %llu payload bytes reused\n",
-                stats.unique_chunks,stats.chunk_references,(unsigned long long)stats.shared_bytes);
+    report_sharing(&stats);
     uc2_say(stderr, "Created %s (%u files, %u dirs, %u masters, %u bytes)\n",
             opt.archive, stats.files, stats.directories, stats.masters, stats.archive_size);
     uc2_say(stderr, "Everything went OK\n");
@@ -1598,8 +1593,8 @@ static void extract_long_options(int *argcp, char **argv, char **ingest_path)
 			while (i < argc) argv[kept++] = argv[i++];
 			break;
 		}
-		if (!strcmp(arg, "--chunked")) {
-			opt.chunked = true;
+		if (!strcmp(arg, "--chunked") || !strcmp(arg, "--chunked=auto")) {
+			opt.chunked = !strcmp(arg, "--chunked") ? 1 : UC2_WRITER_AUTO_CHUNKED;
 			i++;
 			continue;
 		}
@@ -1704,49 +1699,78 @@ static int ing_map_grow(struct ing_map *m)
 	return 0;
 }
 
-static char *staged_path;
-static FILE *staged_stream;
-
 static int close_staged_output(void)
 {
 	FILE *stream = staged_stream;
 	staged_stream = NULL;
-	return stream ? fclose(stream) : 0;
+	if (!stream) return 0;
+	int failed = ferror(stream);
+	int saved_errno = failed ? (errno ? errno : EIO) : 0;
+	int result = fclose(stream);
+	if (failed) { errno = saved_errno; return EOF; }
+	return result;
 }
 
 static void discard_staged_output(void)
 {
 	close_staged_output();
 	if (staged_path) {
+#if defined(_WIN32) || defined(__DJGPP__)
+		chmod(staged_path, 0600);
+#endif
 		unlink(staged_path);
 		free(staged_path);
 		staged_path = NULL;
 	}
 }
 
-static FILE *stage_output(const char *path)
+static FILE *stage_output(const char *path, int mode)
 {
+	static bool cleanup_registered;
+	assert(!staged_path && !staged_stream);
 	char *candidate = malloc(strlen(path) + 96);
 	if (!candidate) err(EXIT_FAILURE, "malloc");
+	const char *slash = strrchr(path, '/');
+#if defined(_WIN32) || defined(__DJGPP__)
+	const char *back = strrchr(path, '\\');
+	if (back && (!slash || back > slash)) slash = back;
+#endif
+	size_t prefix = slash ? (size_t)(slash - path + 1) : 0;
+#if defined(_WIN32) || defined(__DJGPP__)
+	if (!prefix && path[0] && path[1] == ':') prefix = 2;
+#endif
+	memcpy(candidate, path, prefix);
 	for (unsigned i = 0; i < 128; i++) {
-		sprintf(candidate, "%s.tmp-%lu-%lu-%u", path,
+#if defined(_WIN32) || defined(__DJGPP__)
+		/* An 8.3 basename cannot create an unexpected short-name alias. */
+		sprintf(candidate + prefix, "U%07lX.TMP",
+		        ((unsigned long)getpid() + (unsigned long)time(NULL) + i) & 0xfffffff);
+#else
+		sprintf(candidate + prefix, ".uc2-tmp-%lu-%lu-%u",
 		        (unsigned long)getpid(), (unsigned long)time(NULL), i);
+#endif
+		/* Reserve the requested leaf, including on case-insensitive volumes. */
+		const unsigned char *a = (const unsigned char *)candidate + prefix;
+		const unsigned char *b = (const unsigned char *)path + prefix;
+		while (*a && *b && toupper(*a) == toupper(*b)) { a++; b++; }
+		if (!*a && !*b) continue;
 #ifdef _WIN32
 		wchar_t wide[32768];
 		if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, candidate, -1,
 		                        wide, sizeof wide / sizeof *wide))
 			errx(EXIT_FAILURE, "invalid output path");
-		int fd = _wopen(wide, _O_CREAT | _O_EXCL | _O_RDWR | _O_BINARY, 0600);
+		int fd = _wopen(wide, _O_CREAT | _O_EXCL | _O_RDWR | _O_BINARY, mode);
 #else
-		int fd = open(candidate, O_CREAT | O_EXCL | O_RDWR | O_BINARY, 0600);
+		int fd = open(candidate, O_CREAT | O_EXCL | O_RDWR | O_BINARY, mode);
 #endif
 		if (fd >= 0) {
 			staged_path = candidate;
-			if (atexit(discard_staged_output) != 0) {
+			if (!cleanup_registered && atexit(discard_staged_output) != 0) {
 				close(fd);
 				discard_staged_output();
 				errx(EXIT_FAILURE, "cannot register output cleanup");
 			}
+			cleanup_registered = true;
 			staged_stream = fdopen(fd, "w+b");
 			if (!staged_stream) {
 				int error = errno;
@@ -1762,10 +1786,20 @@ static FILE *stage_output(const char *path)
 	return NULL;
 }
 
-static void commit_staged_output(const char *path)
+static void commit_staged_output(const char *path, bool replace)
 {
 	if (close_staged_output() != 0)
 		err(EXIT_FAILURE, "%s: output close failed", path);
+	bool exists = output_exists(path, false);
+#ifdef __DJGPP__
+	/* DJGPP rename unlinks an existing target before its DOS rename call. */
+	if (exists)
+		errx(EXIT_FAILURE, "%s: safe replacement is unavailable on DOS; use a new output path", path);
+#endif
+	if (exists && !replace) {
+		errno = EEXIST;
+		err(EXIT_FAILURE, "%s", path);
+	}
 #ifdef _WIN32
 	int na = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, staged_path, -1, NULL, 0);
 	int nb = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path, -1, NULL, 0);
@@ -1773,11 +1807,44 @@ static void commit_staged_output(const char *path)
 	if (!na || !nb || !a || !b) errx(EXIT_FAILURE, "invalid output path");
 	MultiByteToWideChar(CP_UTF8, 0, staged_path, -1, a, na);
 	MultiByteToWideChar(CP_UTF8, 0, path, -1, b, nb);
-	if (!MoveFileExW(a, b, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
-		errx(EXIT_FAILURE, "cannot commit %s (Windows error %lu)", path, GetLastError());
+	DWORD attributes = GetFileAttributesW(b);
+	bool readonly = replace && attributes != INVALID_FILE_ATTRIBUTES &&
+	                (attributes & FILE_ATTRIBUTE_READONLY);
+	if (readonly && !SetFileAttributesW(b, attributes & ~FILE_ATTRIBUTE_READONLY))
+		errx(EXIT_FAILURE, "%s: cannot replace read-only output", path);
+	if (!MoveFileExW(a, b, (replace ? MOVEFILE_REPLACE_EXISTING : 0) | MOVEFILE_WRITE_THROUGH)) {
+		DWORD error = GetLastError();
+		if (readonly && !SetFileAttributesW(b, attributes))
+			warnx("%s: could not restore read-only attributes", path);
+		errx(EXIT_FAILURE, "cannot commit %s (Windows error %lu)", path, (unsigned long)error);
+	}
 	free(a); free(b);
-#else
+#elif defined(__DJGPP__)
+	/* The caller owns the destination directory; no concurrent writers on DOS. */
 	if (rename(staged_path, path) != 0) err(EXIT_FAILURE, "%s", path);
+#else
+	if (replace) {
+		if (rename(staged_path, path) != 0) err(EXIT_FAILURE, "%s", path);
+	} else {
+		/* Native no-replace rename also works on filesystems without hard links. */
+#if defined(__linux__) && defined(SYS_renameat2)
+		if (syscall(SYS_renameat2, AT_FDCWD, staged_path, AT_FDCWD, path, RENAME_NOREPLACE) == 0)
+			goto published;
+		if (errno != ENOSYS && errno != EINVAL && errno != EOPNOTSUPP)
+			err(EXIT_FAILURE, "%s", path);
+#elif defined(UC2_HAVE_RENAME_EXCL)
+		if (__builtin_available(macOS 10.12, *)) {
+			if (renamex_np(staged_path, path, RENAME_EXCL) == 0) goto published;
+			if (errno != ENOTSUP && errno != EINVAL) err(EXIT_FAILURE, "%s", path);
+		}
+#endif
+		/* Fallback for older kernels; never overwrite a newly appeared file. */
+		if (link(staged_path, path) != 0) err(EXIT_FAILURE, "%s", path);
+		if (unlink(staged_path) != 0) warn("%s: temporary output cleanup", staged_path);
+	}
+#endif
+#if (defined(__linux__) && defined(SYS_renameat2)) || defined(UC2_HAVE_RENAME_EXCL)
+published:
 #endif
 	free(staged_path); staged_path = NULL;
 }
@@ -1798,7 +1865,7 @@ static int ingest_write_v3(const char *archive_path,
                            struct uc2_ingest_stats *stats)
 {
 	int nocc = 0;
-	FILE *out = stage_output(archive_path);
+	FILE *out = stage_output(archive_path, 0600);
 	FILE *raw = tmpfile();
 	if (!raw) err(EXIT_FAILURE, "temporary chunk spool");
 
@@ -2001,7 +2068,7 @@ static int ingest_write_v3(const char *archive_path,
 
 	free(occ_uniq);
 	free(uniq);
-	commit_staged_output(archive_path);
+	commit_staged_output(archive_path, true);
 
 	if (stats) {
 		stats->bytes_in     = bytes_in;
@@ -2091,17 +2158,15 @@ static int cmd_ingest_tar(const char *archive_path)
     if (!writer) errx(EXIT_FAILURE,"cannot initialize tar archive writer");
     char error[256];
     if (uc2_tar_read(writer,stdin,error,sizeof error)<0) errx(EXIT_FAILURE,"%s",error);
-    FILE *out=stage_output(archive_path);
+    FILE *out=stage_output(archive_path, 0600);
     int result=uc2_writer_finish(writer,fwrite_cb,out);
     writer_check(writer,result,archive_path);
-    commit_staged_output(archive_path);
+    commit_staged_output(archive_path, true);
     struct uc2_writer_stats stats;
     uc2_writer_get_stats(writer,&stats);
     uc2_writer_free(writer);
     uc2_say(stderr,"Ingested tar: %u files, %u directories, %u archive bytes\n",stats.files,stats.directories,stats.archive_size);
-    if (opt.chunked)
-        uc2_say(stderr,"Shared chunks: %u unique, %u references, %llu payload bytes reused\n",
-                stats.unique_chunks,stats.chunk_references,(unsigned long long)stats.shared_bytes);
+    report_sharing(&stats);
     return EXIT_SUCCESS;
 }
 
@@ -2109,18 +2174,17 @@ static int cmd_ingest_write(const char *archive_path)
 {
 	binary_stream(stdin);
     if (opt.chunked) {
-        struct uc2_writer_options options=UC2_WRITER_OPTIONS_INIT; options.chunked=1;
+        struct uc2_writer_options options=UC2_WRITER_OPTIONS_INIT; options.chunked=opt.chunked;
         uc2_writer *writer=uc2_writer_create(&options);
         if (!writer) errx(EXIT_FAILURE,"cannot initialize chunked stream writer");
         writer_check(writer,uc2_writer_add_file(writer,0,"data",0,0x20,UC2_WRITER_UNKNOWN_SIZE,
                                               fread_cb,stdin),archive_path);
-        FILE *out=stage_output(archive_path);
+        FILE *out=stage_output(archive_path, 0600);
         int result=uc2_writer_finish(writer,fwrite_cb,out);
         writer_check(writer,result,archive_path);
-        commit_staged_output(archive_path);
+        commit_staged_output(archive_path, true);
         struct uc2_writer_stats stats; uc2_writer_get_stats(writer,&stats); uc2_writer_free(writer);
-        uc2_say(stderr,"Ingested stream: %u unique chunks, %u references, %llu payload bytes reused\n",
-                stats.unique_chunks,stats.chunk_references,(unsigned long long)stats.shared_bytes);
+        report_sharing(&stats);
         return EXIT_SUCCESS;
     }
 	struct uc2_ingest_stats st;
@@ -2253,7 +2317,7 @@ usage:
 				"uc2 [-afpqDT] [-d destination] archive.uc2 [files]...\n"
 				"uc2 -l [-aqT] archive.uc2 [files]...\n"
 				"uc2 -t [-aq] archive.uc2 [files]...\n"
-				"uc2 -w [-qL level] archive.uc2 files...\n"
+				"uc2 [--chunked[=auto]] -w [-qL level] archive.uc2 files...\n"
 				"uc2 -B files...   (benchmark all methods)\n"
 				"uc2 --ots-attach <proof.ots> [-f] archive.uc2\n"
 				"uc2 --ots-extract archive.uc2 <out.ots>\n"
@@ -2270,6 +2334,7 @@ usage:
 					" -t      Test\n"
 					" -w      Create archive\n"
 					" --chunked  Share chunks across files (requires revival 3.0.0a11+)\n"
+					" --chunked=auto  Build both layouts and keep the smaller archive\n"
 					" -L n    Level: 2=Fast 3=Normal 4=Tight(default) 5=Ultra 6-9=rANS\n"
 					" -a      All versions of files\n"
 					" -d path Destination to extract to\n"

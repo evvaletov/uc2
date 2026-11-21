@@ -51,11 +51,11 @@ def main():
     expected = {p.name: digest(p) for p in inputs.iterdir()}
     results = []
     for trial in range(args.repeat):
-        for chunked in (False, True):
-            name = f'{trial}-' + ('chunks' if chunked else 'classic')
+        for chunked in (False, True, 'auto'):
+            name = f'{trial}-' + ('auto' if chunked == 'auto' else 'chunks' if chunked else 'classic')
             archive, restored = root / (name + '.uc2'), root / (name + '-restored')
             restored.mkdir()
-            flags = ['--chunked'] if chunked else []
+            flags = ['--chunked=auto'] if chunked == 'auto' else ['--chunked'] if chunked else []
             enc, rss = measure([cli, *flags, '-w', '-L', '4', archive, *sorted(expected)],
                                inputs, root / (name + '-create.time'))
             dec, dec_rss = measure([cli, '-q', '-d', restored, archive], root,
@@ -68,6 +68,8 @@ def main():
                        restore_peak_kib=dec_rss, verified=True)
             results.append(row)
             print(json.dumps(row), flush=True)
+        classic, chunks, automatic = results[-3:]
+        assert automatic['archive_bytes'] == min(classic['archive_bytes'], chunks['archive_bytes'])
     report = dict(platform=platform.platform(), cli_sha256=digest(cli),
                   source_revision=subprocess.check_output(
                       ['git', '-C', str(source), 'rev-parse', 'HEAD'], text=True).strip(),

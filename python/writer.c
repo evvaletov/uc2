@@ -33,8 +33,8 @@ static int writer_init(Writer *self, PyObject *args, PyObject *kwargs)
     int level=4,chunked=0; unsigned maximum=100000; long long total=UINT32_MAX;
     static char *names[]={"level","max_entries","max_total_size","chunked",NULL};
     if (self->initialized) { PyErr_SetString(PyExc_RuntimeError,"writer cannot be initialized twice"); return -1; }
-    if (!PyArg_ParseTupleAndKeywords(args,kwargs,"|iILp",names,&level,&maximum,&total,&chunked)) return -1;
-    if (level<2 || level>9 || maximum<1 || maximum>1000000 || total<1 || total>UINT32_MAX) {
+    if (!PyArg_ParseTupleAndKeywords(args,kwargs,"|iILi",names,&level,&maximum,&total,&chunked)) return -1;
+    if (level<2 || level>9 || maximum<1 || maximum>1000000 || total<1 || total>UINT32_MAX || chunked<0 || chunked>UC2_WRITER_AUTO_CHUNKED) {
         PyErr_SetString(PyExc_ValueError,"invalid writer level or limits"); return -1;
     }
     struct uc2_writer_options options={level,maximum,(uint64_t)total,chunked};

@@ -192,6 +192,10 @@ if(Python3_Interpreter_FOUND)
         COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_cli_staging.py
                 $<TARGET_FILE:uc2-cli>)
     set_tests_properties(cli_staging PROPERTIES TIMEOUT 90)
+    add_test(NAME cli_transactions
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_cli_transactions.py
+                $<TARGET_FILE:uc2-cli>)
+    set_tests_properties(cli_transactions PROPERTIES TIMEOUT 90)
     add_test(NAME integrations
         COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_integrations.py
                 $<TARGET_FILE:uc2-cli> ${PROJECT_SOURCE_DIR}/contrib/mc/uc2)

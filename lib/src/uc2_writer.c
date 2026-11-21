@@ -143,7 +143,7 @@ uc2_writer *uc2_writer_create(const struct uc2_writer_options *options)
     if (options->level<2 || options->level>9 || !options->max_entries ||
         options->max_entries>1000000 || !options->max_input_size ||
         options->max_input_size>UINT32_MAX ||
-        (options->chunked!=0 && options->chunked!=1)) return NULL;
+        (options->chunked<0 || options->chunked>UC2_WRITER_AUTO_CHUNKED)) return NULL;
     uc2_writer *w=calloc(1,sizeof *w);
     if (!w) return NULL;
     w->options=*options;
@@ -279,7 +279,7 @@ int uc2_writer_add_file(uc2_writer *w, unsigned parent, const char *name,
         if ((unsigned)n>limit) return fail(w,UC2_WRITER_LIMIT,"input exceeds declared size or total input limit");
         if (fwrite(buffer,1,(size_t)n,w->input)!=(size_t)n) return fail(w,UC2_UserFault,"temporary input write failed");
         uc2_sha256_update(&sha,buffer,(unsigned)n);
-        if (w->options.chunked)
+        if (w->options.chunked==1)
             for (unsigned i=0; i<(unsigned)n; ++i)
                 sum^=(unsigned)buffer[i]<<(((consumed+i)&1)*8);
         consumed+=(unsigned)n; w->input_size+=(unsigned)n;
@@ -581,11 +581,10 @@ done:
     free(index.raw); free(index.chunks); free(index.slots); free(index.refs);
     return w->error;
 }
-static int assemble(uc2_writer *w)
+static int assemble(uc2_writer *w, int chunked)
 {
-    if (fflush(w->input)!=0) return fail(w,UC2_UserFault,"temporary input flush failed");
-    if (duplicates(w)<0 || (!w->options.chunked && group_files(w)<0)) return w->error;
-    for (unsigned i=0; !w->options.chunked && i<w->count; ++i) if (w->entries[i].duplicate) {
+    if (!chunked && group_files(w)<0) return w->error;
+    for (unsigned i=0; !chunked && i<w->count; ++i) if (w->entries[i].duplicate) {
         struct entry *e=&w->entries[i];
         e->master=w->entries[e->duplicate-1].master;
         struct master *m=&w->masters[e->master-2];
@@ -595,7 +594,7 @@ static int assemble(uc2_writer *w)
     if (!w->output) return fail(w,UC2_UserFault,"cannot create temporary archive");
     unsigned char header[29]={0}, super[49152], master_data[MASTER_MAX];
     if (output_cb(w,header,sizeof header)<0) return w->error;
-    if (w->options.chunked) {
+    if (chunked) {
         if (write_chunked(w)<0) return w->error;
     } else {
     if (uc2_get_supermaster(super,sizeof super)<0) return fail(w,UC2_InternalError,"SuperMaster decoding failed");
@@ -644,7 +643,7 @@ static int assemble(uc2_writer *w)
         if (e->id) { w32(p,e->id); p+=4; }
         else {
             w32(p,e->size); p+=4; w16(p,e->checksum); p+=2;
-            w32(p,e->csize); p+=4; w16(p,w->options.chunked ? UC2_CHUNK_METHOD : method); p+=2; w32(p,e->master); p+=4;
+            w32(p,e->csize); p+=4; w16(p,chunked ? UC2_CHUNK_METHOD : method); p+=2; w32(p,e->master); p+=4;
             w32(p,1); p+=4; w32(p,e->offset); p+=4;
         }
         unsigned n=(unsigned)strlen(e->name)+1;
@@ -662,11 +661,33 @@ static int assemble(uc2_writer *w)
     unsigned total=(unsigned)w->output_size, length=total-13;
     w32(header,0x1a324355); w32(header+4,length); w32(header+8,length+0x01b2c3d4);
     w32(header+13,1); w32(header+17,cdir_offset); w16(header+21,csum);
-    w16(header+24,w->options.chunked ? UC2_CHUNK_VERSION : 203);
-    w16(header+26,w->options.chunked ? UC2_CHUNK_VERSION : 200);
-    if (seek_file(w->output,0)!=0 || fwrite(header,1,sizeof header,w->output)!=sizeof header || fflush(w->output)!=0)
+    w16(header+24,chunked ? UC2_CHUNK_VERSION : 203);
+    w16(header+26,chunked ? UC2_CHUNK_VERSION : 200);
+    if (seek_file(w->output,0)!=0 || fwrite(header,1,sizeof header,w->output)!=sizeof header || fflush(w->output)!=0 || ferror(w->output))
         return fail(w,UC2_UserFault,"archive header write or flush failed");
     w->stats.archive_size=total;
+    return 0;
+}
+static int assemble_auto(uc2_writer *w)
+{
+    if (assemble(w,0)<0) return w->error;
+    FILE *classic=w->output;
+    struct uc2_writer_stats classic_stats=w->stats;
+
+    /* Entries and the input spool can be reused: finish exposes only the
+     * selected bytes and statistics, not the assembly metadata. The classic
+     * codec's file checksums equal the raw XOR needed by chunk recipes. */
+    w->output=NULL; w->output_size=0;
+    free(w->masters); w->masters=NULL; w->master_count=0;
+    w->stats=(struct uc2_writer_stats){0};
+    w->stats.files=classic_stats.files; w->stats.directories=classic_stats.directories;
+    if (assemble(w,1)<0) { fclose(classic); return w->error; }
+    FILE *discard=classic;
+    if (classic_stats.archive_size<=w->stats.archive_size) {
+        discard=w->output; w->output=classic; w->stats=classic_stats;
+        w->output_size=classic_stats.archive_size;
+    }
+    if (fclose(discard)!=0) return fail(w,UC2_UserFault,"temporary archive close failed");
     return 0;
 }
 int uc2_writer_finish(uc2_writer *w, int (*write_cb)(void *,const void *,unsigned), void *ctx)
@@ -674,7 +695,10 @@ int uc2_writer_finish(uc2_writer *w, int (*write_cb)(void *,const void *,unsigne
     int r=ready(w); if (r<0) return r;
     if (!write_cb) return fail(w,UC2_WRITER_INVALID,"output callback is required");
     w->state=1;
-    r=assemble(w); if (r<0) return r;
+    if (fflush(w->input)!=0 || ferror(w->input)) return fail(w,UC2_UserFault,"temporary input flush failed");
+    if (duplicates(w)<0) return w->error;
+    r=w->options.chunked==UC2_WRITER_AUTO_CHUNKED ? assemble_auto(w) : assemble(w,w->options.chunked);
+    if (r<0) return r;
     if (seek_file(w->output,0)!=0) return fail(w,UC2_UserFault,"temporary archive rewind failed");
     unsigned char buffer[65536];
     for (;;) {

@@ -139,7 +139,8 @@ def test_damaged_compressed_chunks_preserve_destination(tmp_path, level):
     assert (target / "data").read_bytes() == b"keep existing"
 
 
-def test_chunked_cli_tar_and_stream(tmp_path):
+@pytest.mark.parametrize("option", ["--chunked", "--chunked=auto"])
+def test_chunked_cli_tar_and_stream(tmp_path, option):
     base = random.Random(71).randbytes(180000)
     changed = base[:70000] + b"new" + base[70000:]
     tar = io.BytesIO()
@@ -149,7 +150,7 @@ def test_chunked_cli_tar_and_stream(tmp_path):
             info.size = len(data)
             archive.addfile(info, io.BytesIO(data))
     path = tmp_path / "tar.uc2"
-    subprocess.run([executable(), "--chunked", "--ingest-tar", str(path)],
+    subprocess.run([executable(), option, "--ingest-tar", str(path)],
                    input=tar.getvalue(), check=True, capture_output=True)
     with UC2File(path) as archive:
         assert archive.namelist() == ["old", "new"]
@@ -157,7 +158,7 @@ def test_chunked_cli_tar_and_stream(tmp_path):
         assert archive.read("new") == changed
     stream = base + base + changed
     path = tmp_path / "stream.uc2"
-    subprocess.run([executable(), "--chunked", "--ingest", str(path)],
+    subprocess.run([executable(), option, "--ingest", str(path)],
                    input=stream, check=True, capture_output=True)
     with UC2File(path) as archive:
         assert archive.namelist() == ["data"]
@@ -205,3 +206,34 @@ def test_many_repeated_version_names_are_not_a_ratio_bomb(tmp_path, chunked):
     with UC2File(path) as archive:
         assert len(archive.infolist(all_versions=True)) == 4000
         assert archive.read(name) == archive.read(name, version=3999) == b"a"
+
+
+@pytest.mark.parametrize('level', range(2, 10))
+@pytest.mark.parametrize('kind', ['empty', 'small', 'edited'])
+def test_auto_selects_exact_smaller_archive(tmp_path, level, kind):
+    if kind == 'empty':
+        files = []
+    elif kind == 'small':
+        files = [('folder/data', b'hello archive\n')]
+    else:
+        base = random.Random(18).randbytes(140001)
+        files = [('folder/data', base), ('folder/data', base[:80000] + b'edit' + base[80000:]),
+                 ('duplicate', base), ('empty', b'')]
+    encoded, stats = {}, {}
+    for mode in (False, True, 'auto'):
+        path = tmp_path / f'{mode}.uc2'
+        with UC2Writer(path, chunked=mode, level=level) as writer:
+            for name, data in files:
+                writer.writestr(name, data)
+        encoded[mode], stats[mode] = path.read_bytes(), writer.stats
+        with UC2File(path) as archive:
+            infos = [info for info in archive.infolist(all_versions=True) if not info.is_dir()]
+            assert len(infos) == len(files)
+            assert sorted(archive.read(info) for info in infos) == sorted(data for _, data in files)
+    chosen = len(encoded[True]) < len(encoded[False])
+    assert encoded['auto'] == encoded[chosen]
+    assert stats['auto'] == stats[chosen]
+    if kind == 'small' and level < 6:
+        assert chosen is False
+    elif kind == 'edited':
+        assert chosen is True

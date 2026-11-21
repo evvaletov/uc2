@@ -50,6 +50,19 @@ output are spooled to temporary files. Reading checks one descriptor at a time
 and decodes at most 32 KiB per chunk, with the codec workspace additional.
 It does not retain a decoded-chunk cache.
 
+Starting with a13, `--chunked=auto` and `UC2Writer(..., chunked="auto")` build
+both the classic and chunked layouts from the same captured inputs, then keep
+the smaller complete archive. Ties select classic. This avoids the measured
+9.1% source-code expansion while retaining the edited-binary gains; it does
+not change either codec or chunk size. The default remains classic.
+
+Auto mode costs both compression passes and temporary space for both archives.
+Both candidates must fit the existing limits; an assembly or temporary-file
+failure aborts without publishing either candidate. Statistics describe only
+the selected archive. Auto output may use method 11 at any level, so select
+the default mode at levels 2-5 when the original DOS reader must open it.
+See the [measurements](benchmarks/2026-11-20-auto-chunks.md).
+
 `shared_bytes` counts logical source bytes served by an earlier chunk or whole
 file; it is not the compressed space saving. A method-11 entry's `compress_size`
 is its recipe size, excluding shared payloads. Adding entry sizes cannot recover
@@ -58,8 +71,11 @@ the archive's disk size. Use the actual file size or writer `archive_size`.
 Each chunk, the ordered recipe and the complete decoded file have SHA-256
 checks. The historical UC2 XOR checksum is checked too. These detect corruption;
 they do not authenticate the author. Python extraction stages each file before
-publication. CLI extraction writes directly to the final path and can leave a
-partial file after a corruption or output error. C extraction callbacks can receive earlier verified chunks before
+publication. Starting with a13, CLI extraction also stages each file and
+publishes it only after verification and successful close. Earlier files in
+the same extraction remain committed if a later file fails. DOS refuses
+replacement of existing targets; Linux, macOS and Windows support it.
+C extraction callbacks can receive earlier verified chunks before
 a later corruption or output error, so callers must stage output when needed.
 
 ## Method 11 wire format
