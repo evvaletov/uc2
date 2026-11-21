@@ -36,7 +36,7 @@ cross-archive reuse or new wire format is introduced.
 The raw [public-source results](auto-chunks-2026-11-20/public-source.json) and
 [synthetic results](auto-chunks-2026-11-20/synthetic.json) include times, peak RSS,
 tool versions and the measured executable hash. Runs shared the host with other
-work, so the timings are observations rather than controlled speed comparisons.
+work; no controlled speed comparison was performed.
 The Python regression independently compares auto's exact bytes and statistics
 with both explicit layouts at every level from 2 through 9, including empty archives,
 stored versions, duplicates and empty files.

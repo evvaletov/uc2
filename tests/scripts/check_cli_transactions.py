@@ -43,7 +43,8 @@ with tempfile.TemporaryDirectory(prefix='uc2-transactions-') as tmp:
     dest.mkdir()
     target = dest / 'data'
     # The decoder has delivered earlier chunks before the last chunk fails.
-    run('-qxf', archive, cwd=dest, ok=False)
+    result = run('-xf', archive, cwd=dest, ok=False)
+    assert b'Decompression complete' not in result.stderr
     assert not target.exists()
     target.write_bytes(b'keep existing bytes')
     target.chmod(0o444)
@@ -71,6 +72,8 @@ with tempfile.TemporaryDirectory(prefix='uc2-transactions-') as tmp:
         p.name: p.read_bytes() for p in many.iterdir()}
 
     proof = root / 'proof.ots'
+    if os.name != 'nt':
+        archive.chmod(0o640)
     original_mode = stat.S_IMODE(archive.stat().st_mode)
     proof.write_bytes(proof_for(b'wrong bytes'))
     run('--ots-attach', proof, archive, cwd=root, ok=False)
@@ -153,6 +156,7 @@ static void race_target(const char *path) {
     int fd=open(path,O_WRONLY|O_CREAT|O_EXCL,0600);
     if(fd>=0) { write(fd,"racing output",13); close(fd); }
 }
+#ifdef SYS_renameat2
 long syscall(long number,...) {
     /* The CLI uses syscall only for renameat2; libc's own syscalls are internal. */
     if(number!=SYS_renameat2) { errno=ENOSYS; return -1; }
@@ -165,6 +169,17 @@ long syscall(long number,...) {
     if(mode("race")) race_target(b);
     long (*real)(long,...)=dlsym(RTLD_NEXT,"syscall");
     return real(number,oldfd,a,newfd,b,flags);
+}
+#endif
+int native_rename_available(const char *a,const char *b) {
+#ifdef SYS_renameat2
+    long (*real)(long,...)=dlsym(RTLD_NEXT,"syscall");
+    if(real(SYS_renameat2,AT_FDCWD,a,AT_FDCWD,b,1u)==0) return 1;
+    if(errno!=ENOSYS && errno!=EINVAL && errno!=EOPNOTSUPP) return -1;
+#else
+    (void)a; (void)b;
+#endif
+    return 0;
 }
 size_t fwrite(const void *p,size_t size,size_t n,FILE *f) {
     size_t (*real)(const void *,size_t,size_t,FILE *)=dlsym(RTLD_NEXT,"fwrite");
@@ -193,7 +208,7 @@ int link(const char *a,const char *b) {
     if(strstr(a,".uc2-tmp-")) {
         if(mode("publish")) { errno=EACCES; return -1; }
         if(mode("no-links")) { errno=EOPNOTSUPP; return -1; }
-        if(mode("race-link")) race_target(b);
+        if(mode("race") || mode("race-link")) race_target(b);
     }
     return real(a,b);
 }
@@ -201,6 +216,17 @@ int link(const char *a,const char *b) {
         library = root / 'fault.so'
         subprocess.run(['cc', '-shared', '-fPIC', '-Wall', '-Wextra', shim,
                         '-ldl', '-o', library], check=True, capture_output=True)
+        import ctypes
+        probe = ctypes.CDLL(str(library)).native_rename_available
+        probe.argtypes = (ctypes.c_char_p, ctypes.c_char_p)
+        probe.restype = ctypes.c_int
+        probe_from, probe_to = root / 'rename-from', root / 'rename-to'
+        probe_from.write_bytes(b'probe')
+        native_rename = probe(os.fsencode(probe_from), os.fsencode(probe_to))
+        assert native_rename in (0, 1), 'unexpected native rename probe failure'
+        for path in (probe_from, probe_to):
+            if path.exists():
+                path.unlink()
         collision_name = '.uc2-tmp-4242-1700000000-0'
         collision_source = source / collision_name
         collision_source.write_bytes(data)
@@ -237,11 +263,16 @@ int link(const char *a,const char *b) {
             run('--ots-extract', archive, extracted, cwd=root, ok=False, env=env)
             assert extracted.read_bytes() == b'previous proof'
         for fault in ('race', 'race-link', 'fallback', 'no-links'):
-            target.unlink()
+            if target.exists():
+                target.unlink()
             env = dict(os.environ, LD_PRELOAD=str(library), UC2_TEST_FAULT=fault)
             race = fault.startswith('race')
-            run('-qx', archive, cwd=dest, ok=not race, env=env)
-            assert target.read_bytes() == (b'racing output' if race else data)
+            unavailable = fault == 'no-links' and not native_rename
+            run('-qx', archive, cwd=dest, ok=not (race or unavailable), env=env)
+            if unavailable:
+                assert not target.exists()
+            else:
+                assert target.read_bytes() == (b'racing output' if race else data)
     else:
         print('POSIX interposition checks skipped; portable corruption/OTS checks ran')
 

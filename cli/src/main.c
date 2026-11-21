@@ -2226,7 +2226,11 @@ static int cmd_ingest_restore(const char *archive_path)
 }
 
 
+#ifdef _WIN32
+static int uc2_main(int argc, char *argv[])
+#else
 int main(int argc, char *argv[])
+#endif
 {
 #ifdef __DJGPP__
 	setprogname(argv[0]);
@@ -2482,10 +2486,39 @@ usage:
 		visit_selected(&root, extract_cb, &path);
 	}
 
-	if (!opt.list && !opt.test && !opt.pipe)
+	if (!opt.list && !opt.test && !opt.pipe && !had_error)
 		uc2_say(stderr, "Decompression complete\n");
 	uc2_close(uc2);
 	fclose(f);
 	flush_stdout();
 	return had_error ? EXIT_FAILURE : EXIT_SUCCESS;
 }
+
+#ifdef _WIN32
+int wmain(int argc, wchar_t *wide_argv[])
+{
+	/* The file helpers expect UTF-8, independent of the Windows ANSI code page. */
+	int bytes = 0;
+	for (int i = 0; i < argc; i++) {
+		int n = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, wide_argv[i],
+		                            -1, NULL, 0, NULL, NULL);
+		if (!n || bytes > INT_MAX - n) errx(EXIT_FAILURE, "invalid command line");
+		bytes += n;
+	}
+	char *storage = malloc(bytes ? (size_t)bytes : 1);
+	char **argv = calloc((size_t)argc + 1, sizeof *argv);
+	if (!storage || !argv) errx(EXIT_FAILURE, "out of memory for command line");
+	char *p = storage;
+	for (int i = 0; i < argc; i++) {
+		int n = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, wide_argv[i],
+		                            -1, p, bytes, NULL, NULL);
+		if (!n) errx(EXIT_FAILURE, "invalid command line");
+		argv[i] = p;
+		p += n; bytes -= n;
+	}
+	int result = uc2_main(argc, argv);
+	/* Option parsing can reorder argv; the strings share one allocation. */
+	free(argv); free(storage);
+	return result;
+}
+#endif

@@ -43,6 +43,7 @@ if(WIN32)
     else()
         # MinGW/Clang: headers that wrap system headers via #include_next
         target_include_directories(uc2-cli PRIVATE src/compat/include/posix)
+        target_link_options(uc2-cli PRIVATE -municode)
     endif()
     target_compile_definitions(uc2-cli PRIVATE
         NO_OLDNAMES

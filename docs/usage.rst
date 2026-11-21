@@ -107,7 +107,8 @@ DOS refuses to replace an existing target because its runtime deletes the
 target before renaming. Use a fresh destination for DOS extraction and a
 Linux, macOS or Windows build for OTS attachment. Archive creation and
 ingestion use the same staging and publication rules. As before, created and
-ingested archives use owner-only access (0600, subject to umask).
+ingested archives on POSIX use owner-only access (0600, subject to umask).
+Windows access is governed by the destination directory's inherited ACL.
 
 Options
 -------
