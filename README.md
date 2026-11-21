@@ -5,7 +5,7 @@ Nico de Vries (1992-1996). UC2 used shared compression dictionaries
 ("master blocks") and file versioning.
 
 UC2 v3 is under development in portable C99. The current alpha is
-[3.0.0a12](https://pypi.org/project/uc2/3.0.0a12/).
+[3.0.0a13](https://pypi.org/project/uc2/3.0.0a13/).
 Compression levels 2-5 use the original Huffman format; levels 6-9 require the
 new rANS reader. Original-format compatibility is
 covered by DOSBox-X fixtures, including Turbo/method 80 reads. The native CLI
@@ -19,13 +19,16 @@ nested directories, stored file versions, shared master blocks, output to
 stdout, tab-separated listings, and a quiet mode for scripts.
 
 - LZ77 with Huffman coding at levels 2-5, or rANS at levels 6-9.
-- Optional shared payload chunks across named files and versions with `--chunked`;
+- Optional shared payload chunks across named files and versions with `--chunked`.
+  `--chunked=auto` builds both layouts and keeps the smaller complete archive;
   see the [compatibility and format guide](docs/chunk-sharing.md).
 - Stream ingestion with exact restoration through `--ingest-restore`.
   Default `--ingest` stores `part-N` entries; adding `--chunked` stores one
   `data` entry. Use [`--ingest-tar`](docs/tar-ingestion.md) for named tar members.
 - Compression comparisons through `-B`, including the library's LZ4 method.
-- OpenTimestamps proof attachment, extraction, and inspection.
+- OpenTimestamps proof attachment, extraction, and inspection. CLI extraction
+  and OTS updates stage output before publication. DOS requires fresh output
+  paths; see the [alpha13 release record](docs/releases/3.0.0a13-qa.md).
 - Readers for [libarchive/bsdtar](contrib/libarchive/README.md),
   [Midnight Commander](contrib/mc/README.md), and
   [Total Commander](contrib/totalcommander/README.md).
@@ -151,7 +154,7 @@ uc2 --ingest-restore backup.uc2 > restored.tar
 Ingestion keeps a small payload buffer and spools unique raw chunks to a
 temporary file. Memory for chunk indexes and directory entries grows with the
 number of chunks. The writer replaces the output only after completing the
-archive. A killed process can leave a sibling `.tmp-*` file; the previous
+archive. A killed process can leave a sibling temporary file; the previous
 output remains intact. The format and this writer use 32-bit size limits.
 
 ## Project Structure

@@ -42,7 +42,7 @@ struct uc2_writer_stats {
  * compression passes and temporary space for both archives. Both candidates
  * must fit the existing limits; any assembly failure aborts before output.
  * Stats describe only the selected archive. Auto output may require the new
- * reader, so use chunked=0 when historical compatibility is required. */
+ * reader, so use chunked=0 and levels 2-5 for historical DOS compatibility. */
 
 /* NULL options selects defaults. NULL result: invalid options or allocation/
  * temporary-file failure. Uses malloc/free and the platform's tmpfile(). */
