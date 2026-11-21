@@ -3,7 +3,7 @@
 
 Name:           uc2
 Version:        3.0.0~alpha.13
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Read and create UltraCompressor II archives
 License:        GPL-3.0-or-later AND LGPL-3.0-only AND BSD-2-Clause
 URL:            https://github.com/evvaletov/uc2
@@ -59,5 +59,8 @@ cmp "$trial/input.txt" "$trial/output.txt"
 %{_datadir}/uc2/
 
 %changelog
+* Sat Nov 21 2026 Eremey Valetov <eremeyvvaletov@gmail.com> - 3.0.0~alpha.13-2
+- Extend package validation to Fedora 44/45 and AlmaLinux 9/10 on x86_64 and aarch64.
+
 * Sat Nov 21 2026 Eremey Valetov <eremeyvvaletov@gmail.com> - 3.0.0~alpha.13-1
 - Package alpha13 with archive round-trip checks and the native test suite.
