@@ -30,6 +30,9 @@ FILE *uc2_path_regular(const char *path)
     struct stat s;
     if (lstat(path,&s)!=0 || !S_ISREG(s.st_mode)) return NULL;
     int flags=O_RDONLY;
+#ifdef O_BINARY
+    flags|=O_BINARY;
+#endif
 #ifdef O_NOFOLLOW
     flags|=O_NOFOLLOW;
 #endif
@@ -39,7 +42,13 @@ FILE *uc2_path_regular(const char *path)
     int fd=open(path,flags);
     if (fd<0) return NULL;
     struct stat actual;
-    if (fstat(fd,&actual)!=0 || !S_ISREG(actual.st_mode) || actual.st_dev!=s.st_dev || actual.st_ino!=s.st_ino) {
+    if (fstat(fd,&actual)!=0 || !S_ISREG(actual.st_mode) || actual.st_dev!=s.st_dev
+#ifndef __DJGPP__
+        /* DJGPP can synthesise different inode numbers for stat and fstat,
+         * including on FreeDOS. Keep type/device checks on that platform. */
+        || actual.st_ino!=s.st_ino
+#endif
+    ) {
         close(fd); return NULL;
     }
     FILE *f=fdopen(fd,"rb");
