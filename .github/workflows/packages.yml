@@ -30,9 +30,22 @@ jobs:
           set -euo pipefail
           tapdir="$(brew --repository)/Library/Taps/evvaletov/homebrew-tap"
           mkdir -p "$tapdir/Formula"
-          cp packaging/homebrew/uc2.rb "$tapdir/Formula/uc2.rb"
+          python3 - "$tapdir/Formula/uc2.rb" <<'PY'
+          from pathlib import Path
+          import sys
+          recipe = Path("packaging/homebrew/uc2.rb").read_text()
+          recipe = recipe.replace("3.0.0a13", "3.0.0a12").replace("alpha.13", "alpha.12")
+          recipe = recipe.replace(
+              "41566267ca92d36cf181b6c4fc5878b53050b4aebf43baba7d16bdf60149ed93",
+              "a596f5758c2985bf288aab487e4bd61d01a465c6a1f1c396fb491ec621c748bd")
+          Path(sys.argv[1]).write_text(recipe)
+          PY
           git -C "$tapdir" init -q
           brew install --build-from-source evvaletov/tap/uc2
+          uc2 -h | head -1 | grep -F 'UC2 3.0.0a12 '
+          cp packaging/homebrew/uc2.rb "$tapdir/Formula/uc2.rb"
+          brew upgrade --build-from-source evvaletov/tap/uc2
+          uc2 -h | head -1 | grep -F 'UC2 3.0.0a13 '
           brew test evvaletov/tap/uc2
           uc2 -t tests/archives/basic.uc2
           mkdir "$RUNNER_TEMP/uc2-restored"
