@@ -39,18 +39,36 @@ an optional dependency for the Midnight Commander helper.
 
 ## Fedora RPM
 
-The alpha13 release provides an x86_64 RPM built and tested on Fedora 45,
-its source RPM, and `RPM-SHA256SUMS.txt`. Verify the downloads against that
-checksum file before installation. The standalone RPM is unsigned; the
-following command disables signature checking for this local package:
+Alpha13 RPM revision 2 is available for these targets. Choose the row matching
+your distribution and major version, then the column matching `uname -m`.
+Enterprise Linux builds were tested on AlmaLinux; RHEL and other rebuilds
+have not been tested.
+
+| Tested distribution | x86_64 | ARM64 (aarch64) | Source |
+| --- | --- | --- | --- |
+| Fedora 44 | [x86_64](https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.fc44.x86_64.rpm) | [ARM64](https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.fc44.aarch64.rpm) | [SRPM](https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.fc44.src.rpm) |
+| Fedora 45 | [x86_64](https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.fc45.x86_64.rpm) | [ARM64](https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.fc45.aarch64.rpm) | [SRPM](https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.fc45.src.rpm) |
+| AlmaLinux 9 | [x86_64](https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.el9.x86_64.rpm) | [ARM64](https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.el9.aarch64.rpm) | [SRPM](https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.el9.src.rpm) |
+| AlmaLinux 10 | [x86_64](https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.el10.x86_64.rpm) | [ARM64](https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.el10.aarch64.rpm) | [SRPM](https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.el10.src.rpm) |
+
+The AlmaLinux 10 x86_64 package uses the distribution's `x86-64-v3` CPU
+baseline; it is not built for AlmaLinux's separate x86_64_v2 variant.
+
+Download [RPM-SHA256SUMS.txt](https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/RPM-SHA256SUMS.txt)
+alongside the selected package. These standalone RPMs are unsigned. For
+Fedora 45 x86_64, verify the checksum before installing the local package:
 
 ```sh
-sha256sum -c --ignore-missing RPM-SHA256SUMS.txt && \
-  sudo dnf --setopt=localpkg_gpgcheck=0 install ./uc2-3.0.0a13-1.fc45.x86_64.rpm
-uc2 -h
+rpm=uc2-3.0.0a13-2.fc45.x86_64.rpm
+awk -v name="$rpm" '$2 == name {print; found++} END {if (found != 1) exit 1}' \
+  RPM-SHA256SUMS.txt > "$rpm.sha256" && \
+  sha256sum -c "$rpm.sha256" && \
+  sudo dnf --setopt=localpkg_gpgcheck=0 install "./$rpm" && \
+  uc2 -h
 ```
 
-To remove the package:
+Use the corresponding filename for another target. The `localpkg_gpgcheck=0`
+option disables signature checking for this local package. To remove it:
 
 ```sh
 sudo dnf remove uc2
@@ -59,15 +77,20 @@ sudo dnf remove uc2
 The package installs the CLI, man page, licences and Midnight Commander
 helper. Python 3 is required for the helper. RPM version `3.0.0~alpha.13`
 sorts before stable `3.0.0`; the CLI retains its upstream `3.0.0a13` label.
-The native suite passed 35 tests, with the optional OpenTimestamps
-cross-check skipped and DOSBox excluded. Installation, alpha12-to-alpha13
-upgrade, package-file verification, archive round trips, removal and
-reinstallation were tested in a Fedora 45 container.
+The release filenames use `3.0.0a13` for download compatibility.
 
-The recipe and rebuild instructions are in `packaging/rpm/`. Copr publication
-is deferred. The release filenames use `3.0.0a13`; the RPM metadata retains
-`3.0.0~alpha.13` for version ordering.
-No inclusion in Fedora's official repositories is claimed.
+All eight targets build and test on native GitHub runners. Each alpha13
+build passes 35 native tests, with the optional OpenTimestamps cross-check
+skipped and DOSBox excluded. Fresh installation, alpha12-to-alpha13 upgrade,
+package-file verification, six fixture-file comparisons, installed MC helper,
+L4/L9 archive round trips, removal and reinstallation are checked on each
+target. Package removal preserves user files. Fedora 45 x86_64 also has a
+revision-1-to-revision-2 upgrade check. The earlier revision 1 downloads remain
+available.
+
+See the [recipe and rebuild instructions](../packaging/rpm/README.md) and
+[validation record](qa/rpm-matrix-2026-11-21.md). Copr publication is deferred;
+these packages are published in the project's release downloads.
 
 ## FreeDOS
 

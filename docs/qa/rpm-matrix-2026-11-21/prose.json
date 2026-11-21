@@ -1,0 +1,48 @@
+{
+  "files": [
+    "packaging/rpm/README.md",
+    "docs/distribution.md",
+    "docs/outreach/distribution-release-note.md",
+    "docs/qa/rpm-matrix-2026-11-21.md"
+  ],
+  "word_count": 1906,
+  "scan_iteration": 3,
+  "checks": {
+    "packaging/rpm/README.md": {
+      "unicode_punctuation": 0,
+      "formulaic_stems": 0,
+      "contrastive_framing": 0,
+      "assistant_meta": 0,
+      "markdown_bold_prose": 0
+    },
+    "docs/distribution.md": {
+      "unicode_punctuation": 0,
+      "formulaic_stems": 0,
+      "contrastive_framing": 0,
+      "assistant_meta": 0,
+      "markdown_bold_prose": 0
+    },
+    "docs/outreach/distribution-release-note.md": {
+      "unicode_punctuation": 0,
+      "formulaic_stems": 0,
+      "contrastive_framing": 0,
+      "assistant_meta": 0,
+      "markdown_bold_prose": 0
+    },
+    "docs/qa/rpm-matrix-2026-11-21.md": {
+      "unicode_punctuation": 0,
+      "formulaic_stems": 0,
+      "contrastive_framing": 0,
+      "assistant_meta": 0,
+      "markdown_bold_prose": 0
+    }
+  },
+  "sha256": {
+    "packaging/rpm/README.md": "b81b9c1ac353494f7c31ff5d18e41c6fc1edf5a78e5bbeafbdb8d8b710da143d",
+    "docs/distribution.md": "ba35ecdf255417e370c01ab5154e557d8698ce14cd594eea2b44865db06ba0f8",
+    "docs/outreach/distribution-release-note.md": "ee14cab5028f48f03ba76bfb468b16a86c1dd0ccf23cb4700ade527e57cc58b6",
+    "docs/qa/rpm-matrix-2026-11-21.md": "a7499140f6d01bc2a27c80c5e7ef96462c583c023652df37d03fef43cbfa9340"
+  },
+  "scope": "Changed public package prose; technical identifiers and hashes retained. Existing roadmap labels and unedited README prose excluded.",
+  "final_focused_review": "Grok4.7 and Fable5.2 PASS"
+}

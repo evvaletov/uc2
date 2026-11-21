@@ -1,0 +1,139 @@
+{
+  "status": "published and public bytes verified",
+  "time_utc": "2026-11-21T18:42:21.987926+00:00",
+  "github_release": "https://github.com/evvaletov/uc2/releases/tag/v3.0.0-alpha.13",
+  "sdf_release": "https://git.sdf.org/evv/uc2/releases/tag/v3.0.0-alpha.13",
+  "github_assets_total": 49,
+  "new_binary_rpms": 8,
+  "new_source_rpms": 4,
+  "preexisting_assets_unchanged": 36,
+  "checksum_manifest": "RPM-SHA256SUMS.txt extended to cover14RPMs; original two rows preserved",
+  "downloads": [
+    {
+      "name": "uc2-3.0.0a13-2.el10.aarch64.rpm",
+      "size": 122351,
+      "sha256": "bb43397651a3486b7ff449f04ba81c816e9899cdeda5795a694ecf8397341456",
+      "url": "https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.el10.aarch64.rpm",
+      "verified": true
+    },
+    {
+      "name": "uc2-3.0.0a13-2.el10.x86_64.rpm",
+      "size": 123579,
+      "sha256": "05bbcedb981c1f9b1c1b311fe7570cd12051ab34b1e2d0f1533bc9e38b656037",
+      "url": "https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.el10.x86_64.rpm",
+      "verified": true
+    },
+    {
+      "name": "uc2-3.0.0a13-2.el10.src.rpm",
+      "size": 2684309,
+      "sha256": "85bf0e09fe70026dee99e2c23941ffce7883a35367ff487e205213757fe38694",
+      "url": "https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.el10.src.rpm",
+      "verified": true
+    },
+    {
+      "name": "uc2-3.0.0a13-2.el9.aarch64.rpm",
+      "size": 120223,
+      "sha256": "3f3ec425dce38daf368ee15216f349942e75c8b08e9d0498fc08641ac827694b",
+      "url": "https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.el9.aarch64.rpm",
+      "verified": true
+    },
+    {
+      "name": "uc2-3.0.0a13-2.el9.x86_64.rpm",
+      "size": 120127,
+      "sha256": "4775f4245e47e10e4ccdc1e410c726ccec961744161edac65b28ae64f5a88015",
+      "url": "https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.el9.x86_64.rpm",
+      "verified": true
+    },
+    {
+      "name": "uc2-3.0.0a13-2.el9.src.rpm",
+      "size": 2676902,
+      "sha256": "a7d1a6a0b94c811fd515dbcc0a1529c4bdf2034c6256fbc9f4ec53ea7b878601",
+      "url": "https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.el9.src.rpm",
+      "verified": true
+    },
+    {
+      "name": "uc2-3.0.0a13-2.fc44.aarch64.rpm",
+      "size": 121847,
+      "sha256": "fdf0a92197974cde7aab08d89fea07b033a989c2190466bab10850fe3286c506",
+      "url": "https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.fc44.aarch64.rpm",
+      "verified": true
+    },
+    {
+      "name": "uc2-3.0.0a13-2.fc44.x86_64.rpm",
+      "size": 124972,
+      "sha256": "535d999a0e6125f2c939e9b2d6ea52b93079df6b702ea11d43f0c747ebbf7f7b",
+      "url": "https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.fc44.x86_64.rpm",
+      "verified": true
+    },
+    {
+      "name": "uc2-3.0.0a13-2.fc44.src.rpm",
+      "size": 2684499,
+      "sha256": "2b613ac9c710604b82a95c7085791b10625da8625d27a4ef23d02c3ba6bf2db9",
+      "url": "https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.fc44.src.rpm",
+      "verified": true
+    },
+    {
+      "name": "uc2-3.0.0a13-2.fc45.aarch64.rpm",
+      "size": 121866,
+      "sha256": "71716984a90e35d4b2c83bb3e71fef65c5a3d0f5fd06e4538ccd51efcccbe19c",
+      "url": "https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.fc45.aarch64.rpm",
+      "verified": true
+    },
+    {
+      "name": "uc2-3.0.0a13-2.fc45.x86_64.rpm",
+      "size": 124638,
+      "sha256": "8f51f41a8431a58b584683ced76776b48a2c93a7bd6f806e6aca2022f241a396",
+      "url": "https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.fc45.x86_64.rpm",
+      "verified": true
+    },
+    {
+      "name": "uc2-3.0.0a13-2.fc45.src.rpm",
+      "size": 2684495,
+      "sha256": "91b44614ee420f180808dfdb500bbeede92b0088b3458d4db75079301309ab4a",
+      "url": "https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-2.fc45.src.rpm",
+      "verified": true
+    },
+    {
+      "name": "RPM-SHA256SUMS.txt",
+      "size": 1344,
+      "sha256": "6a91a791dd96fc13f7c77eb127c9e3a577e3fc7330a592f49910fea380df0548",
+      "url": "https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/RPM-SHA256SUMS.txt",
+      "verified": true
+    },
+    {
+      "name": "uc2-3.0.0a13-1.fc45.src.rpm",
+      "size": 2683103,
+      "sha256": "fdb2c571c20b93c012d2ced4f0c4f755b398b49bd59bd5996075f39f03e8d7de",
+      "url": "https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-1.fc45.src.rpm",
+      "verified": true
+    },
+    {
+      "name": "uc2-3.0.0a13-1.fc45.x86_64.rpm",
+      "size": 124450,
+      "sha256": "359f741a6625e6817a1d85db4d5945447d4fb3f6707d9b5dfd6442c54ea24abc",
+      "url": "https://github.com/evvaletov/uc2/releases/download/v3.0.0-alpha.13/uc2-3.0.0a13-1.fc45.x86_64.rpm",
+      "verified": true
+    }
+  ],
+  "github_release_body_sha256": "737f7110beb5a15538a20938729548d1c94b7a63a18d83388af252c15e5de2b5",
+  "sdf_release_body_sha256_normalised_LF": "125342599fd8ceb4515f964681f32ff6dd81e0cfad2d3031780f6661275659a6",
+  "release_body_readback": "GitHub exact; SDF exact after normalising HTML-form CRLF line endings",
+  "source_tag_commit": "b297757b7509b3b46be9002979eff5e3e20e6ea8",
+  "source_tag_unchanged": true,
+  "copr": "deferred by owner; standalone unsigned RPM publication",
+  "public_fedora45_x86_64_install": {
+    "status": "PASS",
+    "exit_code": 0,
+    "marker": "PUBLIC_RPM_INSTALL_EXTRACT_HELPER_REMOVE_PASS",
+    "log_sha256": "a84482564255990ebad8557b1a1280bcc85f935754bb57a888c77274f7c0d273",
+    "checks": [
+      "selected public RPM checksum gate",
+      "fresh DNF install",
+      "exact RPM version/release/architecture",
+      "rpm -V",
+      "six byte-identical extracted files",
+      "installed MC copyout",
+      "removal preserves restored files"
+    ]
+  }
+}

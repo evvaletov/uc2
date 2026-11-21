@@ -20,15 +20,18 @@ See the `SDF evidence
 
 The next priorities are:
 
-1. Extend the published RPMs to further Fedora/Enterprise Linux targets and
-   aarch64, then assess signed repository delivery. Copr is deferred after a
-   Fedora login error; resume AUR upload when registration opens.
-2. Fix drive-qualified DOS input paths and add a FreeDOS regression check.
-3. Publish the reviewed SDF tutorial when wiki access is granted.
-4. Resolve the FreeDOS eligibility enquiry and libarchive's optional dependency,
+1. Fix drive-qualified DOS input paths and add a FreeDOS regression check.
+2. Publish the reviewed SDF tutorial when wiki access is granted.
+3. Resolve the FreeDOS eligibility enquiry and libarchive's optional dependency,
    format ID and decoded-entry spool decisions; track MC and TC separately.
-5. Design snapshot growth beyond fixed reference and manifest caps, preserving
+4. Design snapshot growth beyond fixed reference and manifest caps, preserving
    v1/v2 readability and verified publication. Assess concurrent readers separately.
+5. Record a Linux/FreeDOS archive round trip for the README.
+
+RPM revision 2 covers Fedora 44/45 and AlmaLinux 9/10 on x86_64 and ARM64,
+with native build and package lifecycle checks on all eight targets. The
+unsigned standalone packages and four source RPMs are published with checksums.
+Copr remains deferred after a Fedora login error; AUR upload awaits registration.
 
 The FreeDOS ZIP, Homebrew tap and Fedora RPMs are published, with installation,
 upgrade, archive round-trip and removal checks. The Arch recipe is tested and

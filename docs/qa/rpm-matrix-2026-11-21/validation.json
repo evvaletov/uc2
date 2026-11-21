@@ -1,0 +1,499 @@
+{
+  "code_commit": "14d61860cbf7a2ecb13ef92d66ce79069a8541a0",
+  "workflow": "https://github.com/evvaletov/uc2/actions/runs/44935426121",
+  "source_tag": "v3.0.0-alpha.13",
+  "targets": [
+    {
+      "architecture": "aarch64",
+      "os_release": "NAME=\"AlmaLinux\"\nVERSION=\"10.3 (Mauve Lion)\"\nRELEASE_TYPE=stable\nID=\"almalinux\"\nID_LIKE=\"rhel centos fedora\"\nVERSION_ID=\"10.3\"\nPLATFORM_ID=\"platform:el10\"\nPRETTY_NAME=\"AlmaLinux 10.3 (Mauve Lion)\"\nANSI_COLOR=\"0;34\"\nLOGO=\"fedora-logo-icon\"\nCPE_NAME=\"cpe:/o:almalinux:almalinux:10.3\"\nHOME_URL=\"https://almalinux.org/\"\nDOCUMENTATION_URL=\"https://wiki.almalinux.org/\"\nVENDOR_NAME=\"AlmaLinux\"\nVENDOR_URL=\"https://almalinux.org/\"\nBUG_REPORT_URL=\"https://bugs.almalinux.org/\"\n\nALMALINUX_MANTISBT_PROJECT=\"AlmaLinux-10\"\nALMALINUX_MANTISBT_PROJECT_VERSION=\"10.3\"\nREDHAT_SUPPORT_PRODUCT=\"AlmaLinux\"\nREDHAT_SUPPORT_PRODUCT_VERSION=\"10.3\"\nSUPPORT_END=2035-06-01\n",
+      "rpm_version": "RPM version 4.19.1.1",
+      "source_tag": "v3.0.0-alpha.13",
+      "source_sha256": "41566267ca92d36cf181b6c4fc5878b53050b4aebf43baba7d16bdf60149ed93",
+      "native_builds_and_tests": "PASS for alpha12 upgrade fixture and alpha13",
+      "lifecycle": "PASS: fresh install, alpha12 upgrade, removal and reinstallation",
+      "validation": "rpm -V, six byte-identical fixture files, installed MC helper, L4/L9 round trips, user files preserved",
+      "signature": "unsigned standalone RPMs",
+      "artifacts": [
+        {
+          "name": "uc2-3.0.0a13-2.el10.aarch64.rpm",
+          "size": 122351,
+          "sha256": "bb43397651a3486b7ff449f04ba81c816e9899cdeda5795a694ecf8397341456"
+        },
+        {
+          "name": "uc2-3.0.0a13-2.el10.src.rpm",
+          "size": 2684139,
+          "sha256": "34332ea0451d05807cfb1336d354a98687a2a0a1569fe45ad4b6b54afb09954c"
+        }
+      ],
+      "test_runs": {
+        "alpha12": {
+          "registered": 35,
+          "passed": 34,
+          "skipped": [
+            "ots_cross_check"
+          ]
+        },
+        "alpha13": {
+          "registered": 36,
+          "passed": 35,
+          "skipped": [
+            "ots_cross_check"
+          ]
+        }
+      },
+      "target": "uc2-rpm-el10-aarch64"
+    },
+    {
+      "architecture": "x86_64",
+      "os_release": "NAME=\"AlmaLinux\"\nVERSION=\"10.3 (Mauve Lion)\"\nRELEASE_TYPE=stable\nID=\"almalinux\"\nID_LIKE=\"rhel centos fedora\"\nVERSION_ID=\"10.3\"\nPLATFORM_ID=\"platform:el10\"\nPRETTY_NAME=\"AlmaLinux 10.3 (Mauve Lion)\"\nANSI_COLOR=\"0;34\"\nLOGO=\"fedora-logo-icon\"\nCPE_NAME=\"cpe:/o:almalinux:almalinux:10.3\"\nHOME_URL=\"https://almalinux.org/\"\nDOCUMENTATION_URL=\"https://wiki.almalinux.org/\"\nVENDOR_NAME=\"AlmaLinux\"\nVENDOR_URL=\"https://almalinux.org/\"\nBUG_REPORT_URL=\"https://bugs.almalinux.org/\"\n\nALMALINUX_MANTISBT_PROJECT=\"AlmaLinux-10\"\nALMALINUX_MANTISBT_PROJECT_VERSION=\"10.3\"\nREDHAT_SUPPORT_PRODUCT=\"AlmaLinux\"\nREDHAT_SUPPORT_PRODUCT_VERSION=\"10.3\"\nSUPPORT_END=2035-06-01\n",
+      "rpm_version": "RPM version 4.19.1.1",
+      "source_tag": "v3.0.0-alpha.13",
+      "source_sha256": "41566267ca92d36cf181b6c4fc5878b53050b4aebf43baba7d16bdf60149ed93",
+      "native_builds_and_tests": "PASS for alpha12 upgrade fixture and alpha13",
+      "lifecycle": "PASS: fresh install, alpha12 upgrade, removal and reinstallation",
+      "validation": "rpm -V, six byte-identical fixture files, installed MC helper, L4/L9 round trips, user files preserved",
+      "signature": "unsigned standalone RPMs",
+      "artifacts": [
+        {
+          "name": "uc2-3.0.0a13-2.el10.x86_64.rpm",
+          "size": 123579,
+          "sha256": "05bbcedb981c1f9b1c1b311fe7570cd12051ab34b1e2d0f1533bc9e38b656037"
+        },
+        {
+          "name": "uc2-3.0.0a13-2.el10.src.rpm",
+          "size": 2684309,
+          "sha256": "85bf0e09fe70026dee99e2c23941ffce7883a35367ff487e205213757fe38694"
+        }
+      ],
+      "test_runs": {
+        "alpha12": {
+          "registered": 35,
+          "passed": 34,
+          "skipped": [
+            "ots_cross_check"
+          ]
+        },
+        "alpha13": {
+          "registered": 36,
+          "passed": 35,
+          "skipped": [
+            "ots_cross_check"
+          ]
+        }
+      },
+      "target": "uc2-rpm-el10-x86_64"
+    },
+    {
+      "architecture": "aarch64",
+      "os_release": "NAME=\"AlmaLinux\"\nVERSION=\"9.9 (Chartreuse Bobcat)\"\nID=\"almalinux\"\nID_LIKE=\"rhel centos fedora\"\nVERSION_ID=\"9.9\"\nPLATFORM_ID=\"platform:el9\"\nPRETTY_NAME=\"AlmaLinux 9.9 (Chartreuse Bobcat)\"\nANSI_COLOR=\"0;34\"\nLOGO=\"fedora-logo-icon\"\nCPE_NAME=\"cpe:/o:almalinux:almalinux:9::baseos\"\nHOME_URL=\"https://almalinux.org/\"\nDOCUMENTATION_URL=\"https://wiki.almalinux.org/\"\nBUG_REPORT_URL=\"https://bugs.almalinux.org/\"\n\nALMALINUX_MANTISBT_PROJECT=\"AlmaLinux-9\"\nALMALINUX_MANTISBT_PROJECT_VERSION=\"9.9\"\nREDHAT_SUPPORT_PRODUCT=\"AlmaLinux\"\nREDHAT_SUPPORT_PRODUCT_VERSION=\"9.9\"\nSUPPORT_END=2032-06-01\n",
+      "rpm_version": "RPM version 4.16.1.3",
+      "source_tag": "v3.0.0-alpha.13",
+      "source_sha256": "41566267ca92d36cf181b6c4fc5878b53050b4aebf43baba7d16bdf60149ed93",
+      "native_builds_and_tests": "PASS for alpha12 upgrade fixture and alpha13",
+      "lifecycle": "PASS: fresh install, alpha12 upgrade, removal and reinstallation",
+      "validation": "rpm -V, six byte-identical fixture files, installed MC helper, L4/L9 round trips, user files preserved",
+      "signature": "unsigned standalone RPMs",
+      "artifacts": [
+        {
+          "name": "uc2-3.0.0a13-2.el9.aarch64.rpm",
+          "size": 120223,
+          "sha256": "3f3ec425dce38daf368ee15216f349942e75c8b08e9d0498fc08641ac827694b"
+        },
+        {
+          "name": "uc2-3.0.0a13-2.el9.src.rpm",
+          "size": 2676900,
+          "sha256": "daf7a9440f457c4f3c6546c94e2b9061a404ec18514b9f8c82177abeb5aa5863"
+        }
+      ],
+      "test_runs": {
+        "alpha12": {
+          "registered": 35,
+          "passed": 34,
+          "skipped": [
+            "ots_cross_check"
+          ]
+        },
+        "alpha13": {
+          "registered": 36,
+          "passed": 35,
+          "skipped": [
+            "ots_cross_check"
+          ]
+        }
+      },
+      "target": "uc2-rpm-el9-aarch64"
+    },
+    {
+      "architecture": "x86_64",
+      "os_release": "NAME=\"AlmaLinux\"\nVERSION=\"9.9 (Chartreuse Bobcat)\"\nID=\"almalinux\"\nID_LIKE=\"rhel centos fedora\"\nVERSION_ID=\"9.9\"\nPLATFORM_ID=\"platform:el9\"\nPRETTY_NAME=\"AlmaLinux 9.9 (Chartreuse Bobcat)\"\nANSI_COLOR=\"0;34\"\nLOGO=\"fedora-logo-icon\"\nCPE_NAME=\"cpe:/o:almalinux:almalinux:9::baseos\"\nHOME_URL=\"https://almalinux.org/\"\nDOCUMENTATION_URL=\"https://wiki.almalinux.org/\"\nBUG_REPORT_URL=\"https://bugs.almalinux.org/\"\n\nALMALINUX_MANTISBT_PROJECT=\"AlmaLinux-9\"\nALMALINUX_MANTISBT_PROJECT_VERSION=\"9.9\"\nREDHAT_SUPPORT_PRODUCT=\"AlmaLinux\"\nREDHAT_SUPPORT_PRODUCT_VERSION=\"9.9\"\nSUPPORT_END=2032-06-01\n",
+      "rpm_version": "RPM version 4.16.1.3",
+      "source_tag": "v3.0.0-alpha.13",
+      "source_sha256": "41566267ca92d36cf181b6c4fc5878b53050b4aebf43baba7d16bdf60149ed93",
+      "native_builds_and_tests": "PASS for alpha12 upgrade fixture and alpha13",
+      "lifecycle": "PASS: fresh install, alpha12 upgrade, removal and reinstallation",
+      "validation": "rpm -V, six byte-identical fixture files, installed MC helper, L4/L9 round trips, user files preserved",
+      "signature": "unsigned standalone RPMs",
+      "artifacts": [
+        {
+          "name": "uc2-3.0.0a13-2.el9.x86_64.rpm",
+          "size": 120127,
+          "sha256": "4775f4245e47e10e4ccdc1e410c726ccec961744161edac65b28ae64f5a88015"
+        },
+        {
+          "name": "uc2-3.0.0a13-2.el9.src.rpm",
+          "size": 2676902,
+          "sha256": "a7d1a6a0b94c811fd515dbcc0a1529c4bdf2034c6256fbc9f4ec53ea7b878601"
+        }
+      ],
+      "test_runs": {
+        "alpha12": {
+          "registered": 35,
+          "passed": 34,
+          "skipped": [
+            "ots_cross_check"
+          ]
+        },
+        "alpha13": {
+          "registered": 36,
+          "passed": 35,
+          "skipped": [
+            "ots_cross_check"
+          ]
+        }
+      },
+      "target": "uc2-rpm-el9-x86_64"
+    },
+    {
+      "architecture": "aarch64",
+      "os_release": "NAME=\"Fedora Linux\"\nVERSION=\"44 (Container Image)\"\nRELEASE_TYPE=stable\nID=fedora\nVERSION_ID=44\nVERSION_CODENAME=\"\"\nPRETTY_NAME=\"Fedora Linux 44 (Container Image)\"\nANSI_COLOR=\"0;38;2;60;110;180\"\nLOGO=fedora-logo-icon\nCPE_NAME=\"cpe:/o:fedoraproject:fedora:44\"\nDEFAULT_HOSTNAME=\"fedora\"\nHOME_URL=\"https://fedoraproject.org/\"\nDOCUMENTATION_URL=\"https://docs.fedoraproject.org/en-US/fedora/f44/\"\nSUPPORT_URL=\"https://ask.fedoraproject.org/\"\nBUG_REPORT_URL=\"https://bugzilla.redhat.com/\"\nREDHAT_BUGZILLA_PRODUCT=\"Fedora\"\nREDHAT_BUGZILLA_PRODUCT_VERSION=44\nREDHAT_SUPPORT_PRODUCT=\"Fedora\"\nREDHAT_SUPPORT_PRODUCT_VERSION=44\nSUPPORT_END=2027-05-19\nVARIANT=\"Container Image\"\nVARIANT_ID=container\n",
+      "rpm_version": "RPM version 6.0.2",
+      "source_tag": "v3.0.0-alpha.13",
+      "source_sha256": "41566267ca92d36cf181b6c4fc5878b53050b4aebf43baba7d16bdf60149ed93",
+      "native_builds_and_tests": "PASS for alpha12 upgrade fixture and alpha13",
+      "lifecycle": "PASS: fresh install, alpha12 upgrade, removal and reinstallation",
+      "validation": "rpm -V, six byte-identical fixture files, installed MC helper, L4/L9 round trips, user files preserved",
+      "signature": "unsigned standalone RPMs",
+      "artifacts": [
+        {
+          "name": "uc2-3.0.0a13-2.fc44.aarch64.rpm",
+          "size": 121847,
+          "sha256": "fdf0a92197974cde7aab08d89fea07b033a989c2190466bab10850fe3286c506"
+        },
+        {
+          "name": "uc2-3.0.0a13-2.fc44.src.rpm",
+          "size": 2684339,
+          "sha256": "fe161f97f7a5f32cbad624031c2d0367e44e3399c446b42b9653f8fd1af10c7b"
+        }
+      ],
+      "test_runs": {
+        "alpha12": {
+          "registered": 35,
+          "passed": 34,
+          "skipped": [
+            "ots_cross_check"
+          ]
+        },
+        "alpha13": {
+          "registered": 36,
+          "passed": 35,
+          "skipped": [
+            "ots_cross_check"
+          ]
+        }
+      },
+      "target": "uc2-rpm-fc44-aarch64"
+    },
+    {
+      "architecture": "x86_64",
+      "os_release": "NAME=\"Fedora Linux\"\nVERSION=\"44 (Container Image)\"\nRELEASE_TYPE=stable\nID=fedora\nVERSION_ID=44\nVERSION_CODENAME=\"\"\nPRETTY_NAME=\"Fedora Linux 44 (Container Image)\"\nANSI_COLOR=\"0;38;2;60;110;180\"\nLOGO=fedora-logo-icon\nCPE_NAME=\"cpe:/o:fedoraproject:fedora:44\"\nDEFAULT_HOSTNAME=\"fedora\"\nHOME_URL=\"https://fedoraproject.org/\"\nDOCUMENTATION_URL=\"https://docs.fedoraproject.org/en-US/fedora/f44/\"\nSUPPORT_URL=\"https://ask.fedoraproject.org/\"\nBUG_REPORT_URL=\"https://bugzilla.redhat.com/\"\nREDHAT_BUGZILLA_PRODUCT=\"Fedora\"\nREDHAT_BUGZILLA_PRODUCT_VERSION=44\nREDHAT_SUPPORT_PRODUCT=\"Fedora\"\nREDHAT_SUPPORT_PRODUCT_VERSION=44\nSUPPORT_END=2027-05-19\nVARIANT=\"Container Image\"\nVARIANT_ID=container\n",
+      "rpm_version": "RPM version 6.0.2",
+      "source_tag": "v3.0.0-alpha.13",
+      "source_sha256": "41566267ca92d36cf181b6c4fc5878b53050b4aebf43baba7d16bdf60149ed93",
+      "native_builds_and_tests": "PASS for alpha12 upgrade fixture and alpha13",
+      "lifecycle": "PASS: fresh install, alpha12 upgrade, removal and reinstallation",
+      "validation": "rpm -V, six byte-identical fixture files, installed MC helper, L4/L9 round trips, user files preserved",
+      "signature": "unsigned standalone RPMs",
+      "artifacts": [
+        {
+          "name": "uc2-3.0.0a13-2.fc44.x86_64.rpm",
+          "size": 124972,
+          "sha256": "535d999a0e6125f2c939e9b2d6ea52b93079df6b702ea11d43f0c747ebbf7f7b"
+        },
+        {
+          "name": "uc2-3.0.0a13-2.fc44.src.rpm",
+          "size": 2684499,
+          "sha256": "2b613ac9c710604b82a95c7085791b10625da8625d27a4ef23d02c3ba6bf2db9"
+        }
+      ],
+      "test_runs": {
+        "alpha12": {
+          "registered": 35,
+          "passed": 34,
+          "skipped": [
+            "ots_cross_check"
+          ]
+        },
+        "alpha13": {
+          "registered": 36,
+          "passed": 35,
+          "skipped": [
+            "ots_cross_check"
+          ]
+        }
+      },
+      "target": "uc2-rpm-fc44-x86_64"
+    },
+    {
+      "architecture": "aarch64",
+      "os_release": "NAME=\"Fedora Linux\"\nVERSION=\"45 (Container Image)\"\nRELEASE_TYPE=stable\nID=fedora\nVERSION_ID=45\nVERSION_CODENAME=\"\"\nPRETTY_NAME=\"Fedora Linux 45 (Container Image)\"\nANSI_COLOR=\"0;38;2;60;110;180\"\nLOGO=fedora-logo-icon\nCPE_NAME=\"cpe:/o:fedoraproject:fedora:45\"\nDEFAULT_HOSTNAME=\"fedora\"\nHOME_URL=\"https://fedoraproject.org/\"\nDOCUMENTATION_URL=\"https://docs.fedoraproject.org/en-US/fedora/f45/\"\nSUPPORT_URL=\"https://ask.fedoraproject.org/\"\nBUG_REPORT_URL=\"https://bugzilla.redhat.com/\"\nREDHAT_BUGZILLA_PRODUCT=\"Fedora\"\nREDHAT_BUGZILLA_PRODUCT_VERSION=45\nREDHAT_SUPPORT_PRODUCT=\"Fedora\"\nREDHAT_SUPPORT_PRODUCT_VERSION=45\nSUPPORT_END=2027-12-08\nVARIANT=\"Container Image\"\nVARIANT_ID=container\n",
+      "rpm_version": "RPM version 6.1.0",
+      "source_tag": "v3.0.0-alpha.13",
+      "source_sha256": "41566267ca92d36cf181b6c4fc5878b53050b4aebf43baba7d16bdf60149ed93",
+      "native_builds_and_tests": "PASS for alpha12 upgrade fixture and alpha13",
+      "lifecycle": "PASS: fresh install, alpha12 upgrade, removal and reinstallation",
+      "validation": "rpm -V, six byte-identical fixture files, installed MC helper, L4/L9 round trips, user files preserved",
+      "signature": "unsigned standalone RPMs",
+      "artifacts": [
+        {
+          "name": "uc2-3.0.0a13-2.fc45.aarch64.rpm",
+          "size": 121866,
+          "sha256": "71716984a90e35d4b2c83bb3e71fef65c5a3d0f5fd06e4538ccd51efcccbe19c"
+        },
+        {
+          "name": "uc2-3.0.0a13-2.fc45.src.rpm",
+          "size": 2684335,
+          "sha256": "e62c660580e4e272bafe687a5dab6f2e243de040645b8bd989fdfccf96359ff4"
+        }
+      ],
+      "test_runs": {
+        "alpha12": {
+          "registered": 35,
+          "passed": 34,
+          "skipped": [
+            "ots_cross_check"
+          ]
+        },
+        "alpha13": {
+          "registered": 36,
+          "passed": 35,
+          "skipped": [
+            "ots_cross_check"
+          ]
+        }
+      },
+      "target": "uc2-rpm-fc45-aarch64"
+    },
+    {
+      "architecture": "x86_64",
+      "os_release": "NAME=\"Fedora Linux\"\nVERSION=\"45 (Container Image)\"\nRELEASE_TYPE=stable\nID=fedora\nVERSION_ID=45\nVERSION_CODENAME=\"\"\nPRETTY_NAME=\"Fedora Linux 45 (Container Image)\"\nANSI_COLOR=\"0;38;2;60;110;180\"\nLOGO=fedora-logo-icon\nCPE_NAME=\"cpe:/o:fedoraproject:fedora:45\"\nDEFAULT_HOSTNAME=\"fedora\"\nHOME_URL=\"https://fedoraproject.org/\"\nDOCUMENTATION_URL=\"https://docs.fedoraproject.org/en-US/fedora/f45/\"\nSUPPORT_URL=\"https://ask.fedoraproject.org/\"\nBUG_REPORT_URL=\"https://bugzilla.redhat.com/\"\nREDHAT_BUGZILLA_PRODUCT=\"Fedora\"\nREDHAT_BUGZILLA_PRODUCT_VERSION=45\nREDHAT_SUPPORT_PRODUCT=\"Fedora\"\nREDHAT_SUPPORT_PRODUCT_VERSION=45\nSUPPORT_END=2027-12-08\nVARIANT=\"Container Image\"\nVARIANT_ID=container\n",
+      "rpm_version": "RPM version 6.1.0",
+      "source_tag": "v3.0.0-alpha.13",
+      "source_sha256": "41566267ca92d36cf181b6c4fc5878b53050b4aebf43baba7d16bdf60149ed93",
+      "native_builds_and_tests": "PASS for alpha12 upgrade fixture and alpha13",
+      "lifecycle": "PASS: fresh install, alpha12 upgrade, removal and reinstallation",
+      "validation": "rpm -V, six byte-identical fixture files, installed MC helper, L4/L9 round trips, user files preserved",
+      "signature": "unsigned standalone RPMs",
+      "artifacts": [
+        {
+          "name": "uc2-3.0.0a13-2.fc45.x86_64.rpm",
+          "size": 124638,
+          "sha256": "8f51f41a8431a58b584683ced76776b48a2c93a7bd6f806e6aca2022f241a396"
+        },
+        {
+          "name": "uc2-3.0.0a13-2.fc45.src.rpm",
+          "size": 2684495,
+          "sha256": "91b44614ee420f180808dfdb500bbeede92b0088b3458d4db75079301309ab4a"
+        }
+      ],
+      "test_runs": {
+        "alpha12": {
+          "registered": 35,
+          "passed": 34,
+          "skipped": [
+            "ots_cross_check"
+          ]
+        },
+        "alpha13": {
+          "registered": 36,
+          "passed": 35,
+          "skipped": [
+            "ots_cross_check"
+          ]
+        }
+      },
+      "target": "uc2-rpm-fc45-x86_64"
+    }
+  ],
+  "selected_release_assets": [
+    {
+      "name": "RPM-SHA256SUMS.txt",
+      "size": 1344,
+      "sha256": "6a91a791dd96fc13f7c77eb127c9e3a577e3fc7330a592f49910fea380df0548"
+    },
+    {
+      "name": "uc2-3.0.0a13-2.el10.aarch64.rpm",
+      "size": 122351,
+      "sha256": "bb43397651a3486b7ff449f04ba81c816e9899cdeda5795a694ecf8397341456"
+    },
+    {
+      "name": "uc2-3.0.0a13-2.el10.src.rpm",
+      "size": 2684309,
+      "sha256": "85bf0e09fe70026dee99e2c23941ffce7883a35367ff487e205213757fe38694"
+    },
+    {
+      "name": "uc2-3.0.0a13-2.el10.x86_64.rpm",
+      "size": 123579,
+      "sha256": "05bbcedb981c1f9b1c1b311fe7570cd12051ab34b1e2d0f1533bc9e38b656037"
+    },
+    {
+      "name": "uc2-3.0.0a13-2.el9.aarch64.rpm",
+      "size": 120223,
+      "sha256": "3f3ec425dce38daf368ee15216f349942e75c8b08e9d0498fc08641ac827694b"
+    },
+    {
+      "name": "uc2-3.0.0a13-2.el9.src.rpm",
+      "size": 2676902,
+      "sha256": "a7d1a6a0b94c811fd515dbcc0a1529c4bdf2034c6256fbc9f4ec53ea7b878601"
+    },
+    {
+      "name": "uc2-3.0.0a13-2.el9.x86_64.rpm",
+      "size": 120127,
+      "sha256": "4775f4245e47e10e4ccdc1e410c726ccec961744161edac65b28ae64f5a88015"
+    },
+    {
+      "name": "uc2-3.0.0a13-2.fc44.aarch64.rpm",
+      "size": 121847,
+      "sha256": "fdf0a92197974cde7aab08d89fea07b033a989c2190466bab10850fe3286c506"
+    },
+    {
+      "name": "uc2-3.0.0a13-2.fc44.src.rpm",
+      "size": 2684499,
+      "sha256": "2b613ac9c710604b82a95c7085791b10625da8625d27a4ef23d02c3ba6bf2db9"
+    },
+    {
+      "name": "uc2-3.0.0a13-2.fc44.x86_64.rpm",
+      "size": 124972,
+      "sha256": "535d999a0e6125f2c939e9b2d6ea52b93079df6b702ea11d43f0c747ebbf7f7b"
+    },
+    {
+      "name": "uc2-3.0.0a13-2.fc45.aarch64.rpm",
+      "size": 121866,
+      "sha256": "71716984a90e35d4b2c83bb3e71fef65c5a3d0f5fd06e4538ccd51efcccbe19c"
+    },
+    {
+      "name": "uc2-3.0.0a13-2.fc45.src.rpm",
+      "size": 2684495,
+      "sha256": "91b44614ee420f180808dfdb500bbeede92b0088b3458d4db75079301309ab4a"
+    },
+    {
+      "name": "uc2-3.0.0a13-2.fc45.x86_64.rpm",
+      "size": 124638,
+      "sha256": "8f51f41a8431a58b584683ced76776b48a2c93a7bd6f806e6aca2022f241a396"
+    }
+  ],
+  "source_rpm_selection": "One per distribution from the x86_64 job; both architecture payloads are checked against the reviewed spec and pinned source before publication.",
+  "checksum_negative_checks": [
+    {
+      "case": "valid",
+      "install_reached": true,
+      "help_reached": true,
+      "expected": true,
+      "exit_code": 0,
+      "pass": true
+    },
+    {
+      "case": "corrupt",
+      "install_reached": false,
+      "help_reached": false,
+      "expected": false,
+      "exit_code": 1,
+      "pass": true
+    },
+    {
+      "case": "old_manifest_with_old_package",
+      "install_reached": false,
+      "help_reached": false,
+      "expected": false,
+      "exit_code": 1,
+      "pass": true
+    },
+    {
+      "case": "duplicate_selected_entry",
+      "install_reached": false,
+      "help_reached": false,
+      "expected": false,
+      "exit_code": 1,
+      "pass": true
+    },
+    {
+      "case": "missing_rpm",
+      "install_reached": false,
+      "help_reached": false,
+      "expected": false,
+      "exit_code": 1,
+      "pass": true
+    }
+  ],
+  "test_inventory_negative_checks": [
+    {
+      "registered": 36,
+      "skip": "ots_cross_check",
+      "accepted": true,
+      "expected": true,
+      "pass": true
+    },
+    {
+      "registered": 36,
+      "skip": null,
+      "accepted": true,
+      "expected": true,
+      "pass": true
+    },
+    {
+      "registered": 28,
+      "skip": null,
+      "accepted": false,
+      "expected": false,
+      "pass": true
+    },
+    {
+      "registered": 36,
+      "skip": "cli_io",
+      "accepted": false,
+      "expected": false,
+      "pass": true
+    }
+  ],
+  "revision1_upgrade": {
+    "status": "PASS",
+    "exit_code": 0,
+    "marker": "PUBLISHED_REVISION_UPGRADE_PASS",
+    "log_sha256": "7030ee624a6ff1264dab7f8828b464cec78001d6221c957d355c870ae50f2060",
+    "procedure_sha256": "3c2f818a3c24dadc85ef855729ae39615dec7f758707dadfa64b2bcc8227abf1",
+    "checks": [
+      "published revision1 hash",
+      "RPM releases1and2",
+      "rpm-V",
+      "archive integrity and identical output",
+      "archive SHA256 unchanged after upgrade and removal"
+    ]
+  },
+  "source_rpm_payload_check": {
+    "status": "PASS",
+    "source_rpms": 8,
+    "published": "four x86_64-built source RPMs",
+    "marker": "ALL_SOURCE_RPM_CONTENTS_MATCH_REVIEWED_SPEC_AND_SOURCE",
+    "checks": [
+      "spec identical to reviewed packaging/rpm/uc2.spec",
+      "upstream archive SHA256 matches pinned source"
+    ],
+    "exact_file_list": "uc2.spec and v3.0.0-alpha.13.tar.gz, verified in all eight SRPMs"
+  },
+  "cpu_baseline": {
+    "fc44": "x86-64",
+    "fc45": "x86-64",
+    "el9": "x86-64-v2",
+    "el10": "x86-64-v3"
+  },
+  "workflow_result": "All 8 RPM and both existing macOS Homebrew jobs PASS"
+}

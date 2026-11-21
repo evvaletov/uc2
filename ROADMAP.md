@@ -20,31 +20,30 @@ reviews. Both were verified on 20 November. Track maintainer feedback in
 4b7fbd1; catalogue acceptance and an MC merge remain pending.
 [Submission receipts](docs/qa/commander-submissions-2026-11-20.md).
 
-1. [ ] **Expand RPM distribution.** The Fedora 45 x86_64 RPM and complete
-   source RPM are published and lifecycle-tested. Assess Fedora 44, Enterprise
-   Linux and aarch64 builds, then signed repository delivery. The owner chose
-   standalone RPMs for now after Fedora's GSSAPI login returned "System error";
-   Copr is deferred. Resume AUR publication when registration reopens.
-   Tracking: 655345a.
-2. [ ] **Fix drive-qualified DOS input paths.** Creating an archive from a
+1. [ ] **Fix drive-qualified DOS input paths.** Creating an archive from a
    relative 8.3 input works; a drive-qualified backslash input still fails.
    Extend basename handling and add a FreeDOS regression check before the next
    DOS package revision. The current package documents the relative-path form.
    Tracking: 6cbe576.
-3. [ ] **Publish the SDF tutorial when wiki access is granted.** The tested
+2. [ ] **Publish the SDF tutorial when wiki access is granted.** The tested
    native CLI is installed by membership at `/usr/local/bin/uc2` and the
    versioned alpha13 build is shared under `/sys/sdf/uc2-3.0.0a13`. Run the reviewed wiki example on the shared binary,
    publish it through the membership-approved route and respond to compatibility
    reports. Tracking: 176dc48.
-4. [ ] **Resolve maintainer decisions.** The FreeDOS optional-package enquiry
+3. [ ] **Resolve maintainer decisions.** The FreeDOS optional-package enquiry
    is submitted with AI assistance disclosed. Libarchive's optional dependency,
    format ID allocation and decoded-entry spool remain open in
    [PR #3832](https://github.com/libarchive/libarchive/pull/3832). Track MC and TC
    responses separately. Tracking: 655345a, 7bbb6b6 and 4b7fbd1.
-5. [ ] **Design snapshot growth beyond fixed reference and manifest caps.**
+4. [ ] **Design snapshot growth beyond fixed reference and manifest caps.**
    Choose repository partitioning or a larger packed format from the existing
    measurements, retaining v1/v2 readability and verified publication. Assess
    concurrent readers separately from the exclusive lock. Tracking: 179a8de.
+
+5. [ ] **Record a Linux/FreeDOS archive demonstration.** Show a classic archive
+   moving between the revival and original DOS UC2, with extraction checks and
+   a short README recording. Use the tested relative-path form until the DOS
+   path repair is released.
 
 ### Distribution work completed on 21 November
 
@@ -57,8 +56,13 @@ reviews. Both were verified on 20 November. Track maintainer feedback in
   and both Mac architectures.
 - [x] Build and lifecycle-test the Arch recipe. AUR registration is temporarily
   closed, so the recipe remains available for local `makepkg` builds.
-- [x] Publish Fedora 45 x86_64 and source RPMs with checksums. The standalone
-  RPMs are unsigned; Copr publication is deferred after a Fedora login error.
+- [x] Publish RPM revision 2 for Fedora 44/45 and AlmaLinux 9/10 on x86_64
+  and ARM64, with four source RPMs and checksums. All eight targets pass native
+  build and package lifecycle checks. Earlier revision 1 downloads remain.
+  [RPM expansion evidence](docs/qa/rpm-matrix-2026-11-21.md). Tracking: 655345a.
+  The standalone RPMs are unsigned; Copr publication is deferred after a Fedora
+  login error. Assess signed repository delivery later, and resume AUR
+  publication when registration reopens.
 - [x] Update the GitHub and SDF alpha13 release entries with package links.
 - [Package installation and test details](docs/distribution.md);
   [review and publication evidence](docs/qa/distribution-2026-11-21.md).

@@ -74,8 +74,9 @@ For Homebrew on macOS or Linux:
 brew install evvaletov/tap/uc2
 ```
 
-[Package instructions](docs/distribution.md) cover Homebrew, Fedora RPMs,
-FreeDOS and the locally buildable Arch recipe, including upgrade and removal.
+[Package instructions](docs/distribution.md) cover Homebrew, Fedora 44/45 and AlmaLinux 9/10 RPMs
+for x86_64 and ARM64, FreeDOS, and the locally buildable Arch recipe, including
+upgrade and removal.
 
 ```python
 from uc2 import UC2File, UC2Writer
