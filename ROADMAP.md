@@ -1,9 +1,11 @@
 # UC2 Roadmap
 
-## Recommended next priorities (2026-11-20)
+## Recommended next priorities (2026-11-21)
 
 Alpha13 adds automatic layout selection and staged CLI output. It is published
-on GitHub and PyPI, with source and release tags mirrored to SDF.
+on GitHub and PyPI, with source and release tags mirrored to SDF. A matching
+[SDF release entry](https://git.sdf.org/evv/uc2/releases/tag/v3.0.0-alpha.13)
+was published on 21 November.
 [Review and publication evidence](docs/qa/alpha13-2026-11-20.md).
 
 Alpha12 includes the project audit repairs and the CLI metadata indexes.
@@ -18,24 +20,38 @@ reviews. Both were verified on 20 November. Track maintainer feedback in
 4b7fbd1; catalogue acceptance and an MC merge remain pending.
 [Submission receipts](docs/qa/commander-submissions-2026-11-20.md).
 
-1. [ ] **Resolve the remaining libarchive design decisions with maintainers.**
-   [PR #3832](https://github.com/libarchive/libarchive/pull/3832) uses seekable input.
-   Optional dependency acceptance, format ID allocation and the decoded-entry
-   spool remain open. Tracking: 7bbb6b6.
-2. [ ] **Design snapshot growth beyond fixed reference and manifest caps.**
+1. [ ] **Prepare and submit a FreeDOS package.** Build and installation-test a
+   ZIP/LSM bundle, including removal and DOS's refusal to replace existing
+   outputs. Confirm the current third-party submission route. Tracking: 655345a.
+2. [ ] **Publish Homebrew tap and AUR packages.** Test clean installation,
+   upgrade and removal against the available release. Tracking: 655345a.
+3. [ ] **Complete SDF installation and wiki follow-through.** Respond to the
+   REQUESTS proposal and tutorial-access enquiry, adapt the package to the
+   administrators' chosen route and publish the wiki page when access is ready.
+   The native build, release entry, guide and both board posts are complete.
+   Tracking: 176dc48.
+4. [ ] **Resolve upstream maintainer decisions.** Libarchive's optional
+   dependency, format ID allocation and decoded-entry spool remain open in
+   [PR #3832](https://github.com/libarchive/libarchive/pull/3832). Track MC and TC
+   responses separately. Tracking: 7bbb6b6 and 4b7fbd1.
+5. [ ] **Design snapshot growth beyond fixed reference and manifest caps.**
    Choose repository partitioning or a larger packed format from the existing
    measurements, retaining v1/v2 readability and verified publication. Assess
    concurrent readers separately from the exclusive lock. Tracking: 179a8de.
-3. [ ] **Prepare and installation-test a FreeDOS package.** Build a ZIP/LSM
-   bundle, test installation/removal and document DOS's refusal to replace
-   existing outputs. Confirm current repository submission rules. Tracking: 655345a.
-4. [ ] **Prepare Homebrew tap and AUR packages.** Use published binaries or
-   verified source builds and test clean installation, upgrade and removal.
-   Keep distribution-maintained repository proposals separate. Tracking: 655345a.
-5. [ ] **Add a reproducible Linux/DOS round-trip demo to the README.** Include
-   exact commands, a short recording and a text alternative. Show the default
-   legacy-compatible mode and explain when the new reader is required.
-   Tracking: 655345a.
+
+### SDF work completed on 21 November
+
+- [x] Verify alpha13 natively on NetBSD, repair two test assumptions and install
+  a private CLI and man page. There were 35 passes and one optional skip;
+  DOSBox testing remains separate.
+- [x] Publish the SDF release entry with verified source and download links.
+- [x] Publish the [SDF archive-recovery guide](docs/sdf.rst) and run its commands
+  from a fresh SDF clone. This supplies a text demonstration; a recorded
+  Linux/DOS round trip remains on the visibility list below.
+- [x] Post the RETRO compatibility invitation and REQUESTS installation proposal.
+- [x] Offer the tutorial to membership@sdf.org and request wiki access. The mail
+  server accepted delivery; administrator decisions remain pending.
+- Evidence: [SDF reviews and publication](docs/qa/sdf-2026-11-21.md).
 
 ### Implemented for 3.0.0a13
 
@@ -51,11 +67,12 @@ reviews. Both were verified on 20 November. Track maintainer feedback in
 - Evidence: [layout measurements](docs/benchmarks/2026-11-20-auto-chunks.md) and
   [release checks](docs/releases/3.0.0a13-qa.md).
 
-### Distribution and visibility TODOs (20 November 2026)
+### Distribution and visibility TODOs (21 November 2026)
 
 Tracking: `655345a`; SDF mirror work also relates to `176dc48`. Public package
-submissions, mailing-list messages and announcements remain pending. The TC/MC
-proposals have been submitted; their reviews remain a separate task.
+submissions and mailing-list messages remain pending. The SDF board posts and
+tutorial offer are submitted, alongside the earlier TC/MC proposals; recipient
+responses remain separate tasks.
 
 - [x] Publish alpha13 with matching GitHub assets, PyPI distributions, SDF source
   and release tags. All 31 public GitHub downloads and 21 PyPI distribution hashes

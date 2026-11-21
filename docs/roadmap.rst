@@ -11,18 +11,22 @@ Alpha13 adds automatic layout selection and staged CLI extraction/OTS output.
 See the `release checks
 <https://github.com/evvaletov/uc2/blob/main/docs/releases/3.0.0a13-qa.md>`_.
 
+The SDF native build, release entry, archive-recovery guide, RETRO introduction
+and REQUESTS proposal are complete. The tutorial offer was accepted by SDF's
+mail server. Shared installation and wiki access await administrator responses.
+See the `SDF evidence
+<https://github.com/evvaletov/uc2/blob/main/docs/qa/sdf-2026-11-21.md>`_.
+
 The next priorities are:
 
-1. Resolve libarchive's optional dependency, format ID and decoded-entry spool
-   decisions with the maintainers.
-2. Design snapshot growth beyond fixed reference and manifest caps; assess
-   concurrent readers separately from the exclusive lock.
-3. Prepare and installation-test a FreeDOS ZIP/LSM package, including the DOS
-   replacement limitation, then confirm current submission requirements.
-4. Prepare Homebrew tap and AUR packages with installation, upgrade and removal
-   checks.
-5. Add a reproducible Linux/DOS round-trip demo, with commands, a recording and
-   a text alternative.
+1. Prepare, installation-test and submit a FreeDOS ZIP/LSM package.
+2. Publish Homebrew tap and AUR packages with install, upgrade and removal checks.
+3. Complete SDF installation and tutorial wiki publication as access and
+   administrator decisions become available.
+4. Resolve libarchive's optional dependency, format ID and decoded-entry spool
+   decisions; track MC and TC responses separately.
+5. Design snapshot growth beyond fixed reference and manifest caps, preserving
+   v1/v2 readability and verified publication. Assess concurrent readers separately.
 
 See `ROADMAP.md on GitHub
 <https://github.com/evvaletov/uc2/blob/main/ROADMAP.md>`_ for evidence, completed

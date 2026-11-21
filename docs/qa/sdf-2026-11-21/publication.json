@@ -1,0 +1,110 @@
+{
+  "date": "2026-11-21",
+  "source_commit": "a44eb09b6dec69ae515b2a622fab2538567440d3",
+  "release": {
+    "id": 2258064,
+    "tag_name": "v3.0.0-alpha.13",
+    "name": "UC2 3.0.0-alpha.13",
+    "html_url": "https://git.sdf.org/evv/uc2/releases/tag/v3.0.0-alpha.13",
+    "published_at": "2026-11-21T07:36:34-08:00",
+    "draft": false,
+    "prerelease": true,
+    "body_sha256": "e6ad97d71a351cb2a1cbc1ff0f5836c15f98213cb448726f6a039132be6a8ecd",
+    "body_comparison": "Exact after CRLF-to-LF normalisation",
+    "tag_commit": "b297757b7509b3b46be9002979eff5e3e20e6ea8",
+    "state": "verified public readback"
+  },
+  "bboard": [
+    {
+      "board": "RETRO",
+      "account": "evv",
+      "subject": "UC2: opening DOS UltraCompressor II archives on SDF",
+      "display_subject": "UC2. opening DOS UltraCompressor II archives on SDF",
+      "board_date": "21-Nov-26 15:39:08",
+      "host": "otaku",
+      "body_sha256": "a3506699382d9d5311eed222752455e413589f7ba4ec37c243c5674f5a623800",
+      "state": "posted and read back",
+      "readback_body_matches_reviewed_text": true,
+      "subject_normalisation": "bboard replaced colon with full stop"
+    },
+    {
+      "board": "REQUESTS",
+      "account": "evv",
+      "subject": "uc2 alpha13: NetBSD build for installation consideration",
+      "display_subject": "uc2 alpha13. NetBSD build for installation consideration",
+      "board_date": "21-Nov-26 15:41:54",
+      "host": "otaku",
+      "body_sha256": "b793b8b38365b8cc54fc7286b7cf58b2746a402b091e485f29e03bd4049ad139",
+      "state": "posted and read back",
+      "readback_body_matches_reviewed_text": true,
+      "subject_normalisation": "bboard replaced colon with full stop"
+    }
+  ],
+  "tutorial_offer": {
+    "recipient": "membership@sdf.org",
+    "sender": "evv@sdf.org",
+    "message_id": "<179527503684.2811139.13161322843117284720.uc2-sdf-tutorial@sdf.org>",
+    "message_sha256": "e3f144a0d4cdb711068e9793ff6a288af6f473c41019e3d931c544fa13b15496",
+    "state": "accepted for delivery by mx.sdf.org",
+    "exit_code": 0,
+    "queue_id": "6ALFiZkE019793",
+    "recipient_acknowledgement": false
+  },
+  "links": {
+    "sdf_guide": {
+      "status": 200,
+      "sha256": "8b50ed8801bdcf15da4fa1e0afc34354a607c611bfa4635080761ed3d977c5da",
+      "bytes": 5683
+    },
+    "sdf_release_notes": {
+      "status": 200,
+      "sha256": "fe1551ffa99f6417d5e2686adb8da29eeb4d4a816a641dc1e402206483286068",
+      "bytes": 3352
+    },
+    "github_demo": {
+      "status": 200,
+      "sha256": "e2f43932df893f39d1e31ddef390fe4a693037ac096cd73bd9a48e1855516b6a",
+      "bytes": 1123
+    },
+    "github_preservation": {
+      "status": 200,
+      "sha256": "a7ea8a15a3f7f5b43dad2626a9c8b4c08ea7c07f4fb6aa6b6a6af89e8c87c7f0",
+      "bytes": 3914
+    }
+  },
+  "verbatim_tutorial": {
+    "status": "PASS",
+    "scope": "Published build, pinned-test checkout, original-encoder recovery and classic writer blocks, run from a fresh SDF clone",
+    "ctest_passed": 35,
+    "ctest_skipped": 1,
+    "ctest_excluded": [
+      "roundtrip_dosbox"
+    ]
+  },
+  "github_ci": {
+    "source_commit": "a44eb09b6dec69ae515b2a622fab2538567440d3",
+    "build_run": 44919967287,
+    "build_result": "success",
+    "jobs": [
+      "Linux",
+      "macOS",
+      "Windows (MSVC)",
+      "DOS (DJGPP)",
+      "libarchive plugin",
+      "Optional LGPL reader and libarchive proposal",
+      "Total Commander WCX (64-bit)",
+      "Fuzz (libFuzzer + ASan)"
+    ],
+    "docs_run": 44919967419,
+    "docs_result": "success",
+    "distributions_run": 44919967302,
+    "distributions_result": "success",
+    "integrations_run": 44919967229,
+    "integrations_result": "success"
+  },
+  "pending_external_outcomes": [
+    "SDF response to shared-installation proposal",
+    "Tutorial wiki write access and page placement"
+  ],
+  "released_binary_and_tag_replaced": false
+}
