@@ -68,6 +68,15 @@ on Linux x86-64, Windows x86-64, and Intel/Apple Silicon macOS.
 [Standalone CLI downloads](https://github.com/evvaletov/uc2/releases)
 do not require Python. These are alpha releases.
 
+For Homebrew on macOS or Linux:
+
+```sh
+brew install evvaletov/tap/uc2
+```
+
+[Package instructions](docs/distribution.md) cover Homebrew, Fedora RPMs,
+FreeDOS and the locally buildable Arch recipe, including upgrade and removal.
+
 ```python
 from uc2 import UC2File, UC2Writer
 

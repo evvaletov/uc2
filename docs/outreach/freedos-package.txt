@@ -1,0 +1,33 @@
+To: freedos-devel@lists.sourceforge.net
+Subject: Optional UC2 package: FreeDOS testing and eligibility enquiry
+
+Hello,
+
+I maintain UC2, a portable revival of the UltraCompressor II archiver. I have
+prepared an optional FreeDOS package and would like to ask whether it is eligible for
+your third-party repository.
+
+The revival's code, documentation and packaging include AI assistance.
+I have read the current policy for core and plain-DOS packages. Please let
+me know whether an optional application like this can be considered and
+whether this is the right submission route.
+
+UC2.ZIP contains a DJGPP executable, CWSDPMI, licence texts and complete
+source archives. It uses 8.3 paths and a launcher entry for FDNPKG. I tested
+installation, archive recovery, refusal to replace existing output, updating
+and removal on FreeDOS 1.4 boot media with kernel 2043 and FDNPKG 0.99.7a,
+under QEMU with a Pentium CPU and 32 MB RAM.
+
+This is an alpha, labelled 3.0.0a13+dos1. The DOS package includes a fix for
+DJGPP's synthetic inode numbers on FreeDOS. The source revision and checksums
+are included. FDNPKG uses numeric package version 2.99.13.1 so it can order
+updates before the eventual 3.0.0 stable release. UC2's GPL/LGPL components
+and CWSDPMI's GPLv2 licence are documented in the package.
+
+The DOS executable and its patched source are inside the UC2.ZIP asset:
+https://github.com/evvaletov/uc2/releases/tag/v3.0.0-alpha.13
+Installation and validation:
+https://github.com/evvaletov/uc2/blob/main/docs/distribution.md
+
+Thank you,
+Eremey Valetov

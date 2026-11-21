@@ -1,0 +1,21 @@
+Begin3
+Title:          UC2
+Version:        2.99.13.1
+Entered-date:   2026-11-21
+Description:    UltraCompressor II archive reader and writer
+Summary:        UC2 3.0.0a13+dos1, with classic DOS UC2 and extended formats.
+                Alpha release. Numeric package version for FDNPKG updates.
+                Bundled CWSDPMI runtime and source archives.
+Keywords:       archiver, compression, UC2, DJGPP
+Author:         Eremey Valetov and contributors; see CREDITS.TXT
+Maintained-by:  Eremey Valetov (eremeyvvaletov@gmail.com)
+Primary-site:   https://github.com/evvaletov/uc2
+Alternate-site: https://git.sdf.org/evv/uc2
+Platforms:      DOS, FreeDOS (32-bit DJGPP)
+Copying-policy: GNU General Public License, version 3 or later;
+                GNU Lesser General Public License, version 3;
+                BSD 2-Clause License (integration source);
+                CWSDPMI: GNU General Public License, version 2.
+                See COPYING, LGPL.TXT, BSD.TXT and COPYING.CWS.
+Long-file-names: false
+End

@@ -1,0 +1,50 @@
+====== Recover a UC2 archive on SDF ======
+
+UltraCompressor II was a DOS archiver. The UC2 revival reads its archives
+and was tested on otaku (NetBSD 9.3 amd64). This example uses alpha13.
+Keep your original archives and extract copies into
+a fresh directory.
+
+===== Try the shared installation =====
+
+The MetaARPA custom installation is at
+''/sys/sdf/uc2-3.0.0a13/bin/uc2''. Its directory includes licence texts and
+the corresponding source. Run these commands in ''sh'':
+
+<code sh>
+set -eu
+umask 077
+uc2_demo=$(mktemp -d /tmp/uc2-demo.XXXXXX)
+cd "$uc2_demo"
+git clone https://git.sdf.org/evv/uc2.git source
+git -C source checkout v3.0.0-alpha.13
+uc2=/sys/sdf/uc2-3.0.0a13/bin/uc2
+"$uc2" -l source/tests/archives/basic.uc2
+"$uc2" -t source/tests/archives/basic.uc2
+mkdir restored
+"$uc2" -d restored source/tests/archives/basic.uc2
+for file in source/tests/corpus/*; do
+  cmp "$file" "restored/${file##*/}" || exit 1
+done
+</code>
+
+The fixture was created with UC2 Pro 2.3 in DOSBox-X using project-owned
+payloads. The final command compares all six restored files byte for byte.
+The project records its origin and hashes in ''tests/archives/manifest.json''.
+
+For your own archive, replace the fixture path and use a fresh destination.
+Keep every part of split archives. Record a SHA-256 digest before extraction;
+archive checksums detect corruption, while authenticity needs provenance.
+
+===== Compatibility and help =====
+
+New classic archives at levels 2-5, without ''--chunked'', can be read by
+original DOS UC2. Levels 6-9 use the revival's rANS coding. Every chunked
+archive needs revival version 3.0.0a11 or newer.
+
+The [[https://git.sdf.org/evv/uc2/src/branch/main/docs/sdf.rst|full SDF guide]]
+includes build instructions and test limits. Report compatibility issues
+in the UC2 thread on RETRO or through the
+[[https://github.com/evvaletov/uc2/issues|project tracker]]. Include the
+version, command and error. Share archives only with permission and after
+checking them for private data.

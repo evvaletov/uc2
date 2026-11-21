@@ -6,6 +6,24 @@ using NetBSD 9.3 amd64, GCC 7.5.0, CMake 4.1.2 and Python 3.12.7.
 The resulting CLI links to ``libc.so.12``. This is an alpha release; keep your
 original archives and work on copies in a private directory.
 
+Shared MetaARPA installation
+----------------------------
+
+The shared alpha13 CLI for NetBSD amd64 is installed at
+``/sys/sdf/uc2-3.0.0a13/bin/uc2``. Its versioned directory includes the man
+page, licence texts and exact release source archive. This follows the
+REQUESTS charter's MetaARPA custom-software route. Use the full path; the
+shared ``bin`` directory is unchanged::
+
+   /sys/sdf/uc2-3.0.0a13/bin/uc2 -h
+
+The binary SHA-256 is
+``d5cdb68811a74924efbf725a9cc19ba8cb7769df70d3a421228e30ea6f8e7ee8``.
+It was built and tested on otaku. For another operating system or architecture,
+build from source using the instructions below. Tutorial wiki publication
+awaits access from the membership team; the source for that page is in
+``docs/outreach/sdf/wiki.txt``.
+
 Build in local scratch space
 ----------------------------
 
