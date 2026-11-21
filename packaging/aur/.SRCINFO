@@ -1,0 +1,16 @@
+pkgbase = uc2
+	pkgdesc = Read and create UltraCompressor II archives (alpha release)
+	pkgver = 3.0.0a13
+	pkgrel = 1
+	url = https://github.com/evvaletov/uc2
+	arch = x86_64
+	license = GPL-3.0-or-later
+	license = LGPL-3.0-only
+	license = BSD-2-Clause
+	makedepends = cmake
+	depends = glibc
+	optdepends = python: Midnight Commander archive helper
+	source = uc2-3.0.0a13.tar.gz::https://github.com/evvaletov/uc2/archive/refs/tags/v3.0.0-alpha.13.tar.gz
+	sha256sums = 41566267ca92d36cf181b6c4fc5878b53050b4aebf43baba7d16bdf60149ed93
+
+pkgname = uc2

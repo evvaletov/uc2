@@ -1,0 +1,48 @@
+name: Package recipes
+
+on:
+  push:
+    branches: [main, 'work/distribution-*']
+    paths: ['packaging/**', '.github/workflows/packages.yml']
+  pull_request:
+    paths: ['packaging/**', '.github/workflows/packages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  homebrew:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Install, test, remove and reinstall
+        shell: bash
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: '1'
+        run: |
+          set -euo pipefail
+          tapdir="$(brew --repository)/Library/Taps/evvaletov/homebrew-tap"
+          mkdir -p "$tapdir/Formula"
+          cp packaging/homebrew/uc2.rb "$tapdir/Formula/uc2.rb"
+          git -C "$tapdir" init -q
+          brew install --build-from-source evvaletov/tap/uc2
+          brew test evvaletov/tap/uc2
+          uc2 -t tests/archives/basic.uc2
+          mkdir "$RUNNER_TEMP/uc2-restored"
+          uc2 -d "$RUNNER_TEMP/uc2-restored" tests/archives/basic.uc2
+          for file in tests/corpus/*; do
+            cmp "$file" "$RUNNER_TEMP/uc2-restored/${file##*/}"
+          done
+          brew uninstall evvaletov/tap/uc2
+          test ! -e "$(brew --prefix)/bin/uc2"
+          test -f "$RUNNER_TEMP/uc2-restored/hello.txt"
+          brew install --build-from-source evvaletov/tap/uc2
+          brew test evvaletov/tap/uc2
+          brew uninstall evvaletov/tap/uc2

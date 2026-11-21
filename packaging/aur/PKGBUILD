@@ -1,0 +1,45 @@
+# Maintainer: Eremey Valetov <eremeyvvaletov@gmail.com>
+pkgname=uc2
+pkgver=3.0.0a13
+pkgrel=1
+pkgdesc='Read and create UltraCompressor II archives (alpha release)'
+arch=('x86_64')
+url='https://github.com/evvaletov/uc2'
+license=('GPL-3.0-or-later' 'LGPL-3.0-only' 'BSD-2-Clause')
+depends=('glibc')
+makedepends=('cmake')
+optdepends=('python: Midnight Commander archive helper')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v3.0.0-alpha.13.tar.gz")
+sha256sums=('41566267ca92d36cf181b6c4fc5878b53050b4aebf43baba7d16bdf60149ed93')
+
+build() {
+  cmake -S uc2-3.0.0-alpha.13 -B build \
+    -DCMAKE_BUILD_TYPE=None -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_LIBEXECDIR=lib \
+    -DUC2_VERSION_LABEL="$pkgver" -DUC2_BUILD_TESTS=OFF
+  cmake --build build
+}
+
+check() {
+  local cli="$srcdir/build/cli/uc2"
+  local trial
+  trial=$(mktemp -d)
+  printf 'UC2 package round trip\n' > "$trial/input.txt"
+  "$cli" -qw -L4 "$trial/classic.uc2" "$trial/input.txt"
+  "$cli" -t "$trial/classic.uc2"
+  "$cli" -p "$trial/classic.uc2" > "$trial/output.txt"
+  cmp "$trial/input.txt" "$trial/output.txt"
+  "$cli" -qw -L9 --chunked "$trial/modern.uc2" "$trial/input.txt"
+  "$cli" -t "$trial/modern.uc2"
+  "$cli" -p "$trial/modern.uc2" > "$trial/output.txt"
+  cmp "$trial/input.txt" "$trial/output.txt"
+  rm -r "$trial"
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  install -Dm644 uc2-3.0.0-alpha.13/LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 uc2-3.0.0-alpha.13/LICENSES/LGPL-3.0-only.txt "$pkgdir/usr/share/licenses/$pkgname/LGPL-3.0-only.txt"
+  install -Dm644 uc2-3.0.0-alpha.13/LICENSES/BSD-2-Clause.txt "$pkgdir/usr/share/licenses/$pkgname/BSD-2-Clause.txt"
+  install -Dm644 uc2-3.0.0-alpha.13/CREDITS.md "$pkgdir/usr/share/doc/$pkgname/CREDITS.md"
+}
