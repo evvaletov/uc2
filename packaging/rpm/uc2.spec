@@ -1,5 +1,6 @@
 %global upstream_version 3.0.0a13
 %global upstream_tag v3.0.0-alpha.13
+%global native_test_count 36
 %if 0%{?rhel} == 9
 %global test_python python3.11
 %else
@@ -14,7 +15,7 @@ License:        GPL-3.0-or-later AND LGPL-3.0-only AND BSD-2-Clause
 URL:            https://github.com/evvaletov/uc2
 Source0:        %{url}/archive/refs/tags/%{upstream_tag}.tar.gz
 BuildRequires:  gcc
-BuildRequires:  cmake
+BuildRequires:  cmake >= 3.21
 BuildRequires:  make
 BuildRequires:  %{test_python} >= 3.11
 BuildRequires:  diffutils
@@ -39,7 +40,20 @@ echo '41566267ca92d36cf181b6c4fc5878b53050b4aebf43baba7d16bdf60149ed93  %{SOURCE
 install -m644 contrib/mc/README.md %{buildroot}%{_datadir}/uc2/mc/README.md
 
 %check
-(cd "%{_vpath_builddir}" && ctest --output-on-failure -E roundtrip_dosbox)
+(
+cd "%{_vpath_builddir}"
+ctest --output-on-failure -E roundtrip_dosbox --output-junit native-tests.xml
+/usr/bin/%{test_python} - <<'PY'
+import json
+import xml.etree.ElementTree as ET
+tests = ET.parse('native-tests.xml').getroot().findall('testcase')
+skipped = [t.attrib['name'] for t in tests if t.find('skipped') is not None]
+if len(tests) != %{native_test_count} or set(skipped) - {'ots_cross_check'}:
+    raise SystemExit('Incomplete native test suite: ' + str((len(tests), skipped)))
+print('UC2_NATIVE_TESTS ' + json.dumps({
+    'registered': len(tests), 'passed': len(tests) - len(skipped), 'skipped': skipped}))
+PY
+)
 cli="$PWD/%{_vpath_builddir}/cli/uc2"
 trial=$(mktemp -d)
 trap 'rm -rf "$trial"' EXIT

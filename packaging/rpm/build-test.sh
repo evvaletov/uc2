@@ -38,6 +38,7 @@ recipe = Path(sys.argv[1]).read_text()
 if sys.argv[3] == "12":
     # The earlier version is an upgrade fixture, never a release artefact.
     recipe = recipe.replace("3.0.0a13", "3.0.0a12").replace("alpha.13", "alpha.12")
+    recipe = recipe.replace("%global native_test_count 36", "%global native_test_count 35")
     recipe = recipe.replace(
         "41566267ca92d36cf181b6c4fc5878b53050b4aebf43baba7d16bdf60149ed93",
         "a596f5758c2985bf288aab487e4bd61d01a465c6a1f1c396fb491ec621c748bd")
@@ -46,7 +47,7 @@ PY
   curl -fL "https://github.com/evvaletov/uc2/archive/refs/tags/v3.0.0-alpha.$alpha.tar.gz" \
     -o "$top/SOURCES/v3.0.0-alpha.$alpha.tar.gz"
   runuser -u uc2builder -- rpmbuild -ba --define "_topdir $top" \
-    --define '_smp_build_ncpus 4' "$top/uc2.spec" | tee "$output/alpha$alpha-build.log"
+    --define '_smp_build_ncpus 4' "$top/uc2.spec" 2>&1 | tee "$output/alpha$alpha-build.log"
 }
 build 12
 build 13
@@ -82,6 +83,15 @@ check_installed() {
   done
   /usr/libexec/mc/extfs.d/uc2 list "$tree/tests/archives/basic.uc2" > "$dest/mc-list.txt"
   grep -F 'hello.txt' "$dest/mc-list.txt"
+  /usr/libexec/mc/extfs.d/uc2 copyout "$tree/tests/archives/basic.uc2" hello.txt "$dest/mc-hello.txt"
+  cmp "$tree/tests/corpus/hello.txt" "$dest/mc-hello.txt"
+  if [[ $test_python == python3.11 ]]; then
+    head -n 1 /usr/libexec/mc/extfs.d/uc2 | grep -Fx '#!/usr/bin/python3'
+    if rpm -q --requires uc2 | grep -F 'python3.11'; then
+      echo 'Build interpreter leaked into runtime requirements.' >&2
+      return 1
+    fi
+  fi
   for level in 4 9; do
     args=()
     if [[ $level == 9 ]]; then args=(--chunked); fi
@@ -89,6 +99,7 @@ check_installed() {
     uc2 -t "$dest/level$level.uc2"
     uc2 -p "$dest/level$level.uc2" > "$dest/level$level.txt"
     cmp "$trial/keep.txt" "$dest/level$level.txt"
+    sha256sum "$dest/level$level.uc2" >> "$trial/archives.sha256"
   done
 }
 
@@ -101,6 +112,7 @@ remove_package() {
   test ! -e /usr/bin/uc2
   test ! -e /usr/libexec/mc/extfs.d/uc2
   cmp "$trial/keep.txt" "$trial/expected.txt"
+  sha256sum -c "$trial/archives.sha256"
 }
 
 dnf -y --setopt=localpkg_gpgcheck=0 install "$package"
@@ -138,6 +150,14 @@ report = {
     "signature": "unsigned standalone RPMs",
     "artifacts": artifacts,
 }
+report['test_runs'] = {}
+for alpha in (12, 13):
+    lines = (out / f'alpha{alpha}-build.log').read_text().splitlines()
+    results = [json.loads(line.removeprefix('UC2_NATIVE_TESTS '))
+               for line in lines if line.startswith('UC2_NATIVE_TESTS ')]
+    if len(results) != 1:
+        raise SystemExit('Expected one native test report per build')
+    report['test_runs'][f'alpha{alpha}'] = results[0]
 (out / "validation.json").write_text(json.dumps(report, indent=2) + "\n")
 PY
 printf 'RPM_MATRIX_LIFECYCLE_PASS %s\n' "$arch"
