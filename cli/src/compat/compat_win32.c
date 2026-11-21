@@ -116,6 +116,8 @@ const char *getprogname(void)
 	if (!name[0]) {
 #ifdef _WIN32
 		char *p = _pgmptr;
+		/* UCRT's wmain startup may initialise only _wpgmptr. */
+		if (!p) return "uc2";
 		char *q = p;
 		int n;
 		while (*q) {
