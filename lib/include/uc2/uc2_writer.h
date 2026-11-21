@@ -85,7 +85,8 @@ int uc2_writer_add_file(uc2_writer *, unsigned parent, const char *name,
  * or <0 on failure. Before the first call, archive assembly must succeed.
  * A callback error may leave partial output. For atomic path replacement,
  * direct output to an exclusively created sibling temporary file, check flush
- * and close, then rename it. The CLI and Python UC2Writer do this.
+ * and close, then publish with the platform's atomic replacement operation.
+ * The CLI and Python UC2Writer do this; DOS cannot safely replace an old file.
  * The archive is limited to UINT32_MAX bytes, the raw central directory to
  * 64 MiB, and the CDC index to 1048576 chunks. Empty archives are supported.
  */

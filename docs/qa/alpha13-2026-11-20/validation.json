@@ -1,0 +1,250 @@
+{
+  "source_commit": "b297757b7509b3b46be9002979eff5e3e20e6ea8",
+  "ci": {
+    "native": {
+      "url": "https://github.com/evvaletov/uc2/actions/runs/44852948890",
+      "source_commit": "b297757b7509b3b46be9002979eff5e3e20e6ea8",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "libarchive plugin",
+          "conclusion": "success"
+        },
+        {
+          "name": "macOS",
+          "conclusion": "success"
+        },
+        {
+          "name": "Optional LGPL reader and libarchive proposal",
+          "conclusion": "success"
+        },
+        {
+          "name": "Total Commander WCX (64-bit)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Windows (MSVC)",
+          "conclusion": "success"
+        },
+        {
+          "name": "DOS (DJGPP)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Fuzz (libFuzzer + ASan)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Linux",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "distributions": {
+      "url": "https://github.com/evvaletov/uc2/actions/runs/44852948913",
+      "source_commit": "b297757b7509b3b46be9002979eff5e3e20e6ea8",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Source distribution and metadata",
+          "conclusion": "success"
+        },
+        {
+          "name": "Wheels and CLI (windows-x86_64)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Wheels and CLI (linux-x86_64)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Wheels and CLI (macos-arm64)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Wheels and CLI (macos-x86_64)",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "integrations": {
+      "url": "https://github.com/evvaletov/uc2/actions/runs/44852948952",
+      "source_commit": "b297757b7509b3b46be9002979eff5e3e20e6ea8",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Native Total Commander (x64)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Native Total Commander (Win32)",
+          "conclusion": "success"
+        },
+        {
+          "name": "packages",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "browser_docs": {
+      "url": "https://github.com/evvaletov/uc2/actions/runs/44852948927",
+      "source_commit": "b297757b7509b3b46be9002979eff5e3e20e6ea8",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "build",
+          "conclusion": "success"
+        },
+        {
+          "name": "deploy",
+          "conclusion": "skipped"
+        }
+      ]
+    }
+  },
+  "local": {
+    "ctest": {
+      "passed": 37
+    },
+    "python": {
+      "passed": 264,
+      "skipped": 2,
+      "skip_reason": "Two Windows junction cases on Linux"
+    },
+    "sanitizers": {
+      "passed": 14,
+      "mode": "ASan/UBSan; bounded selected suites, plus final affected-CLI rerun"
+    },
+    "baseline_comparisons": [
+      {
+        "level": 2,
+        "chunked": false,
+        "sha256": "c53090235e1b44a830862e91527391fd85aa8f7a6c507396e4f41c29457e0f30",
+        "mode": "0o600"
+      },
+      {
+        "level": 2,
+        "chunked": true,
+        "sha256": "4aa7735aa5dd6314d4ac3d83ef20ad6fa0e7ccd7339f08d6d33e913984ea5f9f",
+        "mode": "0o600"
+      },
+      {
+        "level": 4,
+        "chunked": false,
+        "sha256": "309a6ef21b9e8a7da7dab7a635660162b9ff5a0d66894bd616cd217ad6d7556b",
+        "mode": "0o600"
+      },
+      {
+        "level": 4,
+        "chunked": true,
+        "sha256": "c10e051b5bbd76ee5680c0cc5208e1a94c37840b2925997af96904179733c17b",
+        "mode": "0o600"
+      },
+      {
+        "level": 6,
+        "chunked": false,
+        "sha256": "031c4d003558627166ef2d248e0bd51f1ad05c85b6b86694b5761363a98f4e5f",
+        "mode": "0o600"
+      },
+      {
+        "level": 6,
+        "chunked": true,
+        "sha256": "8aa82b01d5d82e4a75b99b923d517ca7e9024e996cdddec1f11e53e966ceb523",
+        "mode": "0o600"
+      },
+      {
+        "level": 9,
+        "chunked": false,
+        "sha256": "8756eed832190e16896c6acec15d9223caab1ec84a4fd65ddd729236cd002fbc",
+        "mode": "0o600"
+      },
+      {
+        "level": 9,
+        "chunked": true,
+        "sha256": "2a428163ea508ca6ad4ffd923b87dc89e5f571643ffea9432e3159eefe201240",
+        "mode": "0o600"
+      }
+    ],
+    "macos_compile_guards": [
+      {
+        "case": "clang-modern",
+        "path": "native",
+        "result": "PASS"
+      },
+      {
+        "case": "clang-old-sdk",
+        "path": "fallback",
+        "result": "PASS"
+      },
+      {
+        "case": "gcc-apple",
+        "path": "fallback",
+        "result": "PASS"
+      },
+      {
+        "case": "no-builtin-probe",
+        "path": "fallback",
+        "result": "PASS"
+      }
+    ],
+    "dos": {
+      "result": "PASS",
+      "binary_sha256": "2719430159c0a1880c771e778823fc4d559c9d7c8463d1fc9699230505071648",
+      "archive_sha256": "95bcbafde48dd1496e7e73b8097c66ae3eb86cee1a1eb8b28dac185f2fd5e27d",
+      "checks": [
+        "DOS auto create and extract exact bytes",
+        "DOS refuses existing extraction target with original intact",
+        "DOS refuses OTS replacement with original intact",
+        "no staged files remain"
+      ]
+    }
+  },
+  "source_package": {
+    "source_commit": "b297757b7509b3b46be9002979eff5e3e20e6ea8",
+    "matched_reviewed_files": [
+      "lib/src/compress.c",
+      "lib/src/uc2_internal.h",
+      "lib/src/uc2_writer.c",
+      "lib/include/uc2/uc2_writer.h",
+      "cli/src/main.c",
+      "python/writer.c",
+      "python/uc2/_writer.py",
+      "tests/src/test_writer.c",
+      "tests/scripts/check_cli_transactions.py",
+      "python/tests/test_chunk_sharing.py",
+      "tests/scripts/check_cli_staging.py",
+      "tests/scripts/check_integrations.py",
+      "tests/scripts/check_tar_ingest.py",
+      "tests/scripts/check_cli_io.py",
+      "tests/CMakeLists.txt",
+      "cli/CMakeLists.txt",
+      "cli/src/compat/compat_win32.c",
+      "cli/src/compat/include/posix/unistd.h",
+      "cli/src/compat/include/posix/sys/stat.h",
+      "docs/chunk-sharing.md",
+      "docs/usage.rst",
+      "cli/uc2.1",
+      "python/README.md",
+      "docs/releases/3.0.0a13-qa.md",
+      "ROADMAP.md",
+      "docs/roadmap.rst"
+    ],
+    "not_in_source_package": [
+      "docs/benchmarks/2026-11-20-auto-chunks.md"
+    ]
+  },
+  "known_portability_followups": [
+    "Existing dot-input narrow getcwd and legacy library ingest pathname handling on Windows",
+    "Existing MinGW compatibility-header build failures; release Windows binaries use MSVC"
+  ],
+  "limits": [
+    "Per-file publication, not whole-tree rollback",
+    "No power-loss/fsync guarantee",
+    "DOS refuses existing output targets",
+    "Benchmarks are bounded fixtures on a shared host"
+  ]
+}

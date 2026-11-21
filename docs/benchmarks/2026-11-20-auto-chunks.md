@@ -23,8 +23,9 @@ collections use the original seed and eight revisions per collection.
 Sizes were identical across trials. Auto removes the 9.1% public-source
 expansion and retains the 58.6% edited-binary reduction relative to classic.
 Explicit `--chunked` still produces the same larger public-source archive;
-the improvement comes from selecting the layout. It does not claim better
-compression than 7-Zip or Zstandard, which remain smaller on these fixtures.
+the improvement comes from selecting the layout. On the five synthetic
+collections, 7-Zip and tar+Zstandard still produce smaller archives; their
+sizes are in the [synthetic results](auto-chunks-2026-11-20/synthetic.json).
 
 Auto performs both compression passes and retains both complete archives until
 selection. Temporary disk space must cover the uncompressed input and both

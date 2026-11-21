@@ -1,0 +1,660 @@
+{
+  "release_source_commit": "b297757b7509b3b46be9002979eff5e3e20e6ea8",
+  "implementation_commit": "f74789d812ea45642c68b530e40b6784ce0415c3",
+  "skills": [
+    "task-qa",
+    "task-at",
+    "task-elegance"
+  ],
+  "review_scope": "Frozen complete changed writer, CLI, Python bindings, tests, platform helpers and product documentation. Independent source inspection; reviewers did not independently execute the reported tests.",
+  "models": {
+    "grok": "grok-4.7 returned grok-4.7-build; high effort rounds1-5, medium round6 and initial round7, low structured retry and later rounds due13-20minute stalls",
+    "fable": "claude-fable-5-2 through the existing subscription launcher",
+    "astra": "gpt-6.2-astra, high, fresh independent subagents replacing unavailable Gemini Argon"
+  },
+  "incomplete_attempts": [
+    {
+      "seat": "Gemini Argon",
+      "round": 1,
+      "outcome": "Authentication failed before any review; not counted."
+    },
+    {
+      "seat": "Grok",
+      "round": 7,
+      "outcome": "Initial call terminated after798.9seconds without a verdict; fresh structured retry returned a review."
+    },
+    {
+      "seat": "gpt-6.1-terra",
+      "round": 7,
+      "outcome": "Started during Grok delay, but returned INCOMPLETE after truncated snapshot read; not counted."
+    }
+  ],
+  "closure": {
+    "implementation_clean_rounds": [
+      7,
+      8
+    ],
+    "meaning": "No confirmed substantive implementation findings remained. Grok hypotheses were checked and rejected against native MSVC CI and actual staged-stream control flow. Round8 identified a README documentation correction, followed by separate prose passes.",
+    "elegance": "Shared existing assembler and staged-output owner retained; redundant auto checksum scan removed. Optional broad refactors declined without a demonstrated benefit."
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "source_hashes": {
+        "lib/src/uc2_writer.c": "6beb26440970e89b8ebd97e71828579135e041e7530af5188f089081360ca4be",
+        "lib/include/uc2/uc2_writer.h": "d07d5038cbd9640b326435ceefc3fdbb09037d4d866083bea74e7707fea0dc3f",
+        "cli/src/main.c": "30a9e9d880666ca3f7422d02b968127e323cc25f7a2a2b2d4513c0ee82a4d68e",
+        "python/writer.c": "1a2cb855554239261e0b9dd2a1cfb020a8a78165c706ed7ab1cfc5bb0b8b38ce",
+        "python/uc2/_writer.py": "f4c5a98e6bc9a5d32bed81171df4674e0d4167fb53464ab59a2e662319559693",
+        "tests/src/test_writer.c": "9b73b15419b34d73fcb9c2b23d14b5ba0312c47ef6fba3f4679169c22e096585",
+        "tests/scripts/check_cli_transactions.py": "c4660d51bcdc35d7b7dedea198f1c5f00891f401063a2ffbed3625c4ec8f8675",
+        "python/tests/test_chunk_sharing.py": "9eddc1781575f844f1dec220ba747e73451bc93e4cf7869ee6bc04c9223ea601",
+        "tests/scripts/check_cli_staging.py": "2549ed86588e30c09b085abcb5ac60f16b79ea3a0a99007a0096b2118ed13a36"
+      },
+      "reviewers": {
+        "grok": {
+          "status": {
+            "seat": "grok",
+            "exit_code": 0,
+            "seconds": 60.1,
+            "prompt_sha256": "4a098aaa3ad8332a16d09b60c3ab7b9301caaf499deed0ae2360f2a26ab948f3"
+          },
+          "returned_models": [
+            "grok-4.7-build"
+          ],
+          "review_sha256": "e1e171a9bebb3784278468851dc056ae9d2fc16e4a65285108b5873489e2f58c"
+        },
+        "fable": {
+          "status": {
+            "seat": "fable",
+            "exit_code": 0,
+            "seconds": 191.7,
+            "prompt_sha256": "4a098aaa3ad8332a16d09b60c3ab7b9301caaf499deed0ae2360f2a26ab948f3"
+          },
+          "returned_models": [
+            "claude-fable-5-2"
+          ],
+          "review_sha256": "3c105f6ee3400e313f18ce1a5e94af078fccc1272b911c05ecbfe334b1a60220"
+        }
+      },
+      "triage": {
+        "outcome": "findings; Gemini authentication unavailable",
+        "fixed": [
+          "Native no-replace rename before hard-link fallback",
+          "Refuse existing DOS targets",
+          "Report auto layout selection",
+          "Keep OTS mismatch diagnostics on stderr"
+        ],
+        "resolved": [
+          "Created-archive0600 was pre-existing, confirmed against baseline.",
+          "Windows paths already used UTF-8 shims; actual long-path buffer mismatch handled in round2."
+        ]
+      }
+    },
+    {
+      "round": 2,
+      "source_hashes": {
+        "lib/src/uc2_writer.c": "6beb26440970e89b8ebd97e71828579135e041e7530af5188f089081360ca4be",
+        "lib/include/uc2/uc2_writer.h": "d07d5038cbd9640b326435ceefc3fdbb09037d4d866083bea74e7707fea0dc3f",
+        "cli/src/main.c": "55e28644c6519c29e45405d021fa5350481bf22cd925fccd24cb1d27adc415aa",
+        "python/writer.c": "1a2cb855554239261e0b9dd2a1cfb020a8a78165c706ed7ab1cfc5bb0b8b38ce",
+        "python/uc2/_writer.py": "42e059f270c468c63ff60089b47406fe785daccb73958bf4c10f78a92c6be5ec",
+        "tests/src/test_writer.c": "9b73b15419b34d73fcb9c2b23d14b5ba0312c47ef6fba3f4679169c22e096585",
+        "tests/scripts/check_cli_transactions.py": "9855fe6e8e68e1996c48230cff543d7f75fd59b5e19415a4e5c104abeb9c9216",
+        "python/tests/test_chunk_sharing.py": "9eddc1781575f844f1dec220ba747e73451bc93e4cf7869ee6bc04c9223ea601",
+        "tests/scripts/check_cli_staging.py": "2549ed86588e30c09b085abcb5ac60f16b79ea3a0a99007a0096b2118ed13a36",
+        "tests/scripts/check_integrations.py": "8e7277ed953cb7e165338d48d37b271312b7dcea13d37bbd11ed06d117d07dab",
+        "tests/scripts/check_tar_ingest.py": "12f0aba9c1aac6fe5b29e8162e71063b83a27318410cd58ed603b02f96de8615",
+        "cli/CMakeLists.txt": "ae6aa6d3a5ffd59b07c45ff0712a9c63369a2f560766e8b42478a47c7c80b9a4",
+        "cli/src/compat/compat_win32.c": "3d9f44db167e8318823a0f0cf80bc554486e36a9441820c4f0c854f0906d47c6",
+        "cli/src/compat/include/posix/unistd.h": "ef15b7eecad6b2ecbf5e3a367ddaad0f97255eb2dffb13d5492053e83d99ac77",
+        "cli/src/compat/include/posix/sys/stat.h": "766dda5bb291ff400815b8b495641c28d4c53d71309a865389ef89b55c5a13a6",
+        "docs/chunk-sharing.md": "fcd92917acb833eca8c0e1e2e01e37a14903db4d5ec774acffce30cd21b6c239",
+        "docs/usage.rst": "f39493cb0b57f41fd4f909629c8bd73845e3f30e16512ae2456528989ff4f286",
+        "cli/uc2.1": "e97b101cde295171da2c8c40fbc71989f621709f26a548facd562ae2230eae79",
+        "python/README.md": "d4a3231e2c3407d1b1745637d84cd6d558272ea2ff5cadda7f22822883420343",
+        "docs/benchmarks/2026-11-20-auto-chunks.md": "a2e1dd2db220d3e1afd037e2aee7cddd7c6ba0b489b94d1612ef8cea5169da00"
+      },
+      "reviewers": {
+        "grok": {
+          "status": {
+            "seat": "grok",
+            "exit_code": 0,
+            "seconds": 537.7,
+            "prompt_sha256": "7d5987ceeb436f9f30a36461bfc532c32871cf1dec4049e01076d7386f87773a"
+          },
+          "returned_models": [
+            "grok-4.7-build"
+          ],
+          "review_sha256": "7165f033cf0b0f280d22f80a517bb7a1a6e3797a94865c863da6f2a3994b5e00"
+        },
+        "fable": {
+          "status": {
+            "seat": "fable",
+            "exit_code": 0,
+            "seconds": 228.8,
+            "prompt_sha256": "7d5987ceeb436f9f30a36461bfc532c32871cf1dec4049e01076d7386f87773a"
+          },
+          "returned_models": [
+            "claude-fable-5-2"
+          ],
+          "review_sha256": "692a022d68bd477ffbc2b0c4080f14de488099e40f96ef924a17b4d8bbfb208e"
+        },
+        "astra": {
+          "verdict": "FINDINGS",
+          "findings": [
+            "A temporary sibling name can equal an absent destination; skip case-insensitive equality and avoid Windows long-name aliases.",
+            "The permission promise must specify ordinary rwx bits, excluding special bits.",
+            "A target appearing during publication causes failure, not a skip."
+          ],
+          "reviewer": "/root/next_review_r2",
+          "model": "gpt-6.2-astra",
+          "effort": "high",
+          "record_type": "coordinator summary of received independent final review",
+          "prompt_sha256": "7d5987ceeb436f9f30a36461bfc532c32871cf1dec4049e01076d7386f87773a"
+        }
+      },
+      "triage": {
+        "outcome": "findings",
+        "fixed": [
+          "Skip temporary names matching requested leaf; use Windows/DOS8.3 candidates",
+          "Match Windows cleanup/path buffer capacities",
+          "Clarify ordinary permission bits and late-race failure",
+          "Avoid empty classic auto chunk-stat line"
+        ],
+        "resolved": [
+          "Checksum equivalence established by codec source and exact-byte tests.",
+          "fclose always releases the stream; calling it again after error is invalid.",
+          "Archive0600 permissions and Windows recursive scan stack predate this change."
+        ]
+      }
+    },
+    {
+      "round": 3,
+      "source_hashes": {
+        "lib/src/uc2_writer.c": "1483db9a70d360008e4e25228def3c1cdf08125c58c464dfab298c2e622796a4",
+        "lib/include/uc2/uc2_writer.h": "d07d5038cbd9640b326435ceefc3fdbb09037d4d866083bea74e7707fea0dc3f",
+        "cli/src/main.c": "74882b1e67842583fe561aa9a4c51eb7989bfd17c6fdbb5f9914b48e72dde488",
+        "python/writer.c": "1a2cb855554239261e0b9dd2a1cfb020a8a78165c706ed7ab1cfc5bb0b8b38ce",
+        "python/uc2/_writer.py": "42e059f270c468c63ff60089b47406fe785daccb73958bf4c10f78a92c6be5ec",
+        "tests/src/test_writer.c": "9b73b15419b34d73fcb9c2b23d14b5ba0312c47ef6fba3f4679169c22e096585",
+        "tests/scripts/check_cli_transactions.py": "9ea3b24e8a355f4c493cfa90b840e757bb29ea33ce804313be74a60c4bff3fa7",
+        "python/tests/test_chunk_sharing.py": "9eddc1781575f844f1dec220ba747e73451bc93e4cf7869ee6bc04c9223ea601",
+        "tests/scripts/check_cli_staging.py": "a8eab757895c1a3497af42200fdb1bdce5b2bebe1effeab2839b4ad694561d7d",
+        "tests/scripts/check_integrations.py": "88ca1788a57eb5415747bb1f837c6ff8d6067b44eca3e18b997797b18973b5fd",
+        "tests/scripts/check_tar_ingest.py": "63504fc8a53616e6d88a0a2cc8965592a9ff94df92d183c0c2c8afce5bcf367b",
+        "cli/CMakeLists.txt": "ae6aa6d3a5ffd59b07c45ff0712a9c63369a2f560766e8b42478a47c7c80b9a4",
+        "cli/src/compat/compat_win32.c": "f2f53d0d4d25cba68dbd404e7273b112e7d721ee2b14d66fb199cb965ee10091",
+        "cli/src/compat/include/posix/unistd.h": "ef15b7eecad6b2ecbf5e3a367ddaad0f97255eb2dffb13d5492053e83d99ac77",
+        "cli/src/compat/include/posix/sys/stat.h": "766dda5bb291ff400815b8b495641c28d4c53d71309a865389ef89b55c5a13a6",
+        "docs/chunk-sharing.md": "fcd92917acb833eca8c0e1e2e01e37a14903db4d5ec774acffce30cd21b6c239",
+        "docs/usage.rst": "9c98f4dc91016c77753583f3f22b4351e36f0d0aacb362c5b095e883544c9912",
+        "cli/uc2.1": "72d4a1cb493d9b1a445bd0596d3b1d06f4795cbe3d408b50e75de098022ad509",
+        "python/README.md": "d4a3231e2c3407d1b1745637d84cd6d558272ea2ff5cadda7f22822883420343",
+        "docs/benchmarks/2026-11-20-auto-chunks.md": "a2e1dd2db220d3e1afd037e2aee7cddd7c6ba0b489b94d1612ef8cea5169da00",
+        "docs/releases/3.0.0a13-qa.md": "35f2116371132c8fe5573d242c6e5a7054f9c8e9623ef338acc4977f6012fcf3"
+      },
+      "reviewers": {
+        "grok": {
+          "status": {
+            "seat": "grok",
+            "exit_code": 0,
+            "seconds": 1193.1,
+            "prompt_sha256": "d3f737d94c200294c9e4df1bee1e95312ed39484a165a74d7273bd6e3ca74649"
+          },
+          "returned_models": [
+            "grok-4.7-build"
+          ],
+          "review_sha256": "8a1f700ddeaec6ce5439a702aa851d6de0cd720dcb78d74738c8f33dac484d41"
+        },
+        "fable": {
+          "status": {
+            "seat": "fable",
+            "exit_code": 0,
+            "seconds": 310.7,
+            "prompt_sha256": "d3f737d94c200294c9e4df1bee1e95312ed39484a165a74d7273bd6e3ca74649"
+          },
+          "returned_models": [
+            "claude-fable-5-2"
+          ],
+          "review_sha256": "6f6ababb7b80547ece058c8fbf5661fc571aec25f84ee2cb158de6db3a7194b1"
+        },
+        "astra": {
+          "verdict": "FINDINGS",
+          "findings": [
+            "Check sticky ferror before fclose, since a successful close does not clear prior write errors.",
+            "Auto redundantly computes raw XOR before the classic codec computes the same checksum.",
+            "Document extraction permissions and replacement metadata precisely."
+          ],
+          "reviewer": "/root/next_review_r3",
+          "model": "gpt-6.2-astra",
+          "effort": "high",
+          "record_type": "coordinator summary of received independent final review",
+          "prompt_sha256": "d3f737d94c200294c9e4df1bee1e95312ed39484a165a74d7273bd6e3ca74649"
+        }
+      },
+      "triage": {
+        "outcome": "findings",
+        "fixed": [
+          "Check sticky stdio errors",
+          "Remove redundant auto XOR input scan",
+          "Clarify ingestion single-entry wording and extraction permissions",
+          "Suppress completion text after extraction errors"
+        ],
+        "resolved": [
+          "CTest explicitly undefines NDEBUG; CHECK still evaluates expressions in external NDEBUG builds, as its comment says."
+        ]
+      }
+    },
+    {
+      "round": 4,
+      "source_hashes": {
+        "lib/src/uc2_writer.c": "a36f52899a235e58e0e35d154e609ed6c1510988a29354cbb89b7334f9c40141",
+        "lib/include/uc2/uc2_writer.h": "d07d5038cbd9640b326435ceefc3fdbb09037d4d866083bea74e7707fea0dc3f",
+        "cli/src/main.c": "3c82a06adaee7600569ba9c39472f988f310477a45768fddbdf12e73d917b91f",
+        "python/writer.c": "1a2cb855554239261e0b9dd2a1cfb020a8a78165c706ed7ab1cfc5bb0b8b38ce",
+        "python/uc2/_writer.py": "42e059f270c468c63ff60089b47406fe785daccb73958bf4c10f78a92c6be5ec",
+        "tests/src/test_writer.c": "9b73b15419b34d73fcb9c2b23d14b5ba0312c47ef6fba3f4679169c22e096585",
+        "tests/scripts/check_cli_transactions.py": "358f698f6c841674e32b9c0b669dd30f34843280edfb4598a6ee83899a6817e1",
+        "python/tests/test_chunk_sharing.py": "9eddc1781575f844f1dec220ba747e73451bc93e4cf7869ee6bc04c9223ea601",
+        "tests/scripts/check_cli_staging.py": "a8eab757895c1a3497af42200fdb1bdce5b2bebe1effeab2839b4ad694561d7d",
+        "tests/scripts/check_integrations.py": "88ca1788a57eb5415747bb1f837c6ff8d6067b44eca3e18b997797b18973b5fd",
+        "tests/scripts/check_tar_ingest.py": "63504fc8a53616e6d88a0a2cc8965592a9ff94df92d183c0c2c8afce5bcf367b",
+        "tests/scripts/check_cli_io.py": "d4db64d5018817f22d6ea0eb641f8a7796a627715e53232ff3998febf8134ed5",
+        "cli/CMakeLists.txt": "ae6aa6d3a5ffd59b07c45ff0712a9c63369a2f560766e8b42478a47c7c80b9a4",
+        "cli/src/compat/compat_win32.c": "f2f53d0d4d25cba68dbd404e7273b112e7d721ee2b14d66fb199cb965ee10091",
+        "cli/src/compat/include/posix/unistd.h": "ef15b7eecad6b2ecbf5e3a367ddaad0f97255eb2dffb13d5492053e83d99ac77",
+        "cli/src/compat/include/posix/sys/stat.h": "766dda5bb291ff400815b8b495641c28d4c53d71309a865389ef89b55c5a13a6",
+        "docs/chunk-sharing.md": "fcd92917acb833eca8c0e1e2e01e37a14903db4d5ec774acffce30cd21b6c239",
+        "docs/usage.rst": "2f052dc1cc4b40999f7bbf297c2e3291b8b5e8d468a3c9a85be11b0041eb14e2",
+        "cli/uc2.1": "72d4a1cb493d9b1a445bd0596d3b1d06f4795cbe3d408b50e75de098022ad509",
+        "python/README.md": "d4a3231e2c3407d1b1745637d84cd6d558272ea2ff5cadda7f22822883420343",
+        "docs/benchmarks/2026-11-20-auto-chunks.md": "a2e1dd2db220d3e1afd037e2aee7cddd7c6ba0b489b94d1612ef8cea5169da00",
+        "docs/releases/3.0.0a13-qa.md": "35f2116371132c8fe5573d242c6e5a7054f9c8e9623ef338acc4977f6012fcf3"
+      },
+      "reviewers": {
+        "grok": {
+          "status": {
+            "seat": "grok",
+            "exit_code": 0,
+            "seconds": 36.6,
+            "prompt_sha256": "8aa9d77a544f69a975cfacf8bb5e9ed631c607c26b2d7b4a46c5d398e1db3572"
+          },
+          "returned_models": [
+            "grok-4.7-build"
+          ],
+          "review_sha256": "930b41f83a6158b7e08ff8b920bea330fee9c14bc2ca810275fdf357ee54b21f"
+        },
+        "fable": {
+          "status": {
+            "seat": "fable",
+            "exit_code": 0,
+            "seconds": 168.5,
+            "prompt_sha256": "8aa9d77a544f69a975cfacf8bb5e9ed631c607c26b2d7b4a46c5d398e1db3572"
+          },
+          "returned_models": [
+            "claude-fable-5-2"
+          ],
+          "review_sha256": "737ccff75e0472a96997a158ae209b1c43f2822d0bd0d502efcce8198f6cdbf5"
+        },
+        "astra": {
+          "verdict": "FINDINGS",
+          "findings": [
+            "Compile-time guard is needed for macOS SDK/compiler feature availability in addition to the runtime 10.12 guard."
+          ],
+          "reviewer": "/root/next_review_r4",
+          "model": "gpt-6.2-astra",
+          "effort": "high",
+          "record_type": "coordinator summary of received independent final review",
+          "prompt_sha256": "8aa9d77a544f69a975cfacf8bb5e9ed631c607c26b2d7b4a46c5d398e1db3572"
+        }
+      },
+      "triage": {
+        "outcome": "findings",
+        "fixed": [
+          "Guard macOS SDK/compiler availability in addition to runtime version",
+          "Expand exact-byte auto comparisons to all eight levels",
+          "Clarify option/statistics documentation"
+        ]
+      }
+    },
+    {
+      "round": 5,
+      "source_hashes": {
+        "lib/src/compress.c": "bc7034e327270aa65094bea4815a74ea632e719ac08c57c2ead8d4c1103dd55d",
+        "lib/src/uc2_internal.h": "44b77d53f5eeaeb4b6b32b1bc3a20fd38c2b8ed2c0ad7ea635278f318a2ab03a",
+        "lib/src/uc2_writer.c": "a36f52899a235e58e0e35d154e609ed6c1510988a29354cbb89b7334f9c40141",
+        "lib/include/uc2/uc2_writer.h": "d07d5038cbd9640b326435ceefc3fdbb09037d4d866083bea74e7707fea0dc3f",
+        "cli/src/main.c": "bd9d017339d8bb25b08046be1f0174a0756b3eb0f3029d51cb7f3fdb67d122c4",
+        "python/writer.c": "1a2cb855554239261e0b9dd2a1cfb020a8a78165c706ed7ab1cfc5bb0b8b38ce",
+        "python/uc2/_writer.py": "42e059f270c468c63ff60089b47406fe785daccb73958bf4c10f78a92c6be5ec",
+        "tests/src/test_writer.c": "9b73b15419b34d73fcb9c2b23d14b5ba0312c47ef6fba3f4679169c22e096585",
+        "tests/scripts/check_cli_transactions.py": "358f698f6c841674e32b9c0b669dd30f34843280edfb4598a6ee83899a6817e1",
+        "python/tests/test_chunk_sharing.py": "e2a9342d6177f331b200316fe68e803e90d4de1714579b7f75bd953abfba7ee5",
+        "tests/scripts/check_cli_staging.py": "a8eab757895c1a3497af42200fdb1bdce5b2bebe1effeab2839b4ad694561d7d",
+        "tests/scripts/check_integrations.py": "88ca1788a57eb5415747bb1f837c6ff8d6067b44eca3e18b997797b18973b5fd",
+        "tests/scripts/check_tar_ingest.py": "63504fc8a53616e6d88a0a2cc8965592a9ff94df92d183c0c2c8afce5bcf367b",
+        "tests/scripts/check_cli_io.py": "d4db64d5018817f22d6ea0eb641f8a7796a627715e53232ff3998febf8134ed5",
+        "cli/CMakeLists.txt": "ae6aa6d3a5ffd59b07c45ff0712a9c63369a2f560766e8b42478a47c7c80b9a4",
+        "cli/src/compat/compat_win32.c": "f2f53d0d4d25cba68dbd404e7273b112e7d721ee2b14d66fb199cb965ee10091",
+        "cli/src/compat/include/posix/unistd.h": "ef15b7eecad6b2ecbf5e3a367ddaad0f97255eb2dffb13d5492053e83d99ac77",
+        "cli/src/compat/include/posix/sys/stat.h": "766dda5bb291ff400815b8b495641c28d4c53d71309a865389ef89b55c5a13a6",
+        "docs/chunk-sharing.md": "fcd92917acb833eca8c0e1e2e01e37a14903db4d5ec774acffce30cd21b6c239",
+        "docs/usage.rst": "2f052dc1cc4b40999f7bbf297c2e3291b8b5e8d468a3c9a85be11b0041eb14e2",
+        "cli/uc2.1": "6239b5b9196b7962fc6cb55d23ad6f919e926fee0a51daa436c560e836fabbe6",
+        "python/README.md": "0d460f3f124a6365bc2a3ae0e3d5a8d2f57b567aaeb9ba19eebcf9de7459c345",
+        "docs/benchmarks/2026-11-20-auto-chunks.md": "6b9ce994adefd3cea592b0fb5e2a808a913e92c5a4023abc4f2e740b743ce721",
+        "docs/releases/3.0.0a13-qa.md": "40748cb7ead2b5a6a9c7310ece7af83cf81983401018475a747568a34188acd2"
+      },
+      "reviewers": {
+        "grok": {
+          "status": {
+            "seat": "grok",
+            "exit_code": 0,
+            "seconds": 832.3,
+            "prompt_sha256": "82c4b3f8909263364dc256dc53473461da7a4074184013f1497b6556b9ed69d8"
+          },
+          "returned_models": [
+            "grok-4.7-build"
+          ],
+          "review_sha256": "b8a6ff023fb577342e3e2f6669db061765a5ebed5d0ff2a5e7573a12388232fa"
+        },
+        "fable": {
+          "status": {
+            "seat": "fable",
+            "exit_code": 0,
+            "seconds": 159.6,
+            "prompt_sha256": "82c4b3f8909263364dc256dc53473461da7a4074184013f1497b6556b9ed69d8"
+          },
+          "returned_models": [
+            "claude-fable-5-2"
+          ],
+          "review_sha256": "59e6de660d0ad7be866dbf136e2f4f0f3afb741f9bc7ab64bedaa7951a918fff"
+        },
+        "astra": {
+          "verdict": "FINDINGS",
+          "findings": [
+            "Guard SYS_renameat2 in the Linux injection harness and probe native support before requiring success with hard links disabled.",
+            "Qualify owner-only archive permissions as POSIX."
+          ],
+          "optional": [
+            "Exercise successful OTS preservation of a non-default mode; added 0640 case."
+          ],
+          "reviewer": "/root/next_review_r5",
+          "model": "gpt-6.2-astra",
+          "effort": "high",
+          "record_type": "coordinator summary of received independent final review",
+          "prompt_sha256": "82c4b3f8909263364dc256dc53473461da7a4074184013f1497b6556b9ed69d8"
+        }
+      },
+      "triage": {
+        "outcome": "findings",
+        "fixed": [
+          "Probe native Linux exclusive rename before no-links expectation",
+          "Guard the syscall shim when SYS_renameat2 is absent",
+          "Qualify POSIX permission statement",
+          "Verify successful OTS0640 retention"
+        ],
+        "ci_findings": [
+          "Windows accented arguments arrived in the ANSI code page; added wmain conversion to UTF-8."
+        ]
+      }
+    },
+    {
+      "round": 6,
+      "source_hashes": {
+        "lib/src/compress.c": "bc7034e327270aa65094bea4815a74ea632e719ac08c57c2ead8d4c1103dd55d",
+        "lib/src/uc2_internal.h": "44b77d53f5eeaeb4b6b32b1bc3a20fd38c2b8ed2c0ad7ea635278f318a2ab03a",
+        "lib/src/uc2_writer.c": "a36f52899a235e58e0e35d154e609ed6c1510988a29354cbb89b7334f9c40141",
+        "lib/include/uc2/uc2_writer.h": "d07d5038cbd9640b326435ceefc3fdbb09037d4d866083bea74e7707fea0dc3f",
+        "cli/src/main.c": "6513e193d3d9433a377c95f238ee96c8a1398269af82560522d270e01f04a15a",
+        "python/writer.c": "1a2cb855554239261e0b9dd2a1cfb020a8a78165c706ed7ab1cfc5bb0b8b38ce",
+        "python/uc2/_writer.py": "42e059f270c468c63ff60089b47406fe785daccb73958bf4c10f78a92c6be5ec",
+        "tests/src/test_writer.c": "9b73b15419b34d73fcb9c2b23d14b5ba0312c47ef6fba3f4679169c22e096585",
+        "tests/scripts/check_cli_transactions.py": "0e1206e7718a0856c7dddb8fb3e03a5d0fffa0032651adc96c38d44fe10cdc97",
+        "python/tests/test_chunk_sharing.py": "e2a9342d6177f331b200316fe68e803e90d4de1714579b7f75bd953abfba7ee5",
+        "tests/scripts/check_cli_staging.py": "a8eab757895c1a3497af42200fdb1bdce5b2bebe1effeab2839b4ad694561d7d",
+        "tests/scripts/check_integrations.py": "88ca1788a57eb5415747bb1f837c6ff8d6067b44eca3e18b997797b18973b5fd",
+        "tests/scripts/check_tar_ingest.py": "63504fc8a53616e6d88a0a2cc8965592a9ff94df92d183c0c2c8afce5bcf367b",
+        "tests/scripts/check_cli_io.py": "d4db64d5018817f22d6ea0eb641f8a7796a627715e53232ff3998febf8134ed5",
+        "tests/CMakeLists.txt": "0de86104358cb52cd8ab74ee6bbdee573fb336e8aa609f60ee725c273d5e7d63",
+        "cli/CMakeLists.txt": "85910666fd3a330eea3c4b64878e2205ca7e0e68c1c8b65c42c5b56a6376c213",
+        "cli/src/compat/compat_win32.c": "f2f53d0d4d25cba68dbd404e7273b112e7d721ee2b14d66fb199cb965ee10091",
+        "cli/src/compat/include/posix/unistd.h": "ef15b7eecad6b2ecbf5e3a367ddaad0f97255eb2dffb13d5492053e83d99ac77",
+        "cli/src/compat/include/posix/sys/stat.h": "766dda5bb291ff400815b8b495641c28d4c53d71309a865389ef89b55c5a13a6",
+        "docs/chunk-sharing.md": "fcd92917acb833eca8c0e1e2e01e37a14903db4d5ec774acffce30cd21b6c239",
+        "docs/usage.rst": "0c75479ce2bfaa5fb69723f244d704180353b631b2eaeac4da6fada53043e19e",
+        "cli/uc2.1": "6239b5b9196b7962fc6cb55d23ad6f919e926fee0a51daa436c560e836fabbe6",
+        "python/README.md": "0d460f3f124a6365bc2a3ae0e3d5a8d2f57b567aaeb9ba19eebcf9de7459c345",
+        "docs/benchmarks/2026-11-20-auto-chunks.md": "d8c28bad83ac55543c1bedd7a34b706e3284f1965ae158548df8982b2fc7a3c9",
+        "docs/releases/3.0.0a13-qa.md": "1a99ecb5f0d082935177fe252b65c49cabf701ec214d5426d4062ceba2a064a6",
+        "ROADMAP.md": "2c7b553325f070b8034d378b1e7f9fb13db689eaac7a04deb50ebe417689421b",
+        "docs/roadmap.rst": "7e3e346d626309e7e1f90ccf00723b3b3db6b4a3dfd97662bb8f9c55b7551f4f"
+      },
+      "reviewers": {
+        "grok": {
+          "status": {
+            "seat": "grok",
+            "exit_code": 0,
+            "seconds": 25.0,
+            "prompt_sha256": "081c2b8948bd2a07bfadd09d26c0465c110f02b07e1a0d17c8b981ec808c35cb"
+          },
+          "returned_models": [
+            "grok-4.7-build"
+          ],
+          "review_sha256": "900827cc08ed313d161a796aabd9f37f6cd0cfec294b94ac43773e1340a1c4b1"
+        },
+        "fable": {
+          "status": {
+            "seat": "fable",
+            "exit_code": 0,
+            "seconds": 243.9,
+            "prompt_sha256": "081c2b8948bd2a07bfadd09d26c0465c110f02b07e1a0d17c8b981ec808c35cb"
+          },
+          "returned_models": [
+            "claude-fable-5-2"
+          ],
+          "review_sha256": "d48e8404ff9097925fffd11898ef8c381819084f3fde9e5178bbd0964982fa0c"
+        },
+        "astra": {
+          "verdict": "FINDINGS",
+          "findings": [
+            "Wide Windows startup can leave _pgmptr null; diagnostic calls can crash before atexit cleanup."
+          ],
+          "preexisting": [
+            "Windows directory creation from dot still uses narrow getcwd; scope the new Unicode claim to command-line conversion."
+          ],
+          "reviewer": "/root/next_review_r6",
+          "model": "gpt-6.2-astra",
+          "effort": "high",
+          "record_type": "coordinator summary of received independent final review",
+          "prompt_sha256": "081c2b8948bd2a07bfadd09d26c0465c110f02b07e1a0d17c8b981ec808c35cb"
+        }
+      },
+      "triage": {
+        "outcome": "findings",
+        "fixed": [
+          "Handle null _pgmptr under Windows wide startup; confirmed by native CI crash and subsequent passing job"
+        ],
+        "scope": [
+          "Pre-existing Windows narrow getcwd for dot inputs recorded as follow-up; release text describes argument conversion only."
+        ]
+      }
+    },
+    {
+      "round": 7,
+      "source_hashes": {
+        "lib/src/compress.c": "bc7034e327270aa65094bea4815a74ea632e719ac08c57c2ead8d4c1103dd55d",
+        "lib/src/uc2_internal.h": "44b77d53f5eeaeb4b6b32b1bc3a20fd38c2b8ed2c0ad7ea635278f318a2ab03a",
+        "lib/src/uc2_writer.c": "a36f52899a235e58e0e35d154e609ed6c1510988a29354cbb89b7334f9c40141",
+        "lib/include/uc2/uc2_writer.h": "d07d5038cbd9640b326435ceefc3fdbb09037d4d866083bea74e7707fea0dc3f",
+        "cli/src/main.c": "6513e193d3d9433a377c95f238ee96c8a1398269af82560522d270e01f04a15a",
+        "python/writer.c": "1a2cb855554239261e0b9dd2a1cfb020a8a78165c706ed7ab1cfc5bb0b8b38ce",
+        "python/uc2/_writer.py": "42e059f270c468c63ff60089b47406fe785daccb73958bf4c10f78a92c6be5ec",
+        "tests/src/test_writer.c": "9b73b15419b34d73fcb9c2b23d14b5ba0312c47ef6fba3f4679169c22e096585",
+        "tests/scripts/check_cli_transactions.py": "0e1206e7718a0856c7dddb8fb3e03a5d0fffa0032651adc96c38d44fe10cdc97",
+        "python/tests/test_chunk_sharing.py": "e2a9342d6177f331b200316fe68e803e90d4de1714579b7f75bd953abfba7ee5",
+        "tests/scripts/check_cli_staging.py": "a8eab757895c1a3497af42200fdb1bdce5b2bebe1effeab2839b4ad694561d7d",
+        "tests/scripts/check_integrations.py": "88ca1788a57eb5415747bb1f837c6ff8d6067b44eca3e18b997797b18973b5fd",
+        "tests/scripts/check_tar_ingest.py": "63504fc8a53616e6d88a0a2cc8965592a9ff94df92d183c0c2c8afce5bcf367b",
+        "tests/scripts/check_cli_io.py": "d4db64d5018817f22d6ea0eb641f8a7796a627715e53232ff3998febf8134ed5",
+        "tests/CMakeLists.txt": "0de86104358cb52cd8ab74ee6bbdee573fb336e8aa609f60ee725c273d5e7d63",
+        "cli/CMakeLists.txt": "85910666fd3a330eea3c4b64878e2205ca7e0e68c1c8b65c42c5b56a6376c213",
+        "cli/src/compat/compat_win32.c": "0b6a500baf46801195f5247ebc571c573786f9b20e7756b242d687e4cc452b8f",
+        "cli/src/compat/include/posix/unistd.h": "ef15b7eecad6b2ecbf5e3a367ddaad0f97255eb2dffb13d5492053e83d99ac77",
+        "cli/src/compat/include/posix/sys/stat.h": "766dda5bb291ff400815b8b495641c28d4c53d71309a865389ef89b55c5a13a6",
+        "docs/chunk-sharing.md": "fcd92917acb833eca8c0e1e2e01e37a14903db4d5ec774acffce30cd21b6c239",
+        "docs/usage.rst": "0c75479ce2bfaa5fb69723f244d704180353b631b2eaeac4da6fada53043e19e",
+        "cli/uc2.1": "6239b5b9196b7962fc6cb55d23ad6f919e926fee0a51daa436c560e836fabbe6",
+        "python/README.md": "0d460f3f124a6365bc2a3ae0e3d5a8d2f57b567aaeb9ba19eebcf9de7459c345",
+        "docs/benchmarks/2026-11-20-auto-chunks.md": "d8c28bad83ac55543c1bedd7a34b706e3284f1965ae158548df8982b2fc7a3c9",
+        "docs/releases/3.0.0a13-qa.md": "b92c8d7dec525f6303ab4076eab1f59b86e2261acdb5c386b4ac7a6063804b5c",
+        "ROADMAP.md": "2c7b553325f070b8034d378b1e7f9fb13db689eaac7a04deb50ebe417689421b",
+        "docs/roadmap.rst": "7e3e346d626309e7e1f90ccf00723b3b3db6b4a3dfd97662bb8f9c55b7551f4f"
+      },
+      "reviewers": {
+        "grok": {
+          "status": {
+            "seat": "grok",
+            "exit_code": 0,
+            "seconds": 285.4,
+            "prompt_sha256": "894422b7844f3380749c8f3e21988e35748a8351460a84de4cc65ff7a52f82ea"
+          },
+          "returned_models": [
+            "grok-4.7-build"
+          ],
+          "review_sha256": "9320fefaf6beac2cf1ef5f2bf5efe490d3bc0a89361333fe8b3abd15e75f58c1",
+          "review": "{\"checks_performed\":[\"Auto mode assembles classic then chunked from the one input spool, compares archive_size, keeps classic on ties, restores that candidate's full stats, and finish calls the user callback only after both assemblies succeed.\",\"Defaults: C options and CLI start at chunked 0; --chunked is 1 and --chunked=auto is 2; Python False/True/\\\"auto\\\" map to 0/1/2; other values are rejected before a writer exists.\",\"Explicit classic and chunked==1 call assemble once. The raw XOR scan runs only for chunked==1; auto reuses the classic compressor checksum, which matches that XOR, so those two modes are not rewritten by the size comparison.\",\"Either candidate hitting the entry, chunk, central-directory, or UINT32 size limit fails the writer before write_cb. The discarded tmpfile is closed and is not copied out.\",\"Extraction creates an exclusive sibling, publishes with replace only when -f, uses renameat2 or renamex_np and then link for no-replace, and DJGPP refuses an existing target before rename.\",\"OTS attach hashes the prefix it copies, copies permissions as nine rwx bits or the Windows read-only bit, and a failed MoveFileEx restores a cleared read-only attribute. Proof extract also stages.\",\"atexit cleanup is registered once and is safe when no stage exists. uc2err records had_error and does not exit; a failed file discards only its stage. Directory parents are not rolled back.\",\"wmain converts every wide argument with WC_ERR_INVALID_CHARS into one UTF-8 block. MinGW uses -municode. The MSVC target defines neither main nor a wide CRT entry.\",\"Windows opendir still rejects a wchar path once path plus \\\"\\\\\\\\*\\\" reaches MAX_PATH and returns NULL without setting errno, while the other Win32 helpers accept 32768-wchar paths.\",\"Supplied tests cover auto byte and stat equality, a shorter OTS trailer, preserved destinations, and rename/link races. Release tests undefine NDEBUG. Those runs were not re-executed here.\"],\"required_findings\":[\"MSVC CLI entry is not linked. On _WIN32, main.c defines wmain and only a static uc2_main; there is no main. cli/CMakeLists.txt adds -municode for MinGW, but the MSVC branch does not define UNICODE or set the entry to wmainCRTStartup. A stock MSVC console link still expects main, so the supported MSVC CLI target fails to link or never reaches the UTF-8 conversion.\"],\"optional_observations\":[\"Windows directory walks do not match the long-path fopen, chmod, and temp helpers: opendir returns NULL with errno unset once the wchar path plus the \\\"\\\\\\\\*\\\" pattern reaches MAX_PATH, so writer_scan reports a misleading error for a path wmain already accepted.\",\"Auto selection, staging, and the permissive DOS parent rule are large but they follow the stated bounds. The docs name tie-breaking, both passes, per-file publication, and the excluded durability and metadata guarantees without a decorative summary.\"],\"complexity\":\"The new control flow is small: one spool, two existing assemblies, a size compare, then the old callback. Transactional publication is long because POSIX, Windows, and DJGPP replacement rules differ, and those differences are explicit rather than a second writer. The Huffman and rANS cores are unchanged apart from the auto path skipping a second XOR scan. No extra archive format or reader is introduced.\",\"prose\":\"Classic and explicit chunked output stay on the previous assemble paths, and auto publishes exactly one finished candidate with matching stats. Staging matches the per-file, not whole-tree, contract, including DOS refusal and Windows read-only restoration. The MSVC entry point does not implement the Unicode startup that MinGW gets. Usage, the man page, and the a13 notes agree with the code on ties, cost, and the metadata that OTS does not keep.\",\"verdict\":\"FINDINGS\",\"scope\":\"Review used only the listed snapshot. Tests and the f309446 byte comparison were not re-run. Concurrent DOS writers, parent-directory replacement, power-loss durability, and non-rwx metadata were treated as excluded by the contract.\"}"
+        },
+        "fable": {
+          "status": {
+            "seat": "fable",
+            "exit_code": 0,
+            "seconds": 169.0,
+            "prompt_sha256": "894422b7844f3380749c8f3e21988e35748a8351460a84de4cc65ff7a52f82ea"
+          },
+          "returned_models": [
+            "claude-fable-5-2"
+          ],
+          "review_sha256": "b36055fd14d30d9270dd87e76eb248f92e3a785cb9218e6860d820fef6b03f07",
+          "review": "## CHECKS PERFORMED\n\n1. **Auto selection (`uc2_writer.c:671-692`)**: classic is assembled first, its `FILE*` and stats are captured, and masters, `output_size` and stats are reset before the chunked pass. Selection uses `classic <= chunked`, so ties go to classic, and `output_size` and stats are restored when classic wins. Correct.\n2. **Checksum reuse without the XOR scan (`:282-284`, `:677-679`)**: classic `csum_update` reduces to the same parity-positioned XOR seeded with 0xA55A, including odd-length carries across 512-byte reads, empty files and duplicates. Chunked recipes built in the auto pass therefore match explicit `--chunked`; `test_auto_selects_exact_smaller_archive` asserts byte and stats equality at levels 2\u20139.\n3. **State leakage between passes**: `chunk_count` is untouched by the classic pass, `master` is overwritten with 1, and the duplicate loop and `group_files` are guarded by `!chunked`. Nothing from the classic pass alters chunked output.\n4. **Abort before callback**: both assemblies finish before the `write_cb` loop. A second-pass failure closes the classic spool and leaves `w->output` owned by `uc2_writer_free`. `auto_allocation_failure` sweeps every calloc/realloc and asserts zero output and a sticky error.\n5. **Default and explicit paths**: `assemble(w, options.chunked)` for modes 0 and 1 is structurally unchanged. The only additions are the `ferror` check on the header write and the option-range validation, which is consistent with the reported SHA256 equality.\n6. **Staging ownership (`main.c:1702-1787`)**: `staged_path` is set before `atexit` registration, which is guarded by a static flag. `close_staged_output` nulls the stream before `fclose`. `discard` is idempotent and clears read-only on Windows/DOS before unlinking. The `uc2err` non-exit path in `extract_cb` discards explicitly, and I found no path that returns to further staging with state still set. The OTS leaf-mismatch `return EXIT_FAILURE` reaches atexit through `main`/`wmain`.\n7. **No-overwrite publication**: POSIX uses `renameat2(RENAME_NOREPLACE)`, then `renamex_np` with a runtime availability check, then `link`+`unlink`, and falls back only on ENOSYS/EINVAL/EOPNOTSUPP. Windows uses `MoveFileExW` without `REPLACE_EXISTING`. A leaf appearing mid-extraction is never overwritten.\n8. **Replacement and attributes**: on Windows the read-only bit is cleared only when replacing and restored if the move fails. DJGPP refuses an existing target before `rename`. POSIX OTS creates the stage at 0600, then applies `st_mode & 0777` before rename.\n9. **OTS attach**: the hash is computed over the bytes written to the stage, short reads are fatal, and the trailer is appended to a fresh file, so a shorter replacement trailer cannot leave residue. The original is untouched until `commit`.\n10. **Link and special-file refusal**: `output_exists` uses `lstat` (reparse/device attributes on Windows) and checks the directory after `mkdir` EEXIST before appending `/`. The stage uses `O_EXCL`, and a candidate whose leaf equals the requested leaf case-insensitively is skipped (covered by the collision test).\n11. **`wmain`**: two-pass sizing with an INT_MAX guard, a single storage allocation, a NULL-terminated `argv`, and the free after `uc2_main` is safe because `staged_path` is separately allocated. `getprogname` tolerates a NULL `_pgmptr`.\n12. **Python**: `chunked` accepts only `bool` or exactly `\"auto\"`, the native layer rejects values outside 0..2, and the stats dict is unchanged.\n13. **Tests versus contract**: late-chunk corruption, write/close/sticky/publish faults, the two race variants, the no-links fallback, the Windows locked-target case and OTS permission retention are all present, as is the longer-to-shorter trailer case in `check_cli_io.py`.\n\n## CORRECTNESS\n\nNo defect found against the stated contract. Non-blocking observations:\n\n- **DOS refusal is late (low).** With `-f` on DJGPP, `extract_cb` decodes the whole file and only then hits the fatal `errx` in `commit_staged_output`, which ends the entire extraction. `create_archive` and ingestion likewise compress fully before refusing. This is safe and matches the documented refusal; an early check would be cheaper and friendlier.\n- **Diagnostic errno (low).** `close_staged_output` reports `errno ? errno : EIO` on a sticky stream error. By then `errno` may come from an unrelated later call, so the message can mislead even though the failure itself is always detected.\n- **Stale index fields (latent).** `group_files` frees `w->chunks` but leaves `chunk_count` and `chunk_capacity` non-zero. This is harmless today because the chunked pass never touches them, but it is a trap if classic assembly is ever re-entered.\n- **Unverified here.** I could not confirm from the snapshot that `__has_builtin(__builtin_available)` is true on Apple clang. If it is false, the code silently uses the `link` fallback, which is still safe.\n- **Test gap.** The Windows appear-during-publication race and the DOS refusal have no automated test in the supplied files. The code paths are simple and read as correct.\n\n## UNNECESSARY COMPLEXITY\n\nNothing substantial. Optional tidying:\n\n- `main.c` repeats the UTF-8 to wide conversion with 64 KiB stack buffers in four places (`output_exists`, `stage_output`, `cmd_ots_attach`, `writer_scan`). One helper would remove the duplication.\n- The `published:` label under a second `#if` mirrors the earlier condition. A small `publish_noreplace()` returning a status would remove the goto and label pairing.\n- The temp-file glob expression is repeated about ten times across four test scripts, including inside a POSIX-only block where the Windows branch is dead. A shared constant would do.\n- `write_chunked` serialises each record twice, once for the digest and once for output. This is acceptable given the bounded memory.\n\n## PROSE\n\nThe a13 additions in `chunk-sharing.md`, `usage.rst`, `uc2.1`, the README, the benchmark record and the release notes are terse and bounded, and they match the code on ties, the cost of both passes, abort-before-publication, per-file scope, the nine `rwx` bits, DOS refusal and the hard-link fallback. I found no stock openers or decorative summaries. Minor points:\n\n- `chunk-sharing.md:46`: \"Its retained chunk index\" follows a sentence about central-directory metadata, so the antecedent (the writer) is ambiguous.\n- `ROADMAP.md` Phase 10 still lists \"Tar-entry preservation\" as unchecked and snapshot retention/pruning as open, while the alpha10 section of the same file records both as delivered.\n- Older `ROADMAP.md` phase introductions keep promotional claims (\"ahead of its time\", \"something no mainstream archiver offers\", \"No mainstream archiver offers post-quantum encryption\"), which is inconsistent with the corrected README. These predate a13.\n\n## VERDICT: PASS\n\n**Scope limitations.** This was a static read of the supplied snapshot only; nothing was compiled or run. I relied on the stated local evidence (CTest, pytest, sanitizers, old/new SHA256 comparisons) rather than reproducing it. Files not supplied were not reviewed, including `ingest_tar.c`, the decoder, `uc2_chunks.h`, the DOS compat layer and `check_cli_extraction.py`/`check_cli_options.py`. Windows, macOS and DJGPP behaviour is assessed from code and documented API semantics, not execution. `compress.c` was checked only for consistency with the \"unchanged core\" claim."
+        },
+        "astra": {
+          "reviewer": "/root/next_review_r7",
+          "model": "gpt-6.2-astra",
+          "effort": "high",
+          "record_type": "coordinator summary of received independent final review",
+          "verdict": "PASS",
+          "prompt_sha256": "894422b7844f3380749c8f3e21988e35748a8351460a84de4cc65ff7a52f82ea",
+          "findings": [],
+          "optional": [
+            "Pre-existing Windows narrow getcwd does not receive the command-line encoding repair.",
+            "C header may clarify level2-5 requirement for historical DOS compatibility."
+          ]
+        }
+      },
+      "triage": {
+        "outcome": "clean after evidence-based adjudication: Astra PASS, Fable PASS, Grok only required finding disproved by native MSVC CI",
+        "optional_declined": [
+          "Early DOS refusal would improve efficiency but is not needed for preservation.",
+          "No extra public format-selection field: masters/files invariant identifies the selected existing layout.",
+          "No broad helper refactor; current branches map directly to distinct OS guarantees."
+        ],
+        "resolved": [
+          "Grok predicted that MSVC requires an explicit wmainCRTStartup entry option. Exact-source native MSVC configure/build/smoke/CTest succeeded in run44850364429; the inference is false. No code change."
+        ],
+        "incomplete_attempts": [
+          "First Grok attempt terminated after798.9s without a verdict; bounded fresh retry completed in285.4s.",
+          "Terra was started during the delay, but returned INCOMPLETE after a truncated snapshot read. It does not count towards a complete pass."
+        ]
+      }
+    },
+    {
+      "round": 8,
+      "source_hashes": {
+        "lib/src/compress.c": "bc7034e327270aa65094bea4815a74ea632e719ac08c57c2ead8d4c1103dd55d",
+        "lib/src/uc2_internal.h": "44b77d53f5eeaeb4b6b32b1bc3a20fd38c2b8ed2c0ad7ea635278f318a2ab03a",
+        "lib/src/uc2_writer.c": "a36f52899a235e58e0e35d154e609ed6c1510988a29354cbb89b7334f9c40141",
+        "lib/include/uc2/uc2_writer.h": "d07d5038cbd9640b326435ceefc3fdbb09037d4d866083bea74e7707fea0dc3f",
+        "cli/src/main.c": "6513e193d3d9433a377c95f238ee96c8a1398269af82560522d270e01f04a15a",
+        "python/writer.c": "1a2cb855554239261e0b9dd2a1cfb020a8a78165c706ed7ab1cfc5bb0b8b38ce",
+        "python/uc2/_writer.py": "42e059f270c468c63ff60089b47406fe785daccb73958bf4c10f78a92c6be5ec",
+        "tests/src/test_writer.c": "9b73b15419b34d73fcb9c2b23d14b5ba0312c47ef6fba3f4679169c22e096585",
+        "tests/scripts/check_cli_transactions.py": "0e1206e7718a0856c7dddb8fb3e03a5d0fffa0032651adc96c38d44fe10cdc97",
+        "python/tests/test_chunk_sharing.py": "e2a9342d6177f331b200316fe68e803e90d4de1714579b7f75bd953abfba7ee5",
+        "tests/scripts/check_cli_staging.py": "a8eab757895c1a3497af42200fdb1bdce5b2bebe1effeab2839b4ad694561d7d",
+        "tests/scripts/check_integrations.py": "88ca1788a57eb5415747bb1f837c6ff8d6067b44eca3e18b997797b18973b5fd",
+        "tests/scripts/check_tar_ingest.py": "63504fc8a53616e6d88a0a2cc8965592a9ff94df92d183c0c2c8afce5bcf367b",
+        "tests/scripts/check_cli_io.py": "d4db64d5018817f22d6ea0eb641f8a7796a627715e53232ff3998febf8134ed5",
+        "tests/CMakeLists.txt": "0de86104358cb52cd8ab74ee6bbdee573fb336e8aa609f60ee725c273d5e7d63",
+        "cli/CMakeLists.txt": "85910666fd3a330eea3c4b64878e2205ca7e0e68c1c8b65c42c5b56a6376c213",
+        "cli/src/compat/compat_win32.c": "0b6a500baf46801195f5247ebc571c573786f9b20e7756b242d687e4cc452b8f",
+        "cli/src/compat/include/posix/unistd.h": "ef15b7eecad6b2ecbf5e3a367ddaad0f97255eb2dffb13d5492053e83d99ac77",
+        "cli/src/compat/include/posix/sys/stat.h": "766dda5bb291ff400815b8b495641c28d4c53d71309a865389ef89b55c5a13a6",
+        "docs/chunk-sharing.md": "fcd92917acb833eca8c0e1e2e01e37a14903db4d5ec774acffce30cd21b6c239",
+        "docs/usage.rst": "0c75479ce2bfaa5fb69723f244d704180353b631b2eaeac4da6fada53043e19e",
+        "cli/uc2.1": "6239b5b9196b7962fc6cb55d23ad6f919e926fee0a51daa436c560e836fabbe6",
+        "python/README.md": "0d460f3f124a6365bc2a3ae0e3d5a8d2f57b567aaeb9ba19eebcf9de7459c345",
+        "docs/benchmarks/2026-11-20-auto-chunks.md": "d8c28bad83ac55543c1bedd7a34b706e3284f1965ae158548df8982b2fc7a3c9",
+        "docs/releases/3.0.0a13-qa.md": "b92c8d7dec525f6303ab4076eab1f59b86e2261acdb5c386b4ac7a6063804b5c",
+        "ROADMAP.md": "2c7b553325f070b8034d378b1e7f9fb13db689eaac7a04deb50ebe417689421b",
+        "docs/roadmap.rst": "7e3e346d626309e7e1f90ccf00723b3b3db6b4a3dfd97662bb8f9c55b7551f4f",
+        ".git/next-20261120/release-notes.md": "32ab115046a95e3eeb22b72731de9ba0b8b00c36e432f4c215314ef2e1e24629",
+        ".git/next-20261120/README-release.md": "877d34d6d50961807c9f68845dec770249ccbcc4093c8e916f12027971ee4c77"
+      },
+      "reviewers": {
+        "grok": {
+          "status": {
+            "seat": "grok",
+            "exit_code": 0,
+            "seconds": 26.7,
+            "prompt_sha256": "e710feab8941bacb0bc6940579d8a260e5a15e2079b8b03efb872b60d2b2e91d"
+          },
+          "returned_models": [
+            "grok-4.7-build"
+          ],
+          "review_sha256": "654cc260ea223d61bb9b231e0a1328ab8c7d64ccca11b45260449975136f3360",
+          "review": "{\"checks_performed\":[\"Traced assemble_auto: classic then chunked from one spool, classic wins archive_size ties, failed second pass closes classic and returns before finish's write callback.\",\"Checked chunked=0/1 paths and writer option bounds; default UC2_WRITER_OPTIONS_INIT chunked=0; Python maps False/True/\\\"auto\\\" to 0/1/2.\",\"Checked write_chunked duplicate recipe reuse, SHA-256 plus byte compare, method 11 header/records, and master=1 with no classic masters.\",\"Checked extraction staging: O_EXCL leaf, skip without -f, refuse links/specials, DJGPP refuses existing targets, Windows restores FILE_ATTRIBUTE_READONLY if MoveFileExW fails.\",\"Checked OTS attach hashes the copied prefix, chmod of staged file before commit, -f replacement, and atexit discard registered once.\",\"Checked wmain UTF-8 conversion into one allocation and MinGW -municode; getprogname falls back when _pgmptr is null.\",\"Read test_chunk_sharing.py auto byte/stat equality, check_cli_io.py shorter-trailer -f, check_cli_transactions.py corruption/publication/race cases.\",\"Checked uc2err sets had_error without exit; staged_path/staged_stream ownership on extract failure and atexit unlink.\",\"Checked auto failure after classic success still aborts publication (assemble_auto fclose classic, finish returns before callback).\",\"Checked docs/man/release notes against the same auto, staging, DOS, permission, and non-durability bounds.\"],\"required_findings\":[\"cmd_ots_extract (cli/src/main.c ~1062-1078) calls output_exists then stage_output then fwrite of the proof, but never close_staged_output before commit_staged_output. commit_staged_output always fclose's staged_stream first. On a short fwrite, err() exits without discarding the stage; atexit discard_staged_output then fclose's the already-closed FILE* (staged_stream still set) and only afterwards unlinks. That is undefined behavior on the required failure path and can skip or mis-order cleanup. Attach and archive creation call close_staged_output before commit; proof extraction does not. check_cli_transactions.py exercises OTS extract failure\",\", not this short-write-before-close path.\"],\"optional_observations\":[\"Python UC2Writer.close calls os.replace, which overwrites; it does not implement the CLI no-replace race. The contract assigns that rule to the CLI and documents Python replacement of the destination path.\",\"group_files still reads only the first chunker cut of each 16 KiB window (uc2_writer.c ~326-340). That is pre-existing grouping, not the auto layout selector. Auto compares finished archive sizes.\",\"Ingest v3 part-N path is unchanged when chunked is 0; --chunked and --chunked=auto both go through the writer.\"],\"complexity\":\"Auto mode is two full assemble passes plus two tmpfile spools, which the contract requires. Chunk index, name index, and staging are large but each serves a stated bound (dedup, versions, publication). The missing close in OTS extract is a real control-flow hole, not extra abstraction. Prose in the release notes and chunk guide states operational limits without decorative summary.\",\"prose\":\"Release notes, usage, man page, and chunk-sharing docs state the auto rule, both-pass cost, classic-on-tie, DOS refusal, permission subset, and non-durability in operational language. A few sentences are long; they are not stock openers or inflated codec claims. The 9.1% and edited-binary figures are tied to the measurement note.\",\"verdict\":\"FINDINGS\",\"scope\":\"Reviewed only the pasted snapshot: writer, CLI staging/OTS/wmain, Python writer, listed tests, and a13 docs. Did not re-run CI. Decompressor, chunk reader, and ingest_tar.c were not in the snapshot, so method-11 decode and tar metadata were not re-verified here. Evidence that CI passed is taken as given, not re-executed.\"}"
+        },
+        "fable": {
+          "status": {
+            "seat": "fable",
+            "exit_code": 0,
+            "seconds": 209.8,
+            "prompt_sha256": "e710feab8941bacb0bc6940579d8a260e5a15e2079b8b03efb872b60d2b2e91d"
+          },
+          "returned_models": [
+            "claude-fable-5-2"
+          ],
+          "review_sha256": "d3a1d9fbc16d33b0eab6c5f504ea7a8e3e4115b6478ff60f029ee2cc7cf86413",
+          "review": "# Review: frozen snapshot f74789d (alpha13 auto layout and transactional CLI output)\n\n## CHECKS PERFORMED\n\n1. **Auto checksum reuse** (`uc2_writer.c:282-289`, `671-692`). Auto skips the add-time XOR scan and relies on the classic pass filling `e->checksum`. I traced `csum_update`/`csum_get` (`uc2_internal.h:86-103`) against the byte-parity XOR in `add_file`, including odd-length carry across calls, empty files (0xA55A) and duplicates (copied at `:613`). They are equivalent, so the chunked candidate's records match explicit `--chunked`.\n2. **State carried between auto passes.** `masters`/`master_count`/`output_size`/stats are reset, and `write_chunked` overwrites `e->master`, `offset` and `csize` for every file. `chunk_count` is untouched by the classic pass and `duplicate` is deliberately kept. No stale field reaches the chunked central directory.\n3. **Selection, ties and stats.** `classic_stats.archive_size <= chunked` selects classic, and `output_size` and stats are restored together. Selected stats equal explicit-mode stats (masters are 0 in chunked; chunk counters are 0 in classic). `report_sharing`'s `masters || !files` inference holds because every classic archive with files has at least one master.\n4. **Auto failure paths.** A classic failure leaves `w->output` to `uc2_writer_free`; a chunked failure closes the classic spool and leaves the second one to free. Neither reaches the callback; the writer is poisoned. `test_writer.c:282-301` sweeps every calloc/realloc site; malloc sites (`raw`, `remaining`, chunk buffers) are not swept but are handled correctly by inspection.\n5. **Default and explicit byte compatibility.** The only writer-core changes on the non-auto paths are the gated XOR scan (unused in classic, unchanged for `chunked==1`) and the added `ferror` check. Neither alters emitted bytes, consistent with the eight SHA-256 comparisons.\n6. **Staging ownership and atexit.** `staged_stream` is nulled before `fclose`; `staged_path` is nulled on commit and discard; `atexit` is registered once behind `cleanup_registered`, with its failure path cleaned up. I traced every return after `uc2err`: `extract_cb` discards before continuing, and the OTS leaf-mismatch `return EXIT_FAILURE` is cleaned by the handler when `main`/`wmain` returns. The `assert` in `stage_output` vanishes under NDEBUG, but the invariant holds on all paths.\n7. **Publication.** Replacement uses `rename`. No-replace uses `renameat2(RENAME_NOREPLACE)`, then `renamex_np` behind the availability guard, then `link`, so a late-appearing leaf is never overwritten. Windows uses `MoveFileExW` without `REPLACE_EXISTING` and restores the read-only attribute on failure. DJGPP refuses existing targets before `rename`. The `published:` label guard matches its gotos.\n8. **OTS attach.** The hash is computed over the bytes copied into the stage (`main.c:1002-1012`), a short read aborts, an old trailer is dropped via `existing_al`, and permissions are applied to the stage before commit. The original archive is only read before publication. `--ots-extract` validates the output type, stages and replaces.\n9. **`wmain`.** Two-pass sizing with an `INT_MAX` guard, a decreasing remaining-size argument, and `argv[argc]==NULL`. Nothing retains argv storage after `uc2_main` returns; the exit handler uses only its own `staged_path` allocation.\n10. **Option parsing.** `--chunked`/`--chunked=auto` are consumed before `--`. Other `--chunked=\u2026` values fall through to getopt and fail. Non-creation use is rejected, including with ingest-restore, OTS modes and `-B`.\n11. **Tests read.** The conditional assert at `check_cli_transactions.py:255` parses as intended. The collision, race, link-fallback and no-links cases match the code paths. `check_cli_io.py:115-117` covers replacing a longer trailer with a shorter one. `test_chunk_sharing.py:211-239` checks exact bytes and stats, with the tie case exercised by the empty archive.\n12. **Documentation figures.** 413,429/378,945 is +9.1%; 1,556,525/3,763,693 is \u221258.6%; six collections equals one public plus five synthetic. Limits and caveats in `usage.rst`, `uc2.1`, `chunk-sharing.md` and the release notes match the code.\n\n## CORRECTNESS\n\nNo defect found against the stated contract. Three minor, non-blocking observations:\n\n- **Wrong temp-file name in the release README.** `README-release.md:157` says a killed process can leave a sibling `.tmp-*` file. The code creates `.uc2-tmp-<pid>-<time>-<i>` on POSIX and `U???????.TMP` on Windows/DOS (`main.c:1746-1750`). A user globbing `.tmp-*` to clean up will find nothing.\n- **`chmod` prototype mismatch under MinGW.** `compat/include/posix/sys/stat.h:5` declares `chmod(const char *, mode_t)`, while `compat_win32.c:242` defines `chmod(const char *, int)`. `mode_t` is `unsigned short` on mingw-w64, so `main.c` calls through an incompatible prototype. This is harmless in practice on x86/x64, but formally undefined, and it would become a compile error if `compat_win32.c` ever included `<sys/stat.h>`. I could not confirm from the snapshot whether CI builds the CLI with MinGW. Fix: align the declaration to `int`.\n- **DOS refuses late (optional).** With an existing target, `-f` extraction, `-w` and `--ots-attach` on DJGPP do all the decode or compression work and only then fail in `commit_staged_output`. For extraction this turns what would be a skip without `-f` into a fatal abort mid-tree. It is consistent with the documentation; an early `output_exists` refusal under `__DJGPP__` would be kinder.\n\n## UNNECESSARY COMPLEXITY\n\nNothing material. The auto implementation is about 20 lines over an unchanged `assemble`, with one implicit ordering dependency: classic must run first, because `group_files` treats `master==0` as unassigned and the chunked pass needs the classic checksums. The existing comment covers the checksum half; one more clause on the ordering would help.\n\nStyle-level only:\n- The UTF-8-to-wide conversion with a 32768-`wchar_t` stack buffer is repeated at four sites in `main.c`; one helper would do.\n- The staging functions sit in the middle of the ingest section behind forward declarations.\n- `cmd_ots_extract` calls `output_exists` and then `commit_staged_output` repeats the check.\n- The temp-file glob expression is repeated eight times across the test scripts, including a dead `nt` arm inside a POSIX-only block in `check_integrations.py:130-132`.\n\n## PROSE\n\nThe documents are terse, operational and consistent with one another. I found no stock openers, inflated claims or decorative summaries; the benchmark note explicitly disclaims superiority over 7-Zip and Zstandard and any speed comparison. Two small points:\n\n- `chunk-sharing.md:44` has an overlong line.\n- `ROADMAP.md:573` still lists tar-entry preservation as unchecked, although the alpha10 section records `--ingest-tar` as delivered. This predates the change.\n\n## VERDICT\n\n**PASS**, with the README temp-name correction and the MinGW `chmod` declaration recommended before release.\n\n## SCOPE LIMITATIONS\n\n- This was static reading only; nothing was compiled or run, and CI and local results are taken as stated.\n- Files not supplied were not reviewed: `ingest_tar.c`, `decompress.c`, the chunk reader, the MSVC and DOS compat headers, `uc2_path`, `list.h`, and the remaining tests (`check_cli_extraction`/`options`/`metadata`, `test_chunk_corruption`).\n- `compress.c` was checked only for consistency with the unchanged-core claim.\n- Windows and DJGPP runtime behaviour (`MoveFileExW` on read-only files, DJGPP `rename`, `_pgmptr` under `wmain`) was assessed from documented semantics, not executed.\n- Source-control publication and release acceptance are out of scope."
+        },
+        "astra": {
+          "reviewer": "/root/next_review_r8",
+          "model": "gpt-6.2-astra",
+          "effort": "high",
+          "record_type": "coordinator summary of received independent final review",
+          "verdict": "FINDINGS",
+          "implementation": "No required implementation correction",
+          "findings": [
+            "README preview incorrectly called abandoned stages .tmp-*; corrected generic sibling temporary file wording."
+          ],
+          "prompt_sha256": "e710feab8941bacb0bc6940579d8a260e5a15e2079b8b03efb872b60d2b2e91d"
+        }
+      },
+      "triage": {
+        "outcome": "implementation clean after adjudication; one README documentation correction",
+        "fixed": [
+          "Replaced the obsolete abandoned-stage .tmp-* pattern with sibling temporary file.",
+          "Clarified level2-5 together with chunked=0 for historical DOS compatibility in the C API comment."
+        ],
+        "resolved": [
+          "Grok double-close claim is false: short fwrite calls err before commit, so the still-open stage is closed once by atexit; successful writes reach commit, whose close helper clears staged_stream before fclose. Fault-injection tests cover OTS proof extraction write and close errors."
+        ],
+        "preexisting": [
+          "MinGW compatibility header/type issues recorded as a separate portability follow-up."
+        ]
+      }
+    }
+  ]
+}
