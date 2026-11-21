@@ -87,7 +87,19 @@ def main():
         assert b"ERROR" not in empty_result.stdout
         expected_size = f"{source.stat().st_size} bytes input".encode()
         assert expected_size in run("-B", empty, source).stdout
-        run("-B", work, ok=False)
+        run("-B", work / "missing-input", ok=False)
+        # Some systems (including NetBSD) allow raw directory reads. Only
+        # use a directory as a read-error fixture where the OS rejects it.
+        try:
+            directory = os.open(work, os.O_RDONLY)
+            try:
+                os.read(directory, 65536)
+            finally:
+                os.close(directory)
+        except OSError:
+            run("-B", work, ok=False)
+        else:
+            print("Directory read-error check unavailable on this OS")
 
         # Long-option spellings after -- are input filenames.
         for index, name in enumerate(("--ots-info", "--ots-extract", "--ots-attach=x")):
