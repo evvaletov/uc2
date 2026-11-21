@@ -20,7 +20,8 @@ arch=$(uname -m)
 
 # Request the executable so an installed curl-minimal also satisfies the dependency.
 dnf -y --setopt=install_weak_deps=False install \
-  rpm-build redhat-rpm-config cmake gcc make python3 diffutils /usr/bin/curl shadow-utils
+  rpm-build redhat-rpm-config cmake gcc make python3 diffutils tar \
+  /usr/bin/curl /usr/sbin/runuser shadow-utils
 useradd -m uc2builder
 work=$(mktemp -d /tmp/uc2-rpm.XXXXXX)
 chown uc2builder:uc2builder "$work"
@@ -51,13 +52,16 @@ build 13
 mapfile -t old_packages < <(find "$work/alpha12/RPMS" -name "uc2-3.0.0~alpha.12-2.*.$arch.rpm")
 mapfile -t packages < <(find "$work/alpha13/RPMS" -name "uc2-3.0.0~alpha.13-2.*.$arch.rpm")
 mapfile -t sources < <(find "$work/alpha13/SRPMS" -name 'uc2-3.0.0~alpha.13-2.*.src.rpm')
-mapfile -t trees < <(find "$work/alpha13/BUILD" -type d -name 'uc2-3.0.0-alpha.13')
-[[ ${#old_packages[@]} == 1 && ${#packages[@]} == 1 && ${#sources[@]} == 1 && ${#trees[@]} == 1 ]]
+[[ ${#old_packages[@]} == 1 && ${#packages[@]} == 1 && ${#sources[@]} == 1 ]]
 old=${old_packages[0]}
 package=${packages[0]}
 source=${sources[0]}
-tree=${trees[0]}
 trial=$(mktemp -d /tmp/uc2-rpm-lifecycle.XXXXXX)
+# Recent RPM versions remove the build tree after a successful build.
+tree="$trial/fixtures"
+mkdir "$tree"
+tar -xzf "$work/alpha13/SOURCES/v3.0.0-alpha.13.tar.gz" -C "$tree" --strip-components=1 \
+  uc2-3.0.0-alpha.13/tests/archives/basic.uc2 uc2-3.0.0-alpha.13/tests/corpus
 printf 'User archives survive package removal.\n' > "$trial/keep.txt"
 cp "$trial/keep.txt" "$trial/expected.txt"
 

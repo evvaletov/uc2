@@ -34,7 +34,7 @@ echo '41566267ca92d36cf181b6c4fc5878b53050b4aebf43baba7d16bdf60149ed93  %{SOURCE
 install -m644 contrib/mc/README.md %{buildroot}%{_datadir}/uc2/mc/README.md
 
 %check
-%ctest --output-on-failure -E roundtrip_dosbox
+(cd "%{_vpath_builddir}" && ctest --output-on-failure -E roundtrip_dosbox)
 cli="$PWD/%{_vpath_builddir}/cli/uc2"
 trial=$(mktemp -d)
 trap 'rm -rf "$trial"' EXIT
