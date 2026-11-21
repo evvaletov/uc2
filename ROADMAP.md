@@ -2,6 +2,10 @@
 
 ## Recommended next priorities (2026-11-20)
 
+Alpha13 adds automatic layout selection and staged CLI output. It is published
+on GitHub and PyPI, with source and release tags mirrored to SDF.
+[Review and publication evidence](docs/qa/alpha13-2026-11-20.md).
+
 Alpha12 includes the project audit repairs and the CLI metadata indexes.
 The [release record](docs/releases/3.0.0a12-qa.md) and
 [scale/recovery measurements](docs/benchmarks/2026-11-14-scale-recovery.md)
@@ -47,12 +51,17 @@ reviews. Both were verified on 20 November. Track maintainer feedback in
 - Evidence: [layout measurements](docs/benchmarks/2026-11-20-auto-chunks.md) and
   [release checks](docs/releases/3.0.0a13-qa.md).
 
-### Distribution and visibility TODOs (14 November 2026)
+### Distribution and visibility TODOs (20 November 2026)
 
 Tracking: `655345a`; SDF mirror work also relates to `176dc48`. Public package
 submissions, mailing-list messages and announcements remain pending. The TC/MC
 proposals have been submitted; their reviews remain a separate task.
 
+- [x] Publish alpha13 with matching GitHub assets, PyPI distributions, SDF source
+  and release tags. All 31 public GitHub downloads and 21 PyPI distribution hashes
+  match; fresh PyPI and downloaded Linux CLI checks pass. All 75 git-bug and
+  identity refs match both remotes.
+  [Publication receipt](docs/qa/alpha13-2026-11-20/publication.json).
 - [x] Publish alpha12 with matching GitHub assets, PyPI distributions, SDF source
   and release tags. All 31 public GitHub downloads and 21 PyPI distribution hashes
   match; a fresh PyPI installation and downloaded Linux CLI passed verification.
