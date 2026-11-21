@@ -1,16 +1,13 @@
-The REQUESTS charter permits MetaARPA members to share custom software under
-/sys/sdf. I have installed the tested alpha13 build at:
+Thank you for installing uc2 in /usr/local/bin. I checked it on otaku:
+archive integrity passed, and all six extracted fixture files matched the
+original bytes.
+
+I have also installed the alpha13 build under /sys/sdf/uc2-3.0.0a13, with its
+man page, licence texts and exact source archive. The versioned CLI is at:
 
   /sys/sdf/uc2-3.0.0a13/bin/uc2
 
-This binary is for NetBSD amd64 and was built on otaku (NetBSD 9.3). The
-versioned directory also contains its man page, licence texts and the exact
-alpha13 source archive. The installation leaves the shared bin directory
-unchanged.
-
-I checked the installed binary against the private build's SHA-256 and
-repeated the archive integrity and extraction checks. The guide is here:
+The archive-recovery guide is here:
 https://git.sdf.org/evv/uc2/src/branch/main/docs/sdf.rst
 
-The system-package proposal remains available if a pkgsrc installation would
-be useful. Wiki access is still pending with membership.
+Wiki access is still pending with membership.

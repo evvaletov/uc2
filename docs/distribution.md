@@ -128,6 +128,7 @@ git archive --format=tar.gz --prefix=uc2-dos-src/ \
 
 ## SDF
 
-See [the native NetBSD guide](sdf.rst). Shared software uses the MetaARPA
-custom-software route in the REQUESTS charter. Tutorial wiki publication
-awaits the membership team's access response.
+See [the native NetBSD guide](sdf.rst). SDF membership installed the CLI at
+`/usr/local/bin/uc2`; the versioned alpha13 build is also shared under
+`/sys/sdf/uc2-3.0.0a13`. Tutorial wiki publication awaits the membership team's
+access response.

@@ -6,14 +6,24 @@ using NetBSD 9.3 amd64, GCC 7.5.0, CMake 4.1.2 and Python 3.12.7.
 The resulting CLI links to ``libc.so.12``. This is an alpha release; keep your
 original archives and work on copies in a private directory.
 
-Shared MetaARPA installation
-----------------------------
+System installation
+-------------------
+
+SDF membership installed UC2 at ``/usr/local/bin/uc2`` on 21 November 2026.
+On otaku, that binary passed the bundled archive's integrity check and restored
+all six fixture files byte for byte. Its banner reads ``UC2 3.0.0``; the exact
+source revision of that administrator-built binary has not been confirmed.
+The tested SHA-256 is
+``456de82cfe1774ed08fa8964bf52b8b1cd1ca2911d3a7e1fe63864e7f6a20806``.
+
+Versioned MetaARPA installation
+-------------------------------
 
 The shared alpha13 CLI for NetBSD amd64 is installed at
 ``/sys/sdf/uc2-3.0.0a13/bin/uc2``. Its versioned directory includes the man
 page, licence texts and exact release source archive. This follows the
 REQUESTS charter's MetaARPA custom-software route. Use the full path; the
-shared ``bin`` directory is unchanged::
+``/sys/sdf/bin`` directory is unchanged::
 
    /sys/sdf/uc2-3.0.0a13/bin/uc2 -h
 
