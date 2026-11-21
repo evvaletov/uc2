@@ -12,6 +12,40 @@ permissions:
   contents: read
 
 jobs:
+  rpm:
+    runs-on: ubuntu-latest
+    container: fedora:45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Build and test Fedora RPM
+        shell: bash
+        run: |
+          set -euo pipefail
+          dnf -y --setopt=install_weak_deps=False install rpm-build redhat-rpm-config cmake gcc make python3 diffutils curl shadow-utils
+          useradd -m builder
+          install -d -o builder -g builder /tmp/uc2-rpm/SOURCES
+          curl -fL https://github.com/evvaletov/uc2/archive/refs/tags/v3.0.0-alpha.13.tar.gz \
+            -o /tmp/uc2-rpm/SOURCES/v3.0.0-alpha.13.tar.gz
+          runuser -u builder -- rpmbuild -ba --define '_topdir /tmp/uc2-rpm' packaging/rpm/uc2.spec
+          dnf -y --setopt=localpkg_gpgcheck=0 install '/tmp/uc2-rpm/RPMS/x86_64/uc2-3.0.0~alpha.13-1.fc45.x86_64.rpm'
+          rpm -V uc2
+          uc2 -h | head -1 | grep -F 'UC2 3.0.0a13 '
+          mkdir /tmp/uc2-restored
+          uc2 -d /tmp/uc2-restored tests/archives/basic.uc2
+          for file in tests/corpus/*; do
+            cmp "$file" "/tmp/uc2-restored/${file##*/}"
+          done
+          dnf -y remove uc2
+          test ! -e /usr/bin/uc2
+          test -f /tmp/uc2-restored/hello.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: uc2-fedora-45-rpm
+          path: |
+            /tmp/uc2-rpm/RPMS/**/*.rpm
+            /tmp/uc2-rpm/SRPMS/*.rpm
   homebrew:
     strategy:
       fail-fast: false
