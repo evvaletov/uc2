@@ -1,0 +1,158 @@
+{
+  "source": "alpha13 source b297757b7509b3b46be9002979eff5e3e20e6ea8; DOS-only source revision c8f52a7b0543792d159545ab06563c37099d49b3",
+  "native_ctest": {
+    "passed": 36,
+    "failed": 0,
+    "excluded": "roundtrip_dosbox"
+  },
+  "arch": {
+    "makepkg_check": "PASS",
+    "alpha12_to_alpha13_upgrade": "PASS",
+    "pacman_Qkk": "23 total files, 0 altered files",
+    "archive_fixture_6_files": "byte-identical",
+    "remove_and_reinstall": "PASS",
+    "scope": "Arch x86_64 official base-devel container; disabled image NoExtract for doc/man verification"
+  },
+  "homebrew": {
+    "linux_alpha12_to_alpha13_upgrade": "PASS",
+    "linux_install_test_remove_reinstall": "PASS",
+    "linux_style_and_strict_audit": "PASS",
+    "macOS_arm64_install_test_remove_reinstall": "PASS",
+    "macOS_x86_64_install_test_remove_reinstall": "PASS",
+    "macOS_run": "https://github.com/evvaletov/uc2/actions/runs/44924145423",
+    "macOS_upgrade": "PASS on Intel and Apple Silicon",
+    "macOS_upgrade_run": "https://github.com/evvaletov/uc2/actions/runs/44925243074"
+  },
+  "freedos": {
+    "environment": "FreeDOS 1.4 boot media, kernel 2043; QEMU 7.2 emulated Pentium, 32 MiB RAM; FDNPKG 0.99.7a; DJGPP GCC 12.2.0",
+    "install": "PASS: FDNPKG INSTALL-WSRC alpha12 test fixture",
+    "upgrade": "PASS: FDNPKG UPDATE alpha12 fixture 2.99.12.0 to final 2.99.13.1; CLI banner verified",
+    "remove": "PASS: FDNPKG REMOVE, binary/launcher/package ownership list absent; user archives preserved",
+    "fixture": "all six files byte-identical to tests/corpus",
+    "existing_output": "-f refused existing file and preserved sentinel bytes",
+    "roundtrips": "L4 classic and L9 chunked created on DOS, native extraction byte-identical to 2400-byte input",
+    "runtime": "PASS with global CWSDPMI renamed; bundled CWSDPMI used",
+    "package": "all outer paths 8.3, ZIP CRCs valid, exact executable/source bytes, BSD text present",
+    "zip_sha256": "840213faeee23c876a8ca75f8ebfd7a3b3c827b19340c29d0417237876e7279b",
+    "package_version": "2.99.13.1",
+    "cli_version": "3.0.0a13+dos1",
+    "fresh_final_install": "PASS: FDNPKG INSTALL final UC2.ZIP on fresh FreeDOS disk; same six-file, refusal, bundled-runtime, L4/L9 and removal checks passed"
+  },
+  "sdf": {
+    "shared_install_authority": "REQUESTS charter expressly permits MetaARPA custom software in /sys/sdf; evv membership verified",
+    "prepared_bundle": [
+      {
+        "name": "bin/uc2",
+        "size": 188984,
+        "sha256": "d5cdb68811a74924efbf725a9cc19ba8cb7769df70d3a421228e30ea6f8e7ee8"
+      },
+      {
+        "name": "man/man1/uc2.1",
+        "size": 8819,
+        "sha256": "6239b5b9196b7962fc6cb55d23ad6f919e926fee0a51daa436c560e836fabbe6"
+      },
+      {
+        "name": "COPYING",
+        "size": 35157,
+        "sha256": "22f65f0ba65b3fb08b8f2b681d5cefa436690fe67747fa9ad4674c75695643a4"
+      },
+      {
+        "name": "LGPL.TXT",
+        "size": 7650,
+        "sha256": "ea8af5e789cb2d4e9b10bce3874982ade163b749b6bfbdb32e2df21c4d106de1"
+      },
+      {
+        "name": "BSD.TXT",
+        "size": 1323,
+        "sha256": "875c42c072d69aa68a53b12183734024a10bf0e66019dea0ac04a12d2add02eb"
+      },
+      {
+        "name": "CREDITS.md",
+        "size": 4007,
+        "sha256": "cb21a68008aa692fc1b36026d6b4e720bbf4cd2dfa37b73dad93a64bee823bdc"
+      },
+      {
+        "name": "LICENCES.md",
+        "size": 13490,
+        "sha256": "7be1978235146f8e0df9dc24143082d4d57e8ab11d448df33a2fb3f0b0caf6a4"
+      },
+      {
+        "name": "source/uc2-v3.0.0-alpha.13.tar.gz",
+        "size": 2667756,
+        "sha256": "41566267ca92d36cf181b6c4fc5878b53050b4aebf43baba7d16bdf60149ed93"
+      }
+    ],
+    "publication": "shared binary and all eight manifest files verified; public demo passed",
+    "wiki": "access response pending",
+    "system_installation": {
+      "host": "otaku.sdf.org",
+      "path": "/usr/local/bin/uc2",
+      "banner": "UC2 3.0.0 (UltraCompressor II)",
+      "sha256": "456de82cfe1774ed08fa8964bf52b8b1cd1ca2911d3a7e1fe63864e7f6a20806",
+      "checks": [
+        {
+          "name": "allbytes.bin",
+          "bytes": 256,
+          "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+        },
+        {
+          "name": "empty.dat",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "hello.txt",
+          "bytes": 15,
+          "sha256": "92b772380a3f8e27a93e57e6deeca6c01da07f5aadce78bb2fbb20de10a66925"
+        },
+        {
+          "name": "random.bin",
+          "bytes": 1024,
+          "sha256": "08ea14e3e8af9213faf060af321922b6ffaf5d751b0319039c77016b3c6b991c"
+        },
+        {
+          "name": "textfile.txt",
+          "bytes": 1719,
+          "sha256": "c546088b61d38c41d008d2a97c9cb5597b9b7597f2650b49730e0a475a4e05ed"
+        },
+        {
+          "name": "zeros.bin",
+          "bytes": 65536,
+          "sha256": "de2f256064a0af797747c2b97505dc0b9f3df0de4f489eac731c23ae9ca9cc31"
+        }
+      ],
+      "status": "PASS"
+    },
+    "membership_reply": "21-Nov-26 16:46:31: uc2 is now installed in /usr/local/bin"
+  },
+  "aur": {
+    "registration": "User reports AUR registration temporarily closed; defer upload and pursue RPM/Copr",
+    "publication": "not uploaded"
+  },
+  "rpm": {
+    "environment": "Fedora 45 official container x86_64, GCC 16.2.1, RPM 6.1.0, CMake 4.3.0; builds as non-root builder",
+    "version": "3.0.0~alpha.13-1.fc45",
+    "source": "unmodified pinned alpha13",
+    "build": "PASS: binary and complete source RPM generated",
+    "ctest": {
+      "passed": 35,
+      "skipped": "ots_cross_check (optional reference package absent)",
+      "excluded": "roundtrip_dosbox",
+      "failed": 0
+    },
+    "classic_and_chunked_check": "PASS",
+    "lifecycle": "PASS: DNF install alpha12, upgrade alpha13, rpm -V, six fixture files byte-identical, L4 and L9 round trips, remove, reinstall, recheck, remove; user files survive",
+    "signature": "standalone build unsigned; localpkg_gpgcheck disabled only in test-container install invocations",
+    "rpmlint": "0 errors; duplicate BSD licence text warning intentional (integration-local copy plus package licences); locale warnings due container locale",
+    "ci": "PASS: https://github.com/evvaletov/uc2/actions/runs/44928389094 (Fedora RPM and both Mac architectures)",
+    "release_filenames": [
+      "uc2-3.0.0a13-1.fc45.x86_64.rpm",
+      "uc2-3.0.0a13-1.fc45.src.rpm"
+    ],
+    "public_download_install": "PASS: all published hashes, clean Fedora45 install, rpm -V, six fixture byte comparisons and removal preserving user files",
+    "checksum_failure_blocks_install": "PASS with deliberately altered manifest"
+  },
+  "copr": {
+    "publication": "pending normal OIDC login; no project or build published"
+  }
+}

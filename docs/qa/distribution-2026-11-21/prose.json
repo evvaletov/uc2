@@ -1,0 +1,21 @@
+{
+  "files": [
+    "packaging/freedos/UC2.LSM",
+    "packaging/freedos/README.TXT",
+    "packaging/homebrew/README.md",
+    "docs/distribution.md",
+    "docs/sdf.rst",
+    "docs/outreach/freedos-package.txt",
+    "docs/outreach/sdf/shared-install-update.txt",
+    "docs/outreach/sdf/wiki.txt",
+    "packaging/rpm/README.md",
+    "docs/outreach/distribution-release-note.md",
+    "README.md",
+    "ROADMAP.md",
+    "docs/roadmap.rst"
+  ],
+  "word_count": 10240,
+  "findings": [],
+  "iterations": 3,
+  "scope": "Final publication prose and roadmaps; the SDF reply received a focused Grok/Fable factual update review."
+}

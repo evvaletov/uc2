@@ -20,24 +20,47 @@ reviews. Both were verified on 20 November. Track maintainer feedback in
 4b7fbd1; catalogue acceptance and an MC merge remain pending.
 [Submission receipts](docs/qa/commander-submissions-2026-11-20.md).
 
-1. [ ] **Prepare and submit a FreeDOS package.** Build and installation-test a
-   ZIP/LSM bundle, including removal and DOS's refusal to replace existing
-   outputs. Confirm the current third-party submission route. Tracking: 655345a.
-2. [ ] **Publish Homebrew tap and AUR packages.** Test clean installation,
-   upgrade and removal against the available release. Tracking: 655345a.
-3. [ ] **Complete SDF installation and wiki follow-through.** Respond to the
-   REQUESTS proposal and tutorial-access enquiry, adapt the package to the
-   administrators' chosen route and publish the wiki page when access is ready.
-   The native build, release entry, guide and both board posts are complete.
-   Tracking: 176dc48.
-4. [ ] **Resolve upstream maintainer decisions.** Libarchive's optional
-   dependency, format ID allocation and decoded-entry spool remain open in
+1. [ ] **Publish a signed Copr repository.** The Fedora 45 RPM and complete
+   source RPM are available and lifecycle-tested. The Fedora account is verified;
+   Copr needs a normal browser login. Build and verify the hosted package, then
+   assess Fedora 44 and Enterprise Linux. Resume AUR publication when account
+   registration reopens. Tracking: 655345a.
+2. [ ] **Fix drive-qualified DOS input paths.** Creating an archive from a
+   relative 8.3 input works; a drive-qualified backslash input still fails.
+   Extend basename handling and add a FreeDOS regression check before the next
+   DOS package revision. The current package documents the relative-path form.
+   Tracking: 6cbe576.
+3. [ ] **Publish the SDF tutorial when wiki access is granted.** The tested
+   native CLI is installed by membership at `/usr/local/bin/uc2` and the
+   versioned alpha13 build is shared under `/sys/sdf/uc2-3.0.0a13`. Run the reviewed wiki example on the shared binary,
+   publish it through the membership-approved route and respond to compatibility
+   reports. Tracking: 176dc48.
+4. [ ] **Resolve maintainer decisions.** The FreeDOS optional-package enquiry
+   is submitted with AI assistance disclosed. Libarchive's optional dependency,
+   format ID allocation and decoded-entry spool remain open in
    [PR #3832](https://github.com/libarchive/libarchive/pull/3832). Track MC and TC
-   responses separately. Tracking: 7bbb6b6 and 4b7fbd1.
+   responses separately. Tracking: 655345a, 7bbb6b6 and 4b7fbd1.
 5. [ ] **Design snapshot growth beyond fixed reference and manifest caps.**
    Choose repository partitioning or a larger packed format from the existing
    measurements, retaining v1/v2 readability and verified publication. Assess
    concurrent readers separately from the exclusive lock. Tracking: 179a8de.
+
+### Distribution work completed on 21 November
+
+- [x] Build and test the `3.0.0a13+dos1` FreeDOS package, including FDNPKG
+  upgrade/removal, bundled CWSDPMI, exact source, archive recovery and refusal
+  to overwrite an existing output. Submit the eligibility enquiry to
+  freedos-devel; repository acceptance is pending.
+- [x] Publish the [Homebrew tap](https://github.com/evvaletov/homebrew-tap),
+  with installation, upgrade, round-trip and removal checks on Linux x86_64
+  and both Mac architectures.
+- [x] Build and lifecycle-test the Arch recipe. AUR registration is temporarily
+  closed, so the recipe remains available for local `makepkg` builds.
+- [x] Publish Fedora 45 x86_64 and source RPMs with checksums. The standalone
+  RPMs are unsigned; Copr publication is pending browser access.
+- [x] Update the GitHub and SDF alpha13 release entries with package links.
+- [Package installation and test details](docs/distribution.md);
+  [review and publication evidence](docs/qa/distribution-2026-11-21.md).
 
 ### SDF work completed on 21 November
 
@@ -45,12 +68,18 @@ reviews. Both were verified on 20 November. Track maintainer feedback in
   a private CLI and man page. There were 35 passes and one optional skip;
   DOSBox testing remains separate.
 - [x] Publish the SDF release entry with verified source and download links.
+- [x] Verify membership's `/usr/local/bin/uc2` installation on otaku: archive
+  integrity and six byte-for-byte extraction checks pass. The exact source
+  revision of this administrator-built binary remains unconfirmed.
+- [x] Install the tested native CLI, man page, licences and exact source under
+  `/sys/sdf/uc2-3.0.0a13` through the MetaARPA custom-software route. Verify the
+  shared files and demo, then post the REQUESTS update.
 - [x] Publish the [SDF archive-recovery guide](docs/sdf.rst) and run its commands
   from a fresh SDF clone. This supplies a text demonstration; a recorded
   Linux/DOS round trip remains on the visibility list below.
 - [x] Post the RETRO compatibility invitation and REQUESTS installation proposal.
 - [x] Offer the tutorial to membership@sdf.org and request wiki access. The mail
-  server accepted delivery; administrator decisions remain pending.
+  server accepted delivery; wiki access remains pending.
 - Evidence: [SDF reviews and publication](docs/qa/sdf-2026-11-21.md).
 
 ### Implemented for 3.0.0a13
@@ -69,13 +98,12 @@ reviews. Both were verified on 20 November. Track maintainer feedback in
 
 ### Distribution and visibility TODOs (21 November 2026)
 
-Tracking: `655345a`; SDF mirror work also relates to `176dc48`. Public package
-submissions and mailing-list messages remain pending. The SDF board posts and
-tutorial offer are submitted, alongside the earlier TC/MC proposals; recipient
-responses remain separate tasks.
+Tracking: `655345a`; SDF mirror work also relates to `176dc48`. The FreeDOS
+package enquiry, SDF board posts and tutorial offer are submitted, alongside
+the earlier TC/MC proposals. Recipient decisions remain separate tasks.
 
 - [x] Publish alpha13 with matching GitHub assets, PyPI distributions, SDF source
-  and release tags. All 31 public GitHub downloads and 21 PyPI distribution hashes
+  and release tags. The original 31 GitHub downloads and 21 PyPI distribution hashes
   match; fresh PyPI and downloaded Linux CLI checks pass. All 75 git-bug and
   identity refs match both remotes.
   [Publication receipt](docs/qa/alpha13-2026-11-20/publication.json).
@@ -83,15 +111,15 @@ responses remain separate tasks.
   and release tags. All 31 public GitHub downloads and 21 PyPI distribution hashes
   match; a fresh PyPI installation and downloaded Linux CLI passed verification.
   [Publication receipt](docs/qa/alpha12-2026-11-14/publication.json).
-- [ ] Prepare and validate a FreeDOS ZIP/LSM package, current official repository/
-  ibiblio submission requirements and FDIMPLES/FDNPKG installation; draft the
-  relevant freedos-devel/freedos-user notices. Confirm the third-party route and
-  disclose AI assistance; official/default-package acceptance is not established.
-- [ ] Prepare a project Homebrew tap and AUR packaging, with clean install tests;
-  assess distribution-maintained Linux packages and Winget requirements. Defer
-  Homebrew core submission until stable-release and platform criteria are met.
-  UC2 already has PyPI wheels and Linux/macOS/Windows CLI downloads; add a
-  separately tested DJGPP DOS bundle if the release inventory still lacks one.
+- [x] Prepare, validate and publish the FreeDOS ZIP/LSM package and send the
+  freedos-devel eligibility enquiry with AI assistance disclosed. Await the
+  optional-package decision; official acceptance has not been granted.
+- [x] Publish a project Homebrew tap and Fedora RPMs, and test an Arch recipe.
+  AUR registration is closed; Copr awaits browser access. See the completed
+  distribution work above and the installation guide.
+- [ ] Assess distribution-maintained Linux packages and Winget requirements.
+  Defer Homebrew core submission until stable-release and platform criteria
+  are met.
 - [ ] Prepare a technical article on the revival, compression design and measured
   round trips with original DOS UC2. Default levels 2-5 without `--chunked` use
   historical Huffman; levels 6-9 require the new rANS reader, and `--chunked`
