@@ -1,6 +1,6 @@
 # UC2 License Audit
 
-Status: 2026-11-07. Maintained by Eremey Valetov.
+Status: 2026-11-21. Maintained by Eremey Valetov.
 
 UC2 v3 builds on three layers of prior work, each released under its
 own free-software licence.  This document records per-file provenance,
@@ -32,6 +32,16 @@ kept under the decoder's LGPL-3.0-only license.
 
 Relicensing impact: none.  Layer 1 is preserved under its original
 LGPL-3.0 licence; nothing is moved upward to GPL-3.0.
+
+### Permission for the public revival
+
+Nico de Vries explicitly agreed to Eremey Valetov's request to publish the
+ported project as a public GitHub repository with credit to de Vries and
+Jan Bobrowski. His reply was "Sure, go ahead." The
+[permission record](provenance/nico-de-vries-permission.md) preserves the
+request, reply and displayed dates. The supplied LinkedIn view omits the year.
+This publication consent leaves the per-file licences and third-party notices
+described in this audit in place.
 
 ## Layer 2: Jan Bobrowski (2020-2021), libunuc2 / unuc2
 

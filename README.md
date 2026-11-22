@@ -195,6 +195,10 @@ UC2/
 
 See [CREDITS.md](CREDITS.md) for full attribution.
 
+Nico de Vries explicitly agreed to publishing this revival as a public GitHub
+repository. See the [LinkedIn permission record](docs/provenance/nico-de-vries-permission.md)
+for the request and his reply.
+
 ## History
 
 - **v1.0 to v2.3** (1992-1996) Original DOS releases by Nico de Vries

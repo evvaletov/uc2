@@ -8,6 +8,9 @@ versioning.  The original source code is preserved in `original/UC2_source/`.
 
 - Website: <https://nicodevries.com/professional/>
 
+Nico also gave [explicit permission to publish Eremey Valetov's UC2 port
+as a public GitHub repository](docs/provenance/nico-de-vries-permission.md).
+
 ## 2015 LGPL Source Release
 
 In December 2015, **Vladislav Sagunov** asked Nico de Vries whether

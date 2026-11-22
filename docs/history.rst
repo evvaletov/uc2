@@ -25,6 +25,16 @@ History
        original compression engine reimplemented, Sphinx
        documentation, CI/CD pipeline.
 
+Permission for the public revival
+---------------------------------
+
+Nico de Vries explicitly agreed to Eremey Valetov's request to publish the
+ported project as a public GitHub repository with credit to de Vries and
+Jan Bobrowski. The `LinkedIn permission record
+<https://github.com/evvaletov/uc2/blob/main/docs/provenance/nico-de-vries-permission.md>`_
+preserves the request and reply, including the limits of the displayed dates.
+The existing per-file licences and third-party notices continue to apply.
+
 Credits
 -------
 
