@@ -4,7 +4,7 @@ The `uc2` extfs helper supports browsing, viewing, and copying files out of UC2
 archives. It preserves the CLI's `;N` version selectors and quotes names for
 literal extraction. Archive modification is not supported.
 
-Requirements: Python 3 and the current UC2 CLI on `PATH`. Set `UC2` to an
+Requirements: Python 3.6 or newer with a UTF-8 locale and the current UC2 CLI on `PATH`. Set `UC2` to an
 absolute executable path when testing another build.
 
 Download `uc2-mc-<version>.tar.gz` from the
