@@ -55,7 +55,12 @@ def test_incremental_versions_and_recovery(tmp_path):
     assert (tmp_path/first['snapshot']/'old.txt').stat().st_mtime_ns // 10**6 == 1600000000123
     assert len(s.snapshots(repo)) == 3
     # Damage a shared chunk. A failed restore must expose no partial directory.
-    chunk = next((repo/'chunks').rglob('*.uc2'))
+    first_chunks = {d for e in manifest(repo, first['snapshot'])['entries']
+                    for d, _ in e.get('chunks', [])}
+    second_chunks = {d for e in manifest(repo, second['snapshot'])['entries']
+                     for d, _ in e.get('chunks', [])}
+    digest = min(first_chunks & second_chunks)
+    chunk = repo/'chunks'/digest[:2]/(digest + '.uc2')
     original = chunk.read_bytes()
     chunk.write_bytes(b'damaged')
     with pytest.raises((ValueError, OSError)):
